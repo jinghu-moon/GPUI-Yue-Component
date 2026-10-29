@@ -1,0 +1,22 @@
+# Text is stored with LF so a clone's checkout does not depend on its own
+# core.autocrlf setting.
+* text=auto
+
+*.rs text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.lock text eol=lf
+*.json text eol=lf
+*.mjs text eol=lf
+*.svg text eol=lf
+*.gitignore text eol=lf
+*.gitattributes text eol=lf
+
+# PowerShell drives the icon sync, so it keeps the CRLF the shell expects.
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.webp binary

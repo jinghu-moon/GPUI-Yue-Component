@@ -1,0 +1,21 @@
+[workspace]
+members = ["crates/yue-component", "crates/yue-component-icons", "examples/windows-showcase"]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+gpui-kit = { version = "0.8.0", default-features = false }
+# Same major series GPUI's own path tessellation is locked to, so `LineCap` and
+# `StrokeOptions` stay the same types GPUI reads.
+lyon = "1.0.19"
+yue-component = { path = "crates/yue-component" }
+yue-component-icons = { path = "crates/yue-component-icons" }
+
+[profile.dev]
+debug = 0
+
+[profile.dev.package."*"]
+debug = 0

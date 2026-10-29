@@ -1,0 +1,35 @@
+[package]
+name = "yue-component"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "Yue design system components for GPUI Kit"
+
+[dependencies]
+gpui-kit.workspace = true
+# Only for `LineCap` / `LineJoin`, which GPUI does not re-export from its own
+# path builder. Switch glyphs stroke their icon paths, so they need round caps.
+lyon.workspace = true
+yue-component-icons.workspace = true
+# Yue's headless UI tests read GPUI Base's element observations. Base's test-support
+# feature also changes what `test_support()` returns, so it has to stay opt-in: with it
+# on, gpui-component 0.8.0 fails to build because its `Observed` wrapper does not carry
+# `ScrollableElement`. `gpui-kit/test-support` is not an option either, since it pulls in
+# the optional GPUI Fast backend whose pins conflict with the GPUI backend here.
+gpui-base = { version = "0.8.0", optional = true, features = ["test-support"] }
+
+[features]
+headless-tests = ["dep:gpui-base"]
+
+[[test]]
+name = "input"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "radio"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "checkbox"
+required-features = ["headless-tests"]
+
