@@ -312,11 +312,11 @@ YueBreadcrumb::new("deep-path", theme)
 ## 11. 本地依据
 
 - [用户参考图](assets/breadcrumb-reference.png)：基础、图标、分隔符、批量配置、折叠及点击导航。
-- [Button](02-button.md)、[现有实现](../crates/yue-component/src/button.rs)：行为复用与当前 Text variant 的呈现边界。
+- [Button](02-button.md)、[现有实现](../crates/yue-component/src/button/mod.rs)：行为复用与当前 Text variant 的呈现边界。
 - [Dropdown](07-dropdown.md)、[现有实现](../crates/yue-component/src/dropdown/mod.rs)：菜单、稳定行 ID、disabled、回调与焦点。
 - [Popup](12-popup.md)：共享定位、浮层与动效基础。
 - [Tooltip](10-tooltip.md)：溢出提示与浮层避让。
 - [Link](13-link.md)：应用内命令与外部资源链接的边界。
-- [token 键](../crates/yue-component/src/theme/generated.rs)、[Icon](../crates/yue-component/src/icon.rs)：实现使用的静态主题键与图标适配。
+- [token 键](../crates/yue-component/src/theme/generated.rs)、[Icon](../crates/yue-component/src/icon/mod.rs)：实现使用的静态主题键与图标适配。
 
 本次交付包含 Rust 组件、Dropdown 最小内部适配、Base disabled 适配器导出、源 token 及同步快照、Showcase 与自动化测试；未新增路由器或独立 Popup 行为层。

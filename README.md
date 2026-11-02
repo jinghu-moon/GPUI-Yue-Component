@@ -15,9 +15,16 @@ gpui-kit = { version = "0.8.0", default-features = false }
 # Required in the consuming workspace's root Cargo.toml during development:
 [patch.crates-io]
 gpui-base = { path = "../GPUI-Yue-Component/vendor/gpui-base" }
+gpui-pre = { path = "../GPUI-Yue-Component/vendor/gpui-pre" }
+gpui-pre-windows = { path = "../GPUI-Yue-Component/vendor/gpui-pre-windows" }
 ```
 
 Cargo patches are not inherited from a path dependency. This workspace maintains Base 0.8.0 extensions for shared Popup positioning, Dialog, Toast lifecycle/stack/live semantics, Slider domain/drag/focus semantics, numeric input and Link caller-owned focus; a consuming framework must resolve the same patched Base. See [the patch record](vendor/gpui-base/YUE-PATCH.md). Remove the patch only after an upstream version provides equivalent APIs and the integration tests pass.
+
+The maintained GPUI core and Windows backend also provide reusable same-window
+Gaussian backdrop filtering through `Styled::backdrop_blur(rems(1.0))`. It samples
+only the local background on the GPU; the caller owns tint and other styling.
+See [the foundation contract and performance limits](docs/26-backdrop-blur.md).
 
 Initialize once before opening windows:
 
@@ -49,7 +56,7 @@ Buttons and selection controls expose `width`, `min_width`, `max_width`, `margin
 
 Retain `Entity<YueSelectState>` and render `YueSelect::new(id, &state)`. Stable keys support single/multiple values, local or remote search, groups, disabled selections, creation, paging and virtualized lists. Search composes the existing **YueInput**; multiple values use YueTag and the shared Popup foundation. User changes arrive through retained `SelectEvent` subscriptions; external setters are silent.
 
-`YueField.select(...)` forwards field semantics and `YueForm.require_select` / `rule_select` validate typed `SelectValue`. Browse **组件 → Select** in Showcase, including remote race/error simulations, ten thousand options and Dialog integration. See [the Select guide](docs/20-select.md) for public APIs, slot focus contracts, token sources and verification limits. The maintained Base Select/Combobox patch changes `on_open_change` to return the actual open state; downstream workspaces must retain the root Cargo patch described in [YUE-PATCH.md](vendor/gpui-base/YUE-PATCH.md).
+`YueField.select(...)` forwards field semantics and `YueForm.require_select` / `rule_select` validate typed `SelectValue`. Browse **组件 → Select** in Showcase, including remote race/error simulations, ten thousand options and Dialog integration. See [the Select guide](docs/20-select.md) for public APIs, slot focus contracts, token sources and verification limits. The maintained Base Select/Combobox patch adds `on_open_request` returning the actual open state and retains upstream `on_open_change` notifications for Kit styled consumers; downstream workspaces must retain the root Cargo patch described in [YUE-PATCH.md](vendor/gpui-base/YUE-PATCH.md).
 
 ## Tabs
 
@@ -66,13 +73,17 @@ reject each `.on_change(...)` request in the host. Multiple is the default;
 Actions remain independent siblings of each heading's trigger. All enabled
 headings are normal Tab stops, with Up/Down/Home/End focus navigation.
 
-The default measured motion reveals content over 200ms and closes a background
-shell over 100ms. Closing immediately detaches the old input and accessibility
-subtree; retain input/editor Entities in the host to preserve values. Interrupted
+The default measured motion reveals and clips content over 320ms in both
+directions, using cubic-bezier(.4, 0, .2, 1). Closing immediately detaches the old
+input and accessibility subtree and clips a frozen paint frame; retain
+input/editor Entities in the host to preserve values. No title hover background
+is applied. Interrupted
 motion continues from current pixels. None/reduced motion snaps to the final
 state. Three sizes, two variants, leading/trailing/custom indicators and icon-only
 activation share Yue tokens. Browse **组件 → Collapse** and see the
-[Collapse guide](docs/23-collapse.md). This component uses the maintained Base patch.
+[Collapse guide](docs/23-collapse.md). This component uses the maintained Base and
+[GPUI paint snapshot patches](vendor/gpui-pre/YUE-PATCH.md). Downstream workspaces
+must include both Cargo patches shown above.
 
 ## Breadcrumbs
 
@@ -197,6 +208,28 @@ Button's loading glyph also uses the shared painter and clock while retaining it
 size, color and duration tokens. See [the loading feedback guide](docs/22-loading-feedback.md)
 and **组件 → Progress / Spinner / Skeleton** in Showcase.
 
+## Image preview
+
+Retain an `Entity<YueImagePreviewState>` in the host and render
+`YueImagePreview::new(&state)` inside a container with a definite height. Submit an
+`ImagePreviewDocument` through `state.set_document(...)`, with a stable document ID,
+monotonic revision and decoded single-frame `ImagePreviewImage` resources. The host
+owns loading, encoding and cancellation; user operations emit `ImagePreviewEvent`.
+
+Source, Compare and Result share one camera. The viewport supports pointer-anchored
+zoom, captured panning, fit/100%, four transparency backgrounds, scoped keyboard
+commands, loading/error feedback and previous-result retention during updates.
+Comparison requires declared full-frame alignment and compatible aspect ratios.
+View commands use 260ms travel and mode changes use 180ms; gestures respond directly
+and reduced motion snaps to the target.
+
+Browse **组件 → 图片预览 ImagePreview** for the two user-provided screenshots,
+actual JPEG/half-size results, transparency and Dialog composition. Fixtures live in
+[the Showcase asset directory](examples/windows-showcase/assets/image-preview/README.md),
+with original hashes recorded. See [the ImagePreview guide](docs/25-image-preview.md).
+Pixel grids, nearest-neighbor selection, editing and animated-image playback are
+outside this implementation. No new framework patch is required.
+
 ## Icons and fonts
 
 ```rust
@@ -223,9 +256,17 @@ cargo test -p yue-component --locked --no-default-features --features headless-t
 cargo clippy --workspace --locked --all-targets -- -D warnings
 cargo clippy --workspace --locked --all-targets --features headless-tests -- -D warnings
 pwsh -File tools/test-gpui-base.ps1 -Offline -Filter toast::tests
+pwsh -NoProfile -File tools/test-gpui-snapshot.ps1 -Offline
+pwsh -NoProfile -File tools/test-gpui-backdrop.ps1
+pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Release
+pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
 ```
 
 `headless-tests` is opt-in and enables Base observation directly, without Kit's optional Fast backend. Workspace tests now support this feature together with the Base-only showcase. Tests dispatch real input in headless windows and check callbacks, focus, layout and submitted drawing data; Windows reader output, GPU pixels, DPI and IME still require native-window validation. The Windows CI runs these checks.
+
+`-Profile` is an opt-in Release hardware GPU timestamp benchmark without a window;
+it reports cold and steady stage timings plus a minimally instrumented envelope.
+See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先测量再优化).
 
 ## Documentation
 
@@ -249,3 +290,5 @@ pwsh -File tools/test-gpui-base.ps1 -Offline -Filter toast::tests
 - [Tabs design and implementation](docs/21-tabs.md)
 - [Progress / Spinner / Skeleton design and implementation](docs/22-loading-feedback.md)
 - [Collapse design and implementation](docs/23-collapse.md)
+- [ImagePreview design and implementation](docs/25-image-preview.md)
+- [Local Gaussian backdrop foundation](docs/26-backdrop-blur.md)

@@ -220,8 +220,15 @@ impl YueToken {
             .strip_prefix("color-mix(in srgb, ")?
             .strip_suffix(')')?;
         let (left, right) = value.split_once(", ")?;
-        let (blend, amount) = left.split_once(" calc(")?;
-        let amount = amount.strip_suffix("*100%)")?.parse::<f32>().ok()?;
+        let (blend, amount) = if let Some((blend, amount)) = left.split_once(" calc(") {
+            (blend, amount.strip_suffix("*100%)")?.parse::<f32>().ok()?)
+        } else {
+            let (blend, amount) = left.rsplit_once(' ')?;
+            (blend, amount.strip_suffix('%')?.parse::<f32>().ok()? / 100.)
+        };
+        if !amount.is_finite() || !(0.0..=1.0).contains(&amount) {
+            return None;
+        }
         let blend = parse_hex(blend)?;
         if right == "transparent" {
             return Some(gpui_kit::rgba(

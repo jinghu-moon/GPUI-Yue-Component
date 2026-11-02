@@ -33,8 +33,8 @@ Tabs 在同一个容器内切换一组同级内容面板，同一时刻只呈现
 | --- | --- | --- |
 | [Base Tab / Tabs](../vendor/gpui-base/src/tabs.rs)、[Controller](../vendor/gpui-base/src/tabs/controller.rs)、[Panel](../vendor/gpui-base/src/tabs/panel.rs) | `Tab::in_list`、受控快照与请求、roving focus、按轴导航、Home / End、确认与关闭；TabList 方向、TabPanel 活动边界 | Controller 保存交互状态，不自行提交选择；standalone Tab 保留旧 API |
 | [Base motion](../vendor/gpui-base/src/motion.rs) | keyed transition、Presence、当前呈现值反向、reduced motion | 不提供 Tabs 外观、指示线时长或面板切换视觉策略 |
-| [YueSegmented](../crates/yue-component/src/segmented.rs) | 实际边界测量、局部坐标指示块、几何修订失效和稳定动画通道的现成经验 | 可借鉴测量与失效方式，不能直接复用 Radio 语义或复制成第二套 Tabs 行为 |
-| [YueButton](../crates/yue-component/src/button.rs)、[YueOverflowTooltip](../crates/yue-component/src/tooltip/) | 命令、禁用、焦点、实际文本溢出提示 | 组合成新增、关闭、滚动命令和标签全文提示 |
+| [YueSegmented](../crates/yue-component/src/segmented/mod.rs) | 实际边界测量、局部坐标指示块、几何修订失效和稳定动画通道的现成经验 | 可借鉴测量与失效方式，不能直接复用 Radio 语义或复制成第二套 Tabs 行为 |
+| [YueButton](../crates/yue-component/src/button/mod.rs)、[YueOverflowTooltip](../crates/yue-component/src/tooltip/) | 命令、禁用、焦点、实际文本溢出提示 | 组合成新增、关闭、滚动命令和标签全文提示 |
 | Yue Design System / [token 快照](../crates/yue-component/tokens/inventory.json) | `component-tokens/tabs.css` 已新增并登记；同步生成 `--tabs-*` 对应 Rust keys | 外部设计系统是唯一来源，不能直接手改生成代码 |
 
 `Tab::on_click()` 保留 standalone 点击合同；完整复合行为显式接入 `Tab::in_list(&controller, key)`。`Tabs::children()` 不扫描任意子元素推测模型。Yue 已采用显式 Controller 路径。

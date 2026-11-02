@@ -372,7 +372,7 @@ impl Render for CollapsePage {
                 column().child(dynamic).child(keep),
             ))
             .child(div().text_sm().child(format!(
-                "展开值：{:?} · 最近请求：{} · 展开 200ms / 收起 100ms",
+                "展开值：{:?} · 最近请求：{} · 展开 / 收起 320ms · 正文裁切",
                 self.values[0], self.last
             )))
     }

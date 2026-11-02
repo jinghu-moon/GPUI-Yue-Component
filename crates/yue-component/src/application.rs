@@ -19,6 +19,7 @@ pub fn init(cx: &mut App, theme: YueTheme) -> gpui_kit::Result<()> {
         crate::dialog::init(cx);
         crate::toast::init(cx);
         crate::select::init(cx);
+        crate::image_preview::init(cx);
         crate::load_fonts(cx)?;
         cx.set_global(FontsRegistered);
     }

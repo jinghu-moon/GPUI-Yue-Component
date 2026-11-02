@@ -13,8 +13,10 @@ mod control_layout;
 mod dialog;
 mod divider;
 mod dropdown;
+mod field;
 mod form;
 pub mod icon;
+mod image_preview;
 mod input;
 pub mod layout;
 mod link;
@@ -60,13 +62,19 @@ pub use dropdown::{
     DropdownAlign, DropdownIndicatorSide, DropdownPlacement, YueContextMenu, YueDropdownMenu,
     YueDropdownSplitButton, YueMenuItem,
 };
+pub use field::YueField;
 pub use form::YueForm;
 pub use gpui_kit;
 pub use gpui_kit::base::input::{InputEvent, InputState, TextareaState};
 pub use icon::{IconSize, YueIcon};
+pub use image_preview::{
+    ImagePreviewBackground, ImagePreviewChangeSource, ImagePreviewDocument, ImagePreviewError,
+    ImagePreviewEvent, ImagePreviewFit, ImagePreviewImage, ImagePreviewLoad, ImagePreviewMode,
+    ImagePreviewOverlay, ImagePreviewSnapshot, ImagePreviewToolbar, YueImagePreview,
+    YueImagePreviewState,
+};
 pub use input::{
-    InputSize, InputStatus, InputTextAlign, InputType, YueField, YueInput, YueNumberInput,
-    YueTextarea,
+    InputSize, InputStatus, InputTextAlign, InputType, YueInput, YueNumberInput, YueTextarea,
 };
 pub use layout::Breakpoint;
 pub use link::{LinkHover, LinkSize, LinkVariant, YueLink};
@@ -124,9 +132,9 @@ pub mod prelude {
         YueTabs, YueTextarea, YueTheme, YueTooltip, YueTooltipGroup, current_theme, outline,
     };
     pub use crate::{
-        ToastSpec, YueCollapse, YueCollapseItem, YueDialog, YueDialogState, YueLoadingRegion,
-        YueProgress, YueSkeleton,
-        YueSpinner, YueTag, YueTagGroup, YueToaster, YueToasterState,
+        ToastSpec, YueCollapse, YueCollapseItem, YueDialog, YueDialogState, YueImagePreview,
+        YueImagePreviewState, YueLoadingRegion, YueProgress, YueSkeleton, YueSpinner, YueTag,
+        YueTagGroup, YueToaster, YueToasterState,
     };
     pub use gpui_kit::{
         InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement, Styled,

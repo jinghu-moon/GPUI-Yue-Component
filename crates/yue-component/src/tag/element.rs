@@ -528,7 +528,7 @@ impl RenderOnce for YueTag {
                 // Optical correction: the checkbox path occupies half its
                 // viewbox width. Fill two thirds of the same Tag icon slot.
                 let unit = f32::from(icon_size.to_pixels(window.rem_size()))
-                    / crate::checkbox::MARK_BOX
+                    / crate::icon::MARK_BOX
                     * (4. / 3.);
                 let stroke = pixels(theme, keys::CHECKBOX_MARK_STROKE_WIDTH_MD)
                     * f32::from(window.rem_size())
@@ -540,10 +540,10 @@ impl RenderOnce for YueTag {
                     canvas(
                         move |_, _, _| (),
                         move |bounds, _, window, _| {
-                            crate::checkbox::paint_mark(
+                            crate::icon::paint_mark(
                                 window,
                                 bounds,
-                                &crate::checkbox::CHECK_LINE,
+                                &crate::icon::CHECK_LINE,
                                 check_ink,
                                 unit,
                                 stroke,

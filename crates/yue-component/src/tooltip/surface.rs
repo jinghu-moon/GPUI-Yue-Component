@@ -2,7 +2,7 @@ use super::*;
 use crate::{
     popup::{ArrowSpec, ArrowStyle},
     theme::keys,
-    tokens::{duration, easing, pixels, rems, rgba, shadow},
+    tokens::{duration, easing, number, pixels, rems, rgba, shadow},
 };
 use gpui_kit::{Pixels, Rgba, Size, TextRun, px, size};
 
@@ -46,7 +46,7 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
     let (_, color, _, raw_border) = colors(config);
     let border = raw_border * (f32::from(window.rem_size()) / 16.);
     let font_size = length(t, keys::BOX_FONT_SIZE_TOOLTIP, window);
-    let line_height = length(t, keys::LINE_HEIGHT_SM, window);
+    let line_height = window.pixel_snap(length(t, keys::LINE_HEIGHT_SM, window));
     let padding_x = length(t, keys::BOX_PADDING_INLINE_TOOLTIP, window) + border;
     let padding_y = length(t, keys::BOX_PADDING_BLOCK_TOOLTIP, window) + border;
     let max_width = length(t, keys::TOOLTIP_MAX_WIDTH, window)
@@ -62,7 +62,7 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
         .max(padding_x * 2. + px(1.));
     let runs = [TextRun {
         len: config.text.len(),
-        font: window.text_style().font(),
+        font: text_font(config),
         color: color.into(),
         ..Default::default()
     }];
@@ -87,12 +87,26 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
     }
     Measure {
         size: size(
-            (width.ceil() + padding_x * 2.).min(max_width),
+            // Layout snaps the inner edges independently. Reserve one device
+            // pixel, then round outwards so a final glyph cannot wrap at the
+            // measured boundary (especially with fractional DPI/rem sizes).
+            px(
+                ((f32::from(width + padding_x * 2.) * window.scale_factor()).ceil() + 1.)
+                    / window.scale_factor(),
+            )
+            .min(max_width),
             height + padding_y * 2.,
         ),
         line_height,
         single_line: count <= 1,
     }
+}
+fn text_font(config: &Config) -> gpui_kit::Font {
+    let family = crate::typography::ui_font(config.theme);
+    let mut font = gpui_kit::font(family.family.clone());
+    font.fallbacks = family.font_fallbacks();
+    font.weight = gpui_kit::FontWeight(number(config.theme, keys::WEIGHT_REGULAR));
+    font
 }
 pub(super) fn arrow(config: &Config, window: &Window) -> Option<ArrowStyle> {
     if !config.options.arrow {
@@ -172,12 +186,22 @@ pub(super) fn content(
         .text_color(color)
         .border(gpui_kit::rems(f32::from(width) / 16.))
         .border_color(border)
-        .children(old_text.map(|(old, measure, opacity)| text_layer(&old, measure, opacity)))
-        .child(text_layer(config, measure, text_opacity))
+        .children(old_text.map(|(old, measure, opacity)| {
+            text_layer(&old, measure, opacity, "yue-tooltip-old-text")
+        }))
+        .child(text_layer(
+            config,
+            measure,
+            text_opacity,
+            "yue-tooltip-text",
+        ))
         .into_any_element()
 }
 
-fn text_layer(config: &Config, measure: Measure, opacity: f32) -> AnyElement {
+fn text_layer(config: &Config, measure: Measure, opacity: f32, id: &'static str) -> AnyElement {
+    use gpui_kit::InteractiveElement as _;
+    use gpui_kit::base::TestSupportExt as _;
+    use gpui_kit::prelude::FluentBuilder as _;
     let (_, foreground, _, _) = colors(config);
     div()
         .absolute()
@@ -185,9 +209,18 @@ fn text_layer(config: &Config, measure: Measure, opacity: f32) -> AnyElement {
         .px(rems(config.theme, keys::BOX_PADDING_INLINE_TOOLTIP))
         .py(rems(config.theme, keys::BOX_PADDING_BLOCK_TOOLTIP))
         .text_color(foreground)
+        .font(text_font(config))
         .text_size(rems(config.theme, keys::BOX_FONT_SIZE_TOOLTIP))
         .line_height(measure.line_height)
+        .when(measure.single_line, |d| d.whitespace_nowrap())
+        .when(!measure.single_line, |d| d.whitespace_normal())
         .opacity(opacity)
-        .child(config.text.clone())
+        .child(
+            div()
+                .id(id)
+                .test_support()
+                .w_full()
+                .child(config.text.clone()),
+        )
         .into_any_element()
 }

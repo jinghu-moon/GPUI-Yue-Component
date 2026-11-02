@@ -52,6 +52,7 @@ enum ShowcasePage {
     Icon,
     IconDesign,
     Input,
+    ImagePreview,
     Link,
     Progress,
     Spinner,
@@ -92,6 +93,7 @@ struct Showcase {
     tag_demo: gpui_kit::Entity<pages::tag::TagPage>,
     tabs_demo: gpui_kit::Entity<pages::tabs::TabsPage>,
     collapse_demo: gpui_kit::Entity<pages::collapse::CollapsePage>,
+    image_preview_demo: Option<gpui_kit::Entity<pages::image_preview::ImagePreviewPage>>,
     progress_demo: gpui_kit::Entity<pages::loading::FeedbackPage>,
     spinner_demo: gpui_kit::Entity<pages::loading::FeedbackPage>,
     skeleton_demo: gpui_kit::Entity<pages::loading::FeedbackPage>,
@@ -261,6 +263,7 @@ impl Showcase {
             tag_demo: cx.new(|cx| pages::tag::TagPage::new(window, cx)),
             tabs_demo: cx.new(|cx| pages::tabs::TabsPage::new(window, cx)),
             collapse_demo: cx.new(|cx| pages::collapse::CollapsePage::new(window, cx)),
+            image_preview_demo: None,
             progress_demo: cx.new(|_| {
                 pages::loading::FeedbackPage::new(pages::loading::FeedbackPageKind::Progress)
             }),
@@ -512,6 +515,13 @@ impl Render for Showcase {
                         ShowcasePage::Tag => self.tag_demo.clone().into_any_element(),
                         ShowcasePage::Tabs => self.tabs_demo.clone().into_any_element(),
                         ShowcasePage::Collapse => self.collapse_demo.clone().into_any_element(),
+                        ShowcasePage::ImagePreview => self
+                            .image_preview_demo
+                            .get_or_insert_with(|| {
+                                cx.new(|cx| pages::image_preview::ImagePreviewPage::new(window, cx))
+                            })
+                            .clone()
+                            .into_any_element(),
                         ShowcasePage::Progress => self.progress_demo.clone().into_any_element(),
                         ShowcasePage::Spinner => self.spinner_demo.clone().into_any_element(),
                         ShowcasePage::Skeleton => self.skeleton_demo.clone().into_any_element(),

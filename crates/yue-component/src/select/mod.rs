@@ -1,6 +1,9 @@
 //! Stateful choice fields composed with Base Select, YueInput, YueTag and Popup.
 mod behavior;
+mod element;
+mod layout;
 mod model;
+mod option;
 mod panel;
 mod state;
 #[cfg(all(test, feature = "headless-tests"))]

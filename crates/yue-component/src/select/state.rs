@@ -20,6 +20,7 @@ pub(super) struct ListGeometry {
     pub(super) sizes: Rc<Vec<gpui_kit::Size<gpui_kit::Pixels>>>,
     pub(super) total: gpui_kit::Pixels,
     pub(super) option_count: usize,
+    pub(super) has_icons: bool,
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum SelectResultState {
@@ -1021,6 +1022,6 @@ impl Render for YueSelectState {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> impl gpui_kit::IntoElement {
-        super::panel::render(self, window, cx)
+        super::element::render(self, window, cx)
     }
 }

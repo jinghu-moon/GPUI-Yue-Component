@@ -756,12 +756,12 @@ impl MenuPanel {
                     canvas(
                         move |_, _, _| (),
                         move |bounds, _, window, _| {
-                            crate::checkbox::paint_mark(
+                            crate::icon::paint_mark(
                                 window,
                                 bounds,
-                                &crate::checkbox::CHECK_LINE,
+                                &crate::icon::CHECK_LINE,
                                 ink,
-                                f32::from(bounds.size.width) / crate::checkbox::MARK_BOX,
+                                f32::from(bounds.size.width) / crate::icon::MARK_BOX,
                                 2.0,
                                 gpui_kit::Hsla::from(rgba(theme, crate::theme::keys::ACCENT_TEXT)),
                             )

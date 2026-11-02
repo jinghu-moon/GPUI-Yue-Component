@@ -4,7 +4,7 @@
 
 提供独立 Checkbox 与多选组，表示可独立成立的选择；参考图覆盖单项、受控多选、组选项、全选/半选、禁用与只读示意。Checkbox 可同时选择多个项目，与 Radio 互斥选择的语义不同。
 
-`YueCheckbox` 与 `YueCheckboxGroup` 已按这份契约落地（`crates/yue-component/src/checkbox.rs`），勾号与短横按开关那条路子用 GPUI 矢量现画。下面每一节写的都是代码里实际发生的事；与设计稿草案不一致的地方集中在最后一节。
+`YueCheckbox` 与 `YueCheckboxGroup` 已按这份契约落地（`crates/yue-component/src/checkbox/mod.rs`），勾号与短横按开关那条路子用 GPUI 矢量现画。下面每一节写的都是代码里实际发生的事；与设计稿草案不一致的地方集中在最后一节。
 
 ## GPUI Kit 0.8.0 能力
 

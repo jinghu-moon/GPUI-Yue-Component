@@ -6,7 +6,7 @@
 
 Radio 用于少量、互斥且需要同时比较的选项。选项多、需要搜索或占用空间明显时，使用 Select/Combobox，不把 Radio 扩展成下拉菜单。
 
-`YueRadio` 与 `YueRadioGroup` 已按这份契约落地（`crates/yue-component/src/radio.rs`）。下面每一节写的都是代码里实际发生的事；与设计稿草案不一致的地方集中在最后一节。
+`YueRadio` 与 `YueRadioGroup` 已按这份契约落地（`crates/yue-component/src/radio/mod.rs`）。下面每一节写的都是代码里实际发生的事；与设计稿草案不一致的地方集中在最后一节。
 
 ## GPUI Kit 0.8.0 能力
 

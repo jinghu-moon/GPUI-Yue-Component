@@ -30,6 +30,10 @@ name = "input"
 required-features = ["headless-tests"]
 
 [[test]]
+name = "field"
+required-features = ["headless-tests"]
+
+[[test]]
 name = "radio"
 required-features = ["headless-tests"]
 
@@ -72,4 +76,8 @@ required-features = ["headless-tests"]
 
 [[test]]
 name = "collapse"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "image_preview"
 required-features = ["headless-tests"]

@@ -8,6 +8,7 @@ pub(crate) mod divider;
 pub(crate) mod dropdown;
 pub(crate) mod form;
 pub(crate) mod icon;
+pub(crate) mod image_preview;
 pub(crate) mod input;
 pub(crate) mod link;
 pub(crate) mod loading;

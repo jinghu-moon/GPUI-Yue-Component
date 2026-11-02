@@ -8,7 +8,7 @@
 
 参考资料：
 
-- [本地 HTML demo](../refer/GPUI%20Kit%20组件文档%20%281%29.html)：第 256 行起的 `.seg` 样式、第 653 行的示例和第 926 行起的交互脚本。
+- 用户提供的本地 HTML demo（原文件名 `GPUI Kit 组件文档 (1).html`，参考资料不随仓库分发）：第 256 行起的 `.seg` 样式、第 653 行的示例和第 926 行起的交互脚本。
 - [用户补充的截图](assets/segmented-reference.png)：中性圆角矩形、强调色胶囊、等宽/不等宽、单项禁用与当前值回显。
 - [现有 Radio 契约](05-radio.md)、[Button 与图标](02-button.md)、[token 同步与验证约定](08-integration-hardening.md)。
 
@@ -247,7 +247,7 @@ Accent 的白字不能在滑块还未到达时立刻画在浅色底轨上；也�
 5. 只发生窗口缩放、rem、字体、标签、分配方式、形状或选项顺序变化时，更新目标几何并立即对齐，不把重排误当一次用户切换。缓存失效必须包含 rem 与字体/标签/选项顺序和宽度约束。
 6. 纯粹滚动或移动窗口不会改变局部目标，滑块不追逐屏幕坐标。
 
-实现保留在单个 `segmented.rs` 内，通过标准 Radio、flex 与 canvas 完成，无额外公共 Element 或布局引擎。几何变化优先于选择动画，选择与 resize 同帧时使用新布局，不携带旧尺寸。
+实现位于 `segmented/`，公共 builder、element 和 behavior 按职责分离，通过标准 Radio、flex 与 canvas 完成，无额外公共 Element 或布局引擎。几何变化优先于选择动画，选择与 resize 同帧时使用新布局，不携带旧尺寸。
 
 初次 value 从无匹配变为有效、或已选项被删除：前者直接定位，后者移除滑块，均不从其他选项编造起点。整组禁用或选中项变为禁用时，停止选择动画并直接显示实际受控值的禁用填充。
 
@@ -341,7 +341,7 @@ Base 私有的 disabled 无障碍投影通过 Base Radio 获得，不虚构 Yue 
 3. 先做 Neutral 的内容测量、等宽/不等宽与单选交互，再验证指示器连续插值和动态布局。
 4. 完成 Accent 的反色绘制、Pill、图标、禁用与 focus，接入 Showcase；真实 Windows 验收作为待完成项明确记录。
 
-初期保持 `crates/yue-component/src/segmented.rs` 一个组件文件、`tests/segmented.rs` 一个 UI 集成测试入口；只有实现规模确实需要时才拆私有子模块。新增测试沿用 opt-in `headless-tests`，不改变当前依赖 feature 边界。
+当前组件位于 `crates/yue-component/src/segmented/`，按 [组件架构规范](24-component-architecture.md) 拆分为 `mod.rs`、`element.rs`、`behavior.rs` 与 `tests.rs`；公共 UI 集成测试仍使用 `tests/segmented.rs`。新增测试沿用 opt-in `headless-tests`，不改变当前依赖 feature 边界。
 
 ### 12.2 必须证明的行为
 
@@ -380,10 +380,10 @@ cargo clippy --workspace --locked --all-targets --features headless-tests -- -D 
 
 ### 13.1 落地文件
 
-- 组件：[segmented.rs](../crates/yue-component/src/segmented.rs)；根部与 prelude 导出在 [lib.rs](../crates/yue-component/src/lib.rs)。未新增第三方依赖，业务 value 由调用方持有。
+- 组件：[segmented.rs](../crates/yue-component/src/segmented/mod.rs)；根部与 prelude 导出在 [lib.rs](../crates/yue-component/src/lib.rs)。未新增第三方依赖，业务 value 由调用方持有。
 - UI 集成测试：[tests/segmented.rs](../crates/yue-component/tests/segmented.rs)，保持 opt-in `headless-tests`。5 项单元测试、12 项组件 UI 集成测试、1 项构造 doctest；Showcase 另增 1 项真实页面选择写回测试。
 - 示例：[pages/segmented.rs](../examples/windows-showcase/src/pages/segmented.rs)，侧栏“组件 → Segmented”，位于 Radio 与 Switch 之间。两个 Icon 页与现有折叠、滚动行为保持测试覆盖。
-- Button 原有私有 tooltip 绘制提取到 [tooltip.rs](../crates/yue-component/src/tooltip.rs)，供 Button 与纯图标 Segmented 共用；没有新增公共 Tooltip API。Button 的交互回归随 workspace 测试执行，tooltip 的实际弹出外观未做原生窗口验收。
+- Button 原有私有 tooltip 绘制提取到 [tooltip.rs](../crates/yue-component/src/tooltip/mod.rs)，供 Button 与纯图标 Segmented 共用；没有新增公共 Tooltip API。Button 的交互回归随 workspace 测试执行，tooltip 的实际弹出外观未做原生窗口验收。
 - 源 token：`Yue-Design-System/packages/tokens/src/component-tokens/segmented.css`，入口、README、精确名称词表和语法登记同步更新；`tests/token-segmented.test.mjs` 有 17 项测试。Vue/SFC/DOM/SSR、npm 出口和本地化资源未变，相关实现清单不适用于本次纯 token 维护。
 
 实现相较提案的一处调整是：使用有序 canvas 的**本帧 prepaint** 直接测量并采样过渡，省掉额外一帧刷新。Accent 双重绘制复用相同文本坐标及 SVG 字节；GPUI 内容掩码只有矩形，私有 `rounded_masks` 按实际设备像素扫描圆角端部，中间用一块矩形覆盖。无重复语义节点，不将绘制层变为另一套 Radio。

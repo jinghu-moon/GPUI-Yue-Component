@@ -1,11 +1,17 @@
 use super::*;
 use crate::{Accent, ThemeMode, YueDropdownMenu, YueInput, YueMenuItem, YueTooltip};
+use crate::{
+    YueButton,
+    theme::keys,
+    tokens::{duration, rgba, shadow},
+};
 use gpui_base::test_support::{ElementSnapshot, snapshots};
 use gpui_kit::base::Root;
 use gpui_kit::{
     AppContext as _, Context, Modifiers, MouseButton, MouseDownEvent, MouseUpEvent, Render,
     Subscription, TestAppContext, VisualTestContext, point, size,
 };
+use gpui_kit::{div, px};
 use std::time::Duration;
 
 fn theme() -> YueTheme {
@@ -819,3 +825,6 @@ fn dialog_tokens_cover_all_profiles_and_the_scrim_retains_alpha() {
         }
     }
 }
+
+use gpui_kit::base::TestSupportExt as _;
+use gpui_kit::{InteractiveElement as _, Styled as _};

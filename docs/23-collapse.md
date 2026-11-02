@@ -4,6 +4,8 @@
 
 依据用户提供的 [Collapse 参考图](assets/collapse-reference.png)、仓库中实际使用的 `gpui-base 0.8.0` 源码、gpui-kit Coding Guides / Design Guides，以及本文列出的官方交互资料编写。
 
+开合动效以用户补充的 `deepseek_html_20261102_a3d82d.html` 为准：高度连续变化、正文逐步裁切、双向 320ms、`cubic-bezier(.4, 0, .2, 1)`。只参考开合行为；标题继续遵守无 hover 背景的要求。
+
 关联：[Button](02-button.md)、[Checkbox](06-checkbox.md)、[Dropdown](07-dropdown.md)、[Tooltip](10-tooltip.md)、[Popup](12-popup.md)、[Divider](14-divider.md)、[Tabs](21-tabs.md)、[Loading feedback](22-loading-feedback.md)。
 
 ## 1. 定位与参考图取舍
@@ -56,9 +58,10 @@ Collapse 将同一页面的内容按标题分组，允许原地展开和收起�
 
 - [AccordionController](../vendor/gpui-base/src/accordion/controller.rs)：显式快照与只读请求、按 key 保留焦点身份、单开 / 多开投影、键盘标题导航与焦点修复。
 - `AccordionTrigger` 组合 Base Button，保留 standalone bool / ClickEvent 回调；`.in_group(...)` 显式选择组合同。Enter / Space 只使用 Button 的原生按键释放 click，不在 keydown 再提交一次；前置物理 keydown 用于区分 Keyboard 与 Accessibility 来源。
-- [MotionDisclosure](../vendor/gpui-base/src/motion/disclosure.rs)：按实际宽度在正常布局中测量不收缩的子项，以像素高度处理首次揭示、反转和动态高度；收起传入 `None`，仅保留几何背景壳。既有 MotionReveal / Collapsible 调用不变。
+- [MotionDisclosure](../vendor/gpui-base/src/motion/disclosure.rs)：按实际宽度在正常布局中测量不收缩的子项，以像素高度处理首次揭示、反转和动态高度；收起传入 `None`，用最近活动帧的纯绘制快照做正文裁切。既有 MotionReveal / Collapsible 调用不变。
+- [GPUI PaintSnapshot](../vendor/gpui-pre/src/window/paint_snapshot.rs)：同窗口的绘制指令采集 / 平移 / 裁切，不保留活动控件、输入、Tab、IME、原生节点或延迟浮层；图片持有解码源并经 atlas API 重绘。
 
-所有扩展位于仓库的 `vendor/gpui-base`，未修改 Cargo registry；沿用根级 patch。原生 Accessibility 的测试使用 GPUI 的合成 click seam，不等同于已验证真实 Narrator。
+扩展位于仓库的 `vendor/gpui-base` 与 `vendor/gpui-pre`，未修改 Cargo registry；根级 patch 和下游引用方均须包含这两个 crate。当前生产后端提供正文快照；Fast 后端仍为几何退出，不宣称与该参考效果一致。原生 Accessibility 的测试使用 GPUI 的合成 click seam，不等同于已验证真实 Narrator。
 
 ## 3. 分层与状态所有权
 
@@ -92,7 +95,7 @@ YueCollapse / Base Accordion（Group）
 │  │  │     └─ Title（纯文本，可换行）
 │  │  └─ Actions（可选，与 Trigger 为兄弟节点）
 │  ├─ ContentViewport
-│  │  └─ 活动 Panel + 宿主内容；或只用于退出布局的 ClosingShell
+│  │  └─ 活动 Panel + 宿主内容；或无活动子树的 FrozenPaintExit
 │  └─ ItemSeparator（需要时只绘制一次）
 └─ 后续 Item
 ```
@@ -213,8 +216,8 @@ Icon 模式下，Heading 内只放独立图标触发按钮，普通标题文本�
 | 场景 | 首版可见表现 |
 | --- | --- |
 | 首次挂载、宿主默认展开 | 直接处于正确高度和图标角度，不从零重播 |
-| 接受展开请求 | 自然内容从顶部纵向揭示；容器 0 → 自然高度，200ms；下方项目随文档流平稳下移 |
-| 接受收起请求 | 正文交互子树立即移除；仅保留原高度的背景壳，100ms 收拢到零；下方项目随文档流上移 |
+| 接受展开请求 | 自然内容从顶部纵向揭示；容器 0 → 自然高度，320ms；下方项目随文档流平稳下移 |
+| 接受收起请求 | 正文交互子树立即移除；冻结最近绘制画面，随容器高度 320ms 裁切到零；下方项目随文档流上移 |
 | 默认箭头 | ChevronRight 旋转 90° 指向下方，使用同一开合进度；不独立晚一拍 |
 | 自定义非方向图标 | 默认静止，不把 Star / Message 等任意图标旋转成另一种含义 |
 | 手风琴 A → B | 同一受控提交、同一时间基准启动 A 的收拢与 B 的展开，不串行等待，不额外做一次位置平移动画 |
@@ -223,13 +226,15 @@ Icon 模式下，Heading 内只放独立图标触发按钮，普通标题文本�
 | 宽度 / rem / 主题 / 尺寸改变 | 重新测量；几何失效时直接落位，不沿旧高度 / 旧字体做错误插值 |
 | None / 系统减少动效 | 高度和箭头直接到位；保持完全相同的输入、焦点与语义合同 |
 
-### 7.1 退出政策：先安全移除交互，再收拢空间
+### 7.1 退出政策：移除交互，保留画面做高度裁切
 
-首版明确区分“正文仍存在”和“正文原来占用的空间仍在变化”。关闭提交后，正文不再参与布局子树、输入分发、Tab、IME、action 和可访问树；ClosingShell 只保留测量高度、背景及必要边界，不保留旧按钮、文字或编辑器。
+关闭提交后，正文立即退出布局子树、输入分发、Tab、IME、action 和可访问树；保留的是最近活动帧的绘制指令，文字、图标、图形和图片可随裁切窗口逐渐消失。快照不包含活动按钮、编辑器 Entity、监听器、浮层或定时回调。
 
-因此首版关闭不是“整份旧正文继续向上裁切”：正文立即退出，剩余空间用短暂的 100ms 收拢。此取舍保证任意自定义内容的关闭安全，并保持下方布局连续。不能用 opacity=0、缩成 0 高、父级 disabled 或只挡鼠标声称正文已经 inert。
+冻结内容保持原字号和原自然高度，不缩放、不额外位移、不淡出；只有容器下边缘向上收拢。多个面板同时关闭时，每份快照按所属面板的新 origin 平移，保持文档流连续。当前 content mask 与记录的 mask 相交，避免越界覆盖标题或相邻内容。没有可见画面的项目保留几何收拢，不凭空制造内容。
 
-若后续确实要保留正文的退出画面，应先提供经过真实键盘 / 鼠标 / IME / 原生树验证的纯绘制快照或通用活动子树边界，再升级退出呈现；不为首版折叠面板引入一套通用截图缓存系统，也不把这个前置能力当作现有 GPUI API。
+开合统一使用 320ms 与 `cubic-bezier(.4, 0, .2, 1)`，遵循参考的加速 / 减速节奏。GPUI 采用实际像素高度插值，表达 HTML 的 `0fr ↔ 1fr` 与 `overflow: hidden` 效果，不照搬 CSS Grid API。自然高度量测与重定向使用 request_layout 捕获的同一帧时钟。标题行不显示 hover 背景；按压反馈与键盘焦点环保留。
+
+纯绘制快照由新增 GPUI 补丁提供，采集正常 paint 产生的指令，没有 GPU 回读或系统截图。图片保留解码源，即使原 image cache 清除 atlas 条目也能重建；缓存 View 的绘制复用会同步保留图片源元数据。结束、几何 / 宽度失效、None / reduced motion 或窗口隐藏 / 失活时释放退出快照。重开切回活动正文，从当前可见高度继续；关闭期间不再调用 content renderer。
 
 ### 7.2 自然高度与首帧
 
@@ -238,7 +243,7 @@ Icon 模式下，Heading 内只放独立图标触发按钮，普通标题文本�
 - 使用新增 MotionDisclosure，不改 MotionReveal 的未知高度兼容分支；动画中由正常布局中的不收缩子项提供自然高度，同一帧仍保持零可见高度后再揭示。
 - 动效高度以实际像素为采样值，不能在内容自然高度改变时仅把旧的 normalized progress 乘上新高度，导致跳动。
 - 动画中的正文若发生受控更新，重新量测并从当前可见高度接到新目标；几何身份变化按上表直接落位。
-- 稳定展开后恢复自然高度和普通裁切边界；关闭完成背景壳高度归零，不再绘制正文。空几何载体保留下一次开合的量测状态，没有交互 / 可访问子树。没有任务时不持续请求帧，不为每项创建循环 Task。
+- 稳定展开后恢复自然高度和普通裁切边界；关闭完成高度归零并释放冻结画面，不再绘制正文。空几何载体保留下一次开合的量测状态，没有交互 / 可访问子树。没有任务时不持续请求帧，不为每项创建循环 Task。
 - 视口外或窗口隐藏 / 失活时不为此动效保持连续帧；重新可见时采样当前时间，已结束的过渡直接处于终态。
 
 ## 8. 内容生命周期
@@ -353,12 +358,12 @@ YueCollapseItem::new("export", "导出设置")
 | `--collapse-content-padding-sm/md/lg` | 12 / 16 / 20px；Leading 图标文字对齐补偿由布局计算 |
 | `--collapse-radius` / `--collapse-border-width` | radius-md / border-1，单条边界 |
 | `--collapse-header-background` / `--collapse-content-background` | surface / surface-component；明暗主题保持文字对比 |
-| `--collapse-header-background-hover/pressed` | 引用已有中性 hover / pressed 状态语义，不硬编码透明黑 |
+| `--collapse-header-background-hover/pressed` | hover 为 transparent，标题悬停不变色；pressed 引用已有中性按压状态语义 |
 | `--collapse-color` / `--collapse-indicator-color` | text-primary / text-secondary |
 | `--collapse-border-color` / `--collapse-opacity-disabled` | border-default / 既有禁用透明度语义；仅作用于 Trigger 及对应的纯文本标题，不影响 Actions / 正文 |
 | `--collapse-focus-color` / `--collapse-focus-width` | 与现有 Button 相同的焦点语义 |
-| `--collapse-expand-duration` / `--collapse-collapse-duration` | motion-duration-enter / motion-duration-exit，当前 200 / 100ms |
-| `--collapse-ease` / `--collapse-interaction-duration` | motion-ease-stow / motion-duration-interaction，当前 standard / 100ms |
+| `--collapse-expand-duration` / `--collapse-collapse-duration` | 双向 320ms；按明确参考设定的组件策略，源 CSS 同时提供减少动效覆盖 |
+| `--collapse-ease` / `--collapse-interaction-duration` | cubic-bezier(.4, 0, .2, 1) / motion-duration-interaction（100ms） |
 
 长度通过 rem 读取，文字、图标、命中区与内边距同步变化。Icon 模式将命中区居中在同一最小行高内，并补偿焦点边框，使切换触发模式时标题文字前沿不跳动。禁用透明度实际引用 `opacity-disabled-content`，不虚构另一份 opacity token。边框使用既有策略；设备像素对齐误差与产品尺寸区分处理。
 
@@ -402,7 +407,7 @@ YueCollapseItem::new("export", "导出设置")
 | Base 原生 / 输入 | Button / Heading / Group / Region、level / expanded / disabled、Enter / Space、一次按键一次请求、Accessibility 激活 |
 | headless 指针 / 焦点 | 标题与箭头热区、Actions 不展开、仅图标触发、Tab 顺序、Up / Down / Home / End、嵌套键盘隔离、禁用跳过、焦点修复 |
 | 内容生命周期 | 未打开不调用 factory；关闭后按钮不能点击、编辑器不收键盘 / IME / action；宿主 Entity 的输入值可恢复；锚点浮层不悬空 |
-| 动效与几何 | 首次展开无完整首帧闪现、初始默认展开不重播、自然高度、反向衔接、手风琴同批响应、关闭背景壳没有活动子树、无固定 max-height 裁切 |
+| 动效与几何 | 首次展开无完整首帧闪现、初始默认展开不重播、自然高度、反向衔接、手风琴同批响应、关闭画面逐步裁切且没有活动子树、多项同时关闭时快照跟随所属行、无固定 max-height 裁切 |
 | 动态变更 | 删除 / 重排当前项、内容异步增高、宽度 / rem / 主题改变、快速开合期间宿主拒绝或删除项目、过期完成回调不复活内容 |
 | 主题 / 比例 | 明 / 暗、Neutral tone、三尺寸、rem 16 / 20 / 24、显示倍率 1 / 1.5 / 2；标题 / 操作不重叠，边界不叠线，圆角不漏背景 |
 | 动效停止 | None、reduce motion、稳定终态、完全裁切、隐藏 / 失活窗口，不保持无意义循环帧 |
@@ -412,18 +417,20 @@ YueCollapseItem::new("export", "导出设置")
 - Yue：[公开 API](../crates/yue-component/src/collapse/mod.rs)、[布局与外观](../crates/yue-component/src/collapse/element.rs)。
 - Base：[组模型与焦点](../vendor/gpui-base/src/accordion/controller.rs)、[专用自然高度动效](../vendor/gpui-base/src/motion/disclosure.rs)。
 - Showcase：[六组交互示例](../examples/windows-showcase/src/pages/collapse.rs)，包括控制开关、独立 Checkbox / Button / Dropdown、输入保留、嵌套与动态高度。
-- 新增 [Collapse headless 回归](../crates/yue-component/tests/collapse.rs)：25 项已通过，覆盖受控拒绝、单次请求、普通 Tab 入口、键盘隔离、焦点修复、关闭卸载、输入值、Popup 锚点、多行标题行高与文字前沿、首帧 / 中间高度 / 反转 / 动态高度、None / reduced motion、裁切 / 隐藏 / 失活停帧，以及 rem 16 / 20 / 24、显示倍率 1 / 1.5 / 2、三尺寸与明暗主题。
+- 新增 [Collapse headless 回归](../crates/yue-component/tests/collapse.rs)：29 项已通过，覆盖受控拒绝、单次请求、普通 Tab 入口、键盘隔离、焦点修复、关闭卸载、输入值、Popup 锚点、多行标题行高与文字前沿、首帧 / 中间高度 / 反转 / 动态高度、None / reduced motion、裁切 / 隐藏 / 失活停帧，以及 rem 16 / 20 / 24、显示倍率 1 / 1.5 / 2、三尺寸与明暗主题。实际绘制检查证明 hover 不增加背景，关闭后正文画面保留并逐步裁切、控件立即退出、多个快照按新 origin 平移；开合逐帧测试仅派发组件自行请求的帧，不强制 refresh。
+- GPUI [绘制快照专项](../vendor/gpui-pre/tests/paint_snapshot.rs)：2 项已通过，覆盖图形 / 路径 / Sprite 的坐标与 mask、图片 atlas 清除后的重建、真实 Cached View 的图片源继承，以及冻结画面不恢复鼠标监听；均覆盖 1 / 1.5 / 2 显示倍率。
 - Base Accordion 专项：4 项已通过，包括原生结构角色、expanded / disabled 和可同步重入提交的合成 Accessibility 请求。
 
 最终验证（2026-11-02）：
 
 | 检查 | 结果 |
 | --- | --- |
-| `cargo test --workspace --locked --features headless-tests` | 605 项通过，0 失败；含 Collapse 25 项、Showcase 导航和 doctest |
+| `cargo test --workspace --locked --features headless-tests` | 612 项通过，0 失败；含 Collapse 29 项、Showcase 导航和 doctest |
+| `tools/test-gpui-snapshot.ps1 -Offline` | 2 项通过，0 失败；独立于工作区计数 |
 | `tools/test-gpui-base.ps1 -Offline -Filter 'accordion::'` | 4 项通过，0 失败；独立于工作区计数 |
 | `cargo clippy --workspace --locked --all-targets --features headless-tests -- -D warnings` | 通过 |
 | 本次新增 / 修改实现文件的限定范围 `rustfmt --check` | 通过 |
 | `node tools/sync-yue-theme.mjs --check` 与显式 `--design-system ... --check` | 均通过，源 CSS / inventory / generated.rs 一致 |
-| 独立预览 `TEMP/collapse-preview/Cargo.toml`，`cargo build ... --target-dir target --offline` | 构建通过 |
+| 独立预览 `TEMP/collapse-reference-preview/Cargo.toml`，`cargo build ... --target-dir target --offline` | 构建通过 |
 
-预览文件：`target/debug/windows-showcase-collapse-preview.exe`，进入 **组件 → 折叠面板 Collapse**。只构建，未启动应用、截图或进行真实 UI 验收，也未终止既有预览进程。自动测试不代替用户的真实界面 / 读屏 / IME 检查。
+预览文件：`target/debug/windows-showcase-collapse-reference-preview.exe`，进入 **组件 → 折叠面板 Collapse**。只构建，未启动应用、截图或进行真实 UI 验收，也未终止既有预览进程。自动测试不代替用户的真实界面 / 读屏 / IME 检查。

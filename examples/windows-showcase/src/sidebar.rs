@@ -22,6 +22,11 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("dropdown-page", "下拉菜单 Dropdown", ShowcasePage::Dropdown),
     ("form-page", "表单 Form", ShowcasePage::Form),
     ("icon-page", "图标 Icon", ShowcasePage::Icon),
+    (
+        "image-preview-page",
+        "图片预览 ImagePreview",
+        ShowcasePage::ImagePreview,
+    ),
     ("input-page", "输入框 Input", ShowcasePage::Input),
     ("link-page", "链接 Link", ShowcasePage::Link),
     ("progress-page", "进度 Progress", ShowcasePage::Progress),

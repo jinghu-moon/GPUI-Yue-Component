@@ -69,7 +69,7 @@ Base 当前通过同一个 on_click 通道支持 Enter 与 Space；Yue 沿用此
 | `accessibility_label` / `accessibility_description` | 默认 name=label，可覆盖；不把外链图标充当名称 |
 | `width` / `min_width` / `max_width` / `margin` / `flex_grow` | 外部布局，默认内容宽；不添加 Button 的 padding 或背景 |
 
-源代码 `crates/yue-component/src/link.rs`，根和 prelude 导出 YueLink；选项类型在根显式导入。集成测试 `crates/yue-component/tests/link.rs`。实际 Showcase 页面 `examples/windows-showcase/src/pages/link.rs`，侧栏按英文升序排在 Input 与 Radio 之间；保留原有组件 / 设计分组与折叠。
+源代码 `crates/yue-component/src/link/mod.rs`，根和 prelude 导出 YueLink；选项类型在根显式导入。集成测试 `crates/yue-component/tests/link.rs`。实际 Showcase 页面 `examples/windows-showcase/src/pages/link.rs`，侧栏按英文升序排在 Input 与 Radio 之间；保留原有组件 / 设计分组与折叠。
 
 Base 0.8.0 原本 render 始终选用私有 keyed FocusHandle，普通 InteractiveElement::track_focus 会被它覆盖。本轮在 `vendor/gpui-base/src/link.rs` 增加显式 caller-focus builder，并让原生节点接入现有可选 test_support，和 Base Button 一致。没有复制 Base 的键盘、点击或 disabled 行为。Yue 默认焦点在组件身份下稳定保存，焦点环与该原生节点共用同一 handle。消费工作区仍需 README 中现有 `[patch.crates-io]` 配置。
 

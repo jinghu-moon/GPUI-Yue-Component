@@ -3,7 +3,7 @@ use gpui_base::test_support::{ElementSnapshot, snapshots};
 use gpui_kit::{
     AppContext as _, Bounds, Context, ElementId, Entity, FocusHandle, IntoElement, KeyDownEvent,
     KeyUpEvent, Keystroke, Modifiers, ParentElement as _, Pixels, Render, Role, SharedString,
-    Styled as _, TestAppContext, VisualTestContext, Window, div, px,
+    Styled as _, TestAppContext, VisualTestContext, Window, div, prelude::FluentBuilder as _, px,
 };
 use std::{cell::Cell, collections::HashSet, rc::Rc, time::Duration};
 use yue_component::{
@@ -44,6 +44,7 @@ struct Probe {
     after: FocusHandle,
     clipped: bool,
     long_title: bool,
+    paint_probe: bool,
 }
 impl Probe {
     fn new(w: &mut Window, cx: &mut Context<Self>) -> Self {
@@ -78,6 +79,7 @@ impl Probe {
             after: cx.focus_handle(),
             clipped: false,
             long_title: false,
+            paint_probe: false,
         }
     }
 }
@@ -97,6 +99,7 @@ impl Render for Probe {
                 let theme = self.theme;
                 let disabled = self.disabled_keys.contains(key);
                 let height = self.height;
+                let paint_probe = self.paint_probe;
                 let input = self.input.clone();
                 let with_input = self.with_input && key.as_ref() == "a";
                 let with_menu = self.with_menu && key.as_ref() == "a";
@@ -158,7 +161,12 @@ impl Render for Probe {
                         let mut body = div()
                             .flex()
                             .flex_col()
-                            .child(div().h(px(height)).child("自然高度内容"))
+                            .child(
+                                div()
+                                    .h(px(height))
+                                    .when(paint_probe, |d| d.bg(gpui_kit::rgb(0x2468ab)))
+                                    .child("自然高度内容"),
+                            )
                             .child(
                                 YueButton::new(("body-action", ix), format!("正文动作 {ix}"))
                                     .on_click(move |_, _, _| actions.set(actions.get() + 1)),
@@ -270,6 +278,98 @@ fn tick(cx: &mut VisualTestContext, ms: u64) {
         w.draw(cx).clear(cx);
     });
     draw(cx);
+}
+
+// Deliver only the frame the component itself requested. An unconditional
+// refresh here would conceal failures in the real window's frame scheduling.
+fn scheduled_frame(cx: &mut VisualTestContext, ms: u64) -> usize {
+    cx.executor().advance_clock(Duration::from_millis(ms));
+    let callbacks = cx.update(|w, cx| w.simulate_next_frame(cx));
+    cx.run_until_parked();
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    cx.run_until_parked();
+    callbacks
+}
+
+#[gpui_kit::test]
+fn hovering_headers_does_not_paint_a_background(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    for mode in [ThemeMode::Light, ThemeMode::Dark] {
+        for trigger in [CollapseExpandTrigger::Header, CollapseExpandTrigger::Icon] {
+            v.update(cx, |v, cx| {
+                v.theme = YueTheme::new(mode, Accent::Azure);
+                v.trigger = trigger;
+                cx.notify();
+            });
+            cx.simulate_mouse_move(gpui_kit::point(px(1.), px(1.)), None, Modifiers::default());
+            draw(cx);
+            tick(cx, 300);
+            let bounds = node(cx, "标题 a").bounds();
+            let surfaces = |cx: &mut VisualTestContext| {
+                cx.update(|w, _| {
+                    let bounds = bounds.scale(w.scale_factor());
+                    w.painted_quads()
+                        .into_iter()
+                        .filter_map(|q| {
+                            q.background
+                                .as_solid()
+                                .filter(|c| c.a > 0.)
+                                .and_then(|c| q.bounds.intersects(&bounds).then_some((q.bounds, c)))
+                        })
+                        .collect::<Vec<_>>()
+                })
+            };
+            let before = surfaces(cx);
+            cx.simulate_mouse_move(bounds.center(), None, Modifiers::default());
+            draw(cx);
+            tick(cx, 300);
+            assert_eq!(surfaces(cx), before, "Hover must not add a header wash");
+            assert!(v.read_with(cx, |v, _| v.requests.is_empty()));
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn disclosure_runs_both_directions_using_only_its_requested_frames(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    let full = part(cx, "a", "body").size.height;
+    v.update(cx, |v, cx| {
+        v.expanded.clear();
+        cx.notify();
+    });
+    cx.run_until_parked();
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let mut previous = full;
+    for _ in 0..18 {
+        assert!(scheduled_frame(cx, 16) > 0);
+        let current = part(cx, "a", "body").size.height;
+        assert!(
+            current < previous,
+            "Close must advance each frame: {previous:?} -> {current:?}"
+        );
+        previous = current;
+    }
+    scheduled_frame(cx, 60);
+    assert_eq!(part(cx, "a", "body").size.height, px(0.));
+    v.update(cx, |v, cx| {
+        v.expanded = vec!["a".into()];
+        cx.notify();
+    });
+    cx.run_until_parked();
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert_eq!(part(cx, "a", "body").size.height, px(0.));
+    previous = px(0.);
+    for _ in 0..18 {
+        assert!(scheduled_frame(cx, 16) > 0);
+        let current = part(cx, "a", "body").size.height;
+        assert!(
+            current > previous,
+            "Open must advance each frame: {previous:?} -> {current:?}"
+        );
+        previous = current;
+    }
+    scheduled_frame(cx, 60);
+    assert_eq!(part(cx, "a", "body").size.height, full);
 }
 fn open(cx: &mut TestAppContext) -> (Entity<Probe>, &mut VisualTestContext) {
     cx.update(|cx| {
@@ -509,7 +609,7 @@ fn icon_trigger_and_actions_have_disjoint_hit_regions(cx: &mut TestAppContext) {
 }
 
 #[gpui_kit::test]
-fn close_detaches_content_immediately_and_pixel_shell_has_intermediate_height(
+fn close_detaches_content_immediately_and_frozen_frame_has_intermediate_height(
     cx: &mut TestAppContext,
 ) {
     let (v, cx) = open(cx);
@@ -522,22 +622,114 @@ fn close_detaches_content_immediately_and_pixel_shell_has_intermediate_height(
     let middle = part(cx, "a", "body").size.height;
     assert_eq!(v.read_with(cx, |v, _| v.builds[0].get()), built);
     assert!(middle > px(0.) && middle < full, "{middle:?} / {full:?}");
-    tick(cx, 90);
+    tick(cx, 300);
     assert_eq!(part(cx, "a", "body").size.height, px(0.));
     click(cx, "标题 a");
     assert_eq!(part(cx, "a", "body").size.height, px(0.));
     tick(cx, 70);
     let middle = part(cx, "a", "body").size.height;
     assert!(middle > px(0.) && middle < full);
-    tick(cx, 180);
+    tick(cx, 300);
     assert_eq!(part(cx, "a", "body").size.height, full);
+}
+
+fn painted_body_markers(cx: &mut VisualTestContext) -> Vec<gpui_kit::Quad> {
+    cx.update(|w, _| {
+        let color = gpui_kit::Hsla::from(gpui_kit::rgb(0x2468ab));
+        let mut markers = w
+            .painted_quads()
+            .into_iter()
+            .filter(|quad| quad.background.as_solid() == Some(color))
+            .collect::<Vec<_>>();
+        markers.sort_by(|a, b| a.bounds.origin.y.partial_cmp(&b.bounds.origin.y).unwrap());
+        markers
+    })
+}
+
+#[gpui_kit::test]
+fn closing_clips_frozen_content_until_zero_without_keeping_its_controls(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |v, cx| {
+        v.paint_probe = true;
+        cx.notify();
+    });
+    draw(cx);
+    let original = painted_body_markers(cx).remove(0);
+    let old_button = node(cx, "正文动作 0").bounds().center();
+    let actions = v.read_with(cx, |v, _| v.actions.get());
+    click(cx, "标题 a");
+    let built = v.read_with(cx, |v, _| v.builds[0].get());
+    assert!(absent(cx, "正文动作 0"));
+    assert_eq!(painted_body_markers(cx)[0].bounds, original.bounds);
+    cx.simulate_click(old_button, Modifiers::default());
+    draw(cx);
+    assert_eq!(v.read_with(cx, |v, _| v.actions.get()), actions);
+    tick(cx, 100);
+    let first = painted_body_markers(cx).remove(0);
+    let visible = first.bounds.intersect(&first.content_mask.bounds);
+    assert_eq!(
+        first.bounds, original.bounds,
+        "Frozen content must not scale its text or shapes"
+    );
+    assert!(visible.size.height > px(0.).scale(1.));
+    assert!(visible.size.height < original.bounds.size.height);
+    tick(cx, 100);
+    let second = painted_body_markers(cx).remove(0);
+    assert!(
+        second
+            .bounds
+            .intersect(&second.content_mask.bounds)
+            .size
+            .height
+            < visible.size.height
+    );
+    assert_eq!(v.read_with(cx, |v, _| v.builds[0].get()), built);
+    tick(cx, 140);
+    assert!(painted_body_markers(cx).is_empty());
+    assert_eq!(part(cx, "a", "body").size.height, px(0.));
+}
+
+#[gpui_kit::test]
+fn simultaneous_closing_translates_each_frozen_frame_with_its_own_panel(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |v, cx| {
+        v.paint_probe = true;
+        v.expanded = vec!["a".into(), "b".into()];
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 350);
+    let original = painted_body_markers(cx);
+    assert_eq!(original.len(), 2);
+    v.update(cx, |v, cx| {
+        v.expanded.clear();
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 100);
+    let closing = painted_body_markers(cx);
+    assert_eq!(closing.len(), 2);
+    assert_eq!(closing[0].bounds.origin, original[0].bounds.origin);
+    assert!(closing[1].bounds.origin.y < original[1].bounds.origin.y);
+    let panel_b = part(cx, "b", "body");
+    cx.update(|w, _| {
+        assert_eq!(
+            closing[1].bounds.origin,
+            panel_b.origin.scale(w.scale_factor())
+        )
+    });
+    assert!(absent(cx, "正文动作 0") && absent(cx, "正文动作 1"));
+    tick(cx, 250);
+    assert!(painted_body_markers(cx).is_empty());
 }
 
 #[gpui_kit::test]
 fn rapid_reversal_starts_at_current_pixels_and_dynamic_height_retargets(cx: &mut TestAppContext) {
     let (v, cx) = open(cx);
     click(cx, "标题 a");
-    tick(cx, 35);
+    // Reverse after meaningful travel so the shortened return still has an
+    // intermediate frame before the dynamic-height retarget below.
+    tick(cx, 110);
     let close_height = part(cx, "a", "body").size.height;
     click(cx, "标题 a");
     assert!((part(cx, "a", "body").size.height - close_height).abs() < px(1.));
@@ -550,7 +742,7 @@ fn rapid_reversal_starts_at_current_pixels_and_dynamic_height_retargets(cx: &mut
     });
     draw(cx);
     assert!((part(cx, "a", "body").size.height - enter_height).abs() < px(1.));
-    tick(cx, 250);
+    tick(cx, 350);
     let full = part(cx, "a", "body").size.height;
     assert!(full > px(200.));
     v.update(cx, |v, cx| {
@@ -858,7 +1050,7 @@ fn settled_and_clipped_disclosures_do_not_schedule_continuous_frames(cx: &mut Te
         cx.notify();
     });
     draw(cx);
-    tick(cx, 200);
+    tick(cx, 350);
     cx.update(|w, cx| {
         w.simulate_next_frame(cx);
         w.draw(cx).clear(cx);

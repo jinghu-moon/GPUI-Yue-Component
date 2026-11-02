@@ -120,6 +120,7 @@ Popup： ┌──────────────────────�
 
 - 三尺寸单行最低高度直接使用 `--input-height-sm/md/lg`，当前分别为 **28 / 32 / 40px**；字体、前后内边距、图标尺寸、边框与焦点环沿用 Input token。
 - 文本左对齐、垂直居中；选中项、占位符使用相同基线。图标、Tag 关闭区、清空区、箭头区均不收缩，只有文本区域允许省略。
+- 选择框与弹层显式采用左对齐。纯文本选项从行内边距开始，不为不存在的图标留空列；当前结果集含图标时才为所有普通选项保留统一图标列，选中标记始终位于右侧。普通列表和虚拟列表遵循同一规则。
 - 采用正常 flex 槽位分配宽度，文字 `min_w_0`；禁止绝对定位清空图标覆盖长文本，禁止修改高度来模拟按压动画。
 - 多选 Tag 按尺寸对应 Small / Medium / Large。当前 Tag 高度 20 / 24 / 30px；分别与字段的 28 / 32 / 40px 检查边框、上下余量。装不下时调整 Select 容器内距或最低高度，不缩放文字。
 - Collapse 保持单行；Wrap 可增高，箭头区固定于第一行垂直中心，Tag 区独立换行。宽度或 Tag 行数改变后当帧更新 Anchor，而不是留下旧的 Popup 位置。
@@ -373,8 +374,8 @@ Base 继续承载通用行为和语义；不得在这些补丁里加入 Yue toke
 
 - 继承调用环境的 parent 和 modal scope，Dialog 内的 Select 不越出模态层；嵌套 Select 的子面板不会被父层当外部点击。
 - 使用现有 Positioner 同帧 Anchor 与碰撞翻转；位置最终结果可能在上方，进出方向按实际结果调整，不能只看请求方向。
-- 通过现有 `PopupHost::available_size(...)` 约束自然排版，再结合候选侧实际可用高度设置 listbox 视口；保留 shadow / margin 空间。不能只按整个窗口高度排版后任其遮挡 trigger。
-- MatchTrigger 默认按字段可见宽度；Content 是至少 trigger 宽度的受限自然宽；Fixed 是显式面板宽。都 clamp 到视口，长行省略，实际截断才显示帮助。
+- 通过现有 `PopupHost::available_size(...)` 约束自然排版，再结合候选侧实际可用高度设置 listbox 视口；保留面板表面和 margin。Select 的扩散阴影允许在窗口边缘裁切，不把阴影视为需要完整避让的内容，否则靠右的正常字段会被阴影预算推离锚点。不能只按整个窗口高度排版后任其遮挡 trigger。
+- MatchTrigger 默认按字段完整 border box 测量宽度与锚点，不使用扣掉边框的内部 content box；Content 是至少 trigger 宽度的受限自然宽；Fixed 是显式面板宽。都 clamp 到视口，长行省略，实际截断才显示帮助。
 - Content / 虚拟列表不逐帧测量全部候选。允许初次用文本测量与已知槽位计算自然宽度并按模型、字体、主题修订失效；不得只测第一个虚拟行就把长行截成“自然宽”。
 - Panel 的 max height 是整体可用高度减去 query、header、footer、内距后的列表高度，列表单独滚动；滚动条位于列表边缘，不吞没选中标记。
 - 复用 Presence / motion 和 pointer policy。注册只在正确生命周期有效；关闭后移除 hitbox 与活动节点，视觉退出可继续。快速重开采样当前值，不重复叠加残影。
@@ -615,7 +616,7 @@ Base 补丁涉及 Input / Combobox，已追加对应模块回归。生成 token 
 - [Base Select 源码](../vendor/gpui-base/src/select.rs)、[Combobox](../vendor/gpui-base/src/combobox.rs)：0.8.0 当前真实的键盘、焦点、语义与回调。
 - [Base 虚拟列表](../vendor/gpui-base/src/virtual_list.rs)、[Input state](../vendor/gpui-base/src/input/base/state.rs)：虚拟行尺寸、滚动入口、InputEvent 和 EntityInputHandler 实现。
 - [Popup Host](../crates/yue-component/src/popup/host.rs)、[Runtime](../crates/yue-component/src/popup/runtime.rs)、[12 号文档](12-popup.md)：定位、Presence、父子关系、关闭原因和作用域。
-- [YueTag](../crates/yue-component/src/tag.rs)、[Tag 绘制](../crates/yue-component/src/tag/element.rs)、[YueForm](../crates/yue-component/src/form.rs)、[YueInput / YueField](../crates/yue-component/src/input.rs)：复用点与需要扩展的类型边界。
+- [YueTag](../crates/yue-component/src/tag/mod.rs)、[Tag 绘制](../crates/yue-component/src/tag/element.rs)、[YueForm](../crates/yue-component/src/form/mod.rs)、[YueInput](../crates/yue-component/src/input/mod.rs)、[YueField](../crates/yue-component/src/field/mod.rs)：复用点与需要扩展的类型边界。
 - [token 快照](../crates/yue-component/tokens/inventory.json)、[同步工具](../tools/sync-yue-theme.mjs)：当前已解析参数与生成流程；最终变量定义以外部设计系统源包为准。
 - [Element Plus Select 官方文档](https://element-plus.org/zh-CN/component/select.html)：辅助对照搜索、多选、创建与远程等场景，不作为本仓库 Rust API 的证据。
 
@@ -656,7 +657,7 @@ YueSelect::new("language", &language)
 
 ### 19.2 具体机制修补
 
-- Base Select / Combobox 的 on_open_change 回调现在返回实际 open bool。拒绝打开时不聚焦隐藏 content；打开态确认不在回调关闭后夺回焦点；首次方向键开启后被消费。
+- Base Select / Combobox 的 on_open_request 回调返回实际 open bool；on_open_change 保留上游的无返回值通知合同，以便宿主同时使用 Kit styled 组件。拒绝打开时不聚焦隐藏 content；打开态确认不在回调关闭后夺回焦点；首次方向键开启后被消费。
 - Base Select 增加 readonly、required / invalid、description、tab policy，并复用同一原生节点适配。完整变更见 vendor/gpui-base/YUE-PATCH.md。
 - Base Input unmark_text 结束组合时补 notify；Select 观察真实 InputState，在预编辑时失效旧票据、保持候选，在提交或取消边界再处理 query。查询区键绑定使用 `YueSelectQuery > Input` 的祖先关系，保留一般 Input 的 Tab 缩进规则。
 - Content 宽度和虚拟行几何按模型/字形/行高/宽度缓存；hover 不重测一万条文本。PageUp/Down 使用实际列表视口行数。卸载字段会结束会话，即使宿主仍持有 state，迟到回写也失效。

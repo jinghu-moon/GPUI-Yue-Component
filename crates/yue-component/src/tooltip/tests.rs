@@ -121,6 +121,130 @@ fn change(view: &Entity<Demo>, cx: &mut VisualTestContext, edit: impl FnOnce(&mu
     draw(cx);
 }
 
+struct TextProbe {
+    config: Config,
+    measured: Option<surface::Measure>,
+}
+impl Render for TextProbe {
+    fn render(&mut self, w: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        // Measuring and laying out in different inherited styles reproduces
+        // a tooltip moving from a button's context into the overlay host.
+        let measured = w.with_text_style(
+            Some(gpui_kit::TextStyleRefinement {
+                font_family: Some(crate::typography::mono_font(self.config.theme).family),
+                font_weight: Some(gpui_kit::FontWeight::BOLD),
+                font_style: Some(gpui_kit::FontStyle::Italic),
+                font_features: Some(crate::tabular_nums()),
+                ..Default::default()
+            }),
+            |w| surface::measure(&self.config, w),
+        );
+        self.measured = Some(measured);
+        let text = surface::content(&self.config, measured, true, 1., None, w);
+        let family = crate::typography::ui_font(self.config.theme);
+        div().font_family(family.family).child(text)
+    }
+}
+
+#[gpui_kit::test]
+fn short_tooltip_text_and_wrapped_text_match_the_measured_surface(cx: &mut TestAppContext) {
+    let theme = YueTheme::new(crate::ThemeMode::Light, crate::Accent::Azure);
+    cx.update(|cx| {
+        gpui_kit::init(cx);
+        crate::load_fonts(cx).unwrap();
+    });
+    let mut saved = None;
+    let (_, cx) = cx.add_window_view(|w, cx| {
+        let view = cx.new(|_| TextProbe {
+            config: Config::new("缩小（−）".into(), theme, TooltipOptions::default()),
+            measured: None,
+        });
+        saved = Some(view.clone());
+        Root::new(view, w, cx)
+    });
+    let view = saved.unwrap();
+    for scale in [1., 1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        for rem in [16., 20., 24.] {
+            cx.update(|w, _| w.set_rem_size(px(rem)));
+            for text in [
+                "缩小（−）".to_owned(),
+                "放大（+）".to_owned(),
+                "适应窗口（0）".to_owned(),
+                "100%：一个图像像素对应一个屏幕物理像素（1）".to_owned(),
+                "较长的提示文字应该在最大宽度内自然换行，而不是因为字体测量不一致多出一行。"
+                    .repeat(3),
+                "第一行\n第二行".to_owned(),
+            ] {
+                view.update(cx, |v, cx| {
+                    v.config.text = text.clone().into();
+                    cx.notify();
+                });
+                draw(cx);
+                let measured = view.read_with(cx, |v, _| v.measured.unwrap());
+                let text_bounds = cx.update(|w, _| {
+                    snapshots(w)
+                        .into_iter()
+                        .find(|n| n.path().last() == Some(&"yue-tooltip-text".into()))
+                        .expect("real text layout")
+                        .bounds()
+                });
+                let padding = cx.update(|w, _| {
+                    surface::length(theme, crate::theme::keys::BOX_PADDING_BLOCK_TOOLTIP, w)
+                });
+                assert!(
+                    (text_bounds.size.height - (measured.size.height - padding * 2.)).abs()
+                        <= px(1. / scale),
+                    "{text}, scale={scale}, rem={rem}: actual={text_bounds:?}, measured={:?}",
+                    measured.size,
+                );
+                if text.chars().count() < 12 && !text.contains('\n') {
+                    assert!(
+                        measured.single_line,
+                        "short label must stay on one line: {text}"
+                    );
+                    cx.update(|w, _| {
+                        let family = crate::typography::ui_font(theme);
+                        let mut font = gpui_kit::font(family.family.clone());
+                        font.fallbacks = family.font_fallbacks();
+                        let lines = w
+                            .text_system()
+                            .shape_text(
+                                text.clone().into(),
+                                surface::length(
+                                    theme,
+                                    crate::theme::keys::BOX_FONT_SIZE_TOOLTIP,
+                                    w,
+                                ),
+                                &[gpui_kit::TextRun {
+                                    len: text.len(),
+                                    font,
+                                    ..Default::default()
+                                }],
+                                None,
+                                None,
+                            )
+                            .unwrap();
+                        assert!(
+                            lines
+                                .iter()
+                                .all(|line| line.size(measured.line_height).width
+                                    <= text_bounds.size.width),
+                            "nowrap must not conceal an undersized content area: {text}"
+                        );
+                    });
+                }
+                // Width must be independent of the trigger's inherited face.
+                let neutral = cx.update(|w, cx| surface::measure(&view.read(cx).config, w));
+                assert_eq!(
+                    measured.size, neutral.size,
+                    "inherited font changed measurement: {text}"
+                );
+            }
+        }
+    }
+}
+
 #[gpui_kit::test]
 fn hover_waits_300ms_and_leaving_waits_for_grace(cx: &mut TestAppContext) {
     let (_, cx) = open(cx);

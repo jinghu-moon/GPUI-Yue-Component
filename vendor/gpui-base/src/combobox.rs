@@ -27,7 +27,7 @@ pub(crate) fn init(cx: &mut App) {
     ]);
 }
 
-type OpenChangeHandler = Rc<dyn Fn(bool, &mut Window, &mut App) -> bool>;
+type OpenRequestHandler = Rc<dyn Fn(bool, &mut Window, &mut App) -> bool>;
 type ActionHandler = Rc<dyn Fn(&mut Window, &mut App)>;
 
 /// An unstyled controlled combobox root.
@@ -43,7 +43,7 @@ pub struct Combobox {
     content_focus_handle: Option<FocusHandle>,
     style: StyleRefinement,
     children: Vec<AnyElement>,
-    on_open_change: Option<OpenChangeHandler>,
+    on_open_request: Option<OpenRequestHandler>,
     on_confirm: Option<ActionHandler>,
     on_dismiss: Option<ActionHandler>,
 }
@@ -58,7 +58,7 @@ impl Combobox {
             content_focus_handle: None,
             style: StyleRefinement::default(),
             children: Vec::new(),
-            on_open_change: None,
+            on_open_request: None,
             on_confirm: None,
             on_dismiss: None,
         }
@@ -84,13 +84,22 @@ impl Combobox {
         self
     }
 
+    /// Notifies the owner of an open-state change. The owner accepts the requested state.
+    /// Use `on_open_request` when opening or dismissal can be rejected.
+    pub fn on_open_change(self, handler: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self {
+        self.on_open_request(move |open, window, cx| {
+            handler(open, window, cx);
+            open
+        })
+    }
+
     /// Requests a controlled state update and returns the resulting open state.
     /// Return false to reject opening without moving focus to hidden content.
-    pub fn on_open_change(
+    pub fn on_open_request(
         mut self,
         handler: impl Fn(bool, &mut Window, &mut App) -> bool + 'static,
     ) -> Self {
-        self.on_open_change = Some(Rc::new(handler));
+        self.on_open_request = Some(Rc::new(handler));
         self
     }
 
@@ -133,8 +142,8 @@ impl RenderOnce for Combobox {
             .when_some(self.content_focus_handle, |this, handle| {
                 this.content_focus_handle(&handle)
             })
-            .when_some(self.on_open_change, |this, handler| {
-                this.on_open_change(move |open, window, cx| handler(open, window, cx))
+            .when_some(self.on_open_request, |this, handler| {
+                this.on_open_request(move |open, window, cx| handler(open, window, cx))
             })
             .when_some(self.on_confirm, |this, handler| {
                 this.on_confirm(move |window, cx| handler(window, cx))
@@ -193,7 +202,7 @@ mod tests {
                 .content_focus_handle(&self.content_focus)
                 .on_confirm(move |_, _| confirm_events.lock().unwrap().push("confirm"))
                 .on_dismiss(move |_, _| dismiss_events.lock().unwrap().push("dismiss"))
-                .on_open_change(move |open, _, cx| {
+                .on_open_request(move |open, _, cx| {
                     open_events.lock().unwrap().push("close");
                     state.update(cx, |state, cx| {
                         state.open = open;

@@ -4,14 +4,17 @@ use gpui::{
     GlobalElementId, InspectorElementId, IntoElement, LayoutId, ParentElement as _, Pixels, Style,
     Styled as _, Window, div, px, relative,
 };
+#[cfg(not(feature = "gpui-fast"))]
+use std::rc::Rc;
 use std::time::Duration;
 
 /// A measured disclosure with immediate descendant detachment on close.
 ///
 /// Unlike `MotionReveal`, this element owns its pixel timeline: it lays the
 /// child's natural height out in the same layout pass, starts a newly opened
-/// panel at zero, and retains only geometry for its closing shell. Pass `None`
-/// for a closed child; no old content is retained for paint, input or a11y.
+/// panel at zero, and retains frozen paint commands for its closing frame. Pass
+/// `None` for a closed child; no live descendants remain for input or a11y.
+/// The Fast backend currently retains geometry only, without a paint snapshot.
 pub struct MotionDisclosure {
     id: ElementId,
     open: bool,
@@ -36,6 +39,8 @@ struct DisclosureState {
     opening: bool,
     reversing_factor: f32,
     policy: Transition,
+    #[cfg(not(feature = "gpui-fast"))]
+    snapshot: Option<Rc<gpui::PaintSnapshot>>,
 }
 impl DisclosureState {
     fn sample(&mut self, now: Instant) {
@@ -119,7 +124,7 @@ impl IntoElement for MotionDisclosure {
     }
 }
 impl Element for MotionDisclosure {
-    type RequestLayoutState = Option<LayoutId>;
+    type RequestLayoutState = (Option<LayoutId>, Instant);
     type PrepaintState = bool;
     fn id(&self) -> Option<ElementId> {
         Some(self.id.clone())
@@ -158,12 +163,18 @@ impl Element for MotionDisclosure {
                     opening: false,
                     reversing_factor: 1.,
                     policy: policy.clone(),
+                    #[cfg(not(feature = "gpui-fast"))]
+                    snapshot: None,
                 });
                 state.sample(now);
                 if state.geometry != self.geometry || immediate || policy.duration.is_zero() {
                     state.active = false;
                     state.settle = true;
                     state.geometry = self.geometry.clone();
+                    #[cfg(not(feature = "gpui-fast"))]
+                    {
+                        state.snapshot = None;
+                    }
                 }
                 if state.open != self.open {
                     state.open = self.open;
@@ -198,7 +209,7 @@ impl Element for MotionDisclosure {
         if let Some(height) = height {
             style.size.height = height.into();
         }
-        (window.request_layout(style, child, cx), child)
+        (window.request_layout(style, child, cx), (child, now))
     }
     fn prepaint(
         &mut self,
@@ -209,8 +220,11 @@ impl Element for MotionDisclosure {
         window: &mut Window,
         cx: &mut App,
     ) -> bool {
-        let natural = layout.map(|id| window.layout_bounds(id).size.height);
-        let now = cx.background_executor().now();
+        let natural = layout.0.map(|id| window.layout_bounds(id).size.height);
+        // Sampling and natural-height retargeting belong to one frame clock.
+        // Measuring a costly subtree must not restart the transition later in
+        // prepaint, or advance its starting value beyond the pixels laid out.
+        let now = layout.1;
         let visible = window.content_mask().bounds.intersects(&Bounds::new(
             bounds.origin,
             gpui::size(bounds.size.width, bounds.size.height.max(px(1.))),
@@ -227,6 +241,10 @@ impl Element for MotionDisclosure {
                 if width_changed || !enabled {
                     state.active = false;
                     state.settle = true;
+                    #[cfg(not(feature = "gpui-fast"))]
+                    {
+                        state.snapshot = None;
+                    }
                 }
                 if let Some(height) = natural {
                     if state.settle || (!state.active && state.open && !state.opening) {
@@ -246,6 +264,10 @@ impl Element for MotionDisclosure {
                 }
                 let relayout =
                     !state.active && (bounds.size.height - state.current).abs() > px(0.5);
+                #[cfg(not(feature = "gpui-fast"))]
+                if !state.open && !state.active {
+                    state.snapshot = None;
+                }
                 ((state.active && enabled && visible, relayout), state)
             },
         );
@@ -266,7 +288,7 @@ impl Element for MotionDisclosure {
     }
     fn paint(
         &mut self,
-        _: Option<&GlobalElementId>,
+        global_id: Option<&GlobalElementId>,
         _: Option<&InspectorElementId>,
         bounds: Bounds<Pixels>,
         _: &mut Self::RequestLayoutState,
@@ -274,13 +296,49 @@ impl Element for MotionDisclosure {
         window: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "gpui-fast")]
+        let _ = global_id;
         if let Some(child) = self.child.as_mut() {
-            if *clip {
-                window.with_content_mask(Some(ContentMask { bounds }), |window| {
-                    child.paint(window, cx)
-                });
-            } else {
-                child.paint(window, cx);
+            let paint = |window: &mut Window| {
+                if *clip {
+                    window.with_content_mask(Some(ContentMask { bounds }), |window| {
+                        child.paint(window, cx)
+                    });
+                } else {
+                    child.paint(window, cx);
+                }
+            };
+            #[cfg(not(feature = "gpui-fast"))]
+            if !self.exit.duration.is_zero() {
+                let (_, snapshot) = window.capture_paint(bounds.origin, paint);
+                window.with_element_state(
+                    global_id.expect("Disclosure requires an id"),
+                    |state: Option<DisclosureState>, _| {
+                        let mut state = state.expect("Disclosure prepaint must precede paint");
+                        state.snapshot = Some(Rc::new(snapshot));
+                        ((), state)
+                    },
+                );
+                return;
+            }
+            let mut paint = paint;
+            paint(window);
+        } else {
+            #[cfg(not(feature = "gpui-fast"))]
+            {
+                let snapshot = window.with_element_state(
+                    global_id.expect("Disclosure requires an id"),
+                    |state: Option<DisclosureState>, _| {
+                        let state = state.expect("Disclosure prepaint must precede paint");
+                        let snapshot = state.snapshot.clone();
+                        (snapshot, state)
+                    },
+                );
+                if let Some(snapshot) = snapshot {
+                    window.with_content_mask(Some(ContentMask { bounds }), |window| {
+                        window.paint_snapshot(&snapshot, bounds.origin);
+                    });
+                }
             }
         }
     }

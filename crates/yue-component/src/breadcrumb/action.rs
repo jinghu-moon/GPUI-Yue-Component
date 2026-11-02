@@ -149,3 +149,17 @@ impl RenderOnce for TextAction {
         action.into_any_element()
     }
 }
+
+pub(super) fn decoration_element(
+    decoration: Decoration,
+    theme: YueTheme,
+    color: gpui_kit::Rgba,
+) -> AnyElement {
+    match decoration {
+        Decoration::Text(text) => div().child(text).into_any_element(),
+        Decoration::Icon(icon) => icon
+            .size(rems(theme, keys::BREADCRUMB_ICON_SIZE))
+            .color_value(color)
+            .into_any_element(),
+    }
+}

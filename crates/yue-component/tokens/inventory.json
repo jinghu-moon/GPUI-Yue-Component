@@ -5,11 +5,11 @@
     "version": "0.1.0",
     "revision": "7a154f98aa63def6482ab105ce4ea757f77e1ea7",
     "dirty": true,
-    "contentSha256": "82c1c8ef03809fca227e85b70ac3d65b0070dee60be2feffb7a58a1ce91c0ef3",
+    "contentSha256": "82594a0fdafa2b41d90d7076837b2c4029a70eb09f9d07058c943c39a771ace6",
     "files": [
       [
         "packages/tokens/README.md",
-        "51f53f3e598b72bb5eca56bcf477b9cead3d64ab5bfb931bb5ff4661bab77af9"
+        "af7e0c65886c60bef178b2657599e1d54cb8d7d59635ec48056ef94eb024e0f6"
       ],
       [
         "packages/tokens/assets/FiraCode-Regular.woff2",
@@ -41,7 +41,7 @@
       ],
       [
         "packages/tokens/src/component-tokens/_index.css",
-        "4c10a21c8eacbbd6d7461b82ef44acc73b9dd89444e94219714b5132da5a2d4e"
+        "928f2c14a3aff7eefe873f3aa73145900cc1227734e7e48e1dd22e5ca3df0911"
       ],
       [
         "packages/tokens/src/component-tokens/avatar.css",
@@ -69,7 +69,7 @@
       ],
       [
         "packages/tokens/src/component-tokens/collapse.css",
-        "b4a016f5e20d0329816cba16213155619372910dd7baa40f297f99fccd56affe"
+        "bd8b1295bcb67d97390e6c560ab2cfbf0833a60f28519eb67eaae6b4892ffb10"
       ],
       [
         "packages/tokens/src/component-tokens/color-picker.css",
@@ -86,6 +86,10 @@
       [
         "packages/tokens/src/component-tokens/icon.css",
         "cee3187db85fed1d5ec778dd7ff68af2dffbde5fe3701d7aab691caebf4aa874"
+      ],
+      [
+        "packages/tokens/src/component-tokens/image-preview.css",
+        "295f92e28cd7642c7fbf4c157ea4e71b53fcab853b5d54111d6c2ae04bf7e686"
       ],
       [
         "packages/tokens/src/component-tokens/input.css",
@@ -193,7 +197,7 @@
       ],
       [
         "packages/tokens/src/primitives/motion.css",
-        "516ae9afe998c456436624daf37ac7cdebad9fac552e9951e28d2d886a0ee73d"
+        "5babab6d6ac1e60608acd09fe5b7e7fef85d006e172d91703611261327ee4fd2"
       ],
       [
         "packages/tokens/src/primitives/shape.css",
@@ -277,11 +281,11 @@
       ],
       [
         "packages/tokens/src/semantics/surface.css",
-        "25d529f6347bca6da3a8df6674857497068520da8ce8a1946220f8b84cd28322"
+        "7e3eaa20b4dfd3b3a193f5ffc16c9612d3f72eb74166f2a1ec490cdd174dbd36"
       ],
       [
         "packages/tokens/src/semantics/text.css",
-        "a4e968827b9f0de0b3018462802805b682be3a390b512a74b5abe34c78181ec2"
+        "9e2a47e97824c63ead588d5761e7afabf1b8e1444ad8735646d3cc61d2023668"
       ],
       [
         "packages/tokens/src/semantics/typography.css",
@@ -297,7 +301,7 @@
       ]
     ]
   },
-  "payloadSha256": "073aa1b2d8283c8c6af3fb3430489154a55a4fddeaa83c896d33545b3b25ebee",
+  "payloadSha256": "03e57c12dfd0882b5d30459b3b29837e488064e7b24388e0b25ff58b61009ae0",
   "inventory": {
     "generatedFrom": {
       "entry": "packages/tokens/src/index.css",
@@ -315,6 +319,7 @@
         "packages/tokens/src/component-tokens/dialog.css",
         "packages/tokens/src/component-tokens/divider.css",
         "packages/tokens/src/component-tokens/icon.css",
+        "packages/tokens/src/component-tokens/image-preview.css",
         "packages/tokens/src/component-tokens/input.css",
         "packages/tokens/src/component-tokens/link.css",
         "packages/tokens/src/component-tokens/loading.css",
@@ -358,7 +363,7 @@
         "packages/tokens/src/semantics/text.css",
         "packages/tokens/src/semantics/typography.css"
       ],
-      "catalogueGroups": 31
+      "catalogueGroups": 32
     },
     "profiles": [
       "light/azure",
@@ -367,8 +372,8 @@
       "dark/neutral"
     ],
     "counts": {
-      "tokens": 1365,
-      "declared": 1365,
+      "tokens": 1397,
+      "declared": 1397,
       "byNamespace": {
         "accent": 18,
         "action": 6,
@@ -392,7 +397,7 @@
         "disabled": 2,
         "divider": 3,
         "duration": 10,
-        "ease": 9,
+        "ease": 11,
         "elevation": 3,
         "error": 5,
         "focus": 3,
@@ -401,6 +406,7 @@
         "green": 11,
         "haze": 15,
         "icon": 3,
+        "image": 27,
         "info": 4,
         "input": 42,
         "layer": 7,
@@ -441,13 +447,13 @@
         "status": 5,
         "stone": 15,
         "success": 5,
-        "surface": 8,
+        "surface": 10,
         "swatch": 12,
         "switch": 38,
         "tabs": 46,
         "tag": 90,
         "teal": 11,
-        "text": 6,
+        "text": 7,
         "textarea": 2,
         "toast": 24,
         "tooltip": 13,
@@ -459,13 +465,13 @@
         "yellow": 11
       },
       "byLayer": {
-        "components": 914,
-        "primitives": 329,
-        "semantics": 122
+        "components": 941,
+        "primitives": 331,
+        "semantics": 125
       },
-      "publicOverride": 914,
+      "publicOverride": 941,
       "internal": 0,
-      "unreferenced": 786
+      "unreferenced": 813
     },
     "oldTokenNames": [
       "--accent-100",
@@ -946,6 +952,8 @@
       "--ease-expressive-standard",
       "--ease-in-out",
       "--ease-linear",
+      "--ease-out-cubic",
+      "--ease-out-smooth",
       "--ease-spring",
       "--ease-standard",
       "--elevation-dialog",
@@ -1002,6 +1010,33 @@
       "--icon-size-lg",
       "--icon-size-md",
       "--icon-size-sm",
+      "--image-preview-black",
+      "--image-preview-checker-dark-a",
+      "--image-preview-checker-dark-b",
+      "--image-preview-checker-light-a",
+      "--image-preview-checker-light-b",
+      "--image-preview-checker-size",
+      "--image-preview-compare-duration",
+      "--image-preview-compare-ease",
+      "--image-preview-divider-color",
+      "--image-preview-divider-hit-width",
+      "--image-preview-divider-width",
+      "--image-preview-gap",
+      "--image-preview-glass-background",
+      "--image-preview-glass-blur",
+      "--image-preview-glass-border",
+      "--image-preview-glass-color",
+      "--image-preview-glass-shadow",
+      "--image-preview-grip-background",
+      "--image-preview-grip-border",
+      "--image-preview-grip-size",
+      "--image-preview-inset",
+      "--image-preview-pan-step",
+      "--image-preview-radius",
+      "--image-preview-toolbar-clearance",
+      "--image-preview-view-duration",
+      "--image-preview-view-ease",
+      "--image-preview-white",
       "--info",
       "--info-bg",
       "--info-border",
@@ -1547,6 +1582,8 @@
       "--success-solid",
       "--surface",
       "--surface-component",
+      "--surface-glass",
+      "--surface-glass-border",
       "--surface-inverse",
       "--surface-level-2",
       "--surface-level-2-border",
@@ -1753,6 +1790,7 @@
       "--text-disabled",
       "--text-inverse",
       "--text-link",
+      "--text-on-glass",
       "--text-placeholder",
       "--text-primary",
       "--text-secondary",
@@ -1847,6 +1885,7 @@
       "packages/tokens/src/component-tokens/dialog.css",
       "packages/tokens/src/component-tokens/divider.css",
       "packages/tokens/src/component-tokens/icon.css",
+      "packages/tokens/src/component-tokens/image-preview.css",
       "packages/tokens/src/component-tokens/input.css",
       "packages/tokens/src/component-tokens/link.css",
       "packages/tokens/src/component-tokens/loading.css",
@@ -7381,10 +7420,10 @@
         "publicOverride": "public",
         "consumers": [],
         "resolved": {
-          "light/azure": "100ms",
-          "dark/azure": "100ms",
-          "light/neutral": "100ms",
-          "dark/neutral": "100ms"
+          "light/azure": "320ms",
+          "dark/azure": "320ms",
+          "light/neutral": "320ms",
+          "dark/neutral": "320ms"
         }
       },
       {
@@ -7483,10 +7522,10 @@
         "publicOverride": "public",
         "consumers": [],
         "resolved": {
-          "light/azure": "cubic-bezier(.2, 0, .38, .9)",
-          "dark/azure": "cubic-bezier(.2, 0, .38, .9)",
-          "light/neutral": "cubic-bezier(.2, 0, .38, .9)",
-          "dark/neutral": "cubic-bezier(.2, 0, .38, .9)"
+          "light/azure": "cubic-bezier(.4, 0, .2, 1)",
+          "dark/azure": "cubic-bezier(.4, 0, .2, 1)",
+          "light/neutral": "cubic-bezier(.4, 0, .2, 1)",
+          "dark/neutral": "cubic-bezier(.4, 0, .2, 1)"
         }
       },
       {
@@ -7500,10 +7539,10 @@
         "publicOverride": "public",
         "consumers": [],
         "resolved": {
-          "light/azure": "200ms",
-          "dark/azure": "200ms",
-          "light/neutral": "200ms",
-          "dark/neutral": "200ms"
+          "light/azure": "320ms",
+          "dark/azure": "320ms",
+          "light/neutral": "320ms",
+          "dark/neutral": "320ms"
         }
       },
       {
@@ -7619,10 +7658,10 @@
         "publicOverride": "public",
         "consumers": [],
         "resolved": {
-          "light/azure": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
-          "dark/azure": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
-          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
-          "dark/neutral": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+          "light/azure": "transparent",
+          "dark/azure": "transparent",
+          "light/neutral": "transparent",
+          "dark/neutral": "transparent"
         }
       },
       {
@@ -10483,6 +10522,7 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/component-tokens/tooltip.css",
@@ -10505,6 +10545,7 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/semantics/motion.css"
         ],
         "resolved": {
@@ -10765,6 +10806,44 @@
         }
       },
       {
+        "name": "--ease-out-cubic",
+        "namespace": "ease",
+        "declaredIn": [
+          "packages/tokens/src/primitives/motion.css"
+        ],
+        "layer": "primitives",
+        "reachableFromEntry": true,
+        "publicOverride": "primitives",
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "resolved": {
+          "light/azure": "cubic-bezier(.333333, 1, .666667, 1)",
+          "dark/azure": "cubic-bezier(.333333, 1, .666667, 1)",
+          "light/neutral": "cubic-bezier(.333333, 1, .666667, 1)",
+          "dark/neutral": "cubic-bezier(.333333, 1, .666667, 1)"
+        }
+      },
+      {
+        "name": "--ease-out-smooth",
+        "namespace": "ease",
+        "declaredIn": [
+          "packages/tokens/src/primitives/motion.css"
+        ],
+        "layer": "primitives",
+        "reachableFromEntry": true,
+        "publicOverride": "primitives",
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "resolved": {
+          "light/azure": "cubic-bezier(.22, .61, .36, 1)",
+          "dark/azure": "cubic-bezier(.22, .61, .36, 1)",
+          "light/neutral": "cubic-bezier(.22, .61, .36, 1)",
+          "dark/neutral": "cubic-bezier(.22, .61, .36, 1)"
+        }
+      },
+      {
         "name": "--ease-spring",
         "namespace": "ease",
         "declaredIn": [
@@ -10834,7 +10913,9 @@
         "layer": "semantics",
         "reachableFromEntry": true,
         "publicOverride": "semantics",
-        "consumers": [],
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
         "resolved": {
           "light/azure": "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)",
           "dark/azure": "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)",
@@ -11857,6 +11938,465 @@
           "dark/azure": "16px",
           "light/neutral": "16px",
           "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--image-preview-black",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#000000",
+          "dark/azure": "#000000",
+          "light/neutral": "#000000",
+          "dark/neutral": "#000000"
+        }
+      },
+      {
+        "name": "--image-preview-checker-dark-a",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#242830",
+          "dark/azure": "#242830",
+          "light/neutral": "#242830",
+          "dark/neutral": "#242830"
+        }
+      },
+      {
+        "name": "--image-preview-checker-dark-b",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#343a46",
+          "dark/azure": "#343a46",
+          "light/neutral": "#343a46",
+          "dark/neutral": "#343a46"
+        }
+      },
+      {
+        "name": "--image-preview-checker-light-a",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#ffffff",
+          "dark/azure": "#ffffff",
+          "light/neutral": "#ffffff",
+          "dark/neutral": "#ffffff"
+        }
+      },
+      {
+        "name": "--image-preview-checker-light-b",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#dce0e5",
+          "dark/azure": "#dce0e5",
+          "light/neutral": "#dce0e5",
+          "dark/neutral": "#dce0e5"
+        }
+      },
+      {
+        "name": "--image-preview-checker-size",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--image-preview-compare-duration",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(200ms * .9)",
+          "dark/azure": "calc(200ms * .9)",
+          "light/neutral": "calc(200ms * .9)",
+          "dark/neutral": "calc(200ms * .9)"
+        }
+      },
+      {
+        "name": "--image-preview-compare-ease",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "cubic-bezier(.22, .61, .36, 1)",
+          "dark/azure": "cubic-bezier(.22, .61, .36, 1)",
+          "light/neutral": "cubic-bezier(.22, .61, .36, 1)",
+          "dark/neutral": "cubic-bezier(.22, .61, .36, 1)"
+        }
+      },
+      {
+        "name": "--image-preview-divider-color",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--image-preview-divider-hit-width",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--image-preview-divider-width",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--image-preview-gap",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--image-preview-glass-background",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "light/neutral": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #121212 76%, transparent)"
+        }
+      },
+      {
+        "name": "--image-preview-glass-blur",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--image-preview-glass-border",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "light/neutral": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #fff 24%, transparent)"
+        }
+      },
+      {
+        "name": "--image-preview-glass-color",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fafafa",
+          "dark/azure": "#fafafa",
+          "light/neutral": "#fafafa",
+          "dark/neutral": "#fafafa"
+        }
+      },
+      {
+        "name": "--image-preview-glass-shadow",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)",
+          "dark/azure": "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)",
+          "light/neutral": "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)",
+          "dark/neutral": "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)"
+        }
+      },
+      {
+        "name": "--image-preview-grip-background",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "light/neutral": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #121212 76%, transparent)"
+        }
+      },
+      {
+        "name": "--image-preview-grip-border",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "light/neutral": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #fff 24%, transparent)"
+        }
+      },
+      {
+        "name": "--image-preview-grip-size",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--image-preview-inset",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--image-preview-pan-step",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--image-preview-radius",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--image-preview-toolbar-clearance",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "44px",
+          "dark/azure": "44px",
+          "light/neutral": "44px",
+          "dark/neutral": "44px"
+        }
+      },
+      {
+        "name": "--image-preview-view-duration",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(250ms * 1.04)",
+          "dark/azure": "calc(250ms * 1.04)",
+          "light/neutral": "calc(250ms * 1.04)",
+          "dark/neutral": "calc(250ms * 1.04)"
+        }
+      },
+      {
+        "name": "--image-preview-view-ease",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "cubic-bezier(.333333, 1, .666667, 1)",
+          "dark/azure": "cubic-bezier(.333333, 1, .666667, 1)",
+          "light/neutral": "cubic-bezier(.333333, 1, .666667, 1)",
+          "dark/neutral": "cubic-bezier(.333333, 1, .666667, 1)"
+        }
+      },
+      {
+        "name": "--image-preview-white",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#ffffff",
+          "dark/azure": "#ffffff",
+          "light/neutral": "#ffffff",
+          "dark/neutral": "#ffffff"
         }
       },
       {
@@ -14484,7 +15024,6 @@
         "publicOverride": "semantics",
         "consumers": [
           "packages/tokens/src/component-tokens/checkbox.css",
-          "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/popover.css",
           "packages/tokens/src/component-tokens/radio.css",
@@ -14544,7 +15083,6 @@
         "publicOverride": "semantics",
         "consumers": [
           "packages/tokens/src/component-tokens/checkbox.css",
-          "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/popover.css",
           "packages/tokens/src/component-tokens/radio.css",
@@ -14853,9 +15391,7 @@
         "layer": "semantics",
         "reachableFromEntry": true,
         "publicOverride": "semantics",
-        "consumers": [
-          "packages/tokens/src/component-tokens/collapse.css"
-        ],
+        "consumers": [],
         "resolved": {
           "light/azure": "cubic-bezier(.2, 0, .38, .9)",
           "dark/azure": "cubic-bezier(.2, 0, .38, .9)",
@@ -14992,7 +15528,8 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
-          "packages/tokens/src/semantics/surface.css"
+          "packages/tokens/src/semantics/surface.css",
+          "packages/tokens/src/semantics/text.css"
         ],
         "resolved": {
           "light/azure": "#fafafa",
@@ -15335,7 +15872,6 @@
         "consumers": [
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/checkbox.css",
-          "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
@@ -17503,6 +18039,7 @@
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/status.css",
           "packages/tokens/src/component-tokens/switch.css",
@@ -20845,6 +21382,7 @@
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/divider.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/status.css",
           "packages/tokens/src/component-tokens/toast.css",
@@ -20871,6 +21409,7 @@
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css"
         ],
@@ -20918,6 +21457,7 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/checkbox.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/component-tokens/tooltip.css"
         ],
@@ -21037,6 +21577,7 @@
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
           "packages/tokens/src/component-tokens/progress.css",
@@ -21770,6 +22311,44 @@
           "dark/azure": "#2b2b2b",
           "light/neutral": "#eee",
           "dark/neutral": "#2b2b2b"
+        }
+      },
+      {
+        "name": "--surface-glass",
+        "namespace": "surface",
+        "declaredIn": [
+          "packages/tokens/src/semantics/surface.css"
+        ],
+        "layer": "semantics",
+        "reachableFromEntry": true,
+        "publicOverride": "semantics",
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/azure": "color-mix(in srgb, #121212 76%, transparent)",
+          "light/neutral": "color-mix(in srgb, #121212 76%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #121212 76%, transparent)"
+        }
+      },
+      {
+        "name": "--surface-glass-border",
+        "namespace": "surface",
+        "declaredIn": [
+          "packages/tokens/src/semantics/surface.css"
+        ],
+        "layer": "semantics",
+        "reachableFromEntry": true,
+        "publicOverride": "semantics",
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/azure": "color-mix(in srgb, #fff 24%, transparent)",
+          "light/neutral": "color-mix(in srgb, #fff 24%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #fff 24%, transparent)"
         }
       },
       {
@@ -25502,6 +26081,25 @@
         }
       },
       {
+        "name": "--text-on-glass",
+        "namespace": "text",
+        "declaredIn": [
+          "packages/tokens/src/semantics/text.css"
+        ],
+        "layer": "semantics",
+        "reachableFromEntry": true,
+        "publicOverride": "semantics",
+        "consumers": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "resolved": {
+          "light/azure": "#fafafa",
+          "dark/azure": "#fafafa",
+          "light/neutral": "#fafafa",
+          "dark/neutral": "#fafafa"
+        }
+      },
+      {
         "name": "--text-placeholder",
         "namespace": "text",
         "declaredIn": [
@@ -25541,6 +26139,7 @@
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/menu.css",
@@ -27912,15 +28511,6 @@
         ]
       ],
       [
-        "--collapse-header-background-hover",
-        [
-          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
-          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
-        ]
-      ],
-      [
         "--collapse-header-background-pressed",
         [
           "color-mix(in srgb, #192029 calc(.10*100%), transparent)",
@@ -28206,6 +28796,42 @@
           "#93c1ff",
           "#192029",
           "#f0f6fd"
+        ]
+      ],
+      [
+        "--image-preview-divider-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--image-preview-glass-background",
+        [
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)"
+        ]
+      ],
+      [
+        "--image-preview-glass-color",
+        [
+          "#f7faff",
+          "#f7faff",
+          "#f7faff",
+          "#f7faff"
+        ]
+      ],
+      [
+        "--image-preview-grip-background",
+        [
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)"
         ]
       ],
       [
@@ -29307,6 +29933,15 @@
         ]
       ],
       [
+        "--surface-glass",
+        [
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)",
+          "color-mix(in srgb, #0d1219 76%, transparent)"
+        ]
+      ],
+      [
         "--surface-inverse",
         [
           "#0d1219",
@@ -29835,6 +30470,15 @@
           "#93c1ff",
           "#192029",
           "#f0f6fd"
+        ]
+      ],
+      [
+        "--text-on-glass",
+        [
+          "#f7faff",
+          "#f7faff",
+          "#f7faff",
+          "#f7faff"
         ]
       ],
       [
@@ -30857,15 +31501,6 @@
         ]
       ],
       [
-        "--collapse-header-background-hover",
-        [
-          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
-          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
-        ]
-      ],
-      [
         "--collapse-header-background-pressed",
         [
           "color-mix(in srgb, #231e18 calc(.10*100%), transparent)",
@@ -31151,6 +31786,42 @@
           "#93c1ff",
           "#231e18",
           "#f9f4ef"
+        ]
+      ],
+      [
+        "--image-preview-divider-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--image-preview-glass-background",
+        [
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)"
+        ]
+      ],
+      [
+        "--image-preview-glass-color",
+        [
+          "#fcfaf7",
+          "#fcfaf7",
+          "#fcfaf7",
+          "#fcfaf7"
+        ]
+      ],
+      [
+        "--image-preview-grip-background",
+        [
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)"
         ]
       ],
       [
@@ -32252,6 +32923,15 @@
         ]
       ],
       [
+        "--surface-glass",
+        [
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)",
+          "color-mix(in srgb, #15110d 76%, transparent)"
+        ]
+      ],
+      [
         "--surface-inverse",
         [
           "#15110d",
@@ -32780,6 +33460,15 @@
           "#93c1ff",
           "#231e18",
           "#f9f4ef"
+        ]
+      ],
+      [
+        "--text-on-glass",
+        [
+          "#fcfaf7",
+          "#fcfaf7",
+          "#fcfaf7",
+          "#fcfaf7"
         ]
       ],
       [
@@ -33802,15 +34491,6 @@
         ]
       ],
       [
-        "--collapse-header-background-hover",
-        [
-          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
-          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
-          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
-        ]
-      ],
-      [
         "--collapse-header-background-pressed",
         [
           "color-mix(in srgb, #1f1e28 calc(.10*100%), transparent)",
@@ -34096,6 +34776,42 @@
           "#93c1ff",
           "#1f1e28",
           "#f5f4fd"
+        ]
+      ],
+      [
+        "--image-preview-divider-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--image-preview-glass-background",
+        [
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)"
+        ]
+      ],
+      [
+        "--image-preview-glass-color",
+        [
+          "#faf9ff",
+          "#faf9ff",
+          "#faf9ff",
+          "#faf9ff"
+        ]
+      ],
+      [
+        "--image-preview-grip-background",
+        [
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)"
         ]
       ],
       [
@@ -35197,6 +35913,15 @@
         ]
       ],
       [
+        "--surface-glass",
+        [
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)",
+          "color-mix(in srgb, #121119 76%, transparent)"
+        ]
+      ],
+      [
         "--surface-inverse",
         [
           "#121119",
@@ -35725,6 +36450,15 @@
           "#93c1ff",
           "#1f1e28",
           "#f5f4fd"
+        ]
+      ],
+      [
+        "--text-on-glass",
+        [
+          "#faf9ff",
+          "#faf9ff",
+          "#faf9ff",
+          "#faf9ff"
         ]
       ],
       [

@@ -4,6 +4,7 @@ use gpui_kit::base::{
     Root,
     test_support::{ElementSnapshot, snapshots},
 };
+use gpui_kit::{AppContext as _, Entity};
 use gpui_kit::{Context, Modifiers, Render, TestAppContext, VisualTestContext, point, px, size};
 
 struct Probe {

@@ -32,7 +32,7 @@ pub fn init(cx: &mut App) {
     ]);
 }
 
-type OpenChangeHandler = Rc<dyn Fn(bool, &mut Window, &mut App) -> bool>;
+type OpenRequestHandler = Rc<dyn Fn(bool, &mut Window, &mut App) -> bool>;
 type ActionHandler = Rc<dyn Fn(&mut Window, &mut App)>;
 
 /// An unstyled controlled select root.
@@ -62,7 +62,7 @@ pub struct Select {
     accessibility_value: Option<SharedString>,
     style: StyleRefinement,
     children: Vec<AnyElement>,
-    on_open_change: Option<OpenChangeHandler>,
+    on_open_request: Option<OpenRequestHandler>,
     key_context: &'static str,
     on_dismiss: Option<ActionHandler>,
     on_confirm: Option<ActionHandler>,
@@ -86,7 +86,7 @@ impl Select {
             accessibility_value: None,
             style: StyleRefinement::default(),
             children: Vec::new(),
-            on_open_change: None,
+            on_open_request: None,
             key_context: CONTEXT,
             on_dismiss: None,
             on_confirm: None,
@@ -157,13 +157,22 @@ impl Select {
         self
     }
 
+    /// Notifies the owner of an open-state change. The owner accepts the requested state.
+    /// Use `on_open_request` when opening or dismissal can be rejected.
+    pub fn on_open_change(self, handler: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self {
+        self.on_open_request(move |open, window, cx| {
+            handler(open, window, cx);
+            open
+        })
+    }
+
     /// Handles requests to update the controlled open state. Return the actual
     /// resulting open state; rejecting an opening must not focus hidden content.
-    pub fn on_open_change(
+    pub fn on_open_request(
         mut self,
         handler: impl Fn(bool, &mut Window, &mut App) -> bool + 'static,
     ) -> Self {
-        self.on_open_change = Some(Rc::new(handler));
+        self.on_open_request = Some(Rc::new(handler));
         self
     }
 
@@ -213,7 +222,7 @@ impl RenderOnce for Select {
         let readonly = self.readonly;
         let focus_handle = self.focus_handle;
         let content_focus_handle = self.content_focus_handle;
-        let on_open_change = self.on_open_change;
+        let on_open_request = self.on_open_request;
         let on_dismiss = self.on_dismiss;
         let on_confirm = self.on_confirm;
 
@@ -221,14 +230,14 @@ impl RenderOnce for Select {
         // dismissal has to see one however the popup was closed, and the
         // accessible activation closes exactly what Escape closes.
         let close: ActionHandler = Rc::new({
-            let on_open_change = on_open_change.clone();
+            let on_open_request = on_open_request.clone();
             let on_dismiss = on_dismiss.clone();
             let focus_handle = focus_handle.clone();
             move |window: &mut Window, cx: &mut App| {
                 if let Some(handler) = on_dismiss.as_ref() {
                     handler(window, cx);
                 }
-                let still_open = on_open_change
+                let still_open = on_open_request
                     .as_ref()
                     .is_some_and(|handler| handler(false, window, cx));
                 if !still_open && let Some(handle) = focus_handle.as_ref() {
@@ -257,7 +266,7 @@ impl RenderOnce for Select {
                 },
             )
             .when(!disabled && !readonly, |this| {
-                let on_open_change = on_open_change.clone();
+                let on_open_request = on_open_request.clone();
                 let content_focus_handle = content_focus_handle.clone();
                 let close = close.clone();
 
@@ -269,7 +278,7 @@ impl RenderOnce for Select {
                         return;
                     }
 
-                    let accepted = on_open_change
+                    let accepted = on_open_request
                         .as_ref()
                         .is_some_and(|handler| handler(true, window, cx));
                     if accepted && let Some(handle) = content_focus_handle.as_ref() {
@@ -278,7 +287,7 @@ impl RenderOnce for Select {
                 })
             })
             .on_action({
-                let on_open_change = on_open_change.clone();
+                let on_open_request = on_open_request.clone();
                 let content_focus_handle = content_focus_handle.clone();
                 move |_: &SelectUp, window, cx| {
                     if disabled {
@@ -290,7 +299,7 @@ impl RenderOnce for Select {
                     }
 
                     if !open {
-                        let accepted = on_open_change
+                        let accepted = on_open_request
                             .as_ref()
                             .is_some_and(|handler| handler(true, window, cx));
                         if accepted && let Some(handle) = content_focus_handle.as_ref() {
@@ -302,7 +311,7 @@ impl RenderOnce for Select {
                 }
             })
             .on_action({
-                let on_open_change = on_open_change.clone();
+                let on_open_request = on_open_request.clone();
                 let content_focus_handle = content_focus_handle.clone();
                 move |_: &SelectDown, window, cx| {
                     if disabled {
@@ -314,7 +323,7 @@ impl RenderOnce for Select {
                     }
 
                     if !open {
-                        let accepted = on_open_change
+                        let accepted = on_open_request
                             .as_ref()
                             .is_some_and(|handler| handler(true, window, cx));
                         if accepted && let Some(handle) = content_focus_handle.as_ref() {
@@ -326,7 +335,7 @@ impl RenderOnce for Select {
                 }
             })
             .on_action({
-                let on_open_change = on_open_change.clone();
+                let on_open_request = on_open_request.clone();
                 move |_: &Confirm, window, cx| {
                     if disabled {
                         cx.propagate();
@@ -341,7 +350,7 @@ impl RenderOnce for Select {
                             handler(window, cx);
                         }
                     } else {
-                        let accepted = on_open_change
+                        let accepted = on_open_request
                             .as_ref()
                             .is_some_and(|handler| handler(true, window, cx));
                         if accepted && let Some(handle) = content_focus_handle.as_ref() {
@@ -380,6 +389,55 @@ mod tests {
         VisualTestContext, accesskit, px,
     };
     use std::sync::{Arc, Mutex};
+
+    struct NotificationHarness {
+        open: bool,
+        trigger: FocusHandle,
+        content: FocusHandle,
+    }
+
+    impl Render for NotificationHarness {
+        fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+            let owner = cx.entity();
+            Select::new("notification-select")
+                .open(self.open)
+                .focus_handle(&self.trigger)
+                .content_focus_handle(&self.content)
+                .on_open_change(move |open, _, cx| {
+                    owner.update(cx, |state, cx| {
+                        state.open = open;
+                        cx.notify();
+                    });
+                })
+                .child(div().track_focus(&self.trigger).size(px(20.)))
+                .child(div().track_focus(&self.content).size(px(20.)))
+        }
+    }
+
+    #[gpui::test]
+    fn notification_callback_accepts_open_and_close_and_restores_focus(cx: &mut TestAppContext) {
+        cx.update(crate::init);
+        let (state, cx) = cx.add_window_view(|_, cx| NotificationHarness {
+            open: false,
+            trigger: cx.focus_handle(),
+            content: cx.focus_handle(),
+        });
+        cx.update(|window, cx| {
+            state.read(cx).trigger.clone().focus(window, cx);
+            window.draw(cx).clear(cx);
+        });
+        cx.simulate_keystrokes("down");
+        cx.update(|window, cx| {
+            assert!(state.read(cx).open);
+            assert!(state.read(cx).content.is_focused(window));
+            window.draw(cx).clear(cx);
+        });
+        cx.simulate_keystrokes("escape");
+        cx.update(|window, cx| {
+            assert!(!state.read(cx).open);
+            assert!(state.read(cx).trigger.is_focused(window));
+        });
+    }
 
     struct SelectHarness {
         open: bool,
@@ -455,7 +513,7 @@ mod tests {
                         .tab_index(self.tab_index)
                         .focus_handle(&self.focus_handle)
                         .content_focus_handle(&self.content_focus_handle)
-                        .on_open_change(move |open, _, cx| {
+                        .on_open_request(move |open, _, cx| {
                             if open && reject_open {
                                 return false;
                             }
@@ -646,7 +704,7 @@ mod tests {
     /// still read that value.
     ///
     /// Every close shares one path, which is the point: the accessible
-    /// activation used to close by calling `on_open_change` alone, so a
+    /// activation used to close by calling `on_open_request` alone, so a
     /// consumer wiring `on_dismiss` — `crates/shell` forwards it to JS as
     /// `onDismiss` — saw Escape but not a screen reader pressing the same
     /// control. GPUI exposes no way to dispatch an accessibility action in a

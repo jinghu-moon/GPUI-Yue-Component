@@ -427,7 +427,7 @@ Base 输入把 Tab 绑定到缩进；本项目 Input 的已知边界继续成立
 5. 加复制、历史、棋盘/渐变预览和自定义入口，最后接入 Showcase。
 6. 完成自动化与真实 Windows release 验收后，将本文更新为实现记录。
 
-实现模块 `color_picker/{mod.rs,state.rs,color.rs,panel.rs,paint.rs}`，分别承载公共 seam、编辑生命周期、纯颜色算法和面板；`swatch.rs` 为确有独立消费者的色块组。命名和拆分以最终实现复杂度为准，不为尚未实现的功能先建大量空模块。
+实现模块 `color_picker/{mod.rs,element.rs,state.rs,color.rs,panel.rs,paint.rs}`，分别承载公共 seam、编辑生命周期、纯颜色算法和面板；`swatch/mod.rs` 为确有独立消费者的色块组。命名和拆分以最终实现复杂度为准，不为尚未实现的功能先建大量空模块。
 
 ## 13. 验收范围
 
@@ -462,7 +462,7 @@ Base 输入把 Tab 绑定到缩进；本项目 Input 的已知边界继续成立
 ### 14.1 交付与所有权
 
 - 组件为 GPUI RenderOnce + retained Entity<State>，弹层瞬态、Panel 常驻。公共类型从 crate root 导出；prelude 包含主要组件。未启用 styled Component / Lucide，也没有新增第三方依赖或第二个 Root。
-- 主体、算法、状态、绘制分别位于 `src/color_picker/`；独立受控背景选项在 `src/swatch.rs`。示例入口为“组件 → ColorPicker”，与“设计 → Color”分工独立。
+- 主体、算法、状态、绘制分别位于 `src/color_picker/`；独立受控背景选项在 `src/swatch/mod.rs`。示例入口为“组件 → ColorPicker”，与“设计 → Color”分工独立。
 - 触发器默认 160px、面板独立 300px。显式 width 和父级百分比 width 已覆盖；300px 时 RGB/HSL 四字段同排，260px 时 A% 换行。62px 通道最小宽度来自实际可用宽度：300 − 2边框 − 32内边距 = 266px，4×62 + 3×4 = 260px。
 - 两条滑杆可见间距 16px；12px 可见条配24px命中区，中心距28px，命中区不重叠。颜色拖动即时响应；色值本身不插值。Popover 入退与触发器边框使用源 motion token 并尊重 reduce motion。
 - 常规背景选项只通过 on_change 请求受控 value；自定义打开不改选中值。私有确认通知与公开颜色事件分离，同色确认可选中自定义项，已选中后不重复请求选择。

@@ -17,7 +17,6 @@ use std::time::Duration;
 
 #[derive(Default)]
 struct Pointer {
-    hover: bool,
     pressed: bool,
 }
 
@@ -165,7 +164,6 @@ impl RenderOnce for YueCollapse {
                 window.use_keyed_state((id.clone(), "pointer"), cx, |_, _| Pointer::default());
             if disabled || geometry_changed {
                 pointer.update(cx, |p, _| {
-                    p.hover = false;
                     p.pressed = false;
                 });
             }
@@ -173,8 +171,6 @@ impl RenderOnce for YueCollapse {
                 gpui_kit::Rgba::from(gpui_kit::transparent_black())
             } else if pointer.read(cx).pressed {
                 rgba(theme, keys::COLLAPSE_HEADER_BACKGROUND_PRESSED)
-            } else if pointer.read(cx).hover {
-                rgba(theme, keys::COLLAPSE_HEADER_BACKGROUND_HOVER)
             } else {
                 gpui_kit::Rgba::from(gpui_kit::transparent_black())
             };
@@ -238,11 +234,10 @@ impl RenderOnce for YueCollapse {
                 trigger = trigger
                     .on_hover(move |value, _, cx| {
                         hover.update(cx, |p, cx| {
-                            p.hover = *value;
-                            if !*value {
+                            if !*value && p.pressed {
                                 p.pressed = false;
+                                cx.notify();
                             }
-                            cx.notify();
                         });
                     })
                     .on_mouse_down(MouseButton::Left, move |_, _, cx| {

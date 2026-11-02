@@ -215,10 +215,13 @@ disabled menu semantics as well as skipped keyboard activation.
 
 ## Yue Select integration (2026-11-02)
 
-`Select::on_open_change` and `Combobox::on_open_change` now return the resulting
-open state (`Fn(bool, &mut Window, &mut App) -> bool`). This is a breaking API
-change in this development workspace. Return false when rejecting an opening;
-the primitive then keeps focus on the trigger instead of hidden content. A
+`Select::on_open_request` and `Combobox::on_open_request` return the resulting
+open state (`Fn(bool, &mut Window, &mut App) -> bool`). Return false when rejecting
+an opening; the primitive keeps focus on the trigger instead of hidden content.
+The upstream `on_open_change` notification retains its `()` callback and accepts
+the requested state. This distinction lets a consuming application use published
+GPUI Kit styled controls and Yue with one patched Base graph. It is exercised by
+Base notification/open-request tests and the SnapClip consuming application. A
 confirm on an already open Select does not refocus content after its owner
 commits, closes and restores trigger focus. A first closed Up/Down request is
 consumed after opening, preventing an outer navigator from moving twice.
@@ -285,3 +288,21 @@ one Polite Status. `A11yLive::busy` sets or clears the existing native flag with
 adding focus targets. Timers, native properties and frame requests are covered by
 `loading::tests`, `progress::tests` and `a11y_live::tests`; actual Windows UIA and
 reader behavior remain separate from these headless contracts.
+
+## Yue Collapse motion follow-up (2026-11-02)
+
+`MotionDisclosure` passes its request-layout timestamp to prepaint. Natural-height
+retargeting and the height laid out for that frame therefore share one clock;
+measuring content cannot postpone the start or advance the retarget origin past
+the pixels already laid out. Close immediately detaches descendants and clips
+the frozen paint frame from the last live render. The maintained `gpui-pre`
+patch provides paint-only capture/replay; the current Fast backend retains the
+previous geometry-only fallback. Downstream consumers of the production backend
+must patch both crates; see `../gpui-pre/YUE-PATCH.md`.
+
+Yue's Collapse regressions drive opening and closing through requested frame
+callbacks without forcing window refresh, checking monotonic intermediate heights
+and final landing. Painted-quad checks cover hover without a header background in
+light/dark themes and both trigger modes. Additional checks cover retained paint
+with detached controls, progressive clipping and translated snapshots when
+several panels close together. UI motion perception remains user-tested.

@@ -338,7 +338,7 @@ impl fmt::Display for SelectError {
     }
 }
 impl std::error::Error for SelectError {}
-pub(super) fn validate_text(text: &str) -> Result<(), SelectError> {
+fn validate_text(text: &str) -> Result<(), SelectError> {
     if text.trim().is_empty() {
         Err(SelectError::EmptyText)
     } else {

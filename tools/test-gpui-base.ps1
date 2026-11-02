@@ -15,6 +15,8 @@ $manifest = [regex]::Replace($manifest, '(?ms)^\[dev-dependencies\.gpui-fast(?:-
 $source = (Join-Path $repo 'vendor/gpui-base/src/lib.rs').Replace('\', '/')
 $manifest = $manifest.Replace('path = "src/lib.rs"', ('path = "' + $source + '"'))
 $manifest += "`n[workspace]`n"
+$backend = (Join-Path $repo 'vendor/gpui-pre').Replace('\', '/')
+$manifest += "`n[patch.crates-io]`ngpui-pre = { path = `"$backend`" }`n"
 [IO.File]::WriteAllText((Join-Path $fixture 'Cargo.toml'), $manifest, [Text.UTF8Encoding]::new($false))
 # Preserve the consuming workspace's production pins; Cargo adds test-only deps
 # to this disposable lockfile. It never changes the workspace's Cargo.lock.

@@ -152,14 +152,14 @@ function colorValue(value) {
   const hex = /^#([\da-f]{3}|[\da-f]{6})$/i.exec(value)
   if (hex) return Number.parseInt(hex[1].length === 3 ? [...hex[1]].map(c => c+c).join('') : hex[1], 16) * 256 + 255
   if (value === 'transparent') return 0
-  const mix = /^color-mix\(in srgb, (#[\da-f]+) calc\(([\d.]+)\*100%\), (#[\da-f]+|transparent)\)$/i.exec(value)
+  const mix = /^color-mix\(in srgb, (#[\da-f]+) (?:calc\(([\d.]+)\*100%\)|([\d.]+)%), (#[\da-f]+|transparent)\)$/i.exec(value)
   if (mix) {
-    const a = colorValue(mix[1]), b = colorValue(mix[3]), amount = Number(mix[2])
+    const a = colorValue(mix[1]), b = colorValue(mix[4]), amount = mix[2] === undefined ? Number(mix[3]) / 100 : Number(mix[2])
     // Only 3- and 6-digit hex operands are understood; anything else would
     // otherwise fall through as null and come out black.
     if (a === null || b === null) throw new Error(`unsupported color mix operand ${value}`)
-    if (amount < 0 || amount > 1) throw new Error(`invalid color mix ${value}`)
-    if (mix[3] === 'transparent') return a - 255 + Math.round(amount * 255)
+    if (!Number.isFinite(amount) || amount < 0 || amount > 1) throw new Error(`invalid color mix ${value}`)
+    if (mix[4] === 'transparent') return a - 255 + Math.round(amount * 255)
     const channels = [24, 16, 8].map(shift => Math.round(((a >>> shift) & 255) * amount + ((b >>> shift) & 255) * (1-amount)))
     return channels[0]*0x1000000 + channels[1]*0x10000 + channels[2]*0x100 + 255
   }

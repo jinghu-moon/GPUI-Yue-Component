@@ -249,6 +249,38 @@ impl YueSelectState {
         if let Some(row)=(0..count).map(|offset|(start+offset)%count).map(|ix|&self.rows[ix]).find(|row|self.eligible(row)&&matches!(row,Row::Option(option) if option.label.to_lowercase().starts_with(&query))){self.active=row.active_key();self.list_focus.focus(window,cx);self.scroll_active();cx.notify();cx.stop_propagation();}
     }
 }
+
+use gpui_kit::InteractiveElement as _;
+
+pub(super) fn actions(
+    root: gpui_kit::Stateful<gpui_kit::Div>,
+    cx: &mut Context<YueSelectState>,
+) -> gpui_kit::Stateful<gpui_kit::Div> {
+    root.on_action(cx.listener(|state, _: &Next, w, cx| {
+        state.keyboard_navigation = true;
+        state.navigate(Move::Next, w, cx);
+    }))
+    .on_action(cx.listener(|state, _: &Previous, w, cx| {
+        state.keyboard_navigation = true;
+        state.navigate(Move::Previous, w, cx);
+    }))
+    .on_action(cx.listener(|state, _: &First, w, cx| state.navigate(Move::First, w, cx)))
+    .on_action(cx.listener(|state, _: &Last, w, cx| state.navigate(Move::Last, w, cx)))
+    .on_action(cx.listener(|state, _: &PageNext, w, cx| {
+        state.navigate(Move::PageNext(state.page_size), w, cx)
+    }))
+    .on_action(cx.listener(|state, _: &PagePrevious, w, cx| {
+        state.navigate(Move::PagePrevious(state.page_size), w, cx)
+    }))
+    .on_action(cx.listener(|state, _: &Accept, w, cx| state.accept(w, cx)))
+    .on_action(cx.listener(|state, _: &Leave, w, cx| state.leave(false, w, cx)))
+    .on_action(cx.listener(|state, _: &LeaveBack, w, cx| state.leave(true, w, cx)))
+    .on_action(cx.listener(|state, _: &Find, w, cx| state.find(w, cx)))
+    .on_action(cx.listener(|state, _: &TagBack, w, cx| state.tag_back(w, cx)))
+    .on_action(cx.listener(|state, _: &Dismiss, w, cx| state.dismiss(w, cx)))
+    .on_key_down(cx.listener(YueSelectState::type_key))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

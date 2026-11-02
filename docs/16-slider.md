@@ -518,7 +518,7 @@ Base vendored crate 自身的新增单测应按该 crate 的 manifest / features
 - [Base Slider 源码](../vendor/gpui-base/src/slider.rs)：状态、映射、指针、触摸、语义与已有限制。
 - [本地 Base 扩展记录](../vendor/gpui-base/YUE-PATCH.md)：ColorPicker 所需的 focus / cancellation 等补丁。
 - [Base NumberInput](../vendor/gpui-base/src/number_input.rs)、[InputState](../vendor/gpui-base/src/input/base/state.rs)：数字编辑、步进、约束。
-- [Yue Input](../crates/yue-component/src/input.rs)、[Input 文档](03-input.md)：呈现复用与输入能力边界。
+- [Yue Input](../crates/yue-component/src/input/mod.rs)、[Input 文档](03-input.md)：呈现复用与输入能力边界。
 - [ColorPicker state](../crates/yue-component/src/color_picker/state.rs)、[panel](../crates/yue-component/src/color_picker/panel.rs)：现有 Base Slider 消费端与独立 hitbox / 视觉体。
 - [Layout 示例](../examples/windows-showcase/src/layout.rs)：共享 Base Slider 的另一消费端。
 - [Yue Tooltip](../crates/yue-component/src/tooltip/mod.rs)、[controller](../crates/yue-component/src/tooltip/controller.rs)、[Tooltip 文档](10-tooltip.md)、[Popup 文档](12-popup.md)：复用浮层与显示槽的依据。

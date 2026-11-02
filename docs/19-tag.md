@@ -318,7 +318,7 @@ V1 `colors` 仅适用于静态和动作标签；可选标签保持完整语义 t
 
 ## 15. 实施与验收边界
 
-实施对应：`crates/yue-component/src/tag.rs` 负责公共契约，`tag/element.rs` 负责 Base 组合、token 和排版，`tag/tests.rs` 与 `tests/tag.rs` 覆盖纯逻辑和交互；`lib.rs` 提供公共导出。
+实施对应：`crates/yue-component/src/tag/mod.rs` 负责公共契约，`tag/element.rs` 负责 Base 组合、token 和排版，`tag/tests.rs` 与 `tests/tag.rs` 覆盖纯逻辑和交互；`lib.rs` 提供公共导出。
 
 Showcase 的 **组件 → Tag** 包括：
 
@@ -347,7 +347,7 @@ Showcase 的 **组件 → Tag** 包括：
 
 - 用户参考：[Tag 标签图](assets/tag-reference.png)。
 - Base 行为：[Button](../vendor/gpui-base/src/button.rs)、[Toggle](../vendor/gpui-base/src/toggle.rs)、[ToggleGroup](../vendor/gpui-base/src/toggle_group.rs)、[motion](../vendor/gpui-base/src/motion.rs)。
-- 现有受控组合：[Segmented](../crates/yue-component/src/segmented.rs)、[SwatchGroup](../crates/yue-component/src/swatch.rs)。
+- 现有受控组合：[Segmented](../crates/yue-component/src/segmented/mod.rs)、[SwatchGroup](../crates/yue-component/src/swatch/mod.rs)。
 - Yue 基础设施：[motion](../crates/yue-component/src/motion.rs)、[Tooltip](10-tooltip.md)、[Popup](12-popup.md)、[Button](02-button.md)。
 - token 快照：[inventory](../crates/yue-component/tokens/inventory.json)；唯一外部源为 `D:\100_Projects\110_Daily\Yue-Design-System\packages\tokens\src\component-tokens\tag.css`。
 - 业务对照：`D:\100_Projects\110_Daily\SnapClip\docs\design\save-panel-demo-v3.html`。

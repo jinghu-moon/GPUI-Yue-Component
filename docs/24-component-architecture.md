@@ -1,8 +1,8 @@
 # 24 组件架构与目录规范
 
-状态：已采纳的目标架构，存量组件渐进迁移。日期：2026-11-02。
+状态：架构约定已采纳，组件目录与职责迁移已实施；验收记录见第 16 节。日期：2026-11-02。
 
-本文约束 `crates/yue-component` 的组件设计、内部组织、公共接口与改造验收，同时明确与图标 crate、设计系统、Base 及宿主应用的边界。本次新增规范，不代表下面列出的目录迁移已经完成。
+本文约束 `crates/yue-component` 的组件设计、内部组织、公共接口与改造验收，同时明确与图标 crate、设计系统、Base 及宿主应用的边界。第 2 节保留改造前的问题依据，第 12 节规定迁移方法，第 16 节记录本轮实际实施与验证范围。
 
 “必须”表示不可缺少的合同，“建议”表示通常应采用的做法，“按需”表示存在真实职责后才增加。用户明确要求优先；具体可用 API 以本仓库锁定的源码和测试为准。历史设计文档与本文冲突时，结构约定以本文为准，组件特有的行为仍以对应设计文档和经过验证的实现为准；发现冲突时须同步修正文档。
 
@@ -18,7 +18,7 @@
 
 ## 2. 为什么调整现有结构
 
-当前源码同时存在单文件、目录模块以及 `name.rs + name/` 三种形式；后者是合法 Rust 结构，问题在于项目约定不统一，并非编译错误。
+改造前源码同时存在单文件、目录模块以及 `name.rs + name/` 三种形式；后者是合法 Rust 结构，问题在于项目约定不统一，并非编译错误。下表是迁移前的调查记录。
 
 | 当前情况 | 实际问题 | 目标 |
 | --- | --- | --- |
@@ -66,9 +66,11 @@ Yue-Design-System/packages/tokens
 
 Base 补丁须保留来源、许可证、回归测试及移除条件，见 [YUE-PATCH.md](../vendor/gpui-base/YUE-PATCH.md)。外部 workspace 接入时还须在自己的根配置 patch，Cargo 不继承依赖库中的 patch；不能仅搬动 Yue 目录就宣称消除了这一接入要求。
 
+同窗局部高斯模糊属于GPUI绘制基础层，通过 `Styled::backdrop_blur` 供容器组合；不放入ImagePreview私有状态，也不让Base依赖Yue材质token。Windows后端负责局部采样、滤波、顺序及资源预算，Yue负责tint、图标与表面。见 [基础层合同](26-backdrop-blur.md) 和两份 [core](../vendor/gpui-pre/YUE-PATCH.md)／[Windows](../vendor/gpui-pre-windows/YUE-PATCH.md) 补丁记录；三个Cargo patch须统一随宿主接入。
+
 ## 4. crate 级目录
 
-以下是目标结构的局部示例。`field/`、`input/` 等属于待迁移目标，不是当前路径清单。
+以下是已实施结构的局部示例；单个组件的私有文件仍按实际职责选择。
 
 ```text
 crates/yue-component/
@@ -91,7 +93,9 @@ crates/yue-component/
     theme/
       mod.rs               # 主题公开合同和查询
       generated.rs         # 生成代码，禁止手改
-    icon.rs                # 到独立图标 crate 的桥接与 Yue 适配
+    icon/                  # 到独立图标 crate 的桥接与 Yue 适配
+      mod.rs               # 图标语义映射和尺寸
+      paint.rs             # Checkbox / Tag / Dropdown 共用的动态笔画
   tests/                   # 公共接口和跨组件集成测试
   tokens/inventory.json    # 设计系统 token 快照，禁止手改
   assets/                  # 实际需要分发的资源
@@ -99,7 +103,7 @@ crates/yue-component/
 
 组件目录采用 `snake_case`。一个目录可容纳紧密家族，例如 ButtonGroup 属于 Button、RadioGroup 属于 Radio；Input/Textarea/NumberInput 共享编辑器与外框，Loading 家族共享进度语义和绘制。不能因为几个组件都用圆角背景就归为一个家族。
 
-`icon.rs` 是桥接入口，不在 Yue 中重新复制 SVG 数据或实现另一套图标加载。`popup/` 等基础设施按机制命名，与组件目录并列；不新增含糊的 `common/`、`utils/` 或按技术类型横切所有组件的 `states/`、`elements/`。
+`icon/mod.rs` 是桥接入口，不在 Yue 中重新复制 SVG 数据或实现另一套图标加载；`icon/paint.rs` 只承接三个真实消费者共用的动态勾选笔画，不负责 SVG 资源。`popup/` 等基础设施按机制命名，与组件目录并列；不新增含糊的 `common/`、`utils/` 或按技术类型横切所有组件的 `states/`、`elements/`。
 
 ## 5. 单个组件需要哪些文件
 
@@ -161,7 +165,7 @@ select/
 
 ## 6. Input、Field 与 Form 的专门边界
 
-`YueField` 目前位于 `input.rs`，已能包裹 Input、Textarea、NumberInput 和 Select，因此它是字段组合层，不属于文本编辑器内部。
+`YueField` 在改造前位于 `input.rs`，已能包裹 Input、Textarea、NumberInput 和 Select，因此它是字段组合层，不属于文本编辑器内部。本轮已迁至独立 `field/`，Input 不再导入 Form 或 Field。
 
 ```text
 Field ──> Form ──> InputState / YueSelectState 的公开校验与聚焦合同
@@ -298,7 +302,7 @@ mod layout;
 
 ## 12. 存量组件改造计划
 
-以下是改造队列，不表示已有功能存在缺陷，也不授权一次性批量改写。每次选择一个边界清晰的批次，完成后更新该组件文档。
+以下是迁移分工与后续持续检查的依据，不表示列出的组件存在功能缺陷。每次选择一个边界清晰的批次，完成后更新该组件文档；本轮执行结果见第 16 节。
 
 | 对象 | 目标改造 | 优先级/边界 |
 | --- | --- | --- |
@@ -386,3 +390,67 @@ Windows 实窗验收按改动范围选择 DPI、字体、键盘、IME、读屏�
 - [token 同步工具](../tools/sync-yue-theme.mjs)、[Base 补丁说明](../vendor/gpui-base/YUE-PATCH.md)
 
 本文依据本仓库现状及已加载的 gpui-kit Coding Guides / Design Guides 编写；上游指南用于约束所有权、组合和交互，具体行为以锁定源码验证，不以类比其他框架推定。
+
+## 16. 本轮迁移记录（2026-11-02）
+
+### 16.1 基线与范围
+
+改造前的实现、测试、字体、token 快照、Base 补丁与设计文档已保存为 Git 基线 `26e65fe` 并推送至 `origin/main`。本节记录的是基于该快照的架构改造，不将基线中已有的组件功能计为本轮新增。
+
+所有组件均按本文检查目录入口、职责、状态所有权、模块依赖和测试组织。有真实混合职责的模块执行拆分；已经合理的模块保留。未新增依赖、通用控件引擎、状态同步框架或兼容壳，未修改 Base 行为、token 数值和资源文件。
+
+### 16.2 实际落地结构
+
+| 组件 / 家族 | 本轮结果 |
+| --- | --- |
+| Button / ButtonGroup | `button/{mod.rs,element.rs,tests.rs}`；公共构造与按钮表面分开 |
+| Switch | `switch/{mod.rs,element.rs,paint.rs,tests.rs}`；轨道组合与图标/加载环笔画分开 |
+| Checkbox / CheckboxGroup | `checkbox/{mod.rs,element.rs,behavior.rs,paint.rs,tests.rs}`；选择规则与呈现分开 |
+| Radio / RadioGroup | `radio/{mod.rs,element.rs,behavior.rs,tests.rs}`；键盘/roving 规则与呈现分开 |
+| Segmented | `segmented/{mod.rs,element.rs,behavior.rs,tests.rs}`；保持受控 value 与稳定几何身份 |
+| Link、SwatchGroup | 各自迁入目录，分为公共 builder 与 element；Link 的纯测试独立保留 |
+| Tag、Divider、Form | 原入口迁至同名目录的 `mod.rs`；接续已有子模块，不为凑模板增加 State |
+| Input / Textarea / NumberInput | `input/{mod.rs,element.rs,textarea.rs,number_input.rs,frame.rs,tests.rs}`；复用同一 Base 编辑状态，共用外框语义、计数和长度处理 |
+| Field | 独立 `field/{mod.rs,element.rs,tests.rs}`；持有标签/校验组合，不持有控件值；依赖 Form 和控件，控件不反向导入 Field/Form |
+| Select | `element.rs` 负责字段与触发器，`panel.rs` 负责浮层和列表，`option.rs` 负责选项，`layout.rs` 负责共享测量；actions 接线归 behavior，保留唯一 YueSelectState |
+| Select 测试 | 共享 fixture 在 `tests/mod.rs`，键盘、指针、异步请求、布局分别在具名子模块；model/behavior 的纯测试仍普通运行 |
+| Dialog、ColorPicker | 公共 builder 与 `element.rs` 分开；保留既有状态、面板、窗口层和绘制的所有权 |
+| Dropdown / ContextMenu / SplitButton | 触发器组合进入 `element.rs`；实际 MenuHost 进入 `host.rs`，它是持有 retained 句柄的本帧宿主，不伪装成新的 State Entity |
+| Breadcrumb | 路径配置留在 mod，组合进入 element；共享的叶节点装饰绘制归 action |
+| Icon 适配 | `icon/mod.rs` 保持公共语义映射；`icon/paint.rs` 承接 Checkbox、Tag、Dropdown 共用的动态勾选笔画，三个消费者不再读取 Checkbox 私有画笔 |
+| Slider、Tabs、Collapse | 保留已明确的 mod/element/state 分工（按各组件实际需要），不增加占位文件 |
+| Loading（Progress / Spinner / Skeleton） | 保留紧密家族和共享 paint，不拆出多套状态或计时器 |
+| Toast、Tooltip | 保留既有 controller/state、layer、card/surface、group 等真实部件与生命周期 |
+| Popup 与设计基础设施 | 维持内部机制和唯一设计源；库根只保留初始化、布局、动效、token、排版等基础入口 |
+
+所有公共组件继续从 crate 根导出；`YueField` 的导出所有者由 input 改为 field，外部 `yue_component::YueField` 不变。保留根路径是因为它本来就是合理边界，不增加旧私有文件路径的转发层。组件文档中的实现链接已随迁移更新。
+
+迁移时没有将状态字段批量改为 `pub(crate)`。只有确需兄弟模块协作的内部合同使用 `pub(super)` 或窄访问器；MenuHost 的状态字段继续私有，通过 `is_open()` 暴露所需事实，Switch 的笔画配置通过构造器创建。
+
+### 16.3 改造前新增、改造后复验的测试
+
+新增 [公共 Field 组合测试](../crates/yue-component/tests/field.rs)，先在旧结构运行通过，再在新结构运行通过：
+
+1. Input、Textarea、NumberInput、Select 各自只有一个具名可交互节点，Field 将适用的名称和描述传给真实控件。
+2. 同一个 Form 同时校验文本和类型化选择，提交按顺序聚焦实际未通过的控件；修正后错误描述随 live value 消失。
+3. 父级重建、字段标签变化及主题切换保留原编辑状态和焦点，继续输入不会丢失已有值，其他控件值保持原样。
+
+既有测试保留，纯测试没有随整个目录迁入 `headless-tests`。检查迁移前后测试函数清单，没有删减原测试；新增恰为上述 3 项。
+
+### 16.4 自动化验收与边界
+
+下表合计通过数包含对应命令实际运行的单测、集成测试和 doctest；不同模式重复执行部分测试，不能跨行相加。组件 lib 的普通测试仍为 148 项，启用无头后仍为 302 项；新增 Field 测试位于独立集成 target。
+
+| 检查 | 改造前 | 改造后 |
+| --- | --- | --- |
+| `cargo test --workspace --locked` | 183 通过 | 183 通过 |
+| `cargo test --workspace --locked --features headless-tests` | 605 通过 | 608 通过 |
+| `cargo test -p yue-component --locked --no-default-features --features headless-tests` | 585 通过 | 588 通过 |
+| 新增 Field 组合测试 | 3 通过 | 3 通过，已计入上面相应模式 |
+| 本地 token 快照检查、对照设计系统检查 | 快照作为基线保留 | 两种检查一致 |
+| `cargo fmt --all -- --check` | 不以改造前格式作为新规范 | 通过 |
+| 两组 workspace/all-targets Clippy，均 `-D warnings` | 不将旧检查记录冒充本轮结果 | 普通和 headless 模式均通过 |
+| `cargo check -p windows-showcase --locked` | 基线测试可构建 | 通过 |
+| `RUSTDOCFLAGS="-D warnings"` 下生成 crate 文档 | 未新增基线检查 | 通过，无失效的 Rustdoc 内部链接 |
+
+本轮是模块边界与组织改造；自动化测试覆盖原有交互合同、布局和状态，不声称完成新的真实 Windows GPU、DPI、IME 或 Narrator 验收。未启动 Showcase 实窗。临时迁移脚本、快照和执行日志保存在被忽略的 `target/architecture-refactor/`，不作为运行时或发布依赖。

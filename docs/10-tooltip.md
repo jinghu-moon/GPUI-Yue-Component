@@ -188,6 +188,8 @@ V1 定义 LTR 的物理方向，不声称自动 RTL 镜像；未来支持 RTL �
 
 滚动、resize、内容、字体、rem 及主题几何改变均更新同一请求，不重启 show delay、不重播进入动画。优先在 trigger prepaint 更新注册表，由 deferred surface 读取本帧数据；不能照搬 Dropdown 的前帧锚点路径后宣称同帧跟随。如果技术验证只能使用前帧，须记录实窗限制并修正实现计划，验收目标为无可见滞后。
 
+测量与绘制使用同一套UI字体、回退字体、Regular字重与字形特性，不继承trigger的等宽字体、加粗或斜体。行高对齐物理像素，宽度向外取整并预留一个物理像素，避免分数DPI下尾部括号换行。实际测为单行的文字使用nowrap；长文案和显式换行仍按最大宽度排版，不靠固定大宽度或截断掩盖测量误差。
+
 ### 5.3 八个非居中方位的箭头坐标
 
 未触发第 5.4 节退化规则时，`top-left`、`top-right`、`bottom-left`、`bottom-right`、`left-top`、`left-bottom`、`right-top`、`right-bottom` 的小三角不能使用固定边缘偏移，也不能统一放在气泡边缘的 50% 处。位置由气泡实际宽高、trigger 尺寸和最终定位共同计算。以下为 Yue 的明确设计规则，不声称参考截图或 HTML 已提供同样公式。
@@ -453,8 +455,8 @@ reduced motion 时直接切换安全目标几何与文字，不执行平移、�
 | --- | --- |
 | `src/tooltip/` | `mod.rs` 公开 seam；`controller.rs` 每窗仲裁与 trigger；`group.rs` 显式组；`surface.rs` 排版/视觉；`overflow.rs` 真实溢出；`tests.rs` 交互测试 |
 | `src/application.rs` | 使用已注册 PopupRuntime，安装 Tooltip controller，不重复注册基础层或抢占全局 TooltipDefaults |
-| `src/button.rs` | `.tooltip(text)` 迁入统一 layer，保留签名，复用现有焦点和名称 |
-| `src/segmented.rs` | 图标选项提示迁移，保留 roving focus 和 Radio 语义 |
+| `src/button/element.rs` | `.tooltip(text)` 迁入统一 layer，保留签名，复用现有焦点和名称 |
+| `src/segmented/element.rs` | 图标选项提示迁移，保留 roving focus 和 Radio 语义 |
 | `src/lib.rs` | 重导出新类型，按需加入 prelude |
 | `src/tooltip/tests.rs` | 使用现有 opt-in headless-tests，接入真实输入及布局 |
 | `examples/windows-showcase/src/pages/tooltip.rs` | 新增演示页，导航按现有字母序 |
@@ -573,6 +575,8 @@ cargo clippy --workspace --locked --all-targets --features headless-tests -- -D 
 | Clippy / 格式 / 映射 | workspace 默认 / headless 两组 Clippy（全部 targets，`-D warnings`）、workspace fmt、Base Presence rustfmt、离线 token 映射检查及真实源对比通过 |
 
 上游 `corepack pnpm audit:tokens` 未通过：Checkbox 既有冻结词汇错误 25 项；将 Tooltip enter 临时还原为旧值后对照重跑，失败集合与新值完全一致，无 Tooltip 错误。未修改这些无关 token。Base 的独立单元测试未运行：它被当前 workspace 排除，离线独立解析缺少 `rust_decimal`；本次机制修复通过真实 Popup / Tooltip 集成回归验证。上游 Vue 全套验证与 Windows GPU / UIA 实窗验收未执行，不将 headless 检查描述为像素验收。
+
+2026-11-02图片预览反馈修复：统一Tooltip测量／绘制的字体合同、物理像素行高与宽度向外取整；测为单行的内容不再次自动换行。新增回归先复现125%DPI、rem=24时“缩小（−）”排成两行，再验证短文案实际字宽可容纳、长文案与显式换行的真实布局高度，以及trigger继承字体不影响测量。四种DPI、三档rem及两种字体配置通过；组件库320项headless单元测试与Showcase18项测试通过。详见[图片预览本轮修复记录](25-image-preview.md#174-截图反馈修复2026-11-02)。
 
 ### 实现边界
 
