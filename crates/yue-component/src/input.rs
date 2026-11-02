@@ -7,8 +7,11 @@ use gpui_kit::{
     prelude::FluentBuilder as _,
 };
 
-use crate::{ButtonShape, ButtonSize, ButtonVariant, YueButton, YueForm, YueTheme, YueToken};
-use yue_component_icons::{Icon, IconDefinition, outline};
+use crate::{ButtonShape, ButtonSize, ButtonVariant, YueButton, YueForm, YueTheme};
+use yue_component_icons::{Icon, IconDefinition};
+
+use crate::icon::YueIcon;
+use crate::tokens::{pixels as token_pixels, rems, rgba as color};
 
 /// An input frame with its id, styles and accessibility setters applied.
 ///
@@ -16,49 +19,31 @@ use yue_component_icons::{Icon, IconDefinition, outline};
 /// feature of `gpui-kit` the alias collapses to the plain stateful div.
 type ObservedFrame = gpui_kit::base::ObservedElement<gpui_kit::Stateful<gpui_kit::Div>>;
 
-fn token(theme: YueTheme, name: &'static str) -> YueToken {
-    theme
-        .token(name)
-        .unwrap_or_else(|| panic!("missing Yue token {name}"))
-}
-
-fn color(theme: YueTheme, name: &'static str) -> gpui_kit::Rgba {
-    token(theme, name)
-        .rgba()
-        .unwrap_or_else(|| panic!("Yue token {name} is not a supported color"))
-}
-
-fn rems(theme: YueTheme, name: &'static str) -> gpui_kit::Rems {
-    gpui_kit::rems(token_pixels(theme, name) / 16.0)
-}
-
-fn token_pixels(theme: YueTheme, name: &'static str) -> f32 {
-    token(theme, name)
-        .pixels()
-        .unwrap_or_else(|| panic!("Yue token {name} is not a pixel length"))
-}
-
-fn border_token(status: InputStatus, disabled: bool, focused: bool) -> &'static str {
+pub(crate) fn border_token(
+    status: InputStatus,
+    disabled: bool,
+    focused: bool,
+) -> crate::theme::TokenKey {
     if disabled {
-        "--input-border-color-disabled"
+        crate::theme::keys::INPUT_BORDER_COLOR_DISABLED
     } else if status == InputStatus::Normal && focused {
-        "--input-border-color-focus"
+        crate::theme::keys::INPUT_BORDER_COLOR_FOCUS
     } else {
         match status {
-            InputStatus::Normal => "--input-border-color",
-            InputStatus::Success => "--success",
-            InputStatus::Warning => "--warning",
-            InputStatus::Error => "--input-border-color-invalid",
+            InputStatus::Normal => crate::theme::keys::INPUT_BORDER_COLOR,
+            InputStatus::Success => crate::theme::keys::SUCCESS,
+            InputStatus::Warning => crate::theme::keys::WARNING,
+            InputStatus::Error => crate::theme::keys::INPUT_BORDER_COLOR_INVALID,
         }
     }
 }
 
-fn field_message_token(status: InputStatus) -> &'static str {
+fn field_message_token(status: InputStatus) -> crate::theme::TokenKey {
     match status {
-        InputStatus::Error => "--error-foreground",
-        InputStatus::Warning => "--warning-foreground",
-        InputStatus::Success => "--success-foreground",
-        InputStatus::Normal => "--input-affix-color",
+        InputStatus::Error => crate::theme::keys::ERROR_FOREGROUND,
+        InputStatus::Warning => crate::theme::keys::WARNING_FOREGROUND,
+        InputStatus::Success => crate::theme::keys::SUCCESS_FOREGROUND,
+        InputStatus::Normal => crate::theme::keys::INPUT_AFFIX_COLOR,
     }
 }
 
@@ -105,8 +90,8 @@ fn counter_slot(theme: YueTheme, count: usize, limit: Option<usize>) -> AnyEleme
     };
     div()
         .flex_shrink_0()
-        .text_size(rems(theme, "--input-font-size-sm"))
-        .text_color(color(theme, "--input-affix-color"))
+        .text_size(rems(theme, crate::theme::keys::INPUT_FONT_SIZE_SM))
+        .text_color(color(theme, crate::theme::keys::INPUT_AFFIX_COLOR))
         .child(text)
         .into_any_element()
 }
@@ -242,10 +227,20 @@ enum InputSlot {
     Icon(Icon),
 }
 
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueInput};
+/// use yue_component::gpui_kit::{Entity, base::input::InputState};
+/// # fn example(state: &Entity<InputState>) {
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueInput::new("field", theme, state).accessibility_label("名称");
+/// # }
+/// ```
 #[derive(IntoElement)]
 pub struct YueInput {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     state: Entity<gpui_kit::base::input::InputState>,
     size: InputSize,
     status: InputStatus,
@@ -268,10 +263,20 @@ pub struct YueInput {
 }
 
 /// Yue-styled multi-line text editor backed by GPUI Base `TextareaState`.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueTextarea};
+/// use yue_component::gpui_kit::{Entity, base::input::TextareaState};
+/// # fn example(state: &Entity<TextareaState>) {
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueTextarea::new("field", theme, state).accessibility_label("名称");
+/// # }
+/// ```
 #[derive(IntoElement)]
 pub struct YueTextarea {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     state: Entity<gpui_kit::base::input::TextareaState>,
     status: InputStatus,
     accessibility_label: Option<SharedString>,
@@ -287,6 +292,18 @@ pub struct YueTextarea {
 }
 
 impl YueTextarea {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(
         id: impl Into<ElementId>,
         theme: YueTheme,
@@ -295,6 +312,7 @@ impl YueTextarea {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
             state: state.clone(),
             status: InputStatus::Normal,
             accessibility_label: None,
@@ -365,6 +383,7 @@ impl YueTextarea {
 /// Keeping the builder, rather than a finished element, lets the field inject its
 /// label, description, and validation status into the control's accessibility node.
 enum FieldChild {
+    Select(Box<crate::YueSelect>),
     Element(AnyElement),
     Input(YueInput),
     Textarea(YueTextarea),
@@ -377,9 +396,15 @@ enum FieldChild {
 /// [`number_input`](YueField::number_input): the field then names the control for
 /// assistive technology and makes the message the single source of its status, so
 /// a red border always arrives with the copy that explains it.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueField};
+/// let field = YueField::new(YueTheme::new(ThemeMode::Light, Accent::Azure)).label("名称");
+/// ```
 #[derive(IntoElement)]
 pub struct YueField {
     theme: YueTheme,
+    use_default_theme: bool,
     label: Option<SharedString>,
     description: Option<SharedString>,
     message: Option<SharedString>,
@@ -390,9 +415,22 @@ pub struct YueField {
 }
 
 impl YueField {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(theme: YueTheme) -> Self {
         Self {
             theme,
+            use_default_theme: false,
             label: None,
             description: None,
             message: None,
@@ -432,6 +470,11 @@ impl YueField {
         self.child = Some(FieldChild::Input(input));
         self
     }
+    /// Preserve the Select's typed value and forward field semantics/status.
+    pub fn select(mut self, select: crate::YueSelect) -> Self {
+        self.child = Some(FieldChild::Select(Box::new(select)));
+        self
+    }
     pub fn textarea(mut self, textarea: YueTextarea) -> Self {
         self.child = Some(FieldChild::Textarea(textarea));
         self
@@ -448,20 +491,49 @@ impl YueField {
 }
 
 /// Yue-styled number input using GPUI Base's spinbutton behavior.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueNumberInput};
+/// use yue_component::gpui_kit::{Entity, base::input::InputState};
+/// # fn example(state: &Entity<InputState>) {
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueNumberInput::new("field", theme, state).accessibility_label("名称");
+/// # }
+/// ```
 #[derive(IntoElement)]
 pub struct YueNumberInput {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     state: Entity<gpui_kit::base::input::InputState>,
     size: InputSize,
     status: InputStatus,
     accessibility_label: Option<SharedString>,
+    accessibility_description: Option<SharedString>,
+    on_step: Option<std::rc::Rc<NumberStepHandler>>,
+    controls_right: bool,
+    controls: bool,
+    tab_stop: bool,
     disabled: bool,
     width: Option<DefiniteLength>,
     block: bool,
 }
 
+type NumberStepHandler = dyn Fn(gpui_kit::base::StepAction, &mut Window, &mut App);
+
 impl YueNumberInput {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(
         id: impl Into<ElementId>,
         theme: YueTheme,
@@ -470,10 +542,16 @@ impl YueNumberInput {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
             state: state.clone(),
             size: InputSize::Medium,
             status: InputStatus::Normal,
             accessibility_label: None,
+            accessibility_description: None,
+            on_step: None,
+            controls_right: false,
+            controls: true,
+            tab_stop: true,
             disabled: false,
             width: None,
             block: false,
@@ -489,10 +567,35 @@ impl YueNumberInput {
     }
     /// Name this spin button to assistive technology.
     ///
-    /// GPUI Base publishes the spin button node inside [`gpui_kit::base::NumberInput`],
-    /// so the label has to travel there; a description has no slot to reach.
+    /// GPUI Base publishes the spin button node inside [`gpui_kit::base::NumberInput`].
     pub fn accessibility_label(mut self, label: impl Into<SharedString>) -> Self {
         self.accessibility_label = Some(label.into());
+        self
+    }
+    pub fn accessibility_description(mut self, text: impl Into<SharedString>) -> Self {
+        self.accessibility_description = Some(text.into());
+        self
+    }
+    /// Override stepping for a composed editor with a shared numeric model.
+    pub fn on_step(
+        mut self,
+        step: impl Fn(gpui_kit::base::StepAction, &mut Window, &mut App) + 'static,
+    ) -> Self {
+        self.on_step = Some(std::rc::Rc::new(step));
+        self
+    }
+    /// Stack the two step controls in a compact trailing lane.
+    pub fn controls_right(mut self) -> Self {
+        self.controls_right = true;
+        self
+    }
+    /// Hide the step icons while keeping numeric editing, Up/Down and accessibility actions.
+    pub fn controls(mut self, visible: bool) -> Self {
+        self.controls = visible;
+        self
+    }
+    pub fn tab_stop(mut self, enabled: bool) -> Self {
+        self.tab_stop = enabled;
         self
     }
     pub fn disabled(mut self, disabled: bool) -> Self {
@@ -510,6 +613,18 @@ impl YueNumberInput {
 }
 
 impl YueInput {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(
         id: impl Into<ElementId>,
         theme: YueTheme,
@@ -518,6 +633,7 @@ impl YueInput {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
             state: state.clone(),
             size: InputSize::Medium,
             status: InputStatus::Normal,
@@ -632,27 +748,30 @@ impl YueInput {
 }
 
 impl RenderOnce for YueInput {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         use gpui_kit::base::input::InputEditorStyle;
 
         let (height, padding, font_size, icon_size) = match self.size {
             InputSize::Small => (
-                "--input-height-sm",
-                "--input-padding-inline-sm",
-                "--input-font-size-sm",
-                "--input-icon-size-sm",
+                crate::theme::keys::INPUT_HEIGHT_SM,
+                crate::theme::keys::INPUT_PADDING_INLINE_SM,
+                crate::theme::keys::INPUT_FONT_SIZE_SM,
+                crate::theme::keys::INPUT_ICON_SIZE_SM,
             ),
             InputSize::Medium => (
-                "--input-height-md",
-                "--input-padding-inline-md",
-                "--input-font-size-md",
-                "--input-icon-size-md",
+                crate::theme::keys::INPUT_HEIGHT_MD,
+                crate::theme::keys::INPUT_PADDING_INLINE_MD,
+                crate::theme::keys::INPUT_FONT_SIZE_MD,
+                crate::theme::keys::INPUT_ICON_SIZE_MD,
             ),
             InputSize::Large => (
-                "--input-height-lg",
-                "--input-padding-inline-lg",
-                "--input-font-size-lg",
-                "--input-icon-size-lg",
+                crate::theme::keys::INPUT_HEIGHT_LG,
+                crate::theme::keys::INPUT_PADDING_INLINE_LG,
+                crate::theme::keys::INPUT_FONT_SIZE_LG,
+                crate::theme::keys::INPUT_ICON_SIZE_LG,
             ),
         };
         let visibility = self.password.then(|| {
@@ -679,14 +798,16 @@ impl RenderOnce for YueInput {
                 foreground: color(
                     self.theme,
                     if self.disabled {
-                        "--input-color-disabled"
+                        crate::theme::keys::INPUT_COLOR_DISABLED
                     } else {
-                        "--input-color"
+                        crate::theme::keys::INPUT_COLOR
                     },
                 )
                 .into(),
-                muted_foreground: color(self.theme, "--input-placeholder-color").into(),
-                caret: color(self.theme, "--input-color").into(),
+                muted_foreground: color(self.theme, crate::theme::keys::INPUT_PLACEHOLDER_COLOR)
+                    .into(),
+                caret: color(self.theme, crate::theme::keys::INPUT_COLOR).into(),
+                selection: self.theme.selection(),
                 ..Default::default()
             });
             if let Some(placeholder) = &self.placeholder
@@ -709,7 +830,7 @@ impl RenderOnce for YueInput {
         let border = border_token(self.status, self.disabled, focused);
         let height = rems(self.theme, height);
         let pad = rems(self.theme, padding);
-        let gap = rems(self.theme, "--input-gap");
+        let gap = rems(self.theme, crate::theme::keys::INPUT_GAP);
         let text_size = rems(self.theme, font_size);
         let icon_size = rems(self.theme, icon_size);
         let disabled = self.disabled;
@@ -731,16 +852,16 @@ impl RenderOnce for YueInput {
             .bg(color(
                 self.theme,
                 if disabled {
-                    "--input-background-disabled"
+                    crate::theme::keys::INPUT_BACKGROUND_DISABLED
                 } else if self.readonly {
-                    "--input-background-readonly"
+                    crate::theme::keys::INPUT_BACKGROUND_READONLY
                 } else {
-                    "--input-background"
+                    crate::theme::keys::INPUT_BACKGROUND
                 },
             ))
-            .rounded(rems(self.theme, "--input-border-radius"))
+            .rounded(rems(self.theme, crate::theme::keys::INPUT_BORDER_RADIUS))
             .border(if self.bordered {
-                rems(self.theme, "--input-border-width")
+                rems(self.theme, crate::theme::keys::INPUT_BORDER_WIDTH)
             } else {
                 gpui_kit::rems(0.0)
             })
@@ -751,7 +872,10 @@ impl RenderOnce for YueInput {
             .when(!self.bordered, |this| this.border_color(gpui_kit::rgba(0)))
             .when(!disabled && self.status == InputStatus::Normal, |this| {
                 this.hover(|style| {
-                    style.border_color(color(self.theme, "--input-border-color-hover"))
+                    style.border_color(color(
+                        self.theme,
+                        crate::theme::keys::INPUT_BORDER_COLOR_HOVER,
+                    ))
                 })
             })
             .when(focused, |this| this.border_color(color(self.theme, border)))
@@ -760,13 +884,13 @@ impl RenderOnce for YueInput {
                     InputSlot::Element(element) => element,
                     InputSlot::Icon(icon) => icon
                         .size(icon_size)
-                        .color_value(color(self.theme, "--input-affix-color"))
+                        .color_value(color(self.theme, crate::theme::keys::INPUT_AFFIX_COLOR))
                         .into_any_element(),
                 };
                 this.child(
                     div()
                         .flex_shrink_0()
-                        .text_color(color(self.theme, "--input-affix-color"))
+                        .text_color(color(self.theme, crate::theme::keys::INPUT_AFFIX_COLOR))
                         .child(leading),
                 )
             })
@@ -785,14 +909,14 @@ impl RenderOnce for YueInput {
                 YueButton::icon(
                     (self.id.clone(), "input-password-toggle"),
                     self.theme,
-                    outline::Eye,
+                    YueIcon::Visible,
                     "Show password",
                 )
             } else {
                 YueButton::icon(
                     (self.id.clone(), "input-password-toggle"),
                     self.theme,
-                    outline::EyeOff,
+                    YueIcon::Hidden,
                     "Hide password",
                 )
             };
@@ -821,19 +945,27 @@ impl RenderOnce for YueInput {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .size(rems(self.theme, "--input-clear-hit-size"))
-                    .rounded(rems(self.theme, "--input-clear-border-radius"))
+                    .size(rems(self.theme, crate::theme::keys::INPUT_CLEAR_HIT_SIZE))
+                    .rounded(rems(
+                        self.theme,
+                        crate::theme::keys::INPUT_CLEAR_BORDER_RADIUS,
+                    ))
                     .bg(gpui_kit::rgba(0))
-                    .text_color(color(self.theme, "--input-clear-color"))
+                    .text_color(color(self.theme, crate::theme::keys::INPUT_CLEAR_COLOR))
                     .cursor_pointer()
-                    .hover(|style| style.text_color(color(self.theme, "--input-clear-color-hover")))
+                    .hover(|style| {
+                        style.text_color(color(
+                            self.theme,
+                            crate::theme::keys::INPUT_CLEAR_COLOR_HOVER,
+                        ))
+                    })
                     .on_click(move |_, window, cx| {
                         clear.update(cx, |input, cx| input.clean(window, cx))
                     })
                     .child(
-                        Icon::new(outline::X)
+                        Icon::new(YueIcon::Close)
                             .size(icon_size)
-                            .color_value(color(self.theme, "--input-clear-color")),
+                            .color_value(color(self.theme, crate::theme::keys::INPUT_CLEAR_COLOR)),
                     ),
             );
         }
@@ -859,13 +991,13 @@ impl RenderOnce for YueInput {
                 InputSlot::Element(element) => element,
                 InputSlot::Icon(icon) => icon
                     .size(icon_size)
-                    .color_value(color(self.theme, "--input-affix-color"))
+                    .color_value(color(self.theme, crate::theme::keys::INPUT_AFFIX_COLOR))
                     .into_any_element(),
             };
             this.child(
                 div()
                     .flex_shrink_0()
-                    .text_color(color(self.theme, "--input-affix-color"))
+                    .text_color(color(self.theme, crate::theme::keys::INPUT_AFFIX_COLOR))
                     .child(trailing),
             )
         })
@@ -873,7 +1005,10 @@ impl RenderOnce for YueInput {
 }
 
 impl RenderOnce for YueTextarea {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         use gpui_kit::base::input::InputEditorStyle;
         let state = self.state.clone();
         state.update(cx, |input, cx| {
@@ -883,21 +1018,35 @@ impl RenderOnce for YueTextarea {
                 foreground: color(
                     self.theme,
                     if self.disabled {
-                        "--input-color-disabled"
+                        crate::theme::keys::INPUT_COLOR_DISABLED
                     } else {
-                        "--input-color"
+                        crate::theme::keys::INPUT_COLOR
                     },
                 )
                 .into(),
-                muted_foreground: color(self.theme, "--input-placeholder-color").into(),
-                caret: color(self.theme, "--input-color").into(),
+                muted_foreground: color(self.theme, crate::theme::keys::INPUT_PLACEHOLDER_COLOR)
+                    .into(),
+                caret: color(self.theme, crate::theme::keys::INPUT_COLOR).into(),
+                selection: self.theme.selection(),
                 ..Default::default()
             });
             input.set_editor_paddings(gpui_kit::Edges {
-                top: gpui_kit::px(token_pixels(self.theme, "--textarea-padding-block")),
-                right: gpui_kit::px(token_pixels(self.theme, "--input-padding-inline-md")),
-                bottom: gpui_kit::px(token_pixels(self.theme, "--textarea-padding-block")),
-                left: gpui_kit::px(token_pixels(self.theme, "--input-padding-inline-md")),
+                top: gpui_kit::px(token_pixels(
+                    self.theme,
+                    crate::theme::keys::TEXTAREA_PADDING_BLOCK,
+                )),
+                right: gpui_kit::px(token_pixels(
+                    self.theme,
+                    crate::theme::keys::INPUT_PADDING_INLINE_MD,
+                )),
+                bottom: gpui_kit::px(token_pixels(
+                    self.theme,
+                    crate::theme::keys::TEXTAREA_PADDING_BLOCK,
+                )),
+                left: gpui_kit::px(token_pixels(
+                    self.theme,
+                    crate::theme::keys::INPUT_PADDING_INLINE_MD,
+                )),
             });
         });
         if let Some(limit) = self.max_length {
@@ -912,18 +1061,18 @@ impl RenderOnce for YueTextarea {
             .test_support()
             .flex()
             .items_start()
-            .text_size(rems(self.theme, "--input-font-size-md"))
+            .text_size(rems(self.theme, crate::theme::keys::INPUT_FONT_SIZE_MD))
             .bg(color(
                 self.theme,
                 if self.disabled {
-                    "--input-background-disabled"
+                    crate::theme::keys::INPUT_BACKGROUND_DISABLED
                 } else {
-                    "--input-background"
+                    crate::theme::keys::INPUT_BACKGROUND
                 },
             ))
-            .rounded(rems(self.theme, "--input-border-radius"))
+            .rounded(rems(self.theme, crate::theme::keys::INPUT_BORDER_RADIUS))
             .border(if self.bordered {
-                rems(self.theme, "--input-border-width")
+                rems(self.theme, crate::theme::keys::INPUT_BORDER_WIDTH)
             } else {
                 gpui_kit::rems(0.0)
             })
@@ -937,7 +1086,10 @@ impl RenderOnce for YueTextarea {
             frame = frame.child(
                 div()
                     .self_end()
-                    .pr(rems(self.theme, "--input-padding-inline-sm"))
+                    .pr(rems(
+                        self.theme,
+                        crate::theme::keys::INPUT_PADDING_INLINE_SM,
+                    ))
                     .child(counter_slot(
                         self.theme,
                         value.chars().count(),
@@ -960,47 +1112,55 @@ impl RenderOnce for YueTextarea {
             presentation.focus_handle(),
         );
         if focused && self.status == InputStatus::Normal {
-            frame = frame.border_color(color(self.theme, "--input-border-color-focus"));
+            frame = frame.border_color(color(
+                self.theme,
+                crate::theme::keys::INPUT_BORDER_COLOR_FOCUS,
+            ));
         }
         frame
     }
 }
 
 impl RenderOnce for YueNumberInput {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         use gpui_kit::base::input::InputEditorStyle;
-        let (height, padding, font_size) = match self.size {
+        let (height, font_size) = match self.size {
             InputSize::Small => (
-                "--input-height-sm",
-                "--input-padding-inline-sm",
-                "--input-font-size-sm",
+                crate::theme::keys::INPUT_HEIGHT_SM,
+                crate::theme::keys::INPUT_FONT_SIZE_SM,
             ),
             InputSize::Medium => (
-                "--input-height-md",
-                "--input-padding-inline-md",
-                "--input-font-size-md",
+                crate::theme::keys::INPUT_HEIGHT_MD,
+                crate::theme::keys::INPUT_FONT_SIZE_MD,
             ),
             InputSize::Large => (
-                "--input-height-lg",
-                "--input-padding-inline-lg",
-                "--input-font-size-lg",
+                crate::theme::keys::INPUT_HEIGHT_LG,
+                crate::theme::keys::INPUT_FONT_SIZE_LG,
             ),
         };
+        let foreground = color(
+            self.theme,
+            if self.disabled {
+                crate::theme::keys::INPUT_COLOR_DISABLED
+            } else if self.status == InputStatus::Error {
+                crate::theme::keys::ERROR_FOREGROUND
+            } else {
+                crate::theme::keys::INPUT_COLOR
+            },
+        );
         let state = self.state.clone();
         state.update(cx, |input, cx| {
             input.set_disabled(self.disabled, cx);
+            input.set_text_align(TextAlign::Center, cx);
             input.set_editor_style(InputEditorStyle {
-                foreground: color(
-                    self.theme,
-                    if self.disabled {
-                        "--input-color-disabled"
-                    } else {
-                        "--input-color"
-                    },
-                )
-                .into(),
-                muted_foreground: color(self.theme, "--input-placeholder-color").into(),
-                caret: color(self.theme, "--input-color").into(),
+                foreground: foreground.into(),
+                muted_foreground: color(self.theme, crate::theme::keys::INPUT_PLACEHOLDER_COLOR)
+                    .into(),
+                caret: color(self.theme, crate::theme::keys::INPUT_COLOR).into(),
+                selection: self.theme.selection(),
                 ..Default::default()
             });
         });
@@ -1016,30 +1176,120 @@ impl RenderOnce for YueNumberInput {
             .when_some(self.width, |this, width| this.w(width))
             .child(
                 gpui_kit::base::NumberInput::new(&state)
+                    // Base shapes ordinary text from the inherited TextStyle.
+                    .text_color(foreground)
+                    .controls(self.controls)
+                    .tab_stop(self.tab_stop)
+                    .when(self.controls_right, |b| b.controls_right())
                     .disabled(self.disabled)
                     .when_some(self.accessibility_label, |this, label| {
                         this.accessibility_label(label)
                     })
+                    .when_some(self.accessibility_description, |this, text| {
+                        this.accessibility_description(text)
+                    })
+                    .when_some(self.on_step, |this, handler| {
+                        this.on_step(move |action, window, cx| handler(action, window, cx))
+                    })
+                    .input(gpui_kit::base::input::Input::new(&state))
+                    .decrement_button(move |button| {
+                        button
+                            .size(rems(self.theme, font_size))
+                            .flex_shrink_0()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .rounded(rems(
+                                self.theme,
+                                crate::theme::keys::INPUT_STEPPER_BORDER_RADIUS,
+                            ))
+                            .when(!self.disabled, |button| {
+                                button
+                                    .cursor_pointer()
+                                    .hover(|style| {
+                                        style.bg(color(
+                                            self.theme,
+                                            crate::theme::keys::INPUT_STEPPER_BACKGROUND_HOVER,
+                                        ))
+                                    })
+                                    .active(|style| {
+                                        style.bg(color(
+                                            self.theme,
+                                            crate::theme::keys::INPUT_STEPPER_BACKGROUND_PRESSED,
+                                        ))
+                                    })
+                            })
+                            .child(
+                                Icon::new(YueIcon::ChevronDown)
+                                    .size(rems(self.theme, font_size))
+                                    .color_value(color(
+                                        self.theme,
+                                        crate::theme::keys::INPUT_COLOR,
+                                    )),
+                            )
+                    })
+                    .increment_button(move |button| {
+                        button
+                            .size(rems(self.theme, font_size))
+                            .flex_shrink_0()
+                            .flex()
+                            .items_center()
+                            .justify_center()
+                            .rounded(rems(
+                                self.theme,
+                                crate::theme::keys::INPUT_STEPPER_BORDER_RADIUS,
+                            ))
+                            .when(!self.disabled, |button| {
+                                button
+                                    .cursor_pointer()
+                                    .hover(|style| {
+                                        style.bg(color(
+                                            self.theme,
+                                            crate::theme::keys::INPUT_STEPPER_BACKGROUND_HOVER,
+                                        ))
+                                    })
+                                    .active(|style| {
+                                        style.bg(color(
+                                            self.theme,
+                                            crate::theme::keys::INPUT_STEPPER_BACKGROUND_PRESSED,
+                                        ))
+                                    })
+                            })
+                            .child(
+                                Icon::new(YueIcon::ChevronUp)
+                                    .size(rems(self.theme, font_size))
+                                    .color_value(color(
+                                        self.theme,
+                                        crate::theme::keys::INPUT_COLOR,
+                                    )),
+                            )
+                    })
                     .text_size(rems(self.theme, font_size))
                     .h(rems(self.theme, height))
-                    .px(rems(self.theme, padding))
+                    .px(rems(
+                        self.theme,
+                        crate::theme::keys::INPUT_NUMBER_PADDING_INLINE,
+                    ))
                     .bg(color(
                         self.theme,
                         if self.disabled {
-                            "--input-background-disabled"
+                            crate::theme::keys::INPUT_BACKGROUND_DISABLED
                         } else {
-                            "--input-background"
+                            crate::theme::keys::INPUT_BACKGROUND
                         },
                     ))
-                    .rounded(rems(self.theme, "--input-border-radius"))
-                    .border(rems(self.theme, "--input-border-width"))
+                    .rounded(rems(self.theme, crate::theme::keys::INPUT_BORDER_RADIUS))
+                    .border(rems(self.theme, crate::theme::keys::INPUT_BORDER_WIDTH))
                     .border_color(color(self.theme, border)),
             )
     }
 }
 
 impl RenderOnce for YueField {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         let bound_error = match &self.form {
             Some((form, id)) => form.read(cx).error(id, cx),
             None => None,
@@ -1056,6 +1306,13 @@ impl RenderOnce for YueField {
         let label = self.label.clone();
         let announced = announced(self.required, &self.description, &message);
         let child = self.child.map(|child| match child {
+            FieldChild::Select(select) => (*select)
+                .required(self.required)
+                .when_some(label, |this, label| this.accessibility_label(label))
+                .when_some(announced, |this, text| this.accessibility_description(text))
+                .when_some(child_status, |this, status| this.status(status))
+                .render(window, cx)
+                .into_any_element(),
             FieldChild::Element(element) => element,
             FieldChild::Input(input) => input
                 .when_some(label, |this, label| this.accessibility_label(label))
@@ -1073,10 +1330,9 @@ impl RenderOnce for YueField {
                 .when_some(child_status, |this, status| this.status(status))
                 .render(window, cx)
                 .into_any_element(),
-            // GPUI Base publishes the spin button node, which has a label slot but
-            // no slot for the announced description.
             FieldChild::Number(number) => number
                 .when_some(label, |this, label| this.accessibility_label(label))
+                .when_some(announced, |this, text| this.accessibility_description(text))
                 .when_some(child_status, |this, status| this.status(status))
                 .render(window, cx)
                 .into_any_element(),
@@ -1085,11 +1341,11 @@ impl RenderOnce for YueField {
         div()
             .flex()
             .flex_col()
-            .gap(rems(self.theme, "--input-gap"))
+            .gap(rems(self.theme, crate::theme::keys::INPUT_GAP))
             .when_some(self.label, |this, label| {
                 this.child(
                     div()
-                        .text_color(color(self.theme, "--input-color"))
+                        .text_color(color(self.theme, crate::theme::keys::INPUT_COLOR))
                         .child(label)
                         .when(self.required, |label| label.child(" *")),
                 )
@@ -1097,8 +1353,8 @@ impl RenderOnce for YueField {
             .when_some(self.description, |this, description| {
                 this.child(
                     div()
-                        .text_color(color(self.theme, "--input-affix-color"))
-                        .text_size(rems(self.theme, "--input-font-size-sm"))
+                        .text_color(color(self.theme, crate::theme::keys::INPUT_AFFIX_COLOR))
+                        .text_size(rems(self.theme, crate::theme::keys::INPUT_FONT_SIZE_SM))
                         .child(description),
                 )
             })
@@ -1107,7 +1363,7 @@ impl RenderOnce for YueField {
                 this.child(
                     div()
                         .text_color(color(self.theme, message_color))
-                        .text_size(rems(self.theme, "--input-font-size-sm"))
+                        .text_size(rems(self.theme, crate::theme::keys::INPUT_FONT_SIZE_SM))
                         .child(message),
                 )
             })
@@ -1124,13 +1380,16 @@ mod tests {
         for mode in [ThemeMode::Light, ThemeMode::Dark] {
             for accent in [Accent::Azure, Accent::Neutral] {
                 let theme = YueTheme::new(mode, accent);
-                assert_eq!(rems(theme, "--input-height-sm").0, 1.75);
-                assert_eq!(rems(theme, "--input-height-md").0, 2.0);
-                assert_eq!(rems(theme, "--input-height-lg").0, 2.5);
-                assert_eq!(token_pixels(theme, "--textarea-padding-block"), 8.0);
-                assert_eq!(color(theme, "--input-background").a, 1.0);
-                assert!(color(theme, "--input-background-disabled").a < 1.0);
-                assert!(color(theme, "--input-border-color-invalid").a > 0.99);
+                assert_eq!(rems(theme, crate::theme::keys::INPUT_HEIGHT_SM).0, 1.75);
+                assert_eq!(rems(theme, crate::theme::keys::INPUT_HEIGHT_MD).0, 2.0);
+                assert_eq!(rems(theme, crate::theme::keys::INPUT_HEIGHT_LG).0, 2.5);
+                assert_eq!(
+                    token_pixels(theme, crate::theme::keys::TEXTAREA_PADDING_BLOCK),
+                    8.0
+                );
+                assert_eq!(color(theme, crate::theme::keys::INPUT_BACKGROUND).a, 1.0);
+                assert!(color(theme, crate::theme::keys::INPUT_BACKGROUND_DISABLED).a < 1.0);
+                assert!(color(theme, crate::theme::keys::INPUT_BORDER_COLOR_INVALID).a > 0.99);
             }
         }
     }
@@ -1139,21 +1398,27 @@ mod tests {
     fn validation_border_semantics_survive_hover_focus_and_disabled_states() {
         assert_eq!(
             border_token(InputStatus::Normal, false, false),
-            "--input-border-color"
+            crate::theme::keys::INPUT_BORDER_COLOR
         );
         assert_eq!(
             border_token(InputStatus::Normal, false, true),
-            "--input-border-color-focus"
+            crate::theme::keys::INPUT_BORDER_COLOR_FOCUS
         );
-        assert_eq!(border_token(InputStatus::Success, false, true), "--success");
-        assert_eq!(border_token(InputStatus::Warning, false, true), "--warning");
+        assert_eq!(
+            border_token(InputStatus::Success, false, true),
+            crate::theme::keys::SUCCESS
+        );
+        assert_eq!(
+            border_token(InputStatus::Warning, false, true),
+            crate::theme::keys::WARNING
+        );
         assert_eq!(
             border_token(InputStatus::Error, false, true),
-            "--input-border-color-invalid"
+            crate::theme::keys::INPUT_BORDER_COLOR_INVALID
         );
         assert_eq!(
             border_token(InputStatus::Error, true, true),
-            "--input-border-color-disabled"
+            crate::theme::keys::INPUT_BORDER_COLOR_DISABLED
         );
     }
 
@@ -1161,19 +1426,19 @@ mod tests {
     fn field_message_statuses_resolve_to_yue_semantic_tokens() {
         assert_eq!(
             field_message_token(InputStatus::Normal),
-            "--input-affix-color"
+            crate::theme::keys::INPUT_AFFIX_COLOR
         );
         assert_eq!(
             field_message_token(InputStatus::Success),
-            "--success-foreground"
+            crate::theme::keys::SUCCESS_FOREGROUND
         );
         assert_eq!(
             field_message_token(InputStatus::Warning),
-            "--warning-foreground"
+            crate::theme::keys::WARNING_FOREGROUND
         );
         assert_eq!(
             field_message_token(InputStatus::Error),
-            "--error-foreground"
+            crate::theme::keys::ERROR_FOREGROUND
         );
     }
 }

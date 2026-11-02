@@ -1,122 +1,25 @@
-use std::{rc::Rc, time::Duration};
+use std::rc::Rc;
 
 use gpui_kit::{
-    Animation, AnimationExt as _, AnyElement, App, AppContext as _, Axis, ClickEvent, ElementId,
-    InteractiveElement as _, IntoElement, MouseButton, ParentElement as _, RenderOnce,
-    SharedString, StatefulInteractiveElement as _, Styled as _, Window, div,
-    prelude::FluentBuilder as _,
+    AnyElement, App, Axis, ClickEvent, ElementId, InteractiveElement as _, IntoElement,
+    MouseButton, ParentElement as _, RenderOnce, SharedString, StatefulInteractiveElement as _,
+    Styled as _, Window, div, prelude::FluentBuilder as _,
 };
 
-use crate::{YueTheme, YueToken};
-use yue_component_icons::{Icon, IconDefinition, outline};
+use crate::tokens::{
+    duration as token_duration, easing as token_ease, mix_rgba, number as token_number,
+    rems as token_rems, rgba as token_rgba, token,
+};
 
-type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
-
-fn token(theme: YueTheme, name: &'static str) -> YueToken {
-    theme
-        .token(name)
-        .unwrap_or_else(|| panic!("missing Yue token {name}"))
-}
-
-fn token_color(theme: YueTheme, name: &'static str) -> u32 {
+fn token_color(theme: YueTheme, name: impl crate::theme::TokenSource) -> u32 {
     token(theme, name)
         .color()
         .unwrap_or_else(|| panic!("Yue token {name} is not an opaque color"))
 }
+use crate::YueTheme;
+use yue_component_icons::{Icon, IconDefinition};
 
-fn token_rgba(theme: YueTheme, name: &'static str) -> gpui_kit::Rgba {
-    token(theme, name)
-        .rgba()
-        .unwrap_or_else(|| panic!("Yue token {name} is not a supported color"))
-}
-
-fn mix_rgba(from: gpui_kit::Rgba, to: gpui_kit::Rgba, amount: f32) -> gpui_kit::Rgba {
-    gpui_kit::rgba(
-        (((from.r * (1.0 - amount) + to.r * amount) * 255.0).round() as u32) << 24
-            | (((from.g * (1.0 - amount) + to.g * amount) * 255.0).round() as u32) << 16
-            | (((from.b * (1.0 - amount) + to.b * amount) * 255.0).round() as u32) << 8
-            | ((from.a * (1.0 - amount) + to.a * amount) * 255.0).round() as u32,
-    )
-}
-
-fn token_pixels(theme: YueTheme, name: &'static str) -> f32 {
-    token(theme, name)
-        .pixels()
-        .unwrap_or_else(|| panic!("Yue token {name} is not a pixel length"))
-}
-
-fn token_rems(theme: YueTheme, name: &'static str) -> gpui_kit::Rems {
-    gpui_kit::rems(token_pixels(theme, name) / 16.0)
-}
-
-fn token_number(theme: YueTheme, name: &'static str) -> f32 {
-    token(theme, name)
-        .number()
-        .unwrap_or_else(|| panic!("Yue token {name} is not a number"))
-}
-
-fn token_duration(theme: YueTheme, name: &'static str) -> Duration {
-    let value = token(theme, name).value().trim();
-    let value = value
-        .strip_prefix("calc(")
-        .and_then(|value| value.strip_suffix(')'))
-        .unwrap_or(value);
-    if let Some((left, right)) = value.split_once('*') {
-        let left = left
-            .trim()
-            .strip_suffix("ms")
-            .and_then(|value| value.trim().parse::<f64>().ok());
-        let right = right.trim().parse::<f64>().ok();
-        if let (Some(left), Some(right)) = (left, right) {
-            return Duration::from_secs_f64(left * right / 1000.0);
-        }
-    }
-    let millis = value
-        .strip_suffix("ms")
-        .and_then(|value| value.trim().parse::<f64>().ok())
-        .unwrap_or_else(|| panic!("Yue token {name} is not a duration"));
-    Duration::from_secs_f64(millis / 1000.0)
-}
-
-fn token_ease(theme: YueTheme, name: &'static str) -> Box<dyn Fn(f32) -> f32> {
-    let value = token(theme, name).value();
-    let values = value
-        .strip_prefix("cubic-bezier(")
-        .and_then(|value| value.strip_suffix(')'))
-        .and_then(|value| {
-            let values: Vec<_> = value
-                .split(',')
-                .filter_map(|part| part.trim().parse::<f32>().ok())
-                .collect();
-            (values.len() == 4).then_some((values[0], values[1], values[2], values[3]))
-        })
-        .unwrap_or_else(|| panic!("Yue token {name} is not a cubic-bezier easing"));
-    let (x1, y1, x2, y2) = values;
-    Box::new(move |time| {
-        let sample_x = |t: f32| {
-            let u = 1.0 - t;
-            3.0 * u * u * t * x1 + 3.0 * u * t * t * x2 + t * t * t
-        };
-        let sample_y = |t: f32| {
-            let u = 1.0 - t;
-            3.0 * u * u * t * y1 + 3.0 * u * t * t * y2 + t * t * t
-        };
-        let derivative = |t: f32| {
-            3.0 * (1.0 - t) * (1.0 - t) * x1
-                + 6.0 * (1.0 - t) * t * (x2 - x1)
-                + 3.0 * t * t * (1.0 - x2)
-        };
-        let mut t = time;
-        for _ in 0..8 {
-            let slope = derivative(t);
-            if slope.abs() < 1e-6 {
-                break;
-            }
-            t = (t - (sample_x(t) - time) / slope).clamp(0.0, 1.0);
-        }
-        sample_y(t)
-    })
-}
+type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ButtonVariant {
@@ -170,21 +73,97 @@ enum ButtonContent {
 pub struct YueButton {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     variant: ButtonVariant,
     size: ButtonSize,
     shape: ButtonShape,
     icon_position: IconPosition,
+    icon_size_override: Option<gpui_kit::Rems>,
     content: ButtonContent,
     disabled: bool,
     loading: bool,
     block: bool,
+    expanded: Option<bool>,
     tooltip: Option<SharedString>,
+    tooltip_options: crate::TooltipOptions,
     on_click: Option<ClickHandler>,
+    layout: crate::control_layout::ControlLayout,
+    focus_handle: Option<gpui_kit::FocusHandle>,
+    key_context: Option<gpui_kit::SharedString>,
+    description: Option<gpui_kit::SharedString>,
+    accessibility_label: Option<SharedString>,
+    tab_index: isize,
+    tab_stop: bool,
 }
 
+crate::control_layout::control_layout!(YueButton);
+
 impl YueButton {
+    /// Override the accessible command name without changing visible text.
+    pub fn accessibility_label(mut self, label: impl Into<SharedString>) -> Self {
+        let label = label.into();
+        assert!(!label.is_empty(), "YueButton requires an accessible name");
+        self.accessibility_label = Some(label);
+        self
+    }
+    /// Use caller-owned focus without replacing the activation handler.
+    pub fn track_focus(mut self, focus: &gpui_kit::FocusHandle) -> Self {
+        self.focus_handle = Some(focus.clone());
+        self
+    }
+    pub fn key_context(mut self, context: impl Into<gpui_kit::SharedString>) -> Self {
+        self.key_context = Some(context.into());
+        self
+    }
+    pub fn accessibility_description(
+        mut self,
+        description: impl Into<gpui_kit::SharedString>,
+    ) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+    /// Focus traversal order. It is applied to whichever handle the control
+    /// tracks, including one passed to `track_focus`, so set the order here
+    /// rather than on that handle.
+    pub fn tab_index(mut self, index: isize) -> Self {
+        self.tab_index = index;
+        self
+    }
+    /// Whether Tab traversal stops on the control; like `tab_index`, it is
+    /// applied to a caller-owned handle too. The default is `true`.
+    pub fn tab_stop(mut self, tab_stop: bool) -> Self {
+        self.tab_stop = tab_stop;
+        self
+    }
+
+    /// A text command using the application theme. The owner supplies its handler.
+    /// ```
+    /// use yue_component::YueButton;
+    /// let save = YueButton::new("save", "保存").on_click(|_, _, _| {});
+    /// ```
+    pub fn new(id: impl Into<ElementId>, label: impl Into<SharedString>) -> Self {
+        Self::text(
+            id,
+            YueTheme::new(crate::ThemeMode::Light, crate::Accent::Azure),
+            label,
+        )
+        .use_default_theme()
+    }
+
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn text(id: impl Into<ElementId>, theme: YueTheme, label: impl Into<SharedString>) -> Self {
-        Self::new(id, theme, ButtonContent::Text(label.into()))
+        Self::with_content(id, theme, ButtonContent::Text(label.into()))
     }
 
     pub fn icon(
@@ -198,7 +177,7 @@ impl YueButton {
             !accessibility_label.is_empty(),
             "icon-only YueButton requires an accessible name"
         );
-        Self::new(
+        Self::with_content(
             id,
             theme,
             ButtonContent::Icon {
@@ -214,7 +193,7 @@ impl YueButton {
         icon: impl IconDefinition,
         label: impl Into<SharedString>,
     ) -> Self {
-        Self::new(
+        Self::with_content(
             id,
             theme,
             ButtonContent::IconText {
@@ -224,19 +203,30 @@ impl YueButton {
         )
     }
 
-    fn new(id: impl Into<ElementId>, theme: YueTheme, content: ButtonContent) -> Self {
+    fn with_content(id: impl Into<ElementId>, theme: YueTheme, content: ButtonContent) -> Self {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
+            focus_handle: None,
+            key_context: None,
+            description: None,
+            accessibility_label: None,
+            tab_index: 0,
+            tab_stop: true,
             variant: ButtonVariant::Default,
             size: ButtonSize::Medium,
             shape: ButtonShape::RoundedRectangle,
             icon_position: IconPosition::Leading,
+            icon_size_override: None,
             content,
             disabled: false,
             loading: false,
             block: false,
+            expanded: None,
             tooltip: None,
+            tooltip_options: crate::TooltipOptions::default(),
             on_click: None,
         }
     }
@@ -247,6 +237,11 @@ impl YueButton {
     }
     pub fn size(mut self, size: ButtonSize) -> Self {
         self.size = size;
+        self
+    }
+    /// Internal component glyph sizing; preserves the normal Button hit target.
+    pub(crate) fn icon_size_override(mut self, size: gpui_kit::Rems) -> Self {
+        self.icon_size_override = Some(size);
         self
     }
     pub fn shape(mut self, shape: ButtonShape) -> Self {
@@ -269,8 +264,19 @@ impl YueButton {
         self.block = true;
         self
     }
+    /// The expanded state of a disclosure control: announces itself, and turns
+    /// the button's own chevron half a circle towards the panel it opened.
+    pub fn expanded(mut self, expanded: bool) -> Self {
+        self.expanded = Some(expanded);
+        self
+    }
     pub fn tooltip(mut self, text: impl Into<SharedString>) -> Self {
         self.tooltip = Some(text.into());
+        self
+    }
+    /// Configures the shared Tooltip layer; advanced triggers use YueTooltip.
+    pub fn tooltip_options(mut self, options: crate::TooltipOptions) -> Self {
+        self.tooltip_options = options;
         self
     }
     pub fn on_click(
@@ -282,74 +288,105 @@ impl YueButton {
     }
 }
 
+/// The share of `color-mix(in srgb, currentColor calc(N*100%), transparent)`.
+fn current_color_wash(value: &str) -> Option<f32> {
+    let amount = value
+        .strip_prefix("color-mix(in srgb, currentColor calc(")?
+        .strip_suffix("*100%), transparent)")?
+        .parse::<f32>()
+        .ok()?;
+    (0.0..=1.0).contains(&amount).then_some(amount)
+}
+
 impl RenderOnce for YueButton {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let accessibility_label = match &self.content {
-            ButtonContent::Text(label) | ButtonContent::IconText { label, .. } => label.clone(),
-            ButtonContent::Icon {
-                accessibility_label,
-                ..
-            } => accessibility_label.clone(),
-        };
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
+        let accessibility_label =
+            self.accessibility_label
+                .clone()
+                .unwrap_or_else(|| match &self.content {
+                    ButtonContent::Text(label) | ButtonContent::IconText { label, .. } => {
+                        label.clone()
+                    }
+                    ButtonContent::Icon {
+                        accessibility_label,
+                        ..
+                    } => accessibility_label.clone(),
+                });
         let icon_only = matches!(&self.content, ButtonContent::Icon { .. });
         let (background_token, hover_token, foreground_token, border_token) = match self.variant {
             ButtonVariant::Primary => (
-                "--button-primary-background",
-                "--button-primary-background-hover",
-                "--button-primary-color",
-                "--button-primary-border-color",
+                crate::theme::keys::BUTTON_PRIMARY_BACKGROUND,
+                crate::theme::keys::BUTTON_PRIMARY_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_PRIMARY_COLOR,
+                crate::theme::keys::BUTTON_PRIMARY_BORDER_COLOR,
             ),
             ButtonVariant::Default => (
-                "--button-default-background",
-                "--button-default-background-hover",
-                "--button-default-color",
-                "--button-default-border-color",
+                crate::theme::keys::BUTTON_DEFAULT_BACKGROUND,
+                crate::theme::keys::BUTTON_DEFAULT_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_DEFAULT_COLOR,
+                crate::theme::keys::BUTTON_DEFAULT_BORDER_COLOR,
             ),
             ButtonVariant::Outline => (
-                "--button-outline-background",
-                "--button-secondary-background-hover",
-                "--button-secondary-color",
-                "--button-secondary-border-color",
+                crate::theme::keys::BUTTON_OUTLINE_BACKGROUND,
+                crate::theme::keys::BUTTON_SECONDARY_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_SECONDARY_COLOR,
+                crate::theme::keys::BUTTON_SECONDARY_BORDER_COLOR,
             ),
             ButtonVariant::Ghost => (
-                "--button-ghost-background",
-                "--button-ghost-background-hover",
-                "--button-ghost-color",
-                "--button-ghost-border-color",
+                crate::theme::keys::BUTTON_GHOST_BACKGROUND,
+                crate::theme::keys::BUTTON_GHOST_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_GHOST_COLOR,
+                crate::theme::keys::BUTTON_GHOST_BORDER_COLOR,
             ),
             ButtonVariant::Text => (
-                "--button-subtle-background",
-                "--button-subtle-background-hover",
-                "--button-link-color",
-                "--button-ghost-border-color",
+                crate::theme::keys::BUTTON_SUBTLE_BACKGROUND,
+                crate::theme::keys::BUTTON_SUBTLE_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_LINK_COLOR,
+                crate::theme::keys::BUTTON_GHOST_BORDER_COLOR,
             ),
             ButtonVariant::Danger => (
-                "--button-danger-background",
-                "--button-danger-background-hover",
-                "--button-danger-color",
-                "--button-danger-border-color",
+                crate::theme::keys::BUTTON_DANGER_BACKGROUND,
+                crate::theme::keys::BUTTON_DANGER_BACKGROUND_HOVER,
+                crate::theme::keys::BUTTON_DANGER_COLOR,
+                crate::theme::keys::BUTTON_DANGER_BORDER_COLOR,
             ),
         };
         let foreground = token_color(self.theme, foreground_token);
         let background = token_rgba(self.theme, background_token);
-        let hover_background = token(self.theme, hover_token).rgba().unwrap_or_else(|| {
-            let opacity = token_number(self.theme, "--opacity-hover");
-            mix_rgba(gpui_kit::rgba(0), gpui_kit::rgb(foreground), opacity)
+        let hover = token(self.theme, hover_token);
+        // Only a `currentColor` wash is left for the button to resolve, since
+        // the label colour is its own; any other unreadable value is a broken
+        // token and must not quietly become a tint.
+        let hover_background = hover.rgba().unwrap_or_else(|| {
+            let amount = current_color_wash(hover.value())
+                .unwrap_or_else(|| panic!("Yue token {} is not a supported color", hover.name()));
+            mix_rgba(gpui_kit::rgba(0), gpui_kit::rgb(foreground), amount)
         });
         let border = if self.disabled || self.loading {
-            token_rgba(self.theme, "--button-disabled-border-color")
+            token_rgba(self.theme, crate::theme::keys::BUTTON_DISABLED_BORDER_COLOR)
         } else {
             token_rgba(self.theme, border_token)
         };
-        let button_duration = token_duration(self.theme, "--button-duration");
-        let button_ease = token_ease(self.theme, "--button-ease");
+        let button_duration = token_duration(self.theme, crate::theme::keys::BUTTON_DURATION);
         let content_color = if self.disabled || self.loading {
-            token_rgba(self.theme, "--button-disabled-color")
+            token_rgba(self.theme, crate::theme::keys::BUTTON_DISABLED_COLOR)
         } else {
             gpui_kit::rgb(foreground)
         };
-        let disabled_background = token_rgba(self.theme, "--button-disabled-background");
+        let disabled_background =
+            token_rgba(self.theme, crate::theme::keys::BUTTON_DISABLED_BACKGROUND);
         let disabled = self.disabled || self.loading;
+        let focus_handle = self.focus_handle.clone().unwrap_or_else(|| {
+            window
+                .use_keyed_state(self.id.clone(), cx, |_, cx| cx.focus_handle())
+                .read(cx)
+                .clone()
+        });
+        let ring_visible =
+            !disabled && focus_handle.is_focused(window) && window.last_input_was_keyboard();
         let (hovered, pressed, motion_state) = if disabled {
             (false, false, None)
         } else {
@@ -364,21 +401,47 @@ impl RenderOnce for YueButton {
             (self.id.clone(), "yue-button-hover"),
             if hovered { 1.0 } else { 0.0 },
             gpui_kit::base::Transition::new(button_duration)
-                .ease(token_ease(self.theme, "--button-ease")),
+                .ease(token_ease(self.theme, crate::theme::keys::BUTTON_EASE)),
             window,
             cx,
         );
         let press_progress = gpui_kit::base::transition(
             (self.id.clone(), "yue-button-press"),
             if pressed { 1.0 } else { 0.0 },
-            gpui_kit::base::Transition::new(button_duration).ease(button_ease),
+            gpui_kit::base::Transition::new(button_duration)
+                .ease(token_ease(self.theme, crate::theme::keys::BUTTON_EASE)),
             window,
             cx,
         );
         let animated_background = mix_rgba(background, hover_background, hover_progress);
-        let press_inset = token_rems(self.theme, "--button-border-width") * press_progress;
+        let press_inset =
+            token_rems(self.theme, crate::theme::keys::BUTTON_BORDER_WIDTH) * press_progress;
+        // A disclosure's chevron turns half a circle towards the panel it opened,
+        // on the same clock the button's own hover and press ramps use. Only the
+        // icon that faces the disclosure turns: a leading icon belongs to the
+        // action, not to the panel.
+        let expand_turn = self
+            .expanded
+            .filter(|_| icon_only || self.icon_position == IconPosition::Trailing)
+            .map(|open| {
+                gpui_kit::base::transition(
+                    (self.id.clone(), "yue-button-expand"),
+                    if open { 0.5 } else { 0.0 },
+                    gpui_kit::base::Transition::new(button_duration)
+                        .ease(token_ease(self.theme, crate::theme::keys::BUTTON_EASE)),
+                    window,
+                    cx,
+                )
+            });
+        let expand = |icon: Icon| -> Icon {
+            match expand_turn {
+                Some(turn) => icon.rotation(turn),
+                None => icon,
+            }
+        };
 
-        let mut button = gpui_kit::base::Button::new(self.id)
+        let mut button = gpui_kit::base::Button::new(self.id.clone())
+            .track_focus(&focus_handle)
             .disabled(disabled)
             .accessibility_label(accessibility_label)
             .flex()
@@ -387,27 +450,35 @@ impl RenderOnce for YueButton {
             .text_size(token_rems(
                 self.theme,
                 match self.size {
-                    ButtonSize::Small => "--button-font-size-sm",
-                    ButtonSize::Medium => "--button-font-size-md",
-                    ButtonSize::Large => "--button-font-size-lg",
+                    ButtonSize::Small => crate::theme::keys::BUTTON_FONT_SIZE_SM,
+                    ButtonSize::Medium => crate::theme::keys::BUTTON_FONT_SIZE_MD,
+                    ButtonSize::Large => crate::theme::keys::BUTTON_FONT_SIZE_LG,
                 },
             ))
-            .line_height(token_rems(self.theme, "--button-line-height"))
+            .line_height(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_LINE_HEIGHT,
+            ))
             .font_weight(gpui_kit::FontWeight(token_number(
                 self.theme,
-                "--button-font-weight",
+                crate::theme::keys::BUTTON_FONT_WEIGHT,
             )))
             .bg(gpui_kit::transparent_black())
-            .border(token_rems(self.theme, "--button-border-width"))
+            .border(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_BORDER_WIDTH,
+            ))
             .border_color(gpui_kit::transparent_black())
             .text_color(content_color)
-            .px(token_rems(self.theme, "--button-padding-inline-flush"))
-            .when(!disabled, |button| button.cursor_pointer())
-            .focus_visible(|style| {
-                style
-                    .border(token_rems(self.theme, "--button-focus-ring-width"))
-                    .border_color(token_rgba(self.theme, "--button-focus-ring-color"))
-            });
+            .px(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_PADDING_INLINE_FLUSH,
+            ))
+            .when(!disabled, |button| button.cursor_pointer());
+
+        if let Some(expanded) = self.expanded {
+            button = button.aria_expanded(expanded);
+        }
 
         if let Some(state) = motion_state {
             let hover = window.listener_for(&state, |state, hovered, window, cx| {
@@ -448,25 +519,27 @@ impl RenderOnce for YueButton {
 
         let (height_token, padding_token, icon_token) = match self.size {
             ButtonSize::Small => (
-                "--button-height-sm",
-                "--button-padding-inline-sm",
-                "--button-icon-size-sm",
+                crate::theme::keys::BUTTON_HEIGHT_SM,
+                crate::theme::keys::BUTTON_PADDING_INLINE_SM,
+                crate::theme::keys::BUTTON_ICON_SIZE_SM,
             ),
             ButtonSize::Medium => (
-                "--button-height-md",
-                "--button-padding-inline-md",
-                "--button-icon-size-md",
+                crate::theme::keys::BUTTON_HEIGHT_MD,
+                crate::theme::keys::BUTTON_PADDING_INLINE_MD,
+                crate::theme::keys::BUTTON_ICON_SIZE_MD,
             ),
             ButtonSize::Large => (
-                "--button-height-lg",
-                "--button-padding-inline-lg",
-                "--button-icon-size-lg",
+                crate::theme::keys::BUTTON_HEIGHT_LG,
+                crate::theme::keys::BUTTON_PADDING_INLINE_LG,
+                crate::theme::keys::BUTTON_ICON_SIZE_LG,
             ),
         };
         let height = token_rems(self.theme, height_token);
         let horizontal_padding = token_rems(self.theme, padding_token);
-        let icon_size = token_rems(self.theme, icon_token);
-        let button_gap = token_rems(self.theme, "--button-gap");
+        let icon_size = self
+            .icon_size_override
+            .unwrap_or_else(|| token_rems(self.theme, icon_token));
+        let button_gap = token_rems(self.theme, crate::theme::keys::BUTTON_GAP);
         button = button.h(height).when(self.block, |button| button.w_full());
         if icon_only {
             button = button.w(height);
@@ -483,19 +556,27 @@ impl RenderOnce for YueButton {
             } else {
                 animated_background
             })
-            .border(token_rems(self.theme, "--button-border-width"))
+            .border(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_BORDER_WIDTH,
+            ))
             .border_color(border);
         let surface = match self.shape {
-            ButtonShape::RoundedRectangle => {
-                surface.rounded(token_rems(self.theme, "--button-border-radius"))
+            ButtonShape::RoundedRectangle => surface.rounded(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_BORDER_RADIUS,
+            )),
+            ButtonShape::RoundedSquare => {
+                surface.rounded(token_rems(self.theme, crate::theme::keys::RADIUS_MD))
             }
-            ButtonShape::RoundedSquare => surface.rounded(token_rems(self.theme, "--radius-md")),
-            ButtonShape::Pill => {
-                surface.rounded(token_rems(self.theme, "--button-border-radius-full"))
-            }
-            ButtonShape::Circle => {
-                surface.rounded(token_rems(self.theme, "--button-border-radius-full"))
-            }
+            ButtonShape::Pill => surface.rounded(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_BORDER_RADIUS_FULL,
+            )),
+            ButtonShape::Circle => surface.rounded(token_rems(
+                self.theme,
+                crate::theme::keys::BUTTON_BORDER_RADIUS_FULL,
+            )),
         };
         let render_content = || -> AnyElement {
             match &self.content {
@@ -504,10 +585,10 @@ impl RenderOnce for YueButton {
                     .child(label.clone())
                     .into_any_element(),
                 ButtonContent::Icon { icon, .. } => div()
-                    .child(icon.size(icon_size).color_value(content_color))
+                    .child(expand(icon.size(icon_size).color_value(content_color)))
                     .into_any_element(),
                 ButtonContent::IconText { icon, label } => {
-                    let icon = icon.size(icon_size).color_value(content_color);
+                    let icon = expand(icon.size(icon_size).color_value(content_color));
                     let row = div()
                         .flex()
                         .items_center()
@@ -529,17 +610,14 @@ impl RenderOnce for YueButton {
             .when(!icon_only, |content| content.px(horizontal_padding))
             .opacity(0.0);
         let visible_content = if self.loading {
-            Icon::new(outline::Loader)
-                .size(icon_size)
-                .color_value(content_color)
-                .with_animation(
-                    "yue-button-spinner",
-                    Animation::new(token_duration(self.theme, "--button-spinner-duration"))
-                        .repeat()
-                        .with_easing(token_ease(self.theme, "--button-ease")),
-                    |icon, delta| icon.rotation(delta),
-                )
-                .into_any_element()
+            crate::loading::spinner_glyph(
+                self.theme,
+                icon_size,
+                token_rems(self.theme, crate::theme::keys::SPINNER_BORDER_WIDTH),
+                content_color,
+                token_duration(self.theme, crate::theme::keys::BUTTON_SPINNER_DURATION),
+                true,
+            )
         } else {
             render_content()
         };
@@ -556,26 +634,69 @@ impl RenderOnce for YueButton {
             .text_size(token_rems(
                 self.theme,
                 match self.size {
-                    ButtonSize::Small => "--button-font-size-sm",
-                    ButtonSize::Medium => "--button-font-size-md",
-                    ButtonSize::Large => "--button-font-size-lg",
+                    ButtonSize::Small => crate::theme::keys::BUTTON_FONT_SIZE_SM,
+                    ButtonSize::Medium => crate::theme::keys::BUTTON_FONT_SIZE_MD,
+                    ButtonSize::Large => crate::theme::keys::BUTTON_FONT_SIZE_LG,
                 },
             ))
             .text_color(content_color)
             .child(visible_content);
         button = button.child(sized_content).child(surface).child(content);
+        // Focus is paint and never changes intrinsic width or sibling positions.
+        if ring_visible {
+            let radius = match self.shape {
+                ButtonShape::RoundedRectangle => crate::theme::keys::BUTTON_BORDER_RADIUS,
+                ButtonShape::RoundedSquare => crate::theme::keys::RADIUS_MD,
+                ButtonShape::Pill | ButtonShape::Circle => {
+                    crate::theme::keys::BUTTON_BORDER_RADIUS_FULL
+                }
+            };
+            let outer_border = token_rems(self.theme, crate::theme::keys::BUTTON_BORDER_WIDTH);
+            button = button.child(
+                div()
+                    .absolute()
+                    .top(-outer_border)
+                    .right(-outer_border)
+                    .bottom(-outer_border)
+                    .left(-outer_border)
+                    .border(token_rems(
+                        self.theme,
+                        crate::theme::keys::BUTTON_FOCUS_RING_WIDTH,
+                    ))
+                    .border_color(token_rgba(
+                        self.theme,
+                        crate::theme::keys::BUTTON_FOCUS_RING_COLOR,
+                    ))
+                    .rounded(token_rems(self.theme, radius)),
+            );
+        }
         if let Some(handler) = self.on_click {
             button = button.on_click(move |event, window, cx| handler(event, window, cx));
         }
         if let Some(text) = self.tooltip {
-            let theme = self.theme;
-            button = button.tooltip(move |_, cx| {
-                cx.new(|_| TooltipView {
-                    text: text.clone(),
-                    theme,
-                })
-                .into()
-            });
+            if self.description.is_none() && !text.trim().is_empty() {
+                button = button.aria_description(text.clone());
+            }
+            let attachment = crate::tooltip::attach(
+                self.id.clone(),
+                crate::tooltip::Config::new(text, self.theme, self.tooltip_options)
+                    .disabled(disabled),
+                Some(focus_handle.clone()),
+                window,
+                cx,
+            );
+            button = button.relative().child(attachment);
+        }
+        button = self
+            .layout
+            .apply(button)
+            .tab_index(self.tab_index)
+            .tab_stop(self.tab_stop);
+        if let Some(context) = self.key_context {
+            button = button.key_context(context.as_ref());
+        }
+        if let Some(description) = self.description {
+            button = button.aria_description(description);
         }
         button
     }
@@ -585,23 +706,6 @@ impl RenderOnce for YueButton {
 struct ButtonMotion {
     hovered: bool,
     pressed: bool,
-}
-
-struct TooltipView {
-    text: SharedString,
-    theme: YueTheme,
-}
-impl gpui_kit::Render for TooltipView {
-    fn render(&mut self, _: &mut Window, _: &mut gpui_kit::Context<Self>) -> impl IntoElement {
-        div()
-            .px(token_rems(self.theme, "--box-padding-inline-tooltip"))
-            .py(token_rems(self.theme, "--box-padding-block-tooltip"))
-            .rounded(token_rems(self.theme, "--box-border-radius-tooltip"))
-            .bg(token_rgba(self.theme, "--box-background-tooltip"))
-            .text_color(token_rgba(self.theme, "--box-color-tooltip"))
-            .text_size(token_rems(self.theme, "--box-font-size-tooltip"))
-            .child(self.text.clone())
-    }
 }
 
 /// Lays out related buttons on one axis without changing their individual behavior.
@@ -615,7 +719,7 @@ impl ButtonGroup {
     pub fn new(theme: YueTheme) -> Self {
         Self {
             axis: Axis::Horizontal,
-            gap: token_rems(theme, "--button-gap"),
+            gap: token_rems(theme, crate::theme::keys::BUTTON_GAP),
             children: Vec::new(),
         }
     }
@@ -654,8 +758,9 @@ impl RenderOnce for ButtonGroup {
 mod tests {
     use super::{
         ButtonContent, ButtonGroup, ButtonShape, ButtonSize, ButtonVariant, IconPosition,
-        YueButton, mix_rgba, token_color, token_duration, token_ease, token_pixels, token_rgba,
+        YueButton, mix_rgba, token_color, token_duration, token_ease, token_rgba,
     };
+    use crate::tokens::pixels as token_pixels;
     use crate::{Accent, ThemeMode, YueTheme};
     use std::time::Duration;
     use yue_component_icons::{filled, outline};
@@ -720,25 +825,37 @@ mod tests {
         let light = YueTheme::new(ThemeMode::Light, Accent::Azure);
         let dark = YueTheme::new(ThemeMode::Dark, Accent::Azure);
 
-        assert_eq!(token_pixels(light, "--button-height-sm"), 28.0);
-        assert_eq!(token_pixels(light, "--button-height-md"), 32.0);
-        assert_eq!(token_pixels(light, "--button-height-lg"), 40.0);
-        assert_eq!(token_pixels(light, "--button-border-radius"), 4.0);
-        assert_eq!(token_pixels(light, "--button-gap"), 8.0);
         assert_eq!(
-            token_duration(light, "--button-duration"),
+            token_pixels(light, crate::theme::keys::BUTTON_HEIGHT_SM),
+            28.0
+        );
+        assert_eq!(
+            token_pixels(light, crate::theme::keys::BUTTON_HEIGHT_MD),
+            32.0
+        );
+        assert_eq!(
+            token_pixels(light, crate::theme::keys::BUTTON_HEIGHT_LG),
+            40.0
+        );
+        assert_eq!(
+            token_pixels(light, crate::theme::keys::BUTTON_BORDER_RADIUS),
+            4.0
+        );
+        assert_eq!(token_pixels(light, crate::theme::keys::BUTTON_GAP), 8.0);
+        assert_eq!(
+            token_duration(light, crate::theme::keys::BUTTON_DURATION),
             Duration::from_millis(100)
         );
         assert_eq!(
-            token_duration(light, "--button-spinner-duration"),
+            token_duration(light, crate::theme::keys::BUTTON_SPINNER_DURATION),
             Duration::from_millis(900)
         );
         assert_eq!(token_color(light, "--button-danger-background"), 0xa14138);
-        assert_eq!(token_color(dark, "--button-danger-background"), 0xf5aaa3);
-        assert!(token_rgba(light, "--button-danger-background-hover").a > 0.99);
-        assert!(token_rgba(light, "--button-disabled-background").a < 1.0);
-        assert!(token_rgba(light, "--button-disabled-color").a < 1.0);
-        let _ = token_ease(light, "--button-ease");
+        assert_eq!(token_color(dark, "--button-danger-background"), 0xea7d73);
+        assert!(token_rgba(light, crate::theme::keys::BUTTON_DANGER_BACKGROUND_HOVER).a > 0.99);
+        assert!(token_rgba(light, crate::theme::keys::BUTTON_DISABLED_BACKGROUND).a < 1.0);
+        assert!(token_rgba(light, crate::theme::keys::BUTTON_DISABLED_COLOR).a < 1.0);
+        let _ = token_ease(light, crate::theme::keys::BUTTON_EASE);
         let text_foreground = token_color(light, "--button-link-color");
         let text_hover = mix_rgba(gpui_kit::rgba(0), gpui_kit::rgb(text_foreground), 0.08);
         assert!((text_hover.a - 0.08).abs() < 0.01);

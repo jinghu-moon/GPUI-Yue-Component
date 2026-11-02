@@ -5,6 +5,9 @@ edition.workspace = true
 license.workspace = true
 publish = false
 
+[features]
+headless-tests = ["yue-component/headless-tests"]
+
 [dependencies]
-gpui-kit = { workspace = true, features = ["component"] }
-yue-component.workspace = true
+gpui-kit.workspace = true
+yue-component = { workspace = true, features = ["bundled-fonts"] }

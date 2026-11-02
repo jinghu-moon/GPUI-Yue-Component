@@ -53,6 +53,8 @@ struct Probe {
     secret: Entity<InputState>,
     note: Entity<TextareaState>,
     quantity: Entity<InputState>,
+    quantity_disabled: bool,
+    quantity_status: yue_component::InputStatus,
     narrow: Entity<InputState>,
     semantic: [Entity<InputState>; 3],
 }
@@ -75,6 +77,8 @@ impl Probe {
                     .max(100.0)
                     .default_value("12")
             }),
+            quantity_disabled: false,
+            quantity_status: yue_component::InputStatus::Normal,
             narrow: cx.new(|cx| InputState::new(window, cx).default_value("yue@example.com")),
             semantic: [
                 cx.new(|cx| InputState::new(window, cx)),
@@ -143,7 +147,12 @@ impl Render for Probe {
             .child(
                 YueField::new(theme)
                     .label("数量")
-                    .number_input(YueNumberInput::new("quantity", theme, &self.quantity)),
+                    .description("可设置 0 到 100 件")
+                    .number_input(
+                        YueNumberInput::new("quantity", theme, &self.quantity)
+                            .status(self.quantity_status)
+                            .disabled(self.quantity_disabled),
+                    ),
             )
             .child(
                 YueInput::new("narrow", theme, &self.narrow)
@@ -153,6 +162,35 @@ impl Render for Probe {
                     .clearable(true)
                     .width(rems(8.0)),
             )
+    }
+}
+
+#[gpui_kit::test]
+fn numeric_error_colors_reach_the_actual_editor_text_runs(cx: &mut TestAppContext) {
+    cx.update(|cx| yue_component::init(cx, theme()).unwrap());
+    let (view, cx) = cx.add_window_view(Probe::new);
+    for mode in [ThemeMode::Light, ThemeMode::Dark] {
+        for accent in [Accent::Azure, Accent::Neutral] {
+            for status in [
+                yue_component::InputStatus::Error,
+                yue_component::InputStatus::Normal,
+            ] {
+                view.update(cx, |v, cx| {
+                    v.theme = YueTheme::new(mode, accent);
+                    v.quantity_status = status;
+                    cx.notify();
+                });
+                cx.update(|w, cx| {
+                    render(w, cx);
+                    let v = view.read(cx);
+                    let expected: gpui_kit::Hsla = v.theme.token(if status == yue_component::InputStatus::Error {
+                        "--error-foreground"
+                    } else { "--input-color" }).unwrap().rgba().unwrap().into();
+                    assert_eq!(v.quantity.read(cx).rendered_text_color(), Some(expected),
+                        "{mode:?}/{accent:?}/{status:?}: verify the color actually sent to text shaping");
+                });
+            }
+        }
     }
 }
 
@@ -270,6 +308,144 @@ fn a_narrow_slot_keeps_its_editor_visible(cx: &mut TestAppContext) {
             "yue@example.com",
             "affixes and the clear button do not touch the value"
         );
+    });
+}
+
+#[gpui_kit::test]
+fn number_input_renders_a_real_editor_and_exposes_description_and_numeric_bounds(
+    cx: &mut TestAppContext,
+) {
+    cx.update(gpui_kit::init);
+    let (view, cx) = cx.add_window_view(Probe::new);
+    let quantity = view.update(cx, |v, _| v.quantity.clone());
+    cx.update(|w, cx| {
+        w.activate_window();
+        render(w, cx);
+        quantity.update(cx, |s, cx| s.focus(w, cx));
+    });
+    cx.simulate_keystrokes("ctrl-a");
+    cx.simulate_input("42");
+    cx.update(|w, cx| {
+        render(w, cx);
+        assert_eq!(quantity.read(cx).value().as_ref(), "42");
+        let field = node(w, "数量");
+        assert_eq!(field.role(), Some(Role::SpinButton));
+        assert_eq!(field.description(), Some("可设置 0 到 100 件"));
+        assert_eq!(field.value(), Some("42"));
+        assert_eq!(field.numeric_value(), Some(42.));
+        assert_eq!(field.min_numeric_value(), Some(0.));
+        assert_eq!(field.max_numeric_value(), Some(100.));
+        assert_eq!(field.numeric_value_step(), Some(1.));
+    });
+    cx.simulate_keystrokes("up");
+    cx.update(|w, cx| {
+        render(w, cx);
+        assert_eq!(quantity.read(cx).value().as_ref(), "43");
+    });
+}
+
+#[gpui_kit::test]
+fn horizontal_number_editor_stays_between_controls_at_every_size_and_text_scale(
+    cx: &mut TestAppContext,
+) {
+    use gpui_kit::{ElementId, Pixels};
+    use yue_component::InputSize;
+    struct NumberProbe {
+        input: Entity<InputState>,
+        size: InputSize,
+    }
+    impl Render for NumberProbe {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            YueNumberInput::new("number-layout", theme(), &self.input)
+                .accessibility_label("横排数字")
+                .size(self.size)
+                .width(rems(6.))
+        }
+    }
+    cx.update(|cx| yue_component::init(cx, theme()).unwrap());
+    let (view, cx) = cx.add_window_view(|w, cx| NumberProbe {
+        input: cx.new(|cx| InputState::new(w, cx).default_value("-99.9")),
+        size: InputSize::Medium,
+    });
+    for rem in [16., 20., 24.] {
+        cx.update(|w, _| w.set_rem_size(px(rem)));
+        for size in [InputSize::Small, InputSize::Medium, InputSize::Large] {
+            view.update(cx, |v, cx| {
+                v.size = size;
+                cx.notify();
+            });
+            cx.update(|w, cx| {
+                render(w, cx);
+                let nodes = gpui_base::test_support::snapshots(w);
+                let button = |id| {
+                    nodes
+                        .iter()
+                        .find(|n| n.path().last() == Some(&ElementId::from(id)))
+                        .unwrap()
+                        .bounds()
+                };
+                let decrement = button("decrement");
+                let increment = button("increment");
+                let editor = view.read(cx).input.read(cx).input_bounds();
+                assert_eq!(
+                    view.read(cx).input.read(cx).presentation().text_align(),
+                    gpui_kit::TextAlign::Center,
+                    "numeric text must use real editor alignment"
+                );
+                let text = view
+                    .read(cx)
+                    .input
+                    .read(cx)
+                    .range_to_bounds(&(0..5))
+                    .unwrap();
+                assert!(
+                    (text.center().x - editor.center().x).abs() < px(1.),
+                    "visible numeric text must be centered in its editor: {text:?} / {editor:?}"
+                );
+                assert!(
+                    editor.left() >= decrement.right(),
+                    "{size:?}/{rem}: editor overlaps decrement"
+                );
+                assert!(
+                    editor.right() <= increment.left(),
+                    "{size:?}/{rem}: editor overlaps increment"
+                );
+                assert!(
+                    editor.size.width >= px(48. * rem / 16.),
+                    "{size:?}/{rem}: editor must retain readable width: {editor:?}"
+                );
+                let center_distance: Pixels = editor.center().y - increment.center().y;
+                assert!(
+                    center_distance.abs() < px(1.),
+                    "editor and controls share a row"
+                );
+                assert_eq!(view.read(cx).input.read(cx).value().as_ref(), "-99.9");
+            });
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn disabling_a_focused_number_editor_blocks_typing_and_stepping(cx: &mut TestAppContext) {
+    cx.update(gpui_kit::init);
+    let (view, cx) = cx.add_window_view(Probe::new);
+    let quantity = view.update(cx, |v, _| v.quantity.clone());
+    cx.update(|w, cx| {
+        w.activate_window();
+        render(w, cx);
+        quantity.update(cx, |s, cx| s.focus(w, cx));
+    });
+    view.update(cx, |v, cx| {
+        v.quantity_disabled = true;
+        cx.notify();
+    });
+    cx.update(render);
+    cx.simulate_input("7");
+    cx.simulate_keystrokes("up");
+    cx.update(|w, cx| {
+        render(w, cx);
+        assert_eq!(quantity.read(cx).value().as_ref(), "12");
+        assert_eq!(node(w, "数量").disabled(), Some(true));
     });
 }
 

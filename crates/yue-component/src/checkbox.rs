@@ -24,10 +24,10 @@ type SelectionHandler = Rc<dyn Fn(Vec<SharedString>, &ClickEvent, &mut Window, &
 
 /// The reference's `viewBox="0 0 16 16"`: the mark coordinates below are in
 /// those units, and a drawn box of `16 - 2 * border` pixels maps onto it.
-const MARK_BOX: f32 = 16.0;
+pub(crate) const MARK_BOX: f32 = 16.0;
 
 /// The check: the reference's `d="M4 8.5l3 3 5-6"`.
-const CHECK_LINE: [(f32, f32); 3] = [(4.0, 8.5), (7.0, 11.5), (12.0, 5.5)];
+pub(crate) const CHECK_LINE: [(f32, f32); 3] = [(4.0, 8.5), (7.0, 11.5), (12.0, 5.5)];
 
 /// The indeterminate dash: the reference's `d="M4.5 8h7"`.
 const DASH_LINE: [(f32, f32); 2] = [(4.5, 8.0), (11.5, 8.0)];
@@ -80,29 +80,61 @@ pub enum CheckboxSize {
 }
 
 /// A controlled Yue checkbox. The caller owns and updates the state.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueCheckbox, CheckboxState};
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueCheckbox::new("agree", theme, CheckboxState::Unchecked).label("同意");
+/// ```
 #[derive(IntoElement)]
 pub struct YueCheckbox {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     state: CheckboxState,
     disabled: bool,
     size: CheckboxSize,
     label: Option<SharedString>,
     accessibility_label: Option<SharedString>,
     on_change: Option<ChangeHandler>,
+    focus_handle: Option<gpui_kit::FocusHandle>,
+    layout: crate::control_layout::ControlLayout,
 }
 
+crate::control_layout::control_layout!(YueCheckbox);
+
 impl YueCheckbox {
+    /// Use caller-owned focus while preserving the checkbox's native behavior.
+    pub fn track_focus(mut self, focus: &gpui_kit::FocusHandle) -> Self {
+        self.focus_handle = Some(focus.clone());
+        self
+    }
+
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, state: CheckboxState) -> Self {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
             state,
             disabled: false,
             size: CheckboxSize::Medium,
             label: None,
             accessibility_label: None,
             on_change: None,
+            focus_handle: None,
         }
     }
 
@@ -176,10 +208,18 @@ impl YueCheckboxOption {
 
 /// A multi-select group: the caller holds the selected values, the group edits
 /// them one option at a time or through a derived select-all header.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueCheckboxGroup, YueCheckboxOption};
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let group = YueCheckboxGroup::new("channels", theme, Vec::<&str>::new())
+///     .options([YueCheckboxOption::new("mail", "邮件")]);
+/// ```
 #[derive(IntoElement)]
 pub struct YueCheckboxGroup {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     selected: Vec<SharedString>,
     options: Vec<YueCheckboxOption>,
     label: Option<SharedString>,
@@ -188,9 +228,24 @@ pub struct YueCheckboxGroup {
     size: CheckboxSize,
     direction: GroupDirection,
     on_change: Option<SelectionHandler>,
+    layout: crate::control_layout::ControlLayout,
 }
 
+crate::control_layout::control_layout!(YueCheckboxGroup);
+
 impl YueCheckboxGroup {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(
         id: impl Into<ElementId>,
         theme: YueTheme,
@@ -199,6 +254,8 @@ impl YueCheckboxGroup {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
             selected: selected.into_iter().map(Into::into).collect(),
             options: Vec::new(),
             label: None,
@@ -345,25 +402,32 @@ fn apply_option(
     next
 }
 
-fn size_tokens(size: CheckboxSize) -> (&'static str, &'static str, &'static str, &'static str) {
+fn size_tokens(
+    size: CheckboxSize,
+) -> (
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+) {
     match size {
         CheckboxSize::Small => (
-            "--checkbox-size-sm",
-            "--checkbox-height-sm",
-            "--checkbox-label-font-size-sm",
-            "--checkbox-mark-stroke-width-sm",
+            crate::theme::keys::CHECKBOX_SIZE_SM,
+            crate::theme::keys::CHECKBOX_HEIGHT_SM,
+            crate::theme::keys::CHECKBOX_LABEL_FONT_SIZE_SM,
+            crate::theme::keys::CHECKBOX_MARK_STROKE_WIDTH_SM,
         ),
         CheckboxSize::Medium => (
-            "--checkbox-size-md",
-            "--checkbox-height-md",
-            "--checkbox-label-font-size-md",
-            "--checkbox-mark-stroke-width-md",
+            crate::theme::keys::CHECKBOX_SIZE_MD,
+            crate::theme::keys::CHECKBOX_HEIGHT_MD,
+            crate::theme::keys::CHECKBOX_LABEL_FONT_SIZE_MD,
+            crate::theme::keys::CHECKBOX_MARK_STROKE_WIDTH_MD,
         ),
         CheckboxSize::Large => (
-            "--checkbox-size-lg",
-            "--checkbox-height-lg",
-            "--checkbox-label-font-size-lg",
-            "--checkbox-mark-stroke-width-lg",
+            crate::theme::keys::CHECKBOX_SIZE_LG,
+            crate::theme::keys::CHECKBOX_HEIGHT_LG,
+            crate::theme::keys::CHECKBOX_LABEL_FONT_SIZE_LG,
+            crate::theme::keys::CHECKBOX_MARK_STROKE_WIDTH_LG,
         ),
     }
 }
@@ -396,7 +460,7 @@ fn mark_layer(
     .inset_0()
 }
 
-fn paint_mark(
+pub(crate) fn paint_mark(
     window: &mut Window,
     bounds: Bounds<Pixels>,
     points: &[(f32, f32)],
@@ -440,16 +504,19 @@ fn paint_mark(
 }
 
 impl RenderOnce for YueCheckbox {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         let (box_token, height_token, font_token, stroke_token) = size_tokens(self.size);
         let box_size = pixels(self.theme, box_token);
-        let border = pixels(self.theme, "--checkbox-border-width");
-        let radius = pixels(self.theme, "--checkbox-border-radius");
-        let halo_width = pixels(self.theme, "--checkbox-halo-width");
-        let halo_color = rgba(self.theme, "--checkbox-halo-color");
-        let ring_width = pixels(self.theme, "--checkbox-focus-ring-width");
-        let ring_offset = pixels(self.theme, "--checkbox-focus-ring-offset");
-        let ring_color = rgba(self.theme, "--checkbox-focus-ring-color");
+        let border = pixels(self.theme, crate::theme::keys::CHECKBOX_BORDER_WIDTH);
+        let radius = pixels(self.theme, crate::theme::keys::CHECKBOX_BORDER_RADIUS);
+        let halo_width = pixels(self.theme, crate::theme::keys::CHECKBOX_HALO_WIDTH);
+        let halo_color = rgba(self.theme, crate::theme::keys::CHECKBOX_HALO_COLOR);
+        let ring_width = pixels(self.theme, crate::theme::keys::CHECKBOX_FOCUS_RING_WIDTH);
+        let ring_offset = pixels(self.theme, crate::theme::keys::CHECKBOX_FOCUS_RING_OFFSET);
+        let ring_color = rgba(self.theme, crate::theme::keys::CHECKBOX_FOCUS_RING_COLOR);
         let mark_stroke = pixels(self.theme, stroke_token);
         let chosen = self.state.chosen();
         let id = self.id.clone();
@@ -458,12 +525,14 @@ impl RenderOnce for YueCheckbox {
         // Yue's own: the base control is told to track it and the ring reads it
         // back. `last_input_was_keyboard` is what GPUI's own `focus_visible`
         // condition uses, so a mouse click leaves the box unringed.
-        let focus_handle = window
-            .use_keyed_state((id.clone(), "yue-checkbox-focus"), cx, |_, cx| {
-                cx.focus_handle()
-            })
-            .read(cx)
-            .clone();
+        let focus_handle = self.focus_handle.clone().unwrap_or_else(|| {
+            window
+                .use_keyed_state((id.clone(), "yue-checkbox-focus"), cx, |_, cx| {
+                    cx.focus_handle()
+                })
+                .read(cx)
+                .clone()
+        });
         let ring_visible =
             !self.disabled && focus_handle.is_focused(window) && window.last_input_was_keyboard();
 
@@ -481,25 +550,31 @@ impl RenderOnce for YueCheckbox {
         };
 
         let standard = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--checkbox-duration"))
-                .ease(easing(theme, "--checkbox-ease"))
+            gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::CHECKBOX_DURATION))
+                .ease(easing(theme, crate::theme::keys::CHECKBOX_EASE))
         };
         // The mark is written in only once the box has finished filling, and is
         // wiped off on the short rung before the fill has gone.
         let ink = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--checkbox-duration"))
-                .delay(duration(theme, "--checkbox-duration-fast"))
-                .ease(easing(theme, "--checkbox-ease-enter"))
+            gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::CHECKBOX_DURATION))
+                .delay(duration(theme, crate::theme::keys::CHECKBOX_DURATION_FAST))
+                .ease(easing(theme, crate::theme::keys::CHECKBOX_EASE_ENTER))
         };
         let erase = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--checkbox-duration-fast"))
-                .ease(easing(theme, "--checkbox-ease-exit"))
+            gpui_kit::base::Transition::new(duration(
+                theme,
+                crate::theme::keys::CHECKBOX_DURATION_FAST,
+            ))
+            .ease(easing(theme, crate::theme::keys::CHECKBOX_EASE_EXIT))
         };
         // The box shrinks on the short rung, and the shrink is eased the same way
         // as the fill rather than on its own curve.
         let press = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--checkbox-duration-fast"))
-                .ease(easing(theme, "--checkbox-ease"))
+            gpui_kit::base::Transition::new(duration(
+                theme,
+                crate::theme::keys::CHECKBOX_DURATION_FAST,
+            ))
+            .ease(easing(theme, crate::theme::keys::CHECKBOX_EASE))
         };
 
         let mut progress = |channel: &'static str, target: f32, policy| {
@@ -518,7 +593,7 @@ impl RenderOnce for YueCheckbox {
         let scale = gpui_kit::base::transition(
             (id.clone(), "yue-checkbox-press"),
             if pressed {
-                number(self.theme, "--checkbox-press-scale")
+                number(self.theme, crate::theme::keys::CHECKBOX_PRESS_SCALE)
             } else {
                 1.0
             },
@@ -554,29 +629,35 @@ impl RenderOnce for YueCheckbox {
         // A disabled box is repainted rather than transitioned, the way the
         // reference's own disabled rule replaces the fill outright.
         let background = if self.disabled {
-            rgba(self.theme, "--checkbox-disabled-background")
+            rgba(self.theme, crate::theme::keys::CHECKBOX_DISABLED_BACKGROUND)
         } else {
             mix_rgba(
-                rgba(self.theme, "--checkbox-background"),
-                rgba(self.theme, "--checkbox-background-checked"),
+                rgba(self.theme, crate::theme::keys::CHECKBOX_BACKGROUND),
+                rgba(self.theme, crate::theme::keys::CHECKBOX_BACKGROUND_CHECKED),
                 fill,
             )
         };
         let border_color = if self.disabled {
-            rgba(self.theme, "--checkbox-disabled-border-color")
+            rgba(
+                self.theme,
+                crate::theme::keys::CHECKBOX_DISABLED_BORDER_COLOR,
+            )
         } else {
             mix_rgba(
-                rgba(self.theme, "--checkbox-border-color"),
-                rgba(self.theme, "--checkbox-border-color-checked"),
+                rgba(self.theme, crate::theme::keys::CHECKBOX_BORDER_COLOR),
+                rgba(
+                    self.theme,
+                    crate::theme::keys::CHECKBOX_BORDER_COLOR_CHECKED,
+                ),
                 emphasis,
             )
         };
         let mark_color = gpui_kit::Hsla::from(rgba(
             self.theme,
             if self.disabled {
-                "--checkbox-disabled-mark-color"
+                crate::theme::keys::CHECKBOX_DISABLED_MARK_COLOR
             } else {
-                "--checkbox-mark-color"
+                crate::theme::keys::CHECKBOX_MARK_COLOR
             },
         ));
         // The mark is painted on the box's content area, so its unit is that
@@ -647,15 +728,15 @@ impl RenderOnce for YueCheckbox {
             .track_focus(&focus_handle)
             .flex()
             .items_center()
-            .gap(rems(self.theme, "--checkbox-label-gap"))
+            .gap(rems(self.theme, crate::theme::keys::CHECKBOX_LABEL_GAP))
             .min_h(rems(self.theme, height_token))
             .text_size(rems(self.theme, font_token))
             .text_color(rgba(
                 self.theme,
                 if self.disabled {
-                    "--checkbox-label-color-disabled"
+                    crate::theme::keys::CHECKBOX_LABEL_COLOR_DISABLED
                 } else {
-                    "--checkbox-label-color"
+                    crate::theme::keys::CHECKBOX_LABEL_COLOR
                 },
             ))
             .when(!self.disabled, |checkbox| checkbox.cursor_pointer())
@@ -715,13 +796,16 @@ impl RenderOnce for YueCheckbox {
                 handler(CheckboxState::from_base(state), event, window, cx);
             });
         }
-        checkbox
+        self.layout.apply(checkbox)
     }
 }
 
 impl RenderOnce for YueCheckboxGroup {
-    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        let gap = rems(self.theme, "--checkbox-group-gap");
+    fn render(mut self, _: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
+        let gap = rems(self.theme, crate::theme::keys::CHECKBOX_GROUP_GAP);
         let vertical = self.direction == GroupDirection::Vertical;
         let group_disabled = self.disabled;
         let has_header = self.select_all.is_some();
@@ -749,8 +833,11 @@ impl RenderOnce for YueCheckboxGroup {
         group = group.when_some(self.label.clone(), |group, label| {
             group.child(
                 div()
-                    .text_size(rems(self.theme, "--checkbox-label-font-size-md"))
-                    .text_color(rgba(self.theme, "--checkbox-label-color"))
+                    .text_size(rems(
+                        self.theme,
+                        crate::theme::keys::CHECKBOX_LABEL_FONT_SIZE_MD,
+                    ))
+                    .text_color(rgba(self.theme, crate::theme::keys::CHECKBOX_LABEL_COLOR))
                     .child(label),
             )
         });
@@ -807,15 +894,17 @@ impl RenderOnce for YueCheckboxGroup {
         });
         // Options are the header's children, so a vertical group indents them
         // under it; a horizontal group has no such column to hang off.
-        let indent = rems(self.theme, "--checkbox-group-indent");
-        group.child(
-            div()
-                .flex()
-                .gap(gap)
-                .when(vertical, |rows| rows.flex_col().items_start())
-                .when(!vertical, |rows| rows.flex_row().flex_wrap())
-                .when(vertical && has_header, |rows| rows.pl(indent))
-                .children(rows),
+        let indent = rems(self.theme, crate::theme::keys::CHECKBOX_GROUP_INDENT);
+        self.layout.apply(
+            group.child(
+                div()
+                    .flex()
+                    .gap(gap)
+                    .when(vertical, |rows| rows.flex_col().items_start())
+                    .when(!vertical, |rows| rows.flex_row().flex_wrap())
+                    .when(vertical && has_header, |rows| rows.pl(indent))
+                    .children(rows),
+            ),
         )
     }
 }
@@ -1037,7 +1126,7 @@ mod tests {
     #[test]
     fn size_profiles_pair_each_box_with_its_row_and_label() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
-        let border = pixels(theme, "--checkbox-border-width");
+        let border = pixels(theme, crate::theme::keys::CHECKBOX_BORDER_WIDTH);
         for (size, box_size, height, font, stroke_size) in [
             (CheckboxSize::Small, 12.0, 28.0, 12.0, 1.0),
             (CheckboxSize::Medium, 16.0, 32.0, 14.0, 1.5),
@@ -1064,22 +1153,22 @@ mod tests {
     fn checkbox_motion_resolves_the_reference_rungs() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
         assert_eq!(
-            duration(theme, "--checkbox-duration"),
+            duration(theme, crate::theme::keys::CHECKBOX_DURATION),
             Duration::from_millis(200),
             "the box changes state on the enter rung"
         );
         assert_eq!(
-            duration(theme, "--checkbox-duration-fast"),
+            duration(theme, crate::theme::keys::CHECKBOX_DURATION_FAST),
             Duration::from_millis(100),
             "the mark erases, the delay runs and the box shrinks on the exit rung"
         );
         assert_eq!(
-            number(theme, "--checkbox-press-scale"),
+            number(theme, crate::theme::keys::CHECKBOX_PRESS_SCALE),
             0.9,
             "the press scales the box the way the reference does"
         );
         assert_eq!(
-            pixels(theme, "--checkbox-halo-width"),
+            pixels(theme, crate::theme::keys::CHECKBOX_HALO_WIDTH),
             4.0,
             "the hover halo reaches 4px past the box"
         );
@@ -1112,22 +1201,22 @@ mod tests {
             (ThemeMode::Dark, Accent::Neutral),
         ] {
             let theme = YueTheme::new(mode, accent);
-            let fill = rgba(theme, "--checkbox-background-checked");
-            let mark = rgba(theme, "--checkbox-mark-color");
+            let fill = rgba(theme, crate::theme::keys::CHECKBOX_BACKGROUND_CHECKED);
+            let mark = rgba(theme, crate::theme::keys::CHECKBOX_MARK_COLOR);
             assert!(
                 fill.a > 0.99 && mark.a > 0.99,
                 "{mode:?}/{accent:?} keeps an opaque fill and mark, so the mark is not a ghost"
             );
-            let disabled = rgba(theme, "--checkbox-disabled-background");
+            let disabled = rgba(theme, crate::theme::keys::CHECKBOX_DISABLED_BACKGROUND);
             assert!(
                 disabled.a < fill.a,
                 "{mode:?}/{accent:?} dims the disabled fill below the checked one"
             );
             assert!(
-                rgba(theme, "--checkbox-disabled-border-color").a == 0.0,
+                rgba(theme, crate::theme::keys::CHECKBOX_DISABLED_BORDER_COLOR).a == 0.0,
                 "{mode:?}/{accent:?} drops the disabled border out, as the reference does"
             );
-            let halo = rgba(theme, "--checkbox-halo-color");
+            let halo = rgba(theme, crate::theme::keys::CHECKBOX_HALO_COLOR);
             assert!(
                 halo.a > 0.0 && halo.a < 0.5,
                 "{mode:?}/{accent:?} keeps the hover halo a tint, not a fill"

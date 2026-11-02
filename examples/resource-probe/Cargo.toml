@@ -1,0 +1,30 @@
+[package]
+name = "yue-resource-probe"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+publish = false
+build = "build.rs"
+
+[features]
+bundled-fonts = ["yue-component/bundled-fonts"]
+
+[dependencies]
+yue-component.workspace = true
+
+[[bin]]
+name = "resources-empty"
+path = "src/empty.rs"
+
+[[bin]]
+name = "resources-one"
+path = "src/one.rs"
+
+[[bin]]
+name = "resources-all"
+path = "src/all.rs"
+
+[[bin]]
+name = "resources-fonts"
+path = "src/fonts.rs"
+required-features = ["bundled-fonts"]

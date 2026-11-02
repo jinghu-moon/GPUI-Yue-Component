@@ -152,10 +152,11 @@ YueField::new(theme)
 GPUI 与 Base 0.8.0 不提供、Yue 也不伪造的部分：
 
 - 没有 `aria-required`、`aria-invalid` 槽位，必填与失效状态靠可见的星号和并入描述的文案传达。
-- `aria_disabled` 的 setter 在 gpui-base 内部私有，Yue 无法复用，禁用/只读同样无法向辅助技术播报。
+- GPUI 没有公开 `aria_disabled` builder；本地 Base 的 InputBase 现通过已有 `A11yDisabledExt` 标记真实节点，数字框的禁用状态已有回归。只读与原生 Windows 播报仍须分别核查。
 - Windows 无原生文本内容类型通道；`InputType` 只改变节点角色。
 - Base 无 `max_length`，截断发生在 Yue 的渲染路径上。
-- `YueNumberInput` 的 SpinButton 节点有 label 槽位但没有描述槽位，field 的描述不会并入它。
+- 本地 Base NumberInput 已补 description、文本/数值、min / max / step 和原生增减动作；YueField 的说明及错误会进入同一个 SpinButton。YueNumberInput 使用真实 Base Input 编辑器，支持 `.controls_right()` 和组合组件的 `.on_step(...)`；`.controls(false)` 隐藏箭头但保留键盘与可访问增减，`.tab_stop(false)` 可将数字框排除出 Tab 进入顺序。Error 状态同时改变真实编辑器文本与边框颜色。
+- YueNumberInput 的增减图标为 Tabler `chevron-up` / `chevron-down`；`.controls_right()` 时上增下减。非等距 Slider 刻度通过同一 `on_step` 路径处理，原生 SpinButton 不再报告不真实的固定 step。
 - Base 在输入框上下文里把 `tab` 绑到 `IndentInline`、`shift-tab` 绑到 `OutdentInline`，Tab 不遍历字段；字段间移动焦点靠点击或 `InputState::focus`，回车提交靠 `YueForm::attach`。
 
 ## Token 映射
@@ -183,11 +184,11 @@ cargo test -p yue-component --features headless-tests
 cargo clippy -p yue-component --features headless-tests --all-targets -- -D warnings
 ```
 
-`crates/yue-component/tests/input.rs` 用 gpui-base 的元素观测层查询渲染后的节点树。该 feature 是可选的，因为 `gpui-kit/test-support` 会连带激活 GPUI Fast 后端，其固定依赖与本工作区锁定的 GPUI 后端冲突，且 gpui-base 的观测别名会让 `gpui-component` 0.8.0 的 `popup_menu.rs` 编译失败；默认构建与 `cargo test --workspace` 都不会开启它。
+`crates/yue-component/tests/input.rs` 用 gpui-base 的元素观测层查询渲染后的节点树。观测 instrumentation 保持 opt-in，默认构建与 `cargo test --workspace` 不开启它。直接启用 `gpui-base/test-support`，避免 `gpui-kit/test-support` 连带激活的 Fast 后端依赖；Showcase 已移除 styled component 依赖，因此本工作区支持 `cargo test --workspace --features headless-tests`，覆盖组件和 Showcase 的滚动/Slider 测试。外部宿主启用上游 styled component 时仍需独立验证其测试 feature 组合，见 [08 接入与架构完善](08-integration-hardening.md)。
 
 ## 验收
 
-`cargo test -p yue-component`（45 项）与 `cargo test -p yue-component --features headless-tests`（6 项无头）通过；`cargo check --workspace`、`cargo clippy --workspace --all-targets -- -D warnings`、`cargo fmt --all -- --check` 通过。无头测试覆盖的是这些：
+Input 的 10 项无头测试覆盖数字编辑器真实输入、上下键步进、description / min / max / step、已聚焦后禁用、三尺寸 / 三档 rem 的实际编辑区几何，以及四种主题下真实文字塑形输入的错误色与正常色。其余测试与边界如下：
 
 - 各控件的可访问节点：单行为 `TextInput`，`InputType` 改为 `SearchInput`/`EmailInput`/`UrlInput`，密码为 `PasswordInput` 且不发布值，多行为 `MultilineTextInput`，数字控件保留 Base 的 `SpinButton` 节点；label 能被查到，即 frame 确实是被命名的那个节点。
 - 超长值在渲染前截断：默认值、`set_value` 写入都被裁到 `max_length`，节点播报的值与 state 一致；逐字符输入不会突破上限，超长的整段写入保留前缀且光标停在用户原来的位置（越界的光标被夹到上限）。
@@ -207,3 +208,21 @@ cargo clippy -p yue-component --features headless-tests --all-targets -- -D warn
 - YueTextarea 保留 Base 多行编辑和自动增长；YueNumberInput 保留 Base 步进、范围和 SpinButton 语义。
 - YueField 只呈现调用方或绑定规则给出的说明和验证结果，不执行隐式验证。
 - prefix/suffix 可与清除/密码控件组合，不挤压编辑区域或改变输入高度。
+
+## 数字步进按钮反馈（2026-11-01）
+
+按本轮确认的需求，数字输入框的 Chevron 按钮提供 hover 背景和点击时的短促 pressed 反馈：按下加深，持续按住时保持，松开恢复 hover，移出恢复透明；不是定时重复闪烁。样式只由 Yue 提供，实际增减与焦点仍交给 Base NumberInput。
+
+源 token 为 `--input-stepper-background-hover`、`--input-stepper-background-pressed`、`--input-stepper-border-radius`。背景从文本颜色和系统 hover / pressed 透明度派生，圆角使用 `--radius-xs`；禁用时不注册 hover / pressed 样式。ChevronDown / ChevronUp 的 glyph 保持；默认横排“减小 / 编辑区 / 增大”，`.controls_right()` 仍可显式选择右侧竖排。
+
+`tests/slider.rs` 在组合数字框中检查实际提交绘制的背景、按下前不改值、松开只改一次、保持按压时背景稳定、松开恢复 hover、字段 bounds / 已有焦点不变及禁用无反馈。另有独立焦点基线：修正刻度前，已聚焦字段点击步进按钮也不丢焦；本轮没有把正常点击反馈误报为焦点 bug。上述无头测试不等于 Windows 上肉眼观感、DPI 或真实字体渲染验收。
+
+数字框布局回归（2026-11-01）：`tests/input.rs` 的 `horizontal_number_editor_stays_between_controls_at_every_size_and_text_scale` 在三尺寸和三档 rem 下直接检查真实编辑器 bounds 与左右按钮不交叠。当前以 96px 紧凑字段测试负小数；数值使用真实 `InputState::set_text_align(Center)`，并从 `range_to_bounds` 验证实际文字中点与编辑区中点一致，不以居中外层 div 代替文本对齐。
+
+数字框新增 `--input-number-padding-inline: var(--space-4)`，独立于普通文本输入框的尺寸 padding；这使 Large 仍有可读编辑区，而 Slider 无须继续加宽。默认数值对齐从左改为中，属于开发期呈现合同修正；现有步进、编辑、焦点和禁用路径保持。字段组仍可在窄布局换行。Slider 另提供互斥的两端按钮模式，见 [Slider 文档](16-slider.md#91-互斥的两端按钮形式)。
+
+## 数字错误色修正（2026-11-02）
+
+Base 的普通输入文字从继承的 `TextStyle.color` 塑形，仅设置 `InputEditorStyle.foreground` 不会改变这些数字的实际颜色。`YueNumberInput` 现在将同一语义前景色同时交给编辑器样式和 NumberInput 根节点的 `.text_color(...)`：错误使用 `--error-foreground`，正常使用 `--input-color`，禁用使用 `--input-color-disabled`。颜色归 Yue 决定，不改变 Base 的继承合同。
+
+`numeric_error_colors_reach_the_actual_editor_text_runs` 覆盖 Light / Dark × Azure / Neutral 的 Error → Normal 恢复。Base 仅在 `test-support` 下保存并提供最新布局实际传给默认 TextRun 的颜色，测试不以样式配置值代替实际塑形输入。临时移除根节点的 `.text_color(...)` 后，该测试确实失败，日志为 `target/slider-visual-text-color-before.log`；随后逐字节恢复源文件。该观察不等于 GPU 字形像素或 Narrator 验收。

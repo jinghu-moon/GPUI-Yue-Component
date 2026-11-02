@@ -11,15 +11,19 @@ gpui-kit.workspace = true
 # path builder. Switch glyphs stroke their icon paths, so they need round caps.
 lyon.workspace = true
 yue-component-icons.workspace = true
-# Yue's headless UI tests read GPUI Base's element observations. Base's test-support
-# feature also changes what `test_support()` returns, so it has to stay opt-in: with it
-# on, gpui-component 0.8.0 fails to build because its `Observed` wrapper does not carry
-# `ScrollableElement`. `gpui-kit/test-support` is not an option either, since it pulls in
-# the optional GPUI Fast backend whose pins conflict with the GPUI backend here.
+# Headless tests use Base observations directly. This now composes with every
+# workspace member (all consumers are Base-only). Keep instrumentation opt-in.
+# Kit's test-support also enables the optional Fast backend with conflicting pins.
 gpui-base = { version = "0.8.0", optional = true, features = ["test-support"] }
 
 [features]
+default = ["bundled-fonts"]
+bundled-fonts = []
 headless-tests = ["dep:gpui-base"]
+
+[[test]]
+name = "controls"
+required-features = ["headless-tests"]
 
 [[test]]
 name = "input"
@@ -33,3 +37,39 @@ required-features = ["headless-tests"]
 name = "checkbox"
 required-features = ["headless-tests"]
 
+[[test]]
+name = "dropdown"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "segmented"
+required-features = ["headless-tests"]
+
+
+[[test]]
+name = "color_picker"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "link"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "slider"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "tag"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "tabs"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "loading"
+required-features = ["headless-tests"]
+
+[[test]]
+name = "collapse"
+required-features = ["headless-tests"]

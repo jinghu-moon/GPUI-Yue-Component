@@ -1,3 +1,4 @@
+use gpui_kit::StatefulInteractiveElement as _;
 use std::rc::Rc;
 
 use gpui_kit::prelude::FluentBuilder as _;
@@ -87,10 +88,18 @@ pub enum SwitchIndicator {
 }
 
 /// A controlled Yue switch. The caller owns and updates the checked value.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueSwitch};
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueSwitch::new("enabled", theme, false, "启用")
+///     .on_change(|next, _, _, _| { /* owner stores next, then notifies */ });
+/// ```
 #[derive(IntoElement)]
 pub struct YueSwitch {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     checked: bool,
     disabled: bool,
     loading: bool,
@@ -99,9 +108,59 @@ pub struct YueSwitch {
     indicator: SwitchIndicator,
     accessibility_label: SharedString,
     on_change: Option<ChangeHandler>,
+    layout: crate::control_layout::ControlLayout,
+    focus_handle: Option<gpui_kit::FocusHandle>,
+    key_context: Option<gpui_kit::SharedString>,
+    description: Option<gpui_kit::SharedString>,
+    tab_index: isize,
+    tab_stop: bool,
 }
 
+crate::control_layout::control_layout!(YueSwitch);
+
 impl YueSwitch {
+    /// Use caller-owned focus without replacing the activation handler.
+    pub fn track_focus(mut self, focus: &gpui_kit::FocusHandle) -> Self {
+        self.focus_handle = Some(focus.clone());
+        self
+    }
+    pub fn key_context(mut self, context: impl Into<gpui_kit::SharedString>) -> Self {
+        self.key_context = Some(context.into());
+        self
+    }
+    pub fn accessibility_description(
+        mut self,
+        description: impl Into<gpui_kit::SharedString>,
+    ) -> Self {
+        self.description = Some(description.into());
+        self
+    }
+    /// Focus traversal order. It is applied to whichever handle the control
+    /// tracks, including one passed to `track_focus`, so set the order here
+    /// rather than on that handle.
+    pub fn tab_index(mut self, index: isize) -> Self {
+        self.tab_index = index;
+        self
+    }
+    /// Whether Tab traversal stops on the control; like `tab_index`, it is
+    /// applied to a caller-owned handle too. The default is `true`.
+    pub fn tab_stop(mut self, tab_stop: bool) -> Self {
+        self.tab_stop = tab_stop;
+        self
+    }
+
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(
         id: impl Into<ElementId>,
         theme: YueTheme,
@@ -116,6 +175,13 @@ impl YueSwitch {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
+            focus_handle: None,
+            key_context: None,
+            description: None,
+            tab_index: 0,
+            tab_stop: true,
             checked,
             disabled: false,
             loading: false,
@@ -151,7 +217,8 @@ impl YueSwitch {
     ///
     /// The thumb keeps its position and the indicators fade out behind the
     /// spinner. `on_change` is not reported until loading clears, so a slow
-    /// commit cannot be toggled twice; pressing still stretches the thumb.
+    /// commit cannot be toggled twice. The control reports unavailable to
+    /// assistive technology and rejects presses while loading.
     pub fn loading(mut self, loading: bool) -> Self {
         self.loading = loading;
         self
@@ -222,15 +289,15 @@ fn thumb_shadow(mode: ThemeMode) -> Vec<gpui_kit::BoxShadow> {
 /// the drawing is Yue's own addition, and it borrows the checkbox mark's clock:
 /// the enter rung, started one fast rung after the click.
 fn ink_policy(theme: YueTheme) -> gpui_kit::base::Transition {
-    gpui_kit::base::Transition::new(duration(theme, "--switch-duration"))
-        .delay(duration(theme, "--switch-duration-fast"))
-        .ease(easing(theme, "--ease-enter"))
+    gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::SWITCH_DURATION))
+        .delay(duration(theme, crate::theme::keys::SWITCH_DURATION_FAST))
+        .ease(easing(theme, crate::theme::keys::MOTION_EASE_ENTER))
 }
 
 /// The erase leg: the ink goes before the container has finished fading out.
 fn erase_policy(theme: YueTheme) -> gpui_kit::base::Transition {
-    gpui_kit::base::Transition::new(duration(theme, "--switch-duration-fast"))
-        .ease(easing(theme, "--ease-exit"))
+    gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::SWITCH_DURATION_FAST))
+        .ease(easing(theme, crate::theme::keys::MOTION_EASE_EXIT))
 }
 
 /// One stroked sub-path of a thumb glyph: `drawn` is the fraction of the stroke the
@@ -373,65 +440,84 @@ fn ring_layer(size: f32, alpha: f32, turns: f32, color: gpui_kit::Hsla) -> impl 
     .inset_0()
 }
 
-fn size_tokens(size: SwitchSize) -> (&'static str, &'static str, &'static str) {
+fn size_tokens(
+    size: SwitchSize,
+) -> (
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+) {
     match size {
         SwitchSize::Small => (
-            "--switch-width-sm",
-            "--switch-height-sm",
-            "--switch-thumb-sm",
+            crate::theme::keys::SWITCH_WIDTH_SM,
+            crate::theme::keys::SWITCH_HEIGHT_SM,
+            crate::theme::keys::SWITCH_THUMB_SM,
         ),
         SwitchSize::Medium => (
-            "--switch-width-md",
-            "--switch-height-md",
-            "--switch-thumb-md",
+            crate::theme::keys::SWITCH_WIDTH_MD,
+            crate::theme::keys::SWITCH_HEIGHT_MD,
+            crate::theme::keys::SWITCH_THUMB_MD,
         ),
         SwitchSize::Large => (
-            "--switch-width-lg",
-            "--switch-height-lg",
-            "--switch-thumb-lg",
+            crate::theme::keys::SWITCH_WIDTH_LG,
+            crate::theme::keys::SWITCH_HEIGHT_LG,
+            crate::theme::keys::SWITCH_THUMB_LG,
         ),
     }
 }
 
 impl RenderOnce for YueSwitch {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
+        let focus_handle = self.focus_handle.clone().unwrap_or_else(|| {
+            window
+                .use_keyed_state(self.id.clone(), cx, |_, cx| cx.focus_handle())
+                .read(cx)
+                .clone()
+        });
+        let unavailable = self.disabled || self.loading;
+        let ring_visible =
+            !unavailable && focus_handle.is_focused(window) && window.last_input_was_keyboard();
         let (width_token, height_token, thumb_token) = size_tokens(self.size);
         let inset_token = match self.size {
-            SwitchSize::Small => "--switch-inset-sm",
-            SwitchSize::Medium => "--switch-inset-md",
-            SwitchSize::Large => "--switch-inset-lg",
+            SwitchSize::Small => crate::theme::keys::SWITCH_INSET_SM,
+            SwitchSize::Medium => crate::theme::keys::SWITCH_INSET_MD,
+            SwitchSize::Large => crate::theme::keys::SWITCH_INSET_LG,
         };
         let (track_radius, thumb_radius) = match self.shape {
             SwitchShape::Capsule => (
-                "--switch-border-radius-capsule",
-                "--switch-thumb-border-radius-capsule",
+                crate::theme::keys::SWITCH_BORDER_RADIUS_CAPSULE,
+                crate::theme::keys::SWITCH_THUMB_BORDER_RADIUS_CAPSULE,
             ),
             SwitchShape::RoundedRectangle => (
-                "--switch-border-radius-rounded",
-                "--switch-thumb-border-radius-rounded",
+                crate::theme::keys::SWITCH_BORDER_RADIUS_ROUNDED,
+                crate::theme::keys::SWITCH_THUMB_BORDER_RADIUS_ROUNDED,
             ),
         };
         let indicator_token = match self.size {
-            SwitchSize::Small => "--switch-indicator-size-sm",
-            SwitchSize::Medium => "--switch-indicator-size-md",
-            SwitchSize::Large => "--switch-indicator-size-lg",
+            SwitchSize::Small => crate::theme::keys::SWITCH_INDICATOR_SIZE_SM,
+            SwitchSize::Medium => crate::theme::keys::SWITCH_INDICATOR_SIZE_MD,
+            SwitchSize::Large => crate::theme::keys::SWITCH_INDICATOR_SIZE_LG,
         };
         let width = pixels(self.theme, width_token);
         let thumb_size = pixels(self.theme, thumb_token);
         let inset = pixels(self.theme, inset_token);
         let shift = width - thumb_size - 2.0 * inset;
-        let switch_duration = duration(self.theme, "--switch-duration");
-        let spinner_duration = duration(self.theme, "--spinner-duration");
+        let switch_duration = duration(self.theme, crate::theme::keys::SWITCH_DURATION);
+        let spinner_duration = duration(self.theme, crate::theme::keys::SPINNER_DURATION);
         // Every animated property of a switch rides the same duration and curve,
         // so each channel below asks for the same policy.
         let policy = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(switch_duration).ease(easing(theme, "--switch-ease"))
+            gpui_kit::base::Transition::new(switch_duration)
+                .ease(easing(theme, crate::theme::keys::SWITCH_EASE))
         };
-        let press_state = (!self.disabled).then(|| {
+        let press_state = (!unavailable).then(|| {
             window.use_keyed_state((self.id.clone(), "yue-switch-press"), cx, |_, _| false)
         });
         let pressed = press_state.as_ref().is_some_and(|state| *state.read(cx));
-        let stretch = press_stretch(pressed, self.disabled, inset);
+        let stretch = press_stretch(pressed, unavailable, inset);
         let offset = gpui_kit::base::transition(
             (self.id.clone(), "yue-switch-offset"),
             thumb_offset(self.checked, shift, stretch),
@@ -470,8 +556,8 @@ impl RenderOnce for YueSwitch {
             cx,
         );
         let track_color = mix_rgba(
-            rgba(self.theme, "--switch-background"),
-            rgba(self.theme, "--switch-background-checked"),
+            rgba(self.theme, crate::theme::keys::SWITCH_BACKGROUND),
+            rgba(self.theme, crate::theme::keys::SWITCH_BACKGROUND_CHECKED),
             track_color.clamp(0.0, 1.0),
         );
         // The thumb colour only changes with the disabled state, which the demo
@@ -479,11 +565,11 @@ impl RenderOnce for YueSwitch {
         let thumb_color = rgba(
             self.theme,
             if self.disabled {
-                "--switch-thumb-color"
+                crate::theme::keys::SWITCH_THUMB_COLOR
             } else if self.checked {
-                "--switch-thumb-color-checked"
+                crate::theme::keys::SWITCH_THUMB_COLOR_CHECKED
             } else {
-                "--switch-thumb-color"
+                crate::theme::keys::SWITCH_THUMB_COLOR
             },
         );
         // The ink runs on its own clock: it starts a fast rung after the click and
@@ -517,11 +603,16 @@ impl RenderOnce for YueSwitch {
         let icons_alpha = 1.0 - loading_progress;
         let (cross_turns, cross_scale) = cross_motion(cross_progress);
         let (check_turns, check_scale) = check_motion(cross_progress);
-        let cross_color =
-            gpui_kit::Hsla::from(rgba(self.theme, "--switch-indicator-color-unchecked"));
-        let check_color =
-            gpui_kit::Hsla::from(rgba(self.theme, "--switch-indicator-color-checked"));
-        let spinner_color = gpui_kit::Hsla::from(rgba(self.theme, "--spinner-color"));
+        let cross_color = gpui_kit::Hsla::from(rgba(
+            self.theme,
+            crate::theme::keys::SWITCH_INDICATOR_COLOR_UNCHECKED,
+        ));
+        let check_color = gpui_kit::Hsla::from(rgba(
+            self.theme,
+            crate::theme::keys::SWITCH_INDICATOR_COLOR_CHECKED,
+        ));
+        let spinner_color =
+            gpui_kit::Hsla::from(rgba(self.theme, crate::theme::keys::SPINNER_COLOR));
         let thumb = gpui_kit::base::SwitchThumb::new(self.checked)
             .disabled(self.disabled)
             .absolute()
@@ -604,20 +695,55 @@ impl RenderOnce for YueSwitch {
             // would shrink the box the thumb is placed inside, so `top: inset`
             // would measure from below it and the thumb would sit low.
             .when(self.disabled, |track| {
-                track.opacity(number(self.theme, "--switch-opacity-disabled"))
+                track.opacity(number(
+                    self.theme,
+                    crate::theme::keys::SWITCH_OPACITY_DISABLED,
+                ))
             })
-            .child(thumb);
+            .child(thumb)
+            // The ring sits outside the track by the focus-ring offset, as the
+            // demo's `outline-offset` does, so it reads against the page rather
+            // than against a track that may share its colour. It hangs off the
+            // track rather than the root so a widened root does not stretch it.
+            .when(ring_visible, |track| {
+                let width = pixels(self.theme, crate::theme::keys::FOCUS_RING_WIDTH);
+                let offset = pixels(self.theme, crate::theme::keys::FOCUS_RING_OFFSET);
+                let outset = gpui_kit::rems(-(width + offset) / 16.0);
+                track.child(
+                    div()
+                        .absolute()
+                        .top(outset)
+                        .right(outset)
+                        .bottom(outset)
+                        .left(outset)
+                        .rounded(gpui_kit::rems(
+                            (pixels(self.theme, track_radius) + width + offset) / 16.0,
+                        ))
+                        .border(gpui_kit::rems(width / 16.0))
+                        .border_color(rgba(self.theme, crate::theme::keys::FOCUS_RING_COLOR)),
+                )
+            });
 
         let mut switch = gpui_kit::base::Switch::new(self.id)
             .checked(self.checked)
-            .disabled(self.disabled)
+            .disabled(unavailable)
+            .track_focus(&focus_handle)
             .accessibility_label(self.accessibility_label)
-            .child(track)
-            .focus_visible(|style| {
-                style
-                    .border(rems(self.theme, "--switch-border-width"))
-                    .border_color(rgba(self.theme, "--focus-ring-color"))
-            });
+            .relative()
+            .w(rems(self.theme, width_token))
+            .h(rems(self.theme, height_token))
+            .child(track);
+        switch = self
+            .layout
+            .apply(switch)
+            .tab_index(self.tab_index)
+            .tab_stop(self.tab_stop);
+        if let Some(context) = self.key_context {
+            switch = switch.key_context(context.as_ref());
+        }
+        if let Some(description) = self.description {
+            switch = switch.aria_description(description);
+        }
         if let Some(state) = press_state {
             let down = window.listener_for(&state, |state, _, window, cx| {
                 if !*state {
@@ -703,7 +829,10 @@ mod tests {
                 "{size:?} centers the thumb: two insets stack on top of it"
             );
         }
-        assert_eq!(super::pixels(theme, "--switch-indicator-size-md"), 12.0);
+        assert_eq!(
+            super::pixels(theme, crate::theme::keys::SWITCH_INDICATOR_SIZE_MD),
+            12.0
+        );
         for (indicator_token, stroke_token) in [
             (
                 "--switch-indicator-size-sm",
@@ -725,27 +854,27 @@ mod tests {
             );
         }
         assert_eq!(
-            token(theme, "--switch-background").color(),
+            token(theme, crate::theme::keys::SWITCH_BACKGROUND).color(),
             Some(0xa3a3a3),
             "the unchecked track stays visibly distinct from its surface"
         );
         assert_eq!(
-            token(theme, "--switch-thumb-color").color(),
+            token(theme, crate::theme::keys::SWITCH_THUMB_COLOR).color(),
             Some(0xffffff),
             "the unchecked thumb is a light surface against the gray track"
         );
         assert_eq!(
-            token(theme, "--switch-thumb-color-checked").color(),
+            token(theme, crate::theme::keys::SWITCH_THUMB_COLOR_CHECKED).color(),
             Some(0xffffff),
             "the checked thumb remains white against the accent track"
         );
         assert_eq!(
-            token(theme, "--switch-indicator-color-checked").color(),
-            Some(0x1f75db),
+            token(theme, crate::theme::keys::SWITCH_INDICATOR_COLOR_CHECKED).color(),
+            Some(0x125fb8),
             "the checked indicator uses the accent color on the white thumb"
         );
         assert_eq!(
-            super::duration(theme, "--switch-duration"),
+            super::duration(theme, crate::theme::keys::SWITCH_DURATION),
             std::time::Duration::from_millis(200)
         );
     }
@@ -846,28 +975,28 @@ mod tests {
     fn switch_motion_legs_resolve_token_durations_and_curves() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
         assert_eq!(
-            super::duration(theme, "--switch-duration-fast"),
+            super::duration(theme, crate::theme::keys::SWITCH_DURATION_FAST),
             Duration::from_millis(100),
             "the erase leg and the ink delay run on the switch's own fast rung"
         );
         // The ink leg is no longer on a literal clock of its own: it reads the same
         // two rungs the checkbox mark is drawn with.
         assert_eq!(
-            super::duration(theme, "--switch-duration"),
-            super::duration(theme, "--checkbox-duration"),
+            super::duration(theme, crate::theme::keys::SWITCH_DURATION),
+            super::duration(theme, crate::theme::keys::CHECKBOX_DURATION),
             "the glyph is written for as long as the checkbox mark"
         );
         assert_eq!(
-            super::duration(theme, "--switch-duration-fast"),
-            super::duration(theme, "--checkbox-duration-fast"),
+            super::duration(theme, crate::theme::keys::SWITCH_DURATION_FAST),
+            super::duration(theme, crate::theme::keys::CHECKBOX_DURATION_FAST),
             "and starts as late as the checkbox mark"
         );
         assert_eq!(
-            super::duration(theme, "--spinner-duration"),
+            super::duration(theme, crate::theme::keys::SPINNER_DURATION),
             Duration::from_millis(900),
             "the ring resolves a calc() duration"
         );
-        for name in ["--switch-ease", "--ease-enter", "--ease-exit"] {
+        for name in ["--switch-ease", "--motion-ease-enter", "--motion-ease-exit"] {
             let curve = super::easing(theme, name);
             assert_eq!(curve(0.0), 0.0, "{name} starts where the value starts");
             assert_eq!(curve(1.0), 1.0, "{name} ends on target");
@@ -886,8 +1015,8 @@ mod tests {
     #[test]
     fn switch_track_colour_mixes_along_the_rgb_axes() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
-        let off = super::rgba(theme, "--switch-background");
-        let on = super::rgba(theme, "--switch-background-checked");
+        let off = super::rgba(theme, crate::theme::keys::SWITCH_BACKGROUND);
+        let on = super::rgba(theme, crate::theme::keys::SWITCH_BACKGROUND_CHECKED);
         let close = |a: f32, b: f32| (a - b).abs() < 1e-6;
         for (progress, want, note) in [
             (0.0, off, "an unmoved track keeps its unchecked token"),

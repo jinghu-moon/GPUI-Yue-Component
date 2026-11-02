@@ -1,6 +1,11 @@
 [workspace]
-members = ["crates/yue-component", "crates/yue-component-icons", "examples/windows-showcase"]
+members = ["crates/yue-component", "crates/yue-component-icons", "examples/windows-showcase", "examples/minimal", "examples/resource-probe"]
 resolver = "2"
+exclude = ["vendor/gpui-base"]
+
+[patch.crates-io]
+# Maintained, source-tracked Positioner extension; see vendor/gpui-base/YUE-PATCH.md.
+gpui-base = { path = "vendor/gpui-base" }
 
 [workspace.package]
 edition = "2024"
@@ -11,7 +16,7 @@ gpui-kit = { version = "0.8.0", default-features = false }
 # Same major series GPUI's own path tessellation is locked to, so `LineCap` and
 # `StrokeOptions` stay the same types GPUI reads.
 lyon = "1.0.19"
-yue-component = { path = "crates/yue-component" }
+yue-component = { path = "crates/yue-component", default-features = false }
 yue-component-icons = { path = "crates/yue-component-icons" }
 
 [profile.dev]

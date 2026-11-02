@@ -63,10 +63,17 @@ struct Segment {
 }
 
 /// A controlled Yue radio option. The caller owns the selected value.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueRadio};
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let control = YueRadio::new("mode", theme, false).label("标准");
+/// ```
 #[derive(IntoElement)]
 pub struct YueRadio {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     checked: bool,
     disabled: bool,
     size: RadioSize,
@@ -78,13 +85,30 @@ pub struct YueRadio {
     tab_stop: bool,
     position: Option<(usize, usize)>,
     on_change: Option<ChangeHandler>,
+    layout: crate::control_layout::ControlLayout,
 }
 
+crate::control_layout::control_layout!(YueRadio);
+
 impl YueRadio {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, checked: bool) -> Self {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
             checked,
             disabled: false,
             size: RadioSize::Medium,
@@ -143,14 +167,14 @@ impl YueRadio {
 
     /// Uses the handle a group drives roving focus through, instead of creating a
     /// keyed one. The group also reads it to tell which option is focused.
-    pub(crate) fn track_focus(mut self, focus_handle: &FocusHandle) -> Self {
+    pub fn track_focus(mut self, focus_handle: &FocusHandle) -> Self {
         self.focus_handle = Some(focus_handle.clone());
         self
     }
 
     /// Whether Tab reaches this option. A group keeps exactly one option in the
     /// tab order and moves that stop with the selection.
-    pub(crate) fn tab_stop(mut self, tab_stop: bool) -> Self {
+    pub fn tab_stop(mut self, tab_stop: bool) -> Self {
         self.tab_stop = tab_stop;
         self
     }
@@ -210,10 +234,18 @@ impl YueRadioOption {
 /// pointer or a Space key carries: a group's selection also changes when an arrow
 /// key moves onto another option, and a click event invented for that keystroke
 /// would report a button the user never pressed.
+///
+/// ```
+/// use yue_component::{Accent, ThemeMode, YueTheme, YueRadioGroup, YueRadioOption};
+/// let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+/// let group = YueRadioGroup::new("format", theme, None)
+///     .options([YueRadioOption::new("png", "PNG")]);
+/// ```
 #[derive(IntoElement)]
 pub struct YueRadioGroup {
     id: ElementId,
     theme: YueTheme,
+    use_default_theme: bool,
     selected: Option<SharedString>,
     options: Vec<YueRadioOption>,
     label: Option<SharedString>,
@@ -222,13 +254,30 @@ pub struct YueRadioGroup {
     appearance: RadioAppearance,
     direction: GroupDirection,
     on_change: Option<ValueHandler>,
+    layout: crate::control_layout::ControlLayout,
 }
 
+crate::control_layout::control_layout!(YueRadioGroup);
+
 impl YueRadioGroup {
+    /// Resolve the application default at render time, including later theme changes.
+    pub fn use_default_theme(mut self) -> Self {
+        self.use_default_theme = true;
+        self
+    }
+    /// Override the application default for this component instance.
+    pub fn theme(mut self, theme: YueTheme) -> Self {
+        self.theme = theme;
+        self.use_default_theme = false;
+        self
+    }
+
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, selected: Option<SharedString>) -> Self {
         Self {
             id: id.into(),
             theme,
+            use_default_theme: false,
+            layout: Default::default(),
             selected,
             options: Vec::new(),
             label: None,
@@ -363,25 +412,32 @@ fn move_index(operable: usize, current: usize, direction: RadioMove) -> Option<u
     })
 }
 
-fn size_tokens(size: RadioSize) -> (&'static str, &'static str, &'static str, &'static str) {
+fn size_tokens(
+    size: RadioSize,
+) -> (
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+) {
     match size {
         RadioSize::Small => (
-            "--radio-size-sm",
-            "--radio-dot-size-sm",
-            "--radio-height-sm",
-            "--radio-label-font-size-sm",
+            crate::theme::keys::RADIO_SIZE_SM,
+            crate::theme::keys::RADIO_DOT_SIZE_SM,
+            crate::theme::keys::RADIO_HEIGHT_SM,
+            crate::theme::keys::RADIO_LABEL_FONT_SIZE_SM,
         ),
         RadioSize::Medium => (
-            "--radio-size-md",
-            "--radio-dot-size-md",
-            "--radio-height-md",
-            "--radio-label-font-size-md",
+            crate::theme::keys::RADIO_SIZE_MD,
+            crate::theme::keys::RADIO_DOT_SIZE_MD,
+            crate::theme::keys::RADIO_HEIGHT_MD,
+            crate::theme::keys::RADIO_LABEL_FONT_SIZE_MD,
         ),
         RadioSize::Large => (
-            "--radio-size-lg",
-            "--radio-dot-size-lg",
-            "--radio-height-lg",
-            "--radio-label-font-size-lg",
+            crate::theme::keys::RADIO_SIZE_LG,
+            crate::theme::keys::RADIO_DOT_SIZE_LG,
+            crate::theme::keys::RADIO_HEIGHT_LG,
+            crate::theme::keys::RADIO_LABEL_FONT_SIZE_LG,
         ),
     }
 }
@@ -389,22 +445,28 @@ fn size_tokens(size: RadioSize) -> (&'static str, &'static str, &'static str, &'
 /// The row a segment lives in, the label it carries, and the inline padding that
 /// gives it its width — the same three rungs the Indicator appearance reads,
 /// resolved against the segmented control's own ladder.
-fn segment_tokens(size: RadioSize) -> (&'static str, &'static str, &'static str) {
+fn segment_tokens(
+    size: RadioSize,
+) -> (
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+    crate::theme::TokenKey,
+) {
     match size {
         RadioSize::Small => (
-            "--radio-button-height-sm",
-            "--radio-button-font-size-sm",
-            "--radio-button-padding-inline-sm",
+            crate::theme::keys::RADIO_BUTTON_HEIGHT_SM,
+            crate::theme::keys::RADIO_BUTTON_FONT_SIZE_SM,
+            crate::theme::keys::RADIO_BUTTON_PADDING_INLINE_SM,
         ),
         RadioSize::Medium => (
-            "--radio-button-height-md",
-            "--radio-button-font-size-md",
-            "--radio-button-padding-inline-md",
+            crate::theme::keys::RADIO_BUTTON_HEIGHT_MD,
+            crate::theme::keys::RADIO_BUTTON_FONT_SIZE_MD,
+            crate::theme::keys::RADIO_BUTTON_PADDING_INLINE_MD,
         ),
         RadioSize::Large => (
-            "--radio-button-height-lg",
-            "--radio-button-font-size-lg",
-            "--radio-button-padding-inline-lg",
+            crate::theme::keys::RADIO_BUTTON_HEIGHT_LG,
+            crate::theme::keys::RADIO_BUTTON_FONT_SIZE_LG,
+            crate::theme::keys::RADIO_BUTTON_PADDING_INLINE_LG,
         ),
     }
 }
@@ -477,35 +539,39 @@ impl YueRadio {
         let (box_token, dot_token, height_token, font_token) = size_tokens(self.size);
         let box_size = pixels(self.theme, box_token);
         let dot_size = pixels(self.theme, dot_token);
-        let border = pixels(self.theme, "--radio-border-width");
-        let radius = pixels(self.theme, "--radio-border-radius");
-        let halo_width = pixels(self.theme, "--radio-halo-width");
-        let halo_color = rgba(self.theme, "--radio-halo-color");
-        let ring_width = pixels(self.theme, "--radio-focus-ring-width");
-        let ring_offset = pixels(self.theme, "--radio-focus-ring-offset");
-        let ring_color = rgba(self.theme, "--radio-focus-ring-color");
+        let border = pixels(self.theme, crate::theme::keys::RADIO_BORDER_WIDTH);
+        let radius = pixels(self.theme, crate::theme::keys::RADIO_BORDER_RADIUS);
+        let halo_width = pixels(self.theme, crate::theme::keys::RADIO_HALO_WIDTH);
+        let halo_color = rgba(self.theme, crate::theme::keys::RADIO_HALO_COLOR);
+        let ring_width = pixels(self.theme, crate::theme::keys::RADIO_FOCUS_RING_WIDTH);
+        let ring_offset = pixels(self.theme, crate::theme::keys::RADIO_FOCUS_RING_OFFSET);
+        let ring_color = rgba(self.theme, crate::theme::keys::RADIO_FOCUS_RING_COLOR);
 
         let standard = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--radio-duration"))
-                .ease(easing(theme, "--radio-ease"))
+            gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::RADIO_DURATION))
+                .ease(easing(theme, crate::theme::keys::RADIO_EASE))
         };
         // The dot grows and collapses on the same rung the circle changes on; the
         // reference switches only its easing, entering with the ease-in curve and
         // leaving with the ease-out one.
         let dot_motion = |theme: YueTheme, growing| {
-            gpui_kit::base::Transition::new(duration(theme, "--radio-duration")).ease(easing(
-                theme,
-                if growing {
-                    "--radio-ease-enter"
-                } else {
-                    "--radio-ease-exit"
-                },
-            ))
+            gpui_kit::base::Transition::new(duration(theme, crate::theme::keys::RADIO_DURATION))
+                .ease(easing(
+                    theme,
+                    if growing {
+                        crate::theme::keys::RADIO_EASE_ENTER
+                    } else {
+                        crate::theme::keys::RADIO_EASE_EXIT
+                    },
+                ))
         };
         // The circle shrinks on the short rung, eased the same way as the fill.
         let press = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--radio-duration-fast"))
-                .ease(easing(theme, "--radio-ease"))
+            gpui_kit::base::Transition::new(duration(
+                theme,
+                crate::theme::keys::RADIO_DURATION_FAST,
+            ))
+            .ease(easing(theme, crate::theme::keys::RADIO_EASE))
         };
 
         let mut progress = |channel: &'static str, target: f32, policy| {
@@ -529,7 +595,7 @@ impl YueRadio {
         let scale = gpui_kit::base::transition(
             (id.clone(), "yue-radio-press"),
             if pressed {
-                number(self.theme, "--radio-press-scale")
+                number(self.theme, crate::theme::keys::RADIO_PRESS_SCALE)
             } else {
                 1.0
             },
@@ -541,29 +607,29 @@ impl YueRadio {
         // A disabled circle is repainted rather than transitioned, the way the
         // reference's disabled rule replaces the fill outright.
         let background = if self.disabled {
-            rgba(self.theme, "--radio-disabled-background")
+            rgba(self.theme, crate::theme::keys::RADIO_DISABLED_BACKGROUND)
         } else {
             mix_rgba(
-                rgba(self.theme, "--radio-background"),
-                rgba(self.theme, "--radio-background-checked"),
+                rgba(self.theme, crate::theme::keys::RADIO_BACKGROUND),
+                rgba(self.theme, crate::theme::keys::RADIO_BACKGROUND_CHECKED),
                 fill,
             )
         };
         let border_color = if self.disabled {
-            rgba(self.theme, "--radio-disabled-border-color")
+            rgba(self.theme, crate::theme::keys::RADIO_DISABLED_BORDER_COLOR)
         } else {
             mix_rgba(
-                rgba(self.theme, "--radio-border-color"),
-                rgba(self.theme, "--radio-border-color-checked"),
+                rgba(self.theme, crate::theme::keys::RADIO_BORDER_COLOR),
+                rgba(self.theme, crate::theme::keys::RADIO_BORDER_COLOR_CHECKED),
                 emphasis,
             )
         };
         let dot_color = rgba(
             self.theme,
             if self.disabled {
-                "--radio-disabled-dot-color"
+                crate::theme::keys::RADIO_DISABLED_DOT_COLOR
             } else {
-                "--radio-dot-color"
+                crate::theme::keys::RADIO_DOT_COLOR
             },
         );
         // Everything about the circle shrinks together with the press, the dot
@@ -631,15 +697,15 @@ impl YueRadio {
         self.base(frame)
             .flex()
             .items_center()
-            .gap(rems(self.theme, "--radio-label-gap"))
+            .gap(rems(self.theme, crate::theme::keys::RADIO_LABEL_GAP))
             .min_h(rems(self.theme, height_token))
             .text_size(rems(self.theme, font_token))
             .text_color(rgba(
                 self.theme,
                 if self.disabled {
-                    "--radio-label-color-disabled"
+                    crate::theme::keys::RADIO_LABEL_COLOR_DISABLED
                 } else {
-                    "--radio-label-color"
+                    crate::theme::keys::RADIO_LABEL_COLOR
                 },
             ))
             // A fixed slot holds the circle, so shrinking it on press moves nothing
@@ -670,22 +736,28 @@ impl YueRadio {
         let checked = self.checked;
         let (hovered, pressed, ring_visible) = (frame.hovered, frame.pressed, frame.ring_visible);
         let (height_token, font_token, padding_token) = segment_tokens(self.size);
-        let border = pixels(self.theme, "--radio-button-border-width");
-        let radius = pixels(self.theme, "--radio-button-border-radius");
-        let ring_width = pixels(self.theme, "--radio-focus-ring-width");
-        let ring_offset = pixels(self.theme, "--radio-focus-ring-offset");
-        let ring_color = rgba(self.theme, "--radio-focus-ring-color");
+        let border = pixels(self.theme, crate::theme::keys::RADIO_BUTTON_BORDER_WIDTH);
+        let radius = pixels(self.theme, crate::theme::keys::RADIO_BUTTON_BORDER_RADIUS);
+        let ring_width = pixels(self.theme, crate::theme::keys::RADIO_FOCUS_RING_WIDTH);
+        let ring_offset = pixels(self.theme, crate::theme::keys::RADIO_FOCUS_RING_OFFSET);
+        let ring_color = rgba(self.theme, crate::theme::keys::RADIO_FOCUS_RING_COLOR);
 
         // The choice arrives on the row's enter rung and the press leaves on the
         // exit one, the way the reference splits a segmented row's transitions. A
         // segment never scales, so the press reads as its deeper overlay.
         let recolour = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--radio-button-duration"))
-                .ease(easing(theme, "--radio-button-ease"))
+            gpui_kit::base::Transition::new(duration(
+                theme,
+                crate::theme::keys::RADIO_BUTTON_DURATION,
+            ))
+            .ease(easing(theme, crate::theme::keys::RADIO_BUTTON_EASE))
         };
         let release = |theme: YueTheme| {
-            gpui_kit::base::Transition::new(duration(theme, "--radio-button-duration-fast"))
-                .ease(easing(theme, "--radio-button-ease"))
+            gpui_kit::base::Transition::new(duration(
+                theme,
+                crate::theme::keys::RADIO_BUTTON_DURATION_FAST,
+            ))
+            .ease(easing(theme, crate::theme::keys::RADIO_BUTTON_EASE))
         };
 
         let mut progress = |channel: &'static str, target: f32, policy| {
@@ -721,35 +793,47 @@ impl YueRadio {
         // A disabled segment keeps the fill it died with — losing the chosen tint
         // would hide the very selection the caller still holds.
         let background = if self.disabled && !checked {
-            rgba(self.theme, "--radio-button-disabled-background")
+            rgba(
+                self.theme,
+                crate::theme::keys::RADIO_BUTTON_DISABLED_BACKGROUND,
+            )
         } else {
             let fill = mix_rgba(
-                rgba(self.theme, "--radio-button-background"),
-                rgba(self.theme, "--radio-button-background-selected"),
+                rgba(self.theme, crate::theme::keys::RADIO_BUTTON_BACKGROUND),
+                rgba(
+                    self.theme,
+                    crate::theme::keys::RADIO_BUTTON_BACKGROUND_SELECTED,
+                ),
                 selected,
             );
             let fill = tint(
                 fill,
-                rgba(self.theme, "--radio-button-hover-background"),
+                rgba(
+                    self.theme,
+                    crate::theme::keys::RADIO_BUTTON_HOVER_BACKGROUND,
+                ),
                 hover,
             );
             tint(
                 fill,
-                rgba(self.theme, "--radio-button-pressed-background"),
+                rgba(
+                    self.theme,
+                    crate::theme::keys::RADIO_BUTTON_PRESSED_BACKGROUND,
+                ),
                 press,
             )
         };
         let color = if self.disabled {
-            rgba(self.theme, "--radio-button-disabled-color")
+            rgba(self.theme, crate::theme::keys::RADIO_BUTTON_DISABLED_COLOR)
         } else {
             let ink = mix_rgba(
-                rgba(self.theme, "--radio-button-color"),
-                rgba(self.theme, "--radio-button-color-hover"),
+                rgba(self.theme, crate::theme::keys::RADIO_BUTTON_COLOR),
+                rgba(self.theme, crate::theme::keys::RADIO_BUTTON_COLOR_HOVER),
                 lift,
             );
             mix_rgba(
                 ink,
-                rgba(self.theme, "--radio-button-color-selected"),
+                rgba(self.theme, crate::theme::keys::RADIO_BUTTON_COLOR_SELECTED),
                 selected,
             )
         };
@@ -770,7 +854,7 @@ impl YueRadio {
             .when(checked && !self.disabled, |radio| {
                 radio.font_weight(FontWeight(number(
                     self.theme,
-                    "--radio-button-weight-selected",
+                    crate::theme::keys::RADIO_BUTTON_WEIGHT_SELECTED,
                 )))
             })
             .when_some(self.label.clone(), |radio, label| radio.child(label))
@@ -790,7 +874,10 @@ impl YueRadio {
                     .border(px(border))
                     .rounded(gpui_kit::rems(radius / 16.0))
             })
-            .border_color(rgba(self.theme, "--radio-button-border-color"))
+            .border_color(rgba(
+                self.theme,
+                crate::theme::keys::RADIO_BUTTON_BORDER_COLOR,
+            ))
             .when(ring_visible, move |radio| {
                 let inset = ring_inset(ring_offset, border);
                 radio.child(
@@ -811,7 +898,10 @@ impl YueRadio {
 }
 
 impl RenderOnce for YueRadio {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
         let id = self.id.clone();
 
         // The ring belongs to the control rather than to the row around it, so the
@@ -895,13 +985,16 @@ impl RenderOnce for YueRadio {
                 handler(checked, event, window, cx);
             });
         }
-        radio
+        self.layout.apply(radio)
     }
 }
 
 impl RenderOnce for YueRadioGroup {
-    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let gap = rems(self.theme, "--radio-group-gap");
+    fn render(mut self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.use_default_theme {
+            self.theme = crate::current_theme(cx);
+        }
+        let gap = rems(self.theme, crate::theme::keys::RADIO_GROUP_GAP);
         let segmented = self.appearance == RadioAppearance::Button;
         let vertical = self.direction == GroupDirection::Vertical;
         let group_disabled = self.disabled;
@@ -980,8 +1073,11 @@ impl RenderOnce for YueRadioGroup {
         group = group.when_some(self.label.clone(), |group, label| {
             group.aria_label(label.clone()).child(
                 div()
-                    .text_size(rems(self.theme, "--radio-label-font-size-md"))
-                    .text_color(rgba(self.theme, "--radio-label-color"))
+                    .text_size(rems(
+                        self.theme,
+                        crate::theme::keys::RADIO_LABEL_FONT_SIZE_MD,
+                    ))
+                    .text_color(rgba(self.theme, crate::theme::keys::RADIO_LABEL_COLOR))
                     .child(label),
             )
         });
@@ -1012,30 +1108,39 @@ impl RenderOnce for YueRadioGroup {
             });
         }
 
-        group.child(
-            div()
-                .flex()
-                .when(vertical, |rows| rows.flex_col())
-                .when(!vertical, |rows| rows.flex_row())
-                .when(segmented, |track| {
-                    // One continuous outline, drawn once around the row and clipped
-                    // so only its ends show a radius; the segments between them
-                    // carry the shared dividers instead of gaps. A wrapped segment
-                    // row would no longer read as one choice set, so it never
-                    // wraps — long labels belong to the Indicator appearance.
-                    track
-                        .gap(gpui_kit::rems(0.0))
-                        .items_stretch()
-                        .border(px(pixels(self.theme, "--radio-button-border-width")))
-                        .border_color(rgba(self.theme, "--radio-button-border-color"))
-                        .rounded(gpui_kit::rems(
-                            pixels(self.theme, "--radio-button-border-radius") / 16.0,
-                        ))
-                        .overflow_hidden()
-                })
-                .when(!segmented, |rows| rows.gap(gap).items_start())
-                .when(!segmented && !vertical, |rows| rows.flex_wrap())
-                .children(rows),
+        self.layout.apply(
+            group.child(
+                div()
+                    .flex()
+                    .when(vertical, |rows| rows.flex_col())
+                    .when(!vertical, |rows| rows.flex_row())
+                    .when(segmented, |track| {
+                        // One continuous outline, drawn once around the row and clipped
+                        // so only its ends show a radius; the segments between them
+                        // carry the shared dividers instead of gaps. A wrapped segment
+                        // row would no longer read as one choice set, so it never
+                        // wraps — long labels belong to the Indicator appearance.
+                        track
+                            .gap(gpui_kit::rems(0.0))
+                            .items_stretch()
+                            .border(px(pixels(
+                                self.theme,
+                                crate::theme::keys::RADIO_BUTTON_BORDER_WIDTH,
+                            )))
+                            .border_color(rgba(
+                                self.theme,
+                                crate::theme::keys::RADIO_BUTTON_BORDER_COLOR,
+                            ))
+                            .rounded(gpui_kit::rems(
+                                pixels(self.theme, crate::theme::keys::RADIO_BUTTON_BORDER_RADIUS)
+                                    / 16.0,
+                            ))
+                            .overflow_hidden()
+                    })
+                    .when(!segmented, |rows| rows.gap(gap).items_start())
+                    .when(!segmented && !vertical, |rows| rows.flex_wrap())
+                    .children(rows),
+            ),
         )
     }
 }
@@ -1260,7 +1365,8 @@ mod tests {
                 "{size:?} keeps its circle inside its row"
             );
             assert!(
-                pixels(theme, dot_token) < box_size - 2.0 * pixels(theme, "--radio-border-width"),
+                pixels(theme, dot_token)
+                    < box_size - 2.0 * pixels(theme, crate::theme::keys::RADIO_BORDER_WIDTH),
                 "{size:?} keeps the dot inside the circle it sits in"
             );
         }
@@ -1269,7 +1375,7 @@ mod tests {
     #[test]
     fn the_dot_keeps_the_reference_geometry_at_every_size() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
-        let border = pixels(theme, "--radio-border-width");
+        let border = pixels(theme, crate::theme::keys::RADIO_BORDER_WIDTH);
         for (size, box_size) in [
             (RadioSize::Small, 12.0),
             (RadioSize::Medium, 16.0),
@@ -1300,22 +1406,22 @@ mod tests {
     fn radio_motion_resolves_the_reference_rungs() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
         assert_eq!(
-            duration(theme, "--radio-duration"),
+            duration(theme, crate::theme::keys::RADIO_DURATION),
             Duration::from_millis(200),
             "both the circle and the dot change state on the enter rung"
         );
         assert_eq!(
-            duration(theme, "--radio-duration-fast"),
+            duration(theme, crate::theme::keys::RADIO_DURATION_FAST),
             Duration::from_millis(100),
             "the press shrinks on the exit rung"
         );
         assert_eq!(
-            number(theme, "--radio-press-scale"),
+            number(theme, crate::theme::keys::RADIO_PRESS_SCALE),
             0.9,
             "the press scales the circle the way the reference does"
         );
         assert_eq!(
-            pixels(theme, "--radio-halo-width"),
+            pixels(theme, crate::theme::keys::RADIO_HALO_WIDTH),
             4.0,
             "the hover halo reaches 4px past the circle"
         );
@@ -1328,8 +1434,8 @@ mod tests {
     fn radio_colours_come_from_yue_roles_in_every_profile() {
         for (mode, accent) in PROFILES {
             let theme = YueTheme::new(mode, accent);
-            let checked = rgba(theme, "--radio-background-checked");
-            let dot = rgba(theme, "--radio-dot-color");
+            let checked = rgba(theme, crate::theme::keys::RADIO_BACKGROUND_CHECKED);
+            let dot = rgba(theme, crate::theme::keys::RADIO_DOT_COLOR);
             assert!(
                 checked.a > 0.99,
                 "{mode:?}/{accent:?} fills the circle opaquely"
@@ -1343,14 +1449,14 @@ mod tests {
                 "{mode:?}/{accent:?} keeps the dot legible on the fill"
             );
             assert!(
-                rgba(theme, "--radio-disabled-border-color").a == 0.0,
+                rgba(theme, crate::theme::keys::RADIO_DISABLED_BORDER_COLOR).a == 0.0,
                 "{mode:?}/{accent:?} drops the disabled border out, as the reference does"
             );
             assert!(
-                rgba(theme, "--radio-disabled-dot-color").a < dot.a,
+                rgba(theme, crate::theme::keys::RADIO_DISABLED_DOT_COLOR).a < dot.a,
                 "{mode:?}/{accent:?} dims a disabled dot below the live one"
             );
-            let halo = rgba(theme, "--radio-halo-color");
+            let halo = rgba(theme, crate::theme::keys::RADIO_HALO_COLOR);
             assert!(
                 halo.a > 0.0 && halo.a < 0.5,
                 "{mode:?}/{accent:?} keeps the hover halo a tint, not a fill"
@@ -1405,9 +1511,9 @@ mod tests {
     #[test]
     fn the_segment_ring_stays_inside_its_own_row() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
-        let border = pixels(theme, "--radio-button-border-width");
-        let offset = pixels(theme, "--radio-focus-ring-offset");
-        let width = pixels(theme, "--radio-focus-ring-width");
+        let border = pixels(theme, crate::theme::keys::RADIO_BUTTON_BORDER_WIDTH);
+        let offset = pixels(theme, crate::theme::keys::RADIO_FOCUS_RING_OFFSET);
+        let width = pixels(theme, crate::theme::keys::RADIO_FOCUS_RING_WIDTH);
         // The row clips its ends, so the ring is drawn inside the segment. It has
         // to clear the divider the segment shares with its neighbour, and still
         // leave ink on the row rather than past it.
@@ -1426,8 +1532,8 @@ mod tests {
     fn a_hover_overlay_tints_its_fill_instead_of_punching_through_it() {
         for (mode, accent) in PROFILES {
             let theme = YueTheme::new(mode, accent);
-            let surface = rgba(theme, "--radio-button-background");
-            let overlay = rgba(theme, "--radio-button-hover-background");
+            let surface = rgba(theme, crate::theme::keys::RADIO_BUTTON_BACKGROUND);
+            let overlay = rgba(theme, crate::theme::keys::RADIO_BUTTON_HOVER_BACKGROUND);
             assert!(
                 surface.a > 0.99,
                 "{mode:?}/{accent:?} paints the row on an opaque surface"
@@ -1465,38 +1571,41 @@ mod tests {
             // with a pressed button's: a radio's checked state is a fact about the
             // value, not about the pointer.
             assert_eq!(
-                rgba(theme, "--radio-button-background-selected"),
-                rgba(theme, "--selected-background"),
+                rgba(theme, crate::theme::keys::RADIO_BUTTON_BACKGROUND_SELECTED),
+                rgba(theme, crate::theme::keys::SELECTED_BACKGROUND),
                 "{mode:?}/{accent:?} fills with the selected role"
             );
             assert_eq!(
-                rgba(theme, "--radio-button-color-selected"),
-                rgba(theme, "--selected-color"),
+                rgba(theme, crate::theme::keys::RADIO_BUTTON_COLOR_SELECTED),
+                rgba(theme, crate::theme::keys::SELECTED_COLOR),
                 "{mode:?}/{accent:?} writes the chosen label in the selected role"
             );
-            let surface = rgba(theme, "--radio-button-background");
-            let chosen = rgba(theme, "--radio-button-background-selected");
+            let surface = rgba(theme, crate::theme::keys::RADIO_BUTTON_BACKGROUND);
+            let chosen = rgba(theme, crate::theme::keys::RADIO_BUTTON_BACKGROUND_SELECTED);
             assert!(
                 gap(chosen, surface) > 0.02,
                 "{mode:?}/{accent:?} shows the choice without a border change"
             );
             assert!(
-                gap(rgba(theme, "--radio-button-color-selected"), chosen) > 0.5,
+                gap(
+                    rgba(theme, crate::theme::keys::RADIO_BUTTON_COLOR_SELECTED),
+                    chosen
+                ) > 0.5,
                 "{mode:?}/{accent:?} keeps the chosen label legible on the chosen fill"
             );
             assert_eq!(
-                rgba(theme, "--radio-button-color-hover"),
-                rgba(theme, "--radio-label-color"),
+                rgba(theme, crate::theme::keys::RADIO_BUTTON_COLOR_HOVER),
+                rgba(theme, crate::theme::keys::RADIO_LABEL_COLOR),
                 "{mode:?}/{accent:?} lifts a hovered segment to the text a hovered circle uses"
             );
-            let quiet = rgba(theme, "--radio-button-color");
-            let lift = rgba(theme, "--radio-button-color-hover");
+            let quiet = rgba(theme, crate::theme::keys::RADIO_BUTTON_COLOR);
+            let lift = rgba(theme, crate::theme::keys::RADIO_BUTTON_COLOR_HOVER);
             assert!(
                 gap(quiet, surface) < gap(lift, surface),
                 "{mode:?}/{accent:?} keeps an unchosen label quieter than a hovered one"
             );
             assert!(
-                number(theme, "--radio-button-weight-selected") > 400.0,
+                number(theme, crate::theme::keys::RADIO_BUTTON_WEIGHT_SELECTED) > 400.0,
                 "{mode:?}/{accent:?} weights the chosen label above normal text"
             );
         }
@@ -1506,12 +1615,12 @@ mod tests {
     fn segment_motion_splits_the_choice_from_the_press() {
         let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
         assert_eq!(
-            duration(theme, "--radio-button-duration"),
+            duration(theme, crate::theme::keys::RADIO_BUTTON_DURATION),
             Duration::from_millis(200),
             "the fill and the label colour arrive on the enter rung"
         );
         assert_eq!(
-            duration(theme, "--radio-button-duration-fast"),
+            duration(theme, crate::theme::keys::RADIO_BUTTON_DURATION_FAST),
             Duration::from_millis(100),
             "the press overlay leaves on the exit rung"
         );
@@ -1519,12 +1628,12 @@ mod tests {
         // Both appearances ride the same two semantic rungs, so a segmented row
         // and a circle never feel like they are on different clocks.
         assert_eq!(
-            duration(theme, "--radio-button-duration"),
-            duration(theme, "--radio-duration")
+            duration(theme, crate::theme::keys::RADIO_BUTTON_DURATION),
+            duration(theme, crate::theme::keys::RADIO_DURATION)
         );
         assert_eq!(
-            duration(theme, "--radio-button-duration-fast"),
-            duration(theme, "--radio-duration-fast")
+            duration(theme, crate::theme::keys::RADIO_BUTTON_DURATION_FAST),
+            duration(theme, crate::theme::keys::RADIO_DURATION_FAST)
         );
     }
 }

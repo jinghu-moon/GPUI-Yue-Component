@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooltip 文字提示 组件</title>
+    <style>
+        /* ================= 基础重置与变量 ================= */
+        :root {
+            --td-brand-color: #0052d9;
+            --td-brand-color-hover: #266fe8;
+            --td-text-color-primary: rgba(0, 0, 0, 0.9);
+            --td-text-color-secondary: rgba(0, 0, 0, 0.6);
+            --td-bg-color-container: #fff;
+            --td-bg-color-secondarycontainer: #f3f3f3;
+            --td-border-level-1-color: #e7e7e7;
+            --td-radius-default: 4px;
+            --td-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--td-font-family);
+            color: var(--td-text-color-primary);
+            background-color: #f5f5f5;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        h3 {
+            font-size: 16px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--td-border-level-1-color);
+            padding-bottom: 10px;
+        }
+
+        .section {
+            background: var(--td-bg-color-container);
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--td-border-level-1-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .demo-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        /* ================= 按钮样式 ================= */
+        .td-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            height: 32px;
+            border: 1px solid transparent;
+            background-color: var(--td-brand-color);
+            color: #fff;
+            border-radius: var(--td-radius-default);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .td-button:hover { background-color: var(--td-brand-color-hover); }
+        .td-button--default {
+            background-color: var(--td-bg-color-secondarycontainer);
+            color: var(--td-text-color-primary);
+            border-color: var(--td-border-level-1-color);
+        }
+        .td-button--default:hover { background-color: #e7e7e7; }
+
+        /* ================= 基础 Tooltip 容器 ================= */
+        .td-tooltip-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Tooltip 气泡基础样式 */
+        .td-tooltip {
+            position: absolute;
+            z-index: 1000;
+            background-color: #000;
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.5;
+            padding: 6px 12px;
+            border-radius: var(--td-radius-default);
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+            pointer-events: none; /* 防止遮挡鼠标事件 */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* 激活状态 */
+        .td-tooltip.is-active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* ================= 位置控制 (Placement) ================= */
+        /* Top */
+        .td-tooltip[data-placement^="top"] { bottom: 100%; margin-bottom: 8px; }
+        .td-tooltip[data-placement="top"] { left: 50%; transform: translateX(-50%) translateY(4px); }
+        .td-tooltip[data-placement="top"].is-active { transform: translateX(-50%) translateY(0); }
+        .td-tooltip[data-placement="top-left"] { right: 0; transform: translateY(4px); }
+        .td-tooltip[data-placement="top-left"].is-active { transform: translateY(0); }
+        .td-tooltip[data-placement="top-right"] { left: 0; transform: translateY(4px); }
+        .td-tooltip[data-placement="top-right"].is-active { transform: translateY(0); }
+
+        /* Bottom */
+        .td-tooltip[data-placement^="bottom"] { top: 100%; margin-top: 8px; }
+        .td-tooltip[data-placement="bottom"] { left: 50%; transform: translateX(-50%) translateY(-4px); }
+        .td-tooltip[data-placement="bottom"].is-active { transform: translateX(-50%) translateY(0); }
+        .td-tooltip[data-placement="bottom-left"] { right: 0; transform: translateY(-4px); }
+        .td-tooltip[data-placement="bottom-left"].is-active { transform: translateY(0); }
+        .td-tooltip[data-placement="bottom-right"] { left: 0; transform: translateY(-4px); }
+        .td-tooltip[data-placement="bottom-right"].is-active { transform: translateY(0); }
+
+        /* Left */
+        .td-tooltip[data-placement^="left"] { right: 100%; top: 50%; margin-right: 8px; transform: translateY(-50%) translateX(4px); }
+        .td-tooltip[data-placement^="left"].is-active { transform: translateY(-50%) translateX(0); }
+
+        /* Right */
+        .td-tooltip[data-placement^="right"] { left: 100%; top: 50%; margin-left: 8px; transform: translateY(-50%) translateX(-4px); }
+        .td-tooltip[data-placement^="right"].is-active { transform: translateY(-50%) translateX(0); }
+
+
+        /* ================= 箭头 (Arrow) ================= */
+        .td-tooltip[data-show-arrow="true"]::before {
+            content: "";
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 5px solid transparent;
+        }
+        /* Top Arrow */
+        .td-tooltip[data-placement^="top"][data-show-arrow="true"]::before { top: 100%; border-top-color: #000; }
+        .td-tooltip[data-placement="top"][data-show-arrow="true"]::before { left: 50%; transform: translateX(-50%); }
+        .td-tooltip[data-placement="top-left"][data-show-arrow="true"]::before { right: 10px; }
+        .td-tooltip[data-placement="top-right"][data-show-arrow="true"]::before { left: 10px; }
+
+        /* Bottom Arrow */
+        .td-tooltip[data-placement^="bottom"][data-show-arrow="true"]::before { bottom: 100%; border-bottom-color: #000; }
+        .td-tooltip[data-placement="bottom"][data-show-arrow="true"]::before { left: 50%; transform: translateX(-50%); }
+        .td-tooltip[data-placement="bottom-left"][data-show-arrow="true"]::before { right: 10px; }
+        .td-tooltip[data-placement="bottom-right"][data-show-arrow="true"]::before { left: 10px; }
+
+        /* Left Arrow */
+        .td-tooltip[data-placement^="left"][data-show-arrow="true"]::before { left: 100%; top: 50%; transform: translateY(-50%); border-left-color: #000; }
+        /* Right Arrow */
+        .td-tooltip[data-placement^="right"][data-show-arrow="true"]::before { right: 100%; top: 50%; transform: translateY(-50%); border-right-color: #000; }
+
+        /* ================= 悬停触发专用的 CSS ================= */
+        /* 使用 !important 确保悬停时绝对覆盖隐藏状态 */
+        .hover-trigger:hover .td-tooltip {
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        /* 悬停时的位移动画还原 */
+        .hover-trigger:hover .td-tooltip[data-placement="top"] { transform: translateX(-50%) translateY(0) !important; }
+        .hover-trigger:hover .td-tooltip[data-placement="bottom"] { transform: translateX(-50%) translateY(0) !important; }
+        .hover-trigger:hover .td-tooltip[data-placement^="left"] { transform: translateY(-50%) translateX(0) !important; }
+        .hover-trigger:hover .td-tooltip[data-placement^="right"] { transform: translateY(-50%) translateX(0) !important; }
+        .hover-trigger:hover .td-tooltip[data-placement="top-left"], 
+        .hover-trigger:hover .td-tooltip[data-placement="top-right"],
+        .hover-trigger:hover .td-tooltip[data-placement="bottom-left"],
+        .hover-trigger:hover .td-tooltip[data-placement="bottom-right"] { transform: translateY(0) !important; }
+
+        /* ================= 主题色 (Theme) ================= */
+        .td-tooltip[data-theme="primary"] { background-color: var(--td-brand-color); }
+        .td-tooltip[data-theme="primary"][data-placement^="top"][data-show-arrow="true"]::before { border-top-color: var(--td-brand-color); }
+        .td-tooltip[data-theme="primary"][data-placement^="bottom"][data-show-arrow="true"]::before { border-bottom-color: var(--td-brand-color); }
+        .td-tooltip[data-theme="primary"][data-placement^="left"][data-show-arrow="true"]::before { border-left-color: var(--td-brand-color); }
+        .td-tooltip[data-theme="primary"][data-placement^="right"][data-show-arrow="true"]::before { border-right-color: var(--td-brand-color); }
+
+        .td-tooltip[data-theme="success"] { background-color: #2ba471; }
+        .td-tooltip[data-theme="success"][data-placement^="top"][data-show-arrow="true"]::before { border-top-color: #2ba471; }
+        .td-tooltip[data-theme="success"][data-placement^="bottom"][data-show-arrow="true"]::before { border-bottom-color: #2ba471; }
+        .td-tooltip[data-theme="success"][data-placement^="left"][data-show-arrow="true"]::before { border-left-color: #2ba471; }
+        .td-tooltip[data-theme="success"][data-placement^="right"][data-show-arrow="true"]::before { border-right-color: #2ba471; }
+
+        .td-tooltip[data-theme="danger"] { background-color: #d54941; }
+        .td-tooltip[data-theme="danger"][data-placement^="top"][data-show-arrow="true"]::before { border-top-color: #d54941; }
+        .td-tooltip[data-theme="danger"][data-placement^="bottom"][data-show-arrow="true"]::before { border-bottom-color: #d54941; }
+        .td-tooltip[data-theme="danger"][data-placement^="left"][data-show-arrow="true"]::before { border-left-color: #d54941; }
+        .td-tooltip[data-theme="danger"][data-placement^="right"][data-show-arrow="true"]::before { border-right-color: #d54941; }
+
+        .td-tooltip[data-theme="warning"] { background-color: #e37318; }
+        .td-tooltip[data-theme="warning"][data-placement^="top"][data-show-arrow="true"]::before { border-top-color: #e37318; }
+        .td-tooltip[data-theme="warning"][data-placement^="bottom"][data-show-arrow="true"]::before { border-bottom-color: #e37318; }
+        .td-tooltip[data-theme="warning"][data-placement^="left"][data-show-arrow="true"]::before { border-left-color: #e37318; }
+        .td-tooltip[data-theme="warning"][data-placement^="right"][data-show-arrow="true"]::before { border-right-color: #e37318; }
+
+        .td-tooltip[data-theme="light"] { background-color: #fff; color: var(--td-text-color-primary); border: 1px solid var(--td-border-level-1-color); }
+        .td-tooltip[data-theme="light"][data-placement^="top"][data-show-arrow="true"]::before { border-top-color: #fff; }
+        .td-tooltip[data-theme="light"][data-placement^="bottom"][data-show-arrow="true"]::before { border-bottom-color: #fff; }
+        .td-tooltip[data-theme="light"][data-placement^="left"][data-show-arrow="true"]::before { border-left-color: #fff; }
+        .td-tooltip[data-theme="light"][data-placement^="right"][data-show-arrow="true"]::before { border-right-color: #fff; }
+
+        /* ================= 其他辅助 ================= */
+        .text-ellipsis {
+            width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            cursor: pointer; color: var(--td-brand-color); font-size: 14px;
+        }
+        .grid-positions {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 30px 60px; justify-items: center; padding: 30px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 基础用法 -->
+    <div class="section">
+        <h3>基础用法 (包含不同位置)</h3>
+        <div class="grid-positions">
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">top-left</button>
+                <div class="td-tooltip" data-placement="top-left" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">top</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">top-right</button>
+                <div class="td-tooltip" data-placement="top-right" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">left</button>
+                <div class="td-tooltip" data-placement="left" data-show-arrow="true">文字提示</div>
+            </div>
+            <div style="visibility: hidden;">占位</div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">right</button>
+                <div class="td-tooltip" data-placement="right" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">bottom-left</button>
+                <div class="td-tooltip" data-placement="bottom-left" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">bottom</button>
+                <div class="td-tooltip" data-placement="bottom" data-show-arrow="true">文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">bottom-right</button>
+                <div class="td-tooltip" data-placement="bottom-right" data-show-arrow="true">文字提示</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 箭头与主题 -->
+    <div class="section">
+        <h3>带箭头 / 不带箭头 / 主题色</h3>
+        <div class="demo-container">
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">带箭头</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">带箭头文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">不带箭头</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="false">不带箭头文字提示</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">primary</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true" data-theme="primary">主要主题</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">success</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true" data-theme="success">成功主题</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">danger</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true" data-theme="danger">危险主题</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">warning</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true" data-theme="warning">警告主题</div>
+            </div>
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">light</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true" data-theme="light">浅色主题</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 不同触发方式 -->
+    <div class="section">
+        <h3>不同触发方式的文字提示</h3>
+        <div class="demo-container">
+            <!-- 悬浮触发 (默认) -->
+            <div class="td-tooltip-wrapper hover-trigger">
+                <button class="td-button td-button--default">悬浮时触发 (默认)</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">悬浮显示</div>
+            </div>
+            <!-- 聚焦触发 -->
+            <div class="td-tooltip-wrapper focus-trigger">
+                <button class="td-button td-button--default">获得焦点时触发</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">焦点显示 (按Tab键或点击)</div>
+            </div>
+            <!-- 点击触发 -->
+            <div class="td-tooltip-wrapper click-trigger">
+                <button class="td-button td-button--default">点击时触发</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">点击显示 (点空白处关闭)</div>
+            </div>
+            <!-- 右键触发 -->
+            <div class="td-tooltip-wrapper contextmenu-trigger">
+                <button class="td-button td-button--default">右键点击触发</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">右键显示 (点空白处关闭)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 其他特殊用法 -->
+    <div class="section">
+        <h3>特殊用法</h3>
+        <div class="demo-container">
+            <!-- 模拟超出省略 -->
+            <div class="td-tooltip-wrapper hover-trigger">
+                <div class="text-ellipsis">这是一段非常长的文字内容超出了一行</div>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">这是一段非常长的文字内容超出了一行</div>
+            </div>
+            <!-- 定时消失 -->
+            <div class="td-tooltip-wrapper timed-trigger">
+                <button class="td-button td-button--default">定时消失 (2秒)</button>
+                <div class="td-tooltip" data-placement="top" data-show-arrow="true">2秒后自动消失</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= JS 逻辑处理 =================
+
+        // 1. 点击触发 (Click)
+        const clickTriggers = document.querySelectorAll('.click-trigger');
+        clickTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                // 阻止冒泡，防止触发 document 的点击事件
+                e.stopPropagation(); 
+                const tooltip = this.querySelector('.td-tooltip');
+                
+                // 如果当前是打开状态，则关闭
+                if (tooltip.classList.contains('is-active')) {
+                    tooltip.classList.remove('is-active');
+                    return;
+                }
+                
+                // 关闭其他点击/右键触发的 tooltip
+                document.querySelectorAll('.click-trigger .td-tooltip, .contextmenu-trigger .td-tooltip').forEach(t => {
+                    t.classList.remove('is-active');
+                });
+                
+                // 打开当前的
+                tooltip.classList.add('is-active');
+            });
+        });
+
+        // 2. 右键菜单触发 (Contextmenu)
+        const contextmenuTriggers = document.querySelectorAll('.contextmenu-trigger');
+        contextmenuTriggers.forEach(trigger => {
+            trigger.addEventListener('contextmenu', function(e) {
+                e.preventDefault(); // 阻止浏览器默认右键菜单
+                e.stopPropagation(); // 阻止冒泡
+                const tooltip = this.querySelector('.td-tooltip');
+                
+                // 关闭其他
+                document.querySelectorAll('.click-trigger .td-tooltip, .contextmenu-trigger .td-tooltip').forEach(t => {
+                    t.classList.remove('is-active');
+                });
+                
+                tooltip.classList.add('is-active');
+            });
+        });
+
+        // 3. 全局点击关闭 (点击页面空白处关闭 click 和 contextmenu 的提示)
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.click-trigger .td-tooltip, .contextmenu-trigger .td-tooltip').forEach(t => {
+                t.classList.remove('is-active');
+            });
+        });
+
+        // 4. 聚焦触发 (Focus)
+        const focusTriggers = document.querySelectorAll('.focus-trigger');
+        focusTriggers.forEach(trigger => {
+            const btn = trigger.querySelector('button');
+            const tooltip = trigger.querySelector('.td-tooltip');
+
+            btn.addEventListener('focus', () => {
+                tooltip.classList.add('is-active');
+            });
+            btn.addEventListener('blur', () => {
+                tooltip.classList.remove('is-active');
+            });
+        });
+
+        // 5. 定时消失 (Timed)
+        const timedTriggers = document.querySelectorAll('.timed-trigger');
+        timedTriggers.forEach(trigger => {
+            let timer = null;
+            const tooltip = trigger.querySelector('.td-tooltip');
+
+            trigger.addEventListener('mouseenter', () => {
+                tooltip.classList.add('is-active');
+                
+                // 清除之前的定时器，避免重复
+                if (timer) clearTimeout(timer);
+                // 设置2秒后自动消失
+                timer = setTimeout(() => {
+                    tooltip.classList.remove('is-active');
+                }, 2000);
+            });
+
+            trigger.addEventListener('mouseleave', () => {
+                // 鼠标离开时立即消失并清理定时器
+                tooltip.classList.remove('is-active');
+                if (timer) clearTimeout(timer);
+            });
+        });
+    </script>
+</body>
+</html>

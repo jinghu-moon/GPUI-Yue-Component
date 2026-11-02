@@ -1,0 +1,40 @@
+{
+  "profile": "release (Cargo default, x86_64-pc-windows-msvc)",
+  "catalogIcons": 6238,
+  "svgSourceBytes": 3683485,
+  "fontSourceBytes": 34018828,
+  "binaries": {
+    "resources-empty": {
+      "bytes": 123904,
+      "embeddedSvgCount": 0,
+      "containsSearch": false,
+      "embeddedFontCount": 0
+    },
+    "resources-one": {
+      "bytes": 316928,
+      "embeddedSvgCount": 1,
+      "containsSearch": true,
+      "embeddedFontCount": 0
+    },
+    "resources-all": {
+      "bytes": 4143616,
+      "embeddedSvgCount": 6238,
+      "containsSearch": true,
+      "embeddedFontCount": 0
+    },
+    "resources-fonts": {
+      "bytes": 34356736,
+      "embeddedSvgCount": 0,
+      "containsSearch": false,
+      "embeddedFontCount": 6
+    },
+    "minimal-system": {
+      "bytes": 12622336,
+      "embeddedFontCount": 0
+    },
+    "minimal-bundled": {
+      "bytes": 46642176,
+      "embeddedFontCount": 6
+    }
+  }
+}

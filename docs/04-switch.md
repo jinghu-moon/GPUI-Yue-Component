@@ -20,7 +20,7 @@ YueSwitch::new("wifi", theme, enabled, "Wi-Fi")
 
 `new` 接受调用方当前的 `checked` 值和必需的可访问名称。`on_change` 仅报告下一状态，不在组件内部保存第二份业务状态；调用方更新自己的状态并重新渲染。Base Switch 提供点击、Space 键、Tab 焦点、disabled 拦截和 `aria-checked`。
 
-`loading(true)` 表示一次异步提交正在进行：滑块停在原位转加载环，× 与 ✓ 淡出到 0，`on_change` 在此期间不上报，因此慢提交不会被连点两次；按下仍然拉宽滑块。调用方在延迟之后写回新的 `checked` 并清掉 `loading`，目标图标的描边会重新播放一次。
+`loading(true)` 表示一次异步提交正在进行：滑块停在原位转加载环，× 与 ✓ 淡出到 0，`on_change` 在此期间不上报，因此慢提交不会被连点两次。Base 根节点在此期间设为 disabled，无障碍节点报告不可用，不进入 Tab 停靠、不响应鼠标/键盘激活，也不显示按压拉宽反馈；视觉仍使用 loading 色彩，不套用普通 disabled 的透明度。调用方在延迟之后写回新的 `checked` 并清掉 `loading`，目标图标的描边会重新播放一次。Base/GPUI 当前没有公开 busy setter，不声称读屏会播报“正在加载”。
 
 ## 变体
 

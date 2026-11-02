@@ -3,16 +3,14 @@ use gpui_kit::{
     base::input::{InputBaseState, InputEvent, InputModeKind},
 };
 
-type Reader = Box<dyn Fn(&App) -> SharedString>;
 type Focus = Box<dyn Fn(&mut Window, &mut App)>;
-type Rule = Box<dyn Fn(&str, &App) -> Option<SharedString>>;
+type Validation = Box<dyn Fn(&App) -> Option<SharedString>>;
 type Submitted = Box<dyn Fn(bool, &mut Window, &mut App)>;
 
 struct FormField {
     id: SharedString,
-    read: Reader,
     focus: Focus,
-    rule: Rule,
+    validate: Validation,
 }
 
 /// The validation state shared by the fields of one form.
@@ -21,6 +19,11 @@ struct FormField {
 /// its own GPUI Base state, so editing, IME, and caret behaviour stay in Base.
 /// [`YueField::bind`](crate::YueField::bind) shows a rule's result next to its
 /// control, and [`YueForm::submit`] focuses the first field still failing.
+///
+/// ```
+/// use yue_component::YueForm;
+/// let form = YueForm::new();
+/// ```
 #[derive(Default)]
 pub struct YueForm {
     fields: Vec<FormField>,
@@ -62,11 +65,45 @@ impl YueForm {
         let focus_state = state.clone();
         self.fields.push(FormField {
             id: id.into(),
-            read: Box::new(move |cx| read_state.read(cx).value()),
             focus: Box::new(move |window, cx| {
                 focus_state.update(cx, |input, cx| input.focus(window, cx));
             }),
-            rule: Box::new(rule),
+            validate: Box::new(move |cx| rule(&read_state.read(cx).value(), cx)),
+        });
+        self
+    }
+
+    /// Require at least one selected key. Query text is never a field value.
+    pub fn require_select(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueSelectState>,
+        message: impl Into<SharedString>,
+    ) -> &mut Self {
+        let message = message.into();
+        self.rule_select(id, state, move |value, _| {
+            value.is_empty().then(|| message.clone())
+        })
+    }
+
+    /// Validate typed single/multiple selection without joining keys to text.
+    pub fn rule_select(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueSelectState>,
+        rule: impl Fn(&crate::SelectValue, &App) -> Option<SharedString> + 'static,
+    ) -> &mut Self {
+        let read = state.clone();
+        let focus = state.clone();
+        self.fields.push(FormField {
+            id: id.into(),
+            validate: Box::new(move |cx| rule(read.read(cx).value(), cx)),
+            focus: Box::new(move |window, cx| {
+                focus.update(cx, |state, cx| {
+                    state.set_open(false, window, cx);
+                    state.focus_handle().focus(window, cx);
+                })
+            }),
         });
         self
     }
@@ -84,10 +121,9 @@ impl YueForm {
 
     /// Whether every registered field passes its rule right now.
     pub fn is_valid(&self, cx: &App) -> bool {
-        self.fields.iter().all(|field| {
-            let value = (field.read)(cx);
-            (field.rule)(&value, cx).is_none()
-        })
+        self.fields
+            .iter()
+            .all(|field| (field.validate)(cx).is_none())
     }
 
     /// Validate every field, reveal the results, and focus the first failure.
@@ -98,7 +134,7 @@ impl YueForm {
         let invalid = self
             .fields
             .iter()
-            .position(|field| (field.rule)(&(field.read)(cx), cx).is_some());
+            .position(|field| (field.validate)(cx).is_some());
         if let Some(index) = invalid {
             let field = &self.fields[index];
             (field.focus)(window, cx);
@@ -152,6 +188,6 @@ impl YueForm {
         self.fields
             .iter()
             .find(|field| field.id == id)
-            .and_then(|field| (field.rule)(&(field.read)(cx), cx))
+            .and_then(|field| (field.validate)(cx))
     }
 }
