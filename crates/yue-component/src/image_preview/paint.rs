@@ -13,6 +13,79 @@ use gpui_kit::{
 };
 use std::time::Instant;
 
+impl ImagePreviewImage {
+    /// Paint this shared resource without controls, padding, a camera or input
+    /// handlers. Call only during GPUI's paint phase (for example in `canvas`).
+    /// The host owns layout, aspect ratio, window geometry and interaction.
+    /// Bounds and radius are logical-window pixels; HDR encoding and physical
+    /// sampling use the same renderer as `YueImagePreview`. No decode, resize or
+    /// CPU pixel copy occurs here. Nearest sampling falls back to smooth for a
+    /// reduced proxy or a backend without explicit sampling support.
+    ///
+    /// Returns an error for invalid geometry or a failed image upload/paint.
+    /// The host must present that error rather than silently claiming readiness.
+    pub fn paint(
+        &self,
+        viewport: Bounds<gpui_kit::Pixels>,
+        image_bounds: Bounds<gpui_kit::Pixels>,
+        radius: gpui_kit::Pixels,
+        sampling: ImagePreviewSampling,
+        window: &mut Window,
+    ) -> Result<(), ImagePreviewError> {
+        for bounds in [viewport, image_bounds] {
+            let values: [f32; 4] = [
+                bounds.origin.x.into(),
+                bounds.origin.y.into(),
+                bounds.size.width.into(),
+                bounds.size.height.into(),
+            ];
+            if values.iter().any(|v| !v.is_finite())
+                || bounds.size.width <= px(0.)
+                || bounds.size.height <= px(0.)
+            {
+                return Err(ImagePreviewError::InvalidValue);
+            }
+        }
+        if !f32::from(radius).is_finite() || radius < px(0.) {
+            return Err(ImagePreviewError::InvalidValue);
+        }
+        let corners = image_corners(viewport, image_bounds, radius);
+        let result = window.with_content_mask(Some(ContentMask { bounds: viewport }), |window| {
+            if cfg!(target_os = "windows") {
+                if sampling == ImagePreviewSampling::Nearest && !self.is_proxy() {
+                    window.paint_image_nearest(
+                        viewport,
+                        image_bounds,
+                        corners,
+                        self.image.clone(),
+                        0,
+                        false,
+                    )
+                } else {
+                    window.paint_image_precise(
+                        viewport,
+                        image_bounds,
+                        corners,
+                        self.image.clone(),
+                        0,
+                        false,
+                    )
+                }
+            } else {
+                window.paint_image(
+                    viewport,
+                    image_bounds,
+                    corners,
+                    self.image.clone(),
+                    0,
+                    false,
+                )
+            }
+        });
+        result.map_err(|error| ImagePreviewError::Render(error.to_string()))
+    }
+}
+
 pub(super) fn viewport(
     state: &Entity<YueImagePreviewState>,
     theme: YueTheme,
@@ -89,19 +162,17 @@ pub(super) fn viewport(
                     let sz = camera.display_size(d, vp.scale);
                     let image_bounds =
                         Bounds::new(point(px(o[0]), px(o[1])), size(px(sz[0]), px(sz[1])));
-                    let corners = image_corners(b, image_bounds, radius);
                     let mut draw_image = |image: ImagePreviewImage, w: &mut Window| {
                         if paint.read(cx).render_failed(image.image.id) {
                             return;
                         }
                         let id = image.image.id;
-                        let painted = if nearest {
-                            w.paint_image_nearest(b, image_bounds, corners, image.image, 0, false)
-                        } else if cfg!(target_os = "windows") {
-                            w.paint_image_precise(b, image_bounds, corners, image.image, 0, false)
+                        let sampling = if nearest {
+                            ImagePreviewSampling::Nearest
                         } else {
-                            w.paint_image(b, image_bounds, corners, image.image, 0, false)
+                            ImagePreviewSampling::Smooth
                         };
+                        let painted = image.paint(b, image_bounds, radius, sampling, w);
                         if let Err(error) = painted {
                             errors.push((id, error.to_string()));
                         }

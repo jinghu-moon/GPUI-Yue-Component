@@ -1593,3 +1593,89 @@ fn sampling_menu_switches_native_path_and_reports_exactly_one_event(cx: &mut Tes
         });
     }
 }
+
+struct PaintOnlyPreview {
+    image: ImagePreviewImage,
+    sampling: yue_component::ImagePreviewSampling,
+}
+impl Render for PaintOnlyPreview {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let image = self.image.clone();
+        let sampling = self.sampling;
+        div().size_full().child(
+            gpui_kit::canvas(
+                |_, _, _| (),
+                move |bounds, _, window, _| {
+                    image
+                        .paint(bounds, bounds, px(6.), sampling, window)
+                        .unwrap();
+                },
+            )
+            .w(px(321.))
+            .h(px(123.)),
+        )
+    }
+}
+
+#[gpui_kit::test]
+fn paint_only_preview_shares_encoding_geometry_and_sampling_without_chrome(
+    cx: &mut TestAppContext,
+) {
+    use yue_component::{
+        ImagePreviewColorSpace, ImagePreviewLimits, ImagePreviewPixels, ImagePreviewSampling,
+    };
+    let bytes: Vec<u8> = [-0.25_f32, 12.5, 0.5, 0.5]
+        .into_iter()
+        .flat_map(|v| half::f16::from_f32(v).to_le_bytes())
+        .collect();
+    let image =
+        ImagePreviewPixels::from_rgba16f(1, 1, 8, bytes.clone(), ImagePreviewColorSpace::ScRgb)
+            .unwrap()
+            .into_preview(&ImagePreviewLimits::default(), "HDR surface")
+            .unwrap();
+    let original = image.image().clone();
+    let (view, cx) = cx.add_window_view(|_, _| PaintOnlyPreview {
+        image,
+        sampling: ImagePreviewSampling::Smooth,
+    });
+    for scale in [1., 1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        draw(cx);
+        cx.update(|window, _| {
+            let sprites: Vec<_> = window
+                .painted_primitives()
+                .into_iter()
+                .filter_map(|p| match p {
+                    gpui_kit::Primitive::PolychromeSprite(s) => Some(s),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(
+                sprites.len(),
+                1,
+                "no footer, toolbar, checker or second image"
+            );
+            let sprite = &sprites[0];
+            // GPUI resolves element layout to physical pixels before canvas paint.
+            assert_eq!(sprite.bounds.size.width.0, (321. * scale - 0.5).ceil());
+            assert_eq!(sprite.bounds.size.height.0, (123. * scale - 0.5).ceil());
+            assert_eq!(sprite.corner_radii.top_left.0, 6. * scale);
+            assert_eq!(sprite.pad & 15, 10, "precise linear + absolute scRGB");
+            assert!(window.has_image_atlas_entry(&original));
+        });
+    }
+    view.update(cx, |v, cx| {
+        v.sampling = ImagePreviewSampling::Nearest;
+        cx.notify();
+    });
+    draw(cx);
+    cx.update(|window, _| {
+        assert!(
+            window
+                .painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 15 == 9))
+        );
+    });
+    assert_eq!(original.as_bytes(0).unwrap(), bytes);
+}

@@ -238,6 +238,7 @@ pub enum ImagePreviewError {
     InvalidLimits,
     ResourceLimit(String),
     Decode(String),
+    Render(String),
     EmptyDocumentId,
     StaleRevision,
     UnavailableMode,
@@ -248,6 +249,7 @@ impl fmt::Display for ImagePreviewError {
         match self {
             Self::ResourceLimit(message) => return write!(f, "image resource limit: {message}"),
             Self::Decode(message) => return write!(f, "image decoding failed: {message}"),
+            Self::Render(message) => return write!(f, "image rendering failed: {message}"),
             _ => {}
         }
         f.write_str(match self {
@@ -258,7 +260,7 @@ impl fmt::Display for ImagePreviewError {
             Self::InvalidLimits => {
                 "image budgets must be positive; texture edge must not exceed 8192"
             }
-            Self::ResourceLimit(_) | Self::Decode(_) => unreachable!(),
+            Self::ResourceLimit(_) | Self::Decode(_) | Self::Render(_) => unreachable!(),
             Self::EmptyDocumentId => "document identity must not be empty",
             Self::StaleRevision => "document revision is older than the current request",
             Self::UnavailableMode => "requested preview mode is unavailable or unaligned",

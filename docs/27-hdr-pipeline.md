@@ -321,7 +321,15 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。先前检查点已按用户要求正常提交推送，本仓库为 `4846e89`，SnapClip 为 `3b405c7`；接续 P3-B／P3-C 代码和证据更新仍在工作区。
 
-## 13. 官方资料与版本
+## 13. 无附加控件的共用绘制入口（2026-11-03）
+
+`ImagePreviewImage::paint(viewport, image_bounds, radius, sampling, window)` 是现有图片预览组件的底层绘制入口。它只在 GPUI paint 阶段使用；宿主负责布局、宽高比和交互。没有新建媒体引擎、图片缓存或第二套相机。现有 `YueImagePreview` 也调用这个入口，继续保留原有的工具栏、比较裁切、背景、错误反馈及手势。
+
+调用方可在 `canvas` 中直接绘制同一份不可变资源，用于原位贴图等没有页脚／工具栏的窗口。调用本身不解码、不重采样 CPU 缓冲、不复制原图；资源的 sRGB／linear SDR／scRGB 定义由原生 renderer 解释。Windows 平滑／最近邻路径与完整预览一致，代理纹理仍回退到平滑；错误通过 `ImagePreviewError::Render` 返回，非法几何明确拒绝。调用方必须处理错误，不能把成功创建空窗口等同于图像呈现成功。
+
+验证使用 §前置合同记录中的隔离依赖，叠加本节的 `paint.rs`／`model.rs`，不混入并行虚拟列表改造：纯 lib **354** 项、图片预览交互 **38** 项通过（原有 37 项和新增 1 项），相同范围 strict Clippy `--no-deps -D warnings` 通过。新增测试检查 100／125／150／200% 下 GPUI 实际分配的物理几何、圆角、HDR 标记、平滑／最近邻以及同一 atlas 资源复用。完整预览的比较裁切、缩放、焦点和卸载回归仍通过。修改前编译明确缺少此接口，证据为 `target/hdr-p3f-surface-before.log`；最终结果为 `target/hdr-p3f-{preview-final,preview-clippy}.log`。此项只交付共用呈现 API，**F6 窗口宿主迁移仍由 SnapClip `docs/53-hdr-capture.md` 跟踪**。
+
+## 14. 官方资料与版本
 
 核对日期2026-11-03。规范／API结论与本项目工程选择分开；Rust引用固定到本文核对的版本或注明候选。
 
