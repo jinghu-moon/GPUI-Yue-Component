@@ -2576,6 +2576,13 @@ pub struct WindowOptions {
     /// Whether the window should be focused when created
     pub focus: bool,
 
+    /// Whether Windows may activate this window, including after mouse clicks or
+    /// explicit activation requests. Defaults to true; false overrides `focus`.
+    /// A nonactivating window can still receive pointer input and be shown/raised,
+    /// but cannot receive ordinary keyboard focus. Intended for tool/pin windows.
+    /// Currently implemented only by the Windows backend.
+    pub is_activatable: bool,
+
     /// Whether the window should be shown when created
     pub show: bool,
 
@@ -2647,6 +2654,8 @@ pub struct WindowOptions {
 #[allow(missing_docs)]
 pub struct WindowParams {
     pub color_policy: WindowColorPolicy,
+    /// Persistent activation policy (Windows only), distinct from initial `focus`.
+    pub is_activatable: bool,
     pub bounds: Bounds<Pixels>,
 
     /// The titlebar configuration of the window
@@ -2747,6 +2756,7 @@ impl Default for WindowOptions {
                 traffic_light_position: Default::default(),
             }),
             focus: true,
+            is_activatable: true,
             show: true,
             kind: WindowKind::Normal,
             is_movable: true,

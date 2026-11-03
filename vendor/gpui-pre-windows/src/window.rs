@@ -106,6 +106,7 @@ pub(crate) struct WindowsWindowInner {
     pub(crate) is_movable: bool,
     pub(crate) is_resizable: bool,
     pub(crate) is_minimizable: bool,
+    pub(crate) is_activatable: bool,
     pub(crate) executor: ForegroundExecutor,
     pub(crate) validation_number: usize,
     pub(crate) main_receiver: PriorityQueueReceiver<RunnableVariant>,
@@ -333,6 +334,7 @@ impl WindowsWindowInner {
             is_movable: context.is_movable,
             is_resizable: context.is_resizable,
             is_minimizable: context.is_minimizable,
+            is_activatable: context.is_activatable,
             executor: context.executor.clone(),
             validation_number: context.validation_number,
             main_receiver: context.main_receiver.clone(),
@@ -406,9 +408,15 @@ impl WindowsWindowInner {
     }
 
     fn set_window_placement(self: &Rc<Self>) -> Result<()> {
-        let Some(open_status) = self.state.initial_placement.take() else {
+        let Some(mut open_status) = self.state.initial_placement.take() else {
             return Ok(());
         };
+        if !self.is_activatable {
+            open_status.placement.showCmd = SW_SHOWNOACTIVATE.0 as u32;
+            unsafe { SetWindowPlacement(self.hwnd, &open_status.placement) }
+                .context("failed to show nonactivating window")?;
+            return Ok(());
+        }
         match open_status.state {
             WindowOpenState::Maximized => unsafe {
                 SetWindowPlacement(self.hwnd, &open_status.placement)
@@ -460,6 +468,7 @@ struct WindowCreateContext {
     is_movable: bool,
     is_resizable: bool,
     is_minimizable: bool,
+    is_activatable: bool,
     min_size: Option<Size<Pixels>>,
     executor: ForegroundExecutor,
     current_cursor: Option<HCURSOR>,
@@ -555,6 +564,11 @@ impl WindowsWindow {
         if !disable_direct_composition {
             dwexstyle |= WS_EX_NOREDIRECTIONBITMAP;
         }
+        if !params.is_activatable {
+            // This policy must be present before CreateWindowExW; changing styles
+            // after a visible creation cannot undo a focus steal.
+            dwexstyle = (dwexstyle | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW) & !WS_EX_APPWINDOW;
+        }
 
         let hinstance = get_module_handle();
         let display = if let Some(display_id) = params.display_id {
@@ -574,6 +588,7 @@ impl WindowsWindow {
             is_movable: params.is_movable,
             is_resizable: params.is_resizable,
             is_minimizable: params.is_minimizable,
+            is_activatable: params.is_activatable,
             min_size: params.window_min_size,
             executor,
             current_cursor,
@@ -616,8 +631,12 @@ impl WindowsWindow {
         set_non_rude_hwnd(hwnd, true);
         configure_dwm_dark_mode(hwnd, appearance);
         this.state.border_offset.update(hwnd)?;
-        let placement =
+        let mut placement =
             retrieve_window_placement(hwnd, display, params.bounds, &this.state.border_offset)?;
+        if !params.is_activatable {
+            // Preserve the policy for deferred show/activate as well as first show.
+            placement.showCmd = SW_SHOWNOACTIVATE.0 as u32;
+        }
         if params.show {
             let mut placement = placement;
             if !params.focus {
@@ -906,6 +925,13 @@ impl PlatformWindow for WindowsWindow {
             .executor
             .spawn(async move {
                 this.set_window_placement().log_err();
+
+                if !this.is_activatable {
+                    // Showing is still useful to callers. Do not enter the ordinary
+                    // activation path, which sets focus and synthesizes an Alt key.
+                    unsafe { ShowWindowAsync(hwnd, SW_SHOWNOACTIVATE).ok() }.log_err();
+                    return;
+                }
 
                 unsafe {
                     // If the window is minimized, restore it.
@@ -1777,6 +1803,9 @@ fn set_non_rude_hwnd(hwnd: HWND, non_rude: bool) {
         unsafe { RemovePropW(hwnd, w!("NonRudeHWND")) }.log_err();
     }
 }
+
+#[cfg(test)]
+mod activation_tests;
 
 #[cfg(test)]
 mod tests {

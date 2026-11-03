@@ -1590,6 +1590,7 @@ impl Window {
             window_bounds,
             titlebar,
             focus,
+            is_activatable,
             show,
             kind,
             is_movable,
@@ -1620,6 +1621,7 @@ impl Window {
             handle,
             WindowParams {
                 color_policy,
+                is_activatable,
                 bounds: window_bounds.get_bounds(),
                 titlebar,
                 kind,

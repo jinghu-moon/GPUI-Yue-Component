@@ -134,3 +134,20 @@ HDR snapshots cover resource switching, not physical HDR presentation. See
 on/off, cross-display, DPI, actual driver loss and end-to-end resource costs
 remain acceptance gates. Remove this patch only after upstream provides the
 same explicit encoding/output contract and all SDR/FP16 regression gates pass.
+
+## Persistent nonactivation for pin/tool windows (2026-11-03)
+
+Core `WindowOptions::is_activatable` defaults to true. Windows false is enforced
+before native creation, on initial/deferred show, in `WM_MOUSEACTIVATE` and on
+explicit activation requests. Nonactivating windows retain pointer input but
+never enter the ordinary SetFocus/SetForegroundWindow/synthetic-Alt path.
+The policy also sets TOOLWINDOW and removes APPWINDOW before creation.
+
+`tools/test-gpui-window.ps1` checks the default contract. `-Native` explicitly
+opts into a short-lived real GPUI popup: it checks creation styles, hidden and
+initial show, subsequent show without focus theft, and the real message handler.
+A hidden ordinary window is the negative control for unchanged activation.
+One native probe passed; the full ordinary backend suite passed 51 with 3
+ignored. See `docs/performance/2026-11-03-pin-window-contracts.md` for the isolated
+core used during concurrent list work and the limits of these assertions.
+Remove only when upstream supports the same lifetime-wide nonactivation policy.
