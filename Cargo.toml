@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/yue-component", "crates/yue-component-icons", "examples/windows-showcase", "examples/minimal", "examples/resource-probe"]
+members = ["crates/yue-color", "crates/yue-component", "crates/yue-component-icons", "examples/windows-showcase", "examples/minimal", "examples/resource-probe"]
 resolver = "2"
 exclude = ["vendor/gpui-base", "vendor/gpui-pre", "vendor/gpui-pre-windows"]
 

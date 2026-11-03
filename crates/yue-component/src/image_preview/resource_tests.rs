@@ -1,6 +1,22 @@
 use super::*;
 
 #[test]
+fn consuming_owned_pixels_moves_original_color_bytes_without_copying() {
+    let bytes = half_bytes(&[[-0.125, 2.5, 0.5, 0.25]]);
+    let pointer = bytes.as_ptr();
+    let pixels =
+        ImagePreviewPixels::from_rgba16f(1, 1, 8, bytes, ImagePreviewColorSpace::ScRgb).unwrap();
+    assert_eq!(pixels.color_space(), ImagePreviewColorSpace::ScRgb);
+    assert_eq!(pixels.into_bytes().as_ptr(), pointer);
+
+    let borrowed = [17, 70, 180, 127];
+    let pixels = ImagePreviewPixels::from_bgra8(1, 1, borrowed.as_slice()).unwrap();
+    let owned = pixels.into_bytes();
+    assert_eq!(owned, borrowed);
+    assert_ne!(owned.as_ptr(), borrowed.as_ptr());
+}
+
+#[test]
 fn pq_and_sixteen_bit_sdr_keep_high_precision_display_resources() {
     for bytes in [
         include_bytes!("../../tests/fixtures/hdr/pq-gray.png").as_slice(),

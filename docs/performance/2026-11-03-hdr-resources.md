@@ -134,3 +134,12 @@ WGC 单帧、session 创建和 resize 共用一个 descriptor→pool-format 映�
 这批是内部数值验收，**没有测真实 HDR 屏、WGC HDR 捕获、DWM 呈现、DPI／跨屏、45MP、RSS／VRAM 或 20 次资源替换残留**。FP16 每像素八字节，source、双缓冲、blur、export、staging 和 CPU 结果可能同时存活；不能只按最终选区大小宣称低占用。没有性能提升结论，也没有开启 HDR 用户入口、切系统 HDR、实际截屏或改剪贴板。
 
 下一步接真实源能力／输出白快照、来源变化策略，再推进生产滚动的原始行带／固定分析派生、HDR PNG 及保存／贴图／历史消费。HDR 倒计时与 HEX 映射仍需实现；旧宿主的明确拒绝是能力边界，不是完成了该功能。
+
+
+### SnapClip P3-D：共享颜色数学与原始像素转交
+
+`yue-color` 提取已有 sRGB/PQ 传递、Rec.709/Rec.2020 矩阵和 BT.2390 数学，原生捕获与 Yue 图片预览共用，无 GPUI/图像/平台依赖。ICC 仍在图片解码层。`ImagePreviewPixels::into_bytes` 只转移原始字节，不改变编码或通道；新增测试验证 owned 指针不变、borrowed 转为独立所有权。
+
+本机 Yue 正有独立虚拟列表重构；旧 GPUI Component 仍引用已移除 Base 接口，当前整体构建因该改动失败。本批没有回写该重构。图片层验证使用 SnapClip `target/hdr-vendor-baseline`（基线 `7e9b74d` 的 Base/组件，叠加本批图片资源文件及 yue-color），并使用当前 core/Windows backend。该隔离检查 **48 项 image_preview lib 测试通过**；`yue-color --all-targets` strict Clippy 通过。隔离结果不是当前整个工作树编译通过的声明。
+
+SnapClip 的 `PinImage`/截图转交改为共享 `Arc<PixelBuffer>` 并保留 descriptor、generation，FP16 文件与 F3 保留高光/负值/Alpha，兼容复制和缩略图显式生成 SDR 派生。F6 旧宿主仍明确拒绝 HDR；没有用 SDR 派生冒充迁移完成。应用侧回归及后续未完成项见相邻 `docs/53-hdr-capture.md`，真实 HDR/跨屏/DPI 与端到端资源门禁仍保留。

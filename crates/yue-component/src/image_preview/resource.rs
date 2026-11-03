@@ -365,6 +365,13 @@ impl<'a> ImagePreviewPixels<'a> {
     pub fn as_bytes(&self) -> &[u8] {
         &self.bytes
     }
+
+    /// Consume the original bytes without changing their channel order or color
+    /// space. Owned decode results move without copying; borrowed inputs copy.
+    /// Read `color_space`, `is_bgra8` and `pixel_size` before consuming this value.
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.bytes.into_owned()
+    }
     /// Whether these are BGRA8 bytes. Every other prepared buffer is RGBA.
     pub fn is_bgra8(&self) -> bool {
         self.bgra
