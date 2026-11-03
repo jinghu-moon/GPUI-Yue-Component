@@ -1,6 +1,6 @@
 # 27 · Windows HDR 图片与显示管线实施方案
 
-初次设计：2026-11-03；消费者状态更新：2026-11-04。状态：**P1 高精度资源、P2 Windows 输出及 P3 内部捕获／滚动／倒计时／取色、HDR PNG16、P4 保存面板／F3／F6／历史保真、有界导出与登记失败恢复已分批实现；P5 已测 Release 4K/45MP 归档导出、20 次原生窗口释放及空闲重绘。SnapClip 普通／headless 两种 all-targets strict Clippy 均通过；AVIF 候选的独立 CPU 资格验证发现 Identity/RGB 解码数值失败，尚未生产接线。P2/P5 真实 HDR、双屏、完整 DPI／设备恢复、VRAM 和端到端性能仍未验收；生产 HDR 捕获入口未开放，不代表已完整支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。底座证据见 [本轮记录](performance/2026-11-03-hdr-resources.md)，消费者的当前证据以 SnapClip `docs/53-hdr-capture.md` §16～§25 为准。
+初次设计：2026-11-03；消费者状态更新：2026-11-04。状态：**P1 高精度资源、P2 Windows 输出及 P3 内部捕获／滚动／倒计时／取色、HDR PNG16、P4 保存面板／F3／F6／历史保真、有界导出与登记失败恢复已分批实现；P5 已测 Release 4K/45MP 归档导出、20 次原生窗口释放及空闲重绘。SnapClip 普通／headless 两种 all-targets strict Clippy 均通过；AVIF 候选的 Identity/GBR 解码、16 位彩色编码及 ICC 顺序问题已修复，48 组独立 CPU 格式矩阵通过；整帧资源预算仍失败，尚未生产接线。P2/P5 真实 HDR、双屏、完整 DPI／设备恢复、VRAM 和端到端性能仍未验收；生产 HDR 捕获入口未开放，不代表已完整支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。底座证据见 [本轮记录](performance/2026-11-03-hdr-resources.md)，消费者的当前证据以 SnapClip `docs/53-hdr-capture.md` §16～§26 为准。
 
 本次核对本地源码、Rust 依赖和微软／W3C／ITU 官方资料。本文不把库的格式支持列表当作端到端支持，不把数值测试当作显示器验收，也不沿用“先转为 SDR 才能显示”的假设。
 
@@ -317,7 +317,7 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 完成定义：高精度从源到HDR屏、从源到HDR文件均不断；SDR回退明确且不覆盖母版；SDR UI不过亮；F3／F6／保存面板／覆盖层与滚动母版均有证据；新增数值／GPU测试和既有工作流回归通过；资源预算及实机测量有记录。一个环节只通过代码检查，不足以宣布“完整支持HDR”。
 
-接续状态：P3 的源能力／输出白快照、固定滚动分析与原始 FP16 行带、倒计时 composition、明确的 SDR 取色及 HDR PNG16 已有内部实现和分层验证；P4 的保存面板、F3/F6 共用宿主、复制与历史保真源／有界导出也已接入。P2／P5 的真实 HDR／跨屏／DPI／设备恢复、实际剪贴板接收方、端到端与 GPU 预算验收见 SnapClip `docs/53-hdr-capture.md` §22。AVIF 还存在独立的软件数值阻塞，见 §24，不能把它归为缺少 HDR 屏才无法完成的实机任务。生产 HDR 捕获与 AVIF 门禁保持关闭；离屏数值不替代真实 WGC 捕获和显示验收。禁止仅切换 WGC 枚举或增加 `is_hdr` 就宣称产品已完整支持。
+接续状态：P3 的源能力／输出白快照、固定滚动分析与原始 FP16 行带、倒计时 composition、明确的 SDR 取色及 HDR PNG16 已有内部实现和分层验证；P4 的保存面板、F3/F6 共用宿主、复制与历史保真源／有界导出也已接入。P2／P5 的真实 HDR／跨屏／DPI／设备恢复、实际剪贴板接收方、端到端与 GPU 预算验收见 SnapClip `docs/53-hdr-capture.md` §22。AVIF 的 CPU 数值／格式矩阵现已通过，但整帧内存与取消边界仍阻塞生产接线，见 §26，不能把它归为缺少 HDR 屏才无法完成的实机任务。生产 HDR 捕获与 AVIF 门禁保持关闭；离屏数值不替代真实 WGC 捕获和显示验收。禁止仅切换 WGC 枚举或增加 `is_hdr` 就宣称产品已完整支持。
 
 手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `03f338a` 已交付 F6 物理几何／DPI 前置；SnapClip `627548b` 已删除旧 F6 GDI 宿主并统一 GPUI/Yue，`7081c22` 已交付历史保真引用／缩略图／回放，`1ea5855` 已交付有界历史导出、格式门禁和 Release 资源／原生生命周期证据。接续的 `dfe5a1a`／`54ea344` 清理核心与开发工具后，消费者 workspace 的普通／headless 两种 all-targets strict Clippy 均通过（`--no-deps -- -D warnings`）。以消费者 `docs/53-hdr-capture.md` §16～§22 为准；这些检查使用冻结 Yue 依赖，不代表并行虚拟列表工作树已验收。AVIF 未启用，真实 HDR／跨屏／完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，不能把底座与离屏测试等同于完整产品支持。
 
