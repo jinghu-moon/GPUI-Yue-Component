@@ -456,6 +456,12 @@ impl PopupHost {
         Self { spec }
     }
 
+    /// Layout ceiling after reserving the same visual envelope as the positioner.
+    /// Consumers subtract their border/padding before constraining a scroll area.
+    pub(crate) fn content_size(&self, window: &Window) -> Size<Pixels> {
+        Self::available_size(self.spec.arrow, self.spec.outsets, self.spec.margin, window)
+    }
+
     pub(crate) fn mount(
         self,
         content: impl FnOnce(

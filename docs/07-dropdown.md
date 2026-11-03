@@ -383,3 +383,14 @@ Windows Showcase 的 Dropdown Menu 页面按这份契约提供 17 段可交互�
 `MenuAnchor` 的前帧 bounds 与 surfaces Vec 已删除。side 和 submenu 的 live anchor 在 prepaint 读取本帧测量，通过仓库内维护的 gpui-base Positioner 补丁复用同一个求解器；来源与验证见 Popup 第 3.1、14 节。公共 Dropdown API 保持，完整视觉包络的边缘约束比旧矩形 clamp 更保守。
 
 迁移前 Dropdown 23 项基线通过；迁移后验证以 Popup 第 14 节为准。Tooltip 是下一阶段，尚未迁移。
+
+## 小窗口与父级快捷键修复（2026-11-03）
+
+SnapClip 贴图窗口接入中发现并修复两项基础问题：
+
+- 菜单行滚动高度除了窗口比例上限，还要扣除同一 PopupHost 位置求解使用的阴影/箭头/边缘预留，以及 panel padding/border。否则在 240px 或 144px 高的小窗口内，即使菜单行本身不高，完整视觉包络仍可能 NoSpace 而不绘制。`PopupHost::content_size()` 统一提供该尺寸上限。
+- GPUI 先解析 Action keybinding，再调用 raw keydown。菜单 Root 现在使用 `YueDropdownMenu` key context，并屏蔽 Escape、Tab/Shift+Tab、Enter/Space、方向键、Home/End 的父级动作，让现有菜单键盘逻辑先消费它们。Escape 先 dismiss 菜单并恢复焦点，不能穿透成窗口的关闭命令。
+
+初始化接在现有 `yue_component::init`，调用方不需要增加额外初始化。没有改变菜单 token、时长、行密度或公开 builder。
+
+回归：新增生产小窗口测试覆盖 240/144 高、12 行滚动菜单和父级 Escape 隔离，1 项通过；原 Dropdown 23 项与 Popup 相关 34 项通过。无头几何及 action 断言不能替代真实桌面字体、DPI 和动画视觉验收。

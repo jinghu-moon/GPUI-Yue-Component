@@ -107,9 +107,11 @@ impl MenuPanel {
             outsets.bottom = outsets.bottom.max(radius + shadow.offset.y);
         }
         spec = spec.visual_outsets(outsets);
-        PopupHost::new(spec).mount(
+        let host = PopupHost::new(spec);
+        let available = host.content_size(window);
+        host.mount(
             move |presentation, _, window, cx| {
-                self.into_panel(presentation.is_interactive(), window, cx)
+                self.into_panel(presentation.is_interactive(), available, window, cx)
             },
             window,
             cx,
@@ -132,7 +134,13 @@ impl MenuPanel {
 
     /// The panel's own element: its rows, its caret, and the keyboard and mouse
     /// rules of the whole menu tree when this is the root.
-    fn into_panel(self, present: bool, window: &mut Window, cx: &mut App) -> AnyElement {
+    fn into_panel(
+        self,
+        present: bool,
+        available: gpui_kit::Size<Pixels>,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> AnyElement {
         let theme = self.shape.theme;
         let now = cx.background_executor().now();
         // The dwell and the pointer decide which submenu is showing, before any
@@ -230,11 +238,16 @@ impl MenuPanel {
         // reference's `width:min(var(--mw), …)`; the `--menu-width` token default is
         // only where a content-sized panel stops shrinking.
         let fixed = self.shape.panel_width.is_some() || self.shape.columns > 1;
+        let ceiling = ceiling.min(available.width);
         let width = requested.min(ceiling);
+        let chrome = px(2.
+            * (pixels(theme, crate::theme::keys::POPOVER_PADDING)
+                + pixels(theme, crate::theme::keys::POPOVER_BORDER_WIDTH)));
         let max_height = self
             .shape
             .max_height
-            .unwrap_or((viewport.height * 0.5).min(px(450.)));
+            .unwrap_or((viewport.height * 0.5).min(px(450.)))
+            .min((available.height - chrome).max(px(0.)));
         let scroll = self.scroll.clone();
         let mut content = div()
             .w_full()
@@ -395,7 +408,7 @@ impl MenuPanel {
             return panel;
         }
         let focus_handle = self.state.read(cx).focus_handle(cx);
-        let panel = panel.track_focus(&focus_handle);
+        let panel = panel.key_context(KEY_CONTEXT).track_focus(&focus_handle);
         let root = self.clone();
         let submenus = Rc::new(submenus);
         let panel = panel.on_key_down(move |event: &KeyDownEvent, window, cx| {

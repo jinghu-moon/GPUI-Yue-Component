@@ -62,9 +62,35 @@ mod placement;
 #[cfg(test)]
 mod tests;
 
+#[cfg(all(test, feature = "headless-tests"))]
+mod interaction_tests;
+
 type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
 
 type OpenHandler = Rc<dyn Fn(&bool, &mut Window, &mut App)>;
+
+const KEY_CONTEXT: &str = "YueDropdownMenu";
+
+pub(crate) fn init(cx: &mut App) {
+    // GPUI resolves key bindings before raw key listeners. Mask ancestor commands
+    // for keys owned by the menu so Escape/Enter/arrows reach its keyboard ladder.
+    cx.bind_keys(
+        [
+            "escape",
+            "tab",
+            "shift-tab",
+            "enter",
+            "space",
+            "up",
+            "down",
+            "left",
+            "right",
+            "home",
+            "end",
+        ]
+        .map(|key| gpui_kit::KeyBinding::new(key, gpui_kit::NoAction, Some(KEY_CONTEXT))),
+    );
+}
 
 /// Distance kept between the panel and the window edge, the reference's `MG`.
 const WINDOW_MARGIN: Pixels = px(8.);

@@ -15,6 +15,7 @@ pub fn init(cx: &mut App, theme: YueTheme) -> gpui_kit::Result<()> {
     }
     if cx.try_global::<FontsRegistered>().is_none() {
         crate::popup::init(cx);
+        crate::dropdown::init(cx);
         crate::tooltip::init(cx);
         crate::dialog::init(cx);
         crate::toast::init(cx);
