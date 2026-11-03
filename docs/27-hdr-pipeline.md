@@ -1,6 +1,6 @@
 # 27 · Windows HDR 图片与显示管线实施方案
 
-日期：2026-11-03。状态：**P1 高精度资源、P2 Windows 输出及 P3 的像素／行带底座、冻结帧来源代次、压缩母版发布、WGC 格式合同和 D2D 内部 FP16 链路已实现；P0 AVIF 门禁、P2 真实 HDR 显示、P3 生产捕获／滚动／编码和 P4～P5 尚未完成，SnapClip App／Capture 严格 Clippy 仍有失败，不代表 SnapClip 已支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。实施证据和剩余项见 [本轮记录](performance/2026-11-03-hdr-resources.md)。
+初次设计：2026-11-03；消费者状态更新：2026-11-04。状态：**P1 高精度资源、P2 Windows 输出及 P3 内部捕获／滚动／倒计时／取色、HDR PNG16、P4 保存面板／F3／F6／历史保真与有界导出已分批实现；P5 已测 Release 4K/45MP 归档导出、20 次原生窗口释放及空闲重绘。AVIF 门禁关闭，P2/P5 真实 HDR、双屏、完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，SnapClip 严格 Clippy 仍有存量失败；生产 HDR 捕获入口未开放，不代表已完整支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。底座证据见 [本轮记录](performance/2026-11-03-hdr-resources.md)，消费者的当前证据以 SnapClip `docs/53-hdr-capture.md` §16～§21 为准。
 
 本次核对本地源码、Rust 依赖和微软／W3C／ITU 官方资料。本文不把库的格式支持列表当作端到端支持，不把数值测试当作显示器验收，也不沿用“先转为 SDR 才能显示”的假设。
 
@@ -247,14 +247,14 @@ Windows支持发布多个剪贴板格式，但接收应用会自行选格式；�
 
 每批遵循：**现状基线 → 新测试暴露缺口 → 实现 → 新增测试及既有回归 → 记录证据**。下表保留完整交付要求；各阶段实际状态如下，不能以“代码存在”替代门禁。
 
-| 阶段 | 2026-11-03 实际状态 |
+| 阶段 | 2026-11-04 实际状态 |
 | --- | --- |
 | P0 | 原创小样本、ICC 尺度探针、显示探针、固定 BT.2390 数学与独立向量已实现；HDR AVIF 的消费解码／许可／性能门禁未通过，继续不启用 |
 | P1 | 三种真实编码、FP16 atlas、typed readback、逐行 PNG／受限 matrix-TRC ICC、线性代理和源峰值传递已实现；不支持的 ICC／HLG 明确拒绝 |
 | P2 | opt-in `AutomaticHdr`、FP16/scRGB swapchain、能力／系统／输出分离、事件刷新、UI／文字／path／backdrop 和 SDR 读回已实现；WARP 与隐藏硬件 HWND 的切换／resize／读回／资源重建通过，真实 HDR 显示／跨屏／HDR 切换／驱动恢复仍未验收 |
-| P3 | 独立源像素合同、typed ROI／上传／目标、FP16 行带底座、冻结帧来源 generation、typed 选区与圆角、压缩母版发布、WGC 格式合同及 D2D 内部 FP16 已实现；真实源能力／输出白快照、生产滚动／倒计时／取色、HDR 编码仍未完成，不能称 HDR 捕获已完成 |
-| P4 | 待实施；SnapClip 仅适配新资源 API，当前 Pin 模型仍拒绝 HDR，不存在静默转 SDR 的“成功”入口 |
-| P5 | 待实施；只做了单次 CPU 大图准备测量，未验证真实 HDR 屏、RSS／显存峰值或端到端性能 |
+| P3 | typed ROI／上传／目标、FP16 行带、generation、圆角、压缩母版、WGC／D2D、源能力与输出白快照、生产滚动来源合同、composition 倒计时、显式 SDR HEX、PQ PNG16 已实现；真实捕获到最终显示仍未验收，生产入口门禁关闭 |
+| P4 | 保存面板、SDR/HDR 复制、F3/F6 共用 GPUI/Yue、F6 原位无激活／物理几何、历史 DB 保真引用／缩略图／回放／有界导出已实现；256 MiB 交互预算不因 45MP 导出成功被取消，实机工作流仍待验收 |
+| P5 | Release 4K/45MP CPU 归档／PNG16 导出、working set 采样与 Rust 堆峰值、20 次原生窗口释放／空闲 500ms 零视图重绘已测；本机快照为 SDR 输出、150% 缩放。真实 HDR 开启、VRAM、完整 DPI／跨屏／设备恢复和端到端延迟尚未验收 |
 
 | 阶段 | 具体交付 | 升级前必须看到的缺口／升级后门禁 |
 | --- | --- | --- |
@@ -319,7 +319,7 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 接续顺序：P2 真实 HDR 显示门禁仍保留；P3-B 已将色彩定义及来源 generation 传播到冻结帧、选区、行带接口和压缩母版发布（SnapClip docs/53 §9）。P3-C 已接通 WGC 三处格式合同、D3D typed 上传／目标和 D2D 内部 FP16／scRGB 链路（§10），离屏数值不替代真实 WGC 捕获与显示验收。接下来先接源能力／输出白快照，再改生产滚动分析／原始行带及导出，最后接 P4 消费入口。禁止仅切换 WGC 枚举、仅增加 `is_hdr` 或在不完整链路开放 HDR 保存。
 
-手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `67ea607` 已交付共用 paint 入口；SnapClip `de39fa9` 已交付显式 SDR 数值取色，`e541c80` 已交付 HDR composition 倒计时。应用实现与实际验证层次以 SnapClip `docs/53-hdr-capture.md` §11、§14、§15 为准；F6 宿主替换、历史保真引用与回放、AVIF 门禁、资源性能和真实 HDR／跨屏／DPI 仍未完成，不能把底座与离屏测试等同于完整产品支持。
+手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `03f338a` 已交付 F6 物理几何／DPI 前置；SnapClip `627548b` 已删除旧 F6 GDI 宿主并统一 GPUI/Yue，`7081c22` 已交付历史保真引用／缩略图／回放，`1ea5855` 已交付有界历史导出、格式门禁和 Release 资源／原生生命周期证据。以消费者 `docs/53-hdr-capture.md` §16～§21 为准。AVIF 未启用，真实 HDR／跨屏／完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，不能把底座与离屏测试等同于完整产品支持。
 
 ## 13. 无附加控件的共用绘制入口（2026-11-03）
 
