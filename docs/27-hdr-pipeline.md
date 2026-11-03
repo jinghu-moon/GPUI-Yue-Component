@@ -1,6 +1,6 @@
 # 27 · Windows HDR 图片与显示管线实施方案
 
-日期：2026-11-03。状态：**P1 高精度资源、P2 Windows 输出及 P3 的第一批像素／行带底座已实现并通过关联功能测试；P0 AVIF 门禁、P2 真实 HDR 显示、P3 剩余捕获／母版发布和 P4～P5 尚未完成，SnapClip 扩大 Clippy 检查也仍有失败，不代表 SnapClip 已支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。实施证据和剩余项见 [本轮记录](performance/2026-11-03-hdr-resources.md)。
+日期：2026-11-03。状态：**P1 高精度资源、P2 Windows 输出及 P3 的像素／行带底座、冻结帧来源代次、压缩母版发布、WGC 格式合同和 D2D 内部 FP16 链路已实现；P0 AVIF 门禁、P2 真实 HDR 显示、P3 生产捕获／滚动／编码和 P4～P5 尚未完成，SnapClip App／Capture 严格 Clippy 仍有失败，不代表 SnapClip 已支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。实施证据和剩余项见 [本轮记录](performance/2026-11-03-hdr-resources.md)。
 
 本次核对本地源码、Rust 依赖和微软／W3C／ITU 官方资料。本文不把库的格式支持列表当作端到端支持，不把数值测试当作显示器验收，也不沿用“先转为 SDR 才能显示”的假设。
 
@@ -252,7 +252,7 @@ Windows支持发布多个剪贴板格式，但接收应用会自行选格式；�
 | P0 | 原创小样本、ICC 尺度探针、显示探针、固定 BT.2390 数学与独立向量已实现；HDR AVIF 的消费解码／许可／性能门禁未通过，继续不启用 |
 | P1 | 三种真实编码、FP16 atlas、typed readback、逐行 PNG／受限 matrix-TRC ICC、线性代理和源峰值传递已实现；不支持的 ICC／HLG 明确拒绝 |
 | P2 | opt-in `AutomaticHdr`、FP16/scRGB swapchain、能力／系统／输出分离、事件刷新、UI／文字／path／backdrop 和 SDR 读回已实现；WARP 与隐藏硬件 HWND 的切换／resize／读回／资源重建通过，真实 HDR 显示／跨屏／HDR 切换／驱动恢复仍未验收 |
-| P3 | 第一批底座已实现：独立源像素合同、typed ROI 读回、FP16 原始行带逐 bit 落盘／反向增长／释放。当前滚动匹配与消费仍为 SDR；WGC／D2D／耐久母版发布／HDR 编码尚未迁移，不能称 HDR 捕获已完成 |
+| P3 | 独立源像素合同、typed ROI／上传／目标、FP16 行带底座、冻结帧来源 generation、typed 选区与圆角、压缩母版发布、WGC 格式合同及 D2D 内部 FP16 已实现；真实源能力／输出白快照、生产滚动／倒计时／取色、HDR 编码仍未完成，不能称 HDR 捕获已完成 |
 | P4 | 待实施；SnapClip 仅适配新资源 API，当前 Pin 模型仍拒绝 HDR，不存在静默转 SDR 的“成功”入口 |
 | P5 | 待实施；只做了单次 CPU 大图准备测量，未验证真实 HDR 屏、RSS／显存峰值或端到端性能 |
 
@@ -317,9 +317,9 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 完成定义：高精度从源到HDR屏、从源到HDR文件均不断；SDR回退明确且不覆盖母版；SDR UI不过亮；F3／F6／保存面板／覆盖层与滚动母版均有证据；新增数值／GPU测试和既有工作流回归通过；资源预算及实机测量有记录。一个环节只通过代码检查，不足以宣布“完整支持HDR”。
 
-接续顺序：P2 真实 HDR 显示门禁仍保留；P3 已补源像素／typed readback／原始行带底座，接下来将色彩定义及来源 generation 传播到冻结帧与母版，再同步改 WGC、D2D、滚动分析／原始行带及导出，最后接 P4 消费入口。禁止仅切换 WGC 枚举、仅增加 `is_hdr` 或在不完整链路开放 HDR 保存。
+接续顺序：P2 真实 HDR 显示门禁仍保留；P3-B 已将色彩定义及来源 generation 传播到冻结帧、选区、行带接口和压缩母版发布（SnapClip docs/53 §9）。P3-C 已接通 WGC 三处格式合同、D3D typed 上传／目标和 D2D 内部 FP16／scRGB 链路（§10），离屏数值不替代真实 WGC 捕获与显示验收。接下来先接源能力／输出白快照，再改生产滚动分析／原始行带及导出，最后接 P4 消费入口。禁止仅切换 WGC 枚举、仅增加 `is_hdr` 或在不完整链路开放 HDR 保存。
 
-手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统HDR设置、不安装新渲染运行时、不提交或推送用户工作区。
+手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。先前检查点已按用户要求正常提交推送，本仓库为 `4846e89`，SnapClip 为 `3b405c7`；接续 P3-B／P3-C 代码和证据更新仍在工作区。
 
 ## 13. 官方资料与版本
 
