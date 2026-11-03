@@ -876,6 +876,12 @@ impl WindowsWindowInner {
         lparam: LPARAM,
     ) -> Option<isize> {
         let new_dpi = wparam.loword() as f32;
+        // Read the client before changing the scale/border metrics. A screenshot
+        // host measures content in device pixels, unlike an ordinary editor.
+        let mut physical_client = RECT::default();
+        let preserve_physical = self.keep_physical_size_on_dpi_change
+            && !self.state.is_maximized()
+            && unsafe { GetClientRect(handle, &mut physical_client) }.is_ok();
 
         let is_maximized = self.state.is_maximized();
         let new_scale_factor = new_dpi / USER_DEFAULT_SCREEN_DPI as f32;
@@ -886,7 +892,35 @@ impl WindowsWindowInner {
             .direct_manipulation
             .set_scale_factor(new_scale_factor);
 
-        if is_maximized {
+        if preserve_physical {
+            let mut outer = RECT::default();
+            if unsafe { GetWindowRect(handle, &mut outer) }.is_ok() {
+                let border = &self.state.border_offset;
+                unsafe {
+                    SetWindowPos(
+                        handle,
+                        None,
+                        outer.left,
+                        outer.top,
+                        physical_client.right + border.width_offset.get(),
+                        physical_client.bottom + border.height_offset.get(),
+                        SWP_NOZORDER | SWP_NOACTIVATE,
+                    )
+                    .context("unable to preserve physical client size after DPI change")
+                    .log_err();
+                }
+                // An unchanged physical rectangle need not emit WM_SIZE. Logical
+                // size, scale and the renderer must still be updated together.
+                self.handle_size_change(
+                    size(
+                        DevicePixels(physical_client.right),
+                        DevicePixels(physical_client.bottom),
+                    ),
+                    new_scale_factor,
+                    true,
+                );
+            }
+        } else if is_maximized {
             // Get the monitor and its work area at the new DPI
             let monitor = unsafe { MonitorFromWindow(handle, MONITOR_DEFAULTTONEAREST) };
             let mut monitor_info: MONITORINFO = unsafe { std::mem::zeroed() };
@@ -940,6 +974,16 @@ impl WindowsWindowInner {
             }
         }
 
+        // An equal outer rectangle also suppresses WM_SIZE on the ordinary
+        // suggested-rectangle path (e.g. returning to a previous scale). Keep
+        // the logical viewport current even when no physical resize occurred.
+        let mut client = RECT::default();
+        if unsafe { GetClientRect(handle, &mut client) }.is_ok() {
+            let device_size = size(DevicePixels(client.right), DevicePixels(client.bottom));
+            if self.state.logical_size.get() != device_size.to_pixels(new_scale_factor) {
+                self.handle_size_change(device_size, new_scale_factor, false);
+            }
+        }
         Some(0)
     }
 

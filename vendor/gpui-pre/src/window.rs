@@ -1591,6 +1591,8 @@ impl Window {
             titlebar,
             focus,
             is_activatable,
+            keep_physical_size_on_dpi_change,
+            physical_bounds,
             show,
             kind,
             is_movable,
@@ -1622,6 +1624,8 @@ impl Window {
             WindowParams {
                 color_policy,
                 is_activatable,
+                keep_physical_size_on_dpi_change,
+                physical_bounds,
                 bounds: window_bounds.get_bounds(),
                 titlebar,
                 kind,
@@ -2928,6 +2932,15 @@ impl Window {
     /// Set the content size of the window.
     pub fn resize(&mut self, size: Size<Pixels>) {
         self.platform_window.resize(size);
+    }
+
+    /// Queue exact outer virtual-desktop device-pixel bounds without activating
+    /// this window. Returns false on unsupported backends or invalid dimensions.
+    /// Layout is updated by the platform resize/move callbacks after application.
+    pub fn set_physical_bounds(&mut self, bounds: Bounds<DevicePixels>) -> bool {
+        bounds.size.width.0 > 0
+            && bounds.size.height.0 > 0
+            && self.platform_window.set_physical_bounds(bounds)
     }
 
     /// Returns whether or not the window is currently fullscreen

@@ -1220,6 +1220,11 @@ pub trait PlatformWindow: HasWindowHandle + HasDisplayHandle {
         false
     }
     fn resize(&mut self, size: Size<Pixels>);
+    /// Set outer device-pixel bounds without activating. Returns false when
+    /// unsupported. Windows queues the operation outside the current callback.
+    fn set_physical_bounds(&mut self, _bounds: Bounds<DevicePixels>) -> bool {
+        false
+    }
     fn scale_factor(&self) -> f32;
     fn appearance(&self) -> WindowAppearance;
     fn display(&self) -> Option<Rc<dyn PlatformDisplay>>;
@@ -2583,6 +2588,17 @@ pub struct WindowOptions {
     /// Currently implemented only by the Windows backend.
     pub is_activatable: bool,
 
+    /// Keep the drawable client's device-pixel size when Windows changes DPI.
+    /// Default false preserves ordinary logical-size behavior. Raster/pin hosts
+    /// can opt in; logical layout and UI scale still follow the destination DPI.
+    /// Implemented only by the Windows backend.
+    pub keep_physical_size_on_dpi_change: bool,
+
+    /// Exact outer virtual-desktop device-pixel bounds (Windows only). Takes
+    /// precedence over `window_bounds`' rectangle, while preserving its state.
+    /// Intended for raster surfaces whose origin can be on a negative monitor.
+    pub physical_bounds: Option<Bounds<DevicePixels>>,
+
     /// Whether the window should be shown when created
     pub show: bool,
 
@@ -2656,6 +2672,9 @@ pub struct WindowParams {
     pub color_policy: WindowColorPolicy,
     /// Persistent activation policy (Windows only), distinct from initial `focus`.
     pub is_activatable: bool,
+    /// Preserve drawable device-pixel dimensions across Windows DPI changes.
+    pub keep_physical_size_on_dpi_change: bool,
+    pub physical_bounds: Option<Bounds<DevicePixels>>,
     pub bounds: Bounds<Pixels>,
 
     /// The titlebar configuration of the window
@@ -2757,6 +2776,8 @@ impl Default for WindowOptions {
             }),
             focus: true,
             is_activatable: true,
+            keep_physical_size_on_dpi_change: false,
+            physical_bounds: None,
             show: true,
             kind: WindowKind::Normal,
             is_movable: true,

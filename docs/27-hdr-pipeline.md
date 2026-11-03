@@ -329,7 +329,17 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 验证使用[前置合同记录](performance/2026-11-03-pin-window-contracts.md)中的隔离依赖，叠加本节的 `paint.rs`／`model.rs`，不混入并行虚拟列表改造：纯 lib **354** 项、图片预览交互 **38** 项通过（原有 37 项和新增 1 项），相同范围 strict Clippy `--no-deps -D warnings` 通过。新增测试检查 100／125／150／200% 下 GPUI 实际分配的物理几何、圆角、HDR 标记、平滑／最近邻以及同一 atlas 资源复用。完整预览的比较裁切、缩放、焦点和卸载回归仍通过。修改前编译明确缺少此接口，证据为 `target/hdr-p3f-surface-before.log`；最终结果为 `target/hdr-p3f-{preview-final,preview-clippy}.log`。此项只交付共用呈现 API，**F6 窗口宿主迁移仍由 SnapClip `docs/53-hdr-capture.md` 跟踪**。
 
-## 14. 官方资料与版本
+## 14. 原位窗口物理几何合同（2026-11-03）
+
+Windows core 新增 `WindowOptions::physical_bounds`（外框虚拟桌面物理像素坐标）、`keep_physical_size_on_dpi_change`（默认 false）和 `Window::set_physical_bounds`。后者异步应用、不激活、不改 Z 序；普通窗口保持默认逻辑布局策略。hidden 创建也先应用所请求的几何，不能用尚未显示的默认大尺寸准备图片。`PopUp` 使用真正的 `WS_POPUP`；Windows `start_window_move` 在输入回调退出后进入系统移动循环，避免同步重入。
+
+`WM_DPICHANGED` 在保留物理 client 时仍更新 logical viewport 与 scale；普通 suggested-rectangle 分支在没有 `WM_SIZE` 时也更新 viewport。SnapClip F6 在此基础上只调整 DIP 边框，源图片保持物理尺寸，不重新解码或 CPU 缩放。该 API 不提供跨平台保证，也不是对最终 DWM present 的成功回执。
+
+验证继续隔离并行虚拟列表改造：普通 activation 测试 **1 passed / 2 ignored**，两个 native filter 分别在独立进程中各 **1 passed**。DPI 探针用自己的隐藏 HWND 合成 96/120/144/192/96 DPI 消息，比较保物理窗口与普通窗口负对照；临时禁用 preserve 分支时实际失败（变成 suggested 320×200），恢复后通过。它不是实屏切换或跨屏测试。日志：本仓 `target/hdr-f6-window-{pure,final}.log`、`target/hdr-f6-dpi-regression-red.log`。SnapClip 的 F6 生产画布原生 probe 另验 FP16、alpha、无激活、位置、滚轮资源复用和释放，详见消费者 `docs/53-hdr-capture.md` §16。
+
+`tools/test-gpui-window.ps1 -Native` 为每个 native Application 启动独立测试进程，避免进程静态 Win32 类/dispatcher 的复用。不要将多个 native Application fixture 合并到一个 test runner。真实 F6 热键、系统鼠标移动、实际跨屏/DPI、HDR 最终屏幕亮度和设备恢复仍须单独验收。
+
+## 15. 官方资料与版本
 
 核对日期2026-11-03。规范／API结论与本项目工程选择分开；Rust引用固定到本文核对的版本或注明候选。
 

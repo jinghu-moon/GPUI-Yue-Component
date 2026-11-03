@@ -107,6 +107,7 @@ pub(crate) struct WindowsWindowInner {
     pub(crate) is_resizable: bool,
     pub(crate) is_minimizable: bool,
     pub(crate) is_activatable: bool,
+    pub(crate) keep_physical_size_on_dpi_change: bool,
     pub(crate) executor: ForegroundExecutor,
     pub(crate) validation_number: usize,
     pub(crate) main_receiver: PriorityQueueReceiver<RunnableVariant>,
@@ -335,6 +336,7 @@ impl WindowsWindowInner {
             is_resizable: context.is_resizable,
             is_minimizable: context.is_minimizable,
             is_activatable: context.is_activatable,
+            keep_physical_size_on_dpi_change: context.keep_physical_size_on_dpi_change,
             executor: context.executor.clone(),
             validation_number: context.validation_number,
             main_receiver: context.main_receiver.clone(),
@@ -469,6 +471,7 @@ struct WindowCreateContext {
     is_resizable: bool,
     is_minimizable: bool,
     is_activatable: bool,
+    keep_physical_size_on_dpi_change: bool,
     min_size: Option<Size<Pixels>>,
     executor: ForegroundExecutor,
     current_cursor: Option<HCURSOR>,
@@ -541,7 +544,7 @@ impl WindowsWindow {
         );
 
         let (mut dwexstyle, dwstyle) = if params.kind == WindowKind::PopUp {
-            (WS_EX_TOOLWINDOW | WS_EX_TOPMOST, WINDOW_STYLE(0x0))
+            (WS_EX_TOOLWINDOW | WS_EX_TOPMOST, WS_POPUP)
         } else {
             let mut dwstyle = WS_SYSMENU;
 
@@ -589,6 +592,7 @@ impl WindowsWindow {
             is_resizable: params.is_resizable,
             is_minimizable: params.is_minimizable,
             is_activatable: params.is_activatable,
+            keep_physical_size_on_dpi_change: params.keep_physical_size_on_dpi_change,
             min_size: params.window_min_size,
             executor,
             current_cursor,
@@ -633,6 +637,28 @@ impl WindowsWindow {
         this.state.border_offset.update(hwnd)?;
         let mut placement =
             retrieve_window_placement(hwnd, display, params.bounds, &this.state.border_offset)?;
+        if let Some(bounds) = params.physical_bounds {
+            anyhow::ensure!(
+                bounds.size.width.0 > 0 && bounds.size.height.0 > 0,
+                "physical window dimensions must be positive"
+            );
+            placement.rcNormalPosition = RECT {
+                left: bounds.origin.x.0,
+                top: bounds.origin.y.0,
+                right: bounds
+                    .origin
+                    .x
+                    .0
+                    .checked_add(bounds.size.width.0)
+                    .context("physical window right edge overflow")?,
+                bottom: bounds
+                    .origin
+                    .y
+                    .0
+                    .checked_add(bounds.size.height.0)
+                    .context("physical window bottom edge overflow")?,
+            };
+        }
         if !params.is_activatable {
             // Preserve the policy for deferred show/activate as well as first show.
             placement.showCmd = SW_SHOWNOACTIVATE.0 as u32;
@@ -644,6 +670,12 @@ impl WindowsWindow {
             }
             unsafe { SetWindowPlacement(hwnd, &placement)? };
         } else {
+            // Establish requested geometry while still hidden. Otherwise the
+            // public logical viewport retains CW_USEDEFAULT dimensions until
+            // first activation, and a raster host may prepare the wrong frame.
+            let mut hidden = placement;
+            hidden.showCmd = SW_HIDE.0 as u32;
+            unsafe { SetWindowPlacement(hwnd, &hidden)? };
             this.state.initial_placement.set(Some(WindowOpenStatus {
                 placement,
                 state: WindowOpenState::Windowed,
@@ -774,7 +806,7 @@ impl PlatformWindow for WindowsWindow {
                         bounds.origin.y.0,
                         rect.right - rect.left,
                         rect.bottom - rect.top,
-                        SWP_NOMOVE,
+                        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE,
                     )
                     .context("unable to set window content size")
                     .log_err();
@@ -785,6 +817,64 @@ impl PlatformWindow for WindowsWindow {
 
     fn scale_factor(&self) -> f32 {
         self.state.scale_factor.get()
+    }
+
+    fn set_physical_bounds(&mut self, bounds: Bounds<DevicePixels>) -> bool {
+        if bounds.origin.x.0.checked_add(bounds.size.width.0).is_none()
+            || bounds
+                .origin
+                .y
+                .0
+                .checked_add(bounds.size.height.0)
+                .is_none()
+        {
+            return false;
+        }
+        let hwnd = self.hwnd;
+        let this = self.0.clone();
+        self.executor
+            .spawn(async move {
+                // A later explicit activation must not replay an obsolete initial
+                // placement over a newer raster-host geometry request.
+                this.state.initial_placement.take();
+                unsafe {
+                    SetWindowPos(
+                        hwnd,
+                        None,
+                        bounds.origin.x.0,
+                        bounds.origin.y.0,
+                        bounds.size.width.0,
+                        bounds.size.height.0,
+                        SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS,
+                    )
+                    .context("unable to apply physical window bounds")
+                    .log_err();
+                }
+            })
+            .detach();
+        true
+    }
+
+    fn start_window_move(&self) {
+        if !self.is_movable {
+            return;
+        }
+        let hwnd = self.hwnd;
+        // Leave the GPUI input callback before entering Win32's nested move
+        // loop. Its WM_MOVE/WM_SIZE callbacks may re-enter the application.
+        self.executor
+            .spawn(async move {
+                unsafe {
+                    ReleaseCapture().log_err();
+                    SendMessageW(
+                        hwnd,
+                        WM_SYSCOMMAND,
+                        Some(WPARAM((SC_MOVE | HTCAPTION) as usize)),
+                        Some(LPARAM(0)),
+                    );
+                }
+            })
+            .detach();
     }
 
     fn appearance(&self) -> WindowAppearance {
