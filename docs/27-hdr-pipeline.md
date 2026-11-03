@@ -1,6 +1,6 @@
 # 27 · Windows HDR 图片与显示管线实施方案
 
-初次设计：2026-11-03；消费者状态更新：2026-11-04。状态：**P1 高精度资源、P2 Windows 输出及 P3 内部捕获／滚动／倒计时／取色、HDR PNG16、P4 保存面板／F3／F6／历史保真、有界导出与登记失败恢复已分批实现；P5 已测 Release 4K/45MP 归档导出、20 次原生窗口释放及空闲重绘。SnapClip 普通／headless 两种 all-targets strict Clippy 均通过；AVIF 的 48 组 CPU 格式矩阵、有界 grid/Alpha/ICC 及真实行带／SCPX 资格验证通过，包含 4K/45MP 合成成功、噪声超限拒绝和运行中取消。整帧资源仍失败，grid 仍限制 4 MiB payload／5 MiB 文件，尚未生产接线。P2/P5 真实 HDR、双屏、完整 DPI／设备恢复、VRAM 和端到端性能仍未验收；生产 HDR 捕获入口未开放，不代表已完整支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。底座证据见 [本轮记录](performance/2026-11-03-hdr-resources.md)，消费者的当前证据以 SnapClip `docs/53-hdr-capture.md` §16～§28 为准。
+初次设计：2026-11-03；消费者状态更新：2026-11-04。状态：**P1 高精度资源、P2 Windows 输出及 P3 内部捕获／滚动／倒计时／取色、HDR PNG16、P4 保存面板／F3／F6／历史保真、有界导出与登记失败恢复已分批实现；P5 已测 Release 4K/45MP 归档导出、20 次原生窗口释放及空闲重绘。AVIF 的 48 组 CPU 格式矩阵、有界 grid/Alpha/ICC、真实行带／SCPX 和共享解码器资格验证通过；消费者新增默认关闭的 avif feature，接入保存面板、历史导出和贴图。共享编码器用磁盘后备代替 4 MiB payload Vec，累计 payload 限 512 MiB；交互解码另限 64 MiB／24MP。MIT Yue 不引入 codec，复用原图片预览。整帧旧路径的资源失败、编码延迟及 simd_helpers 原始许可正文缺口仍不能忽略。P2/P5 真实 HDR、双屏、完整 DPI／设备恢复、VRAM 和端到端性能仍未验收；生产 HDR 捕获入口未开放，不代表已完整支持 HDR。** 适用：GPUI Kit 0.8.0、本仓库维护的 GPUI core／Windows D3D11 补丁，以及 SnapClip 的捕获、保存面板和贴图。底座证据见 [本轮记录](performance/2026-11-03-hdr-resources.md)，消费者的当前证据以 SnapClip `docs/53-hdr-capture.md` §16～§29 为准。
 
 本次核对本地源码、Rust 依赖和微软／W3C／ITU 官方资料。本文不把库的格式支持列表当作端到端支持，不把数值测试当作显示器验收，也不沿用“先转为 SDR 才能显示”的假设。
 
@@ -373,3 +373,15 @@ Windows core 新增 `WindowOptions::physical_bounds`（外框虚拟桌面物理�
 - [L5] 项目文档：[half](https://docs.rs/half/)。以Cargo.lock实际版本为准。
 - [L6] 项目文档：[pic-scale 0.7.12](https://docs.rs/pic-scale/0.7.12/pic_scale/)。候选，非新增依赖承诺。
 - [L7] 项目文档及许可：[zenavif](https://docs.rs/crate/zenavif/latest)。AGPL／商业双许可，需按实际版本核对。
+
+## 16. 消费者 AVIF 共享能力与边界（2026-11-04）
+
+SnapClip 新增 Windows CPU crate `snapclip-avif`，只依赖 Model 像素合同和固定 codec；`BandSource` trait 移入 Model，Capture reexport 同一类型。App／Pin 的 `avif` feature 默认关闭，显式启用后提供 HDR PQ10 保存、SCPX 历史导出、AVIF 贴图与保存预览。**不需要新增 Yue 组件，也不在 MIT Yue 中引入 AGPL 编解码依赖**：消费者将已解码的 `ScRgb` 或相对 `LinearSrgb` FP16 交给现有 YueImagePreview，共用既有 GPU 路径。消费者不把相对 SDR 白误标为绝对 80 nit。
+
+产品编码采用两个自动清理的临时文件，128×128 tile、4096 块、累计 payload ≤512 MiB；header 后顺序写入既有原子提交服务。源错误、取消、体积上限或磁盘错误保留源母版和旧目标。源读取 ≤1 MiB，缓存最多 128 行，原 32 MiB 编码额外堆／16 MiB 单分配门槛不变。scratch 和目标 partial 可同时存在，磁盘峰值约为压缩量两倍，不能忽略这个成本。
+
+交互解码单独限制 64 MiB／24MP，预览在缩放、编码之前检查像素预算，压缩字节写入也有上限。它仍需完整 FP16 输出，24MP 约 192 MB，另有 codec／压缩／上传资源；不能将有界编码的数 MiB 额外堆当成预览总占用。支持经过验证的静态 PQ、SDR、RGB matrix/TRC ICC；未实现的 HLG、LUT ICC、动画、gain map、变换与特殊 Alpha 布局明确拒绝。生产 HDR 桌面捕获门禁继续关闭。
+
+实际共享解码器通过原 48 组 8/10/12 位矩阵和 4 项有界异常拒绝。真实 HDR／SDR 45MP 原图在像素展开前拒绝；另以两份 160×96、明确标色的 12 位真实内容裁片独立回读通过。包装层曾重复解除预乘，导致半透明 R 从应有约 0.214 变成约 0.998，已用实际失败回归修复。详见消费者 `docs/53-hdr-capture.md` §29 及 `tools/codec-bench/HDR-AVIF.md`；这些 CPU 证据不能替代实屏色彩或实机性能验收。
+
+固定源码／许可清单覆盖 122 个 normal/build 包，记录原 archive、许可原文、features 和本地源码。上游 `simd_helpers 0.1.0` 缺原始 MIT 正文，审计包会明确标记 `NOT-RELEASE-READY` 并退出 1；没有宣称完整发行义务已经满足。共享功能保持显式开发入口，许可缺口、较高 CPU 编码时间与显示层实机验收仍需分别处理。本次仅同步消费者结果，不混入本仓并行虚拟列表／Select／图片资源改造。
