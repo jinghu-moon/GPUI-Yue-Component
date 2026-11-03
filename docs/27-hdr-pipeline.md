@@ -317,9 +317,11 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 完成定义：高精度从源到HDR屏、从源到HDR文件均不断；SDR回退明确且不覆盖母版；SDR UI不过亮；F3／F6／保存面板／覆盖层与滚动母版均有证据；新增数值／GPU测试和既有工作流回归通过；资源预算及实机测量有记录。一个环节只通过代码检查，不足以宣布“完整支持HDR”。
 
-接续顺序：P2 真实 HDR 显示门禁仍保留；P3-B 已将色彩定义及来源 generation 传播到冻结帧、选区、行带接口和压缩母版发布（SnapClip docs/53 §9）。P3-C 已接通 WGC 三处格式合同、D3D typed 上传／目标和 D2D 内部 FP16／scRGB 链路（§10），离屏数值不替代真实 WGC 捕获与显示验收。接下来先接源能力／输出白快照，再改生产滚动分析／原始行带及导出，最后接 P4 消费入口。禁止仅切换 WGC 枚举、仅增加 `is_hdr` 或在不完整链路开放 HDR 保存。
+接续状态：P3 的源能力／输出白快照、固定滚动分析与原始 FP16 行带、倒计时 composition、明确的 SDR 取色及 HDR PNG16 已有内部实现和分层验证；P4 的保存面板、F3/F6 共用宿主、复制与历史保真源／有界导出也已接入。当前剩余项是 P2／P5 的真实 HDR／跨屏／DPI／设备恢复、实际剪贴板接收方、端到端与 GPU 预算验收，见 SnapClip `docs/53-hdr-capture.md` §22。生产 HDR 捕获与 AVIF 门禁保持关闭；离屏数值不替代真实 WGC 捕获和显示验收。禁止仅切换 WGC 枚举或增加 `is_hdr` 就宣称产品已完整支持。
 
-手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `03f338a` 已交付 F6 物理几何／DPI 前置；SnapClip `627548b` 已删除旧 F6 GDI 宿主并统一 GPUI/Yue，`7081c22` 已交付历史保真引用／缩略图／回放，`1ea5855` 已交付有界历史导出、格式门禁和 Release 资源／原生生命周期证据。以消费者 `docs/53-hdr-capture.md` §16～§21 为准。AVIF 未启用，真实 HDR／跨屏／完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，不能把底座与离屏测试等同于完整产品支持。
+手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `03f338a` 已交付 F6 物理几何／DPI 前置；SnapClip `627548b` 已删除旧 F6 GDI 宿主并统一 GPUI/Yue，`7081c22` 已交付历史保真引用／缩略图／回放，`1ea5855` 已交付有界历史导出、格式门禁和 Release 资源／原生生命周期证据。接续的 `dfe5a1a`／`54ea344` 清理核心与开发工具后，消费者 workspace 的普通／headless 两种 all-targets strict Clippy 均通过（`--no-deps -- -D warnings`）。以消费者 `docs/53-hdr-capture.md` §16～§22 为准；这些检查使用冻结 Yue 依赖，不代表并行虚拟列表工作树已验收。AVIF 未启用，真实 HDR／跨屏／完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，不能把底座与离屏测试等同于完整产品支持。
+
+2026-11-04 消费者复测：普通 lib **1225 passed**，App／Pin headless **310／71 passed**，UI／基线 **10／2 passed**；D2D／D3D 离屏数值 **6 passed**。Release 的 20 次小窗循环确认资源释放及空闲 500ms **0** 次 render，4K／45MP 归档和 PNG16 导出均为 **0** 次完整图像分配，Rust 堆增量峰值不超过 **14,151,353 B**。这是消费者的同一合成行带 fixture 及当前 SDR／150% 输出上的小窗证据，不代表真实 HDR、4K 首帧、应用总内存或 VRAM；完整数据、复现命令和剩余实机矩阵见 SnapClip `docs/53-hdr-capture.md` §22。
 
 ## 13. 无附加控件的共用绘制入口（2026-11-03）
 
