@@ -1,5 +1,17 @@
 # Yue Base patches
 
+## Read-only Select All snapshot (2026-11-03)
+
+`text/state.rs` exposes the existing `TextViewState::is_all_selected()` getter
+publicly. A content owner can copy retained original text (CRLF, Tab, trailing
+whitespace) after Select All instead of copying a rendered HTML/Markdown text
+projection. Selection mutation, parsing and the default Copy action are unchanged.
+The existing select-all/clear regression checks the getter before, during and
+after selection; SnapClip's production pin UI test covers exact original copying.
+
+Run `pwsh -File tools/test-gpui-base.ps1 -Offline -Filter text::state::tests::select_all`
+for the focused Base regressions.
+
 ## Controlled accordion and safe measured disclosure (2026-11-02)
 
 `accordion/controller.rs` adds explicit descriptors/snapshots, Multiple/Accordion

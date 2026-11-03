@@ -29,6 +29,7 @@ pub(crate) const WM_GPUI_KEYBOARD_LAYOUT_CHANGED: u32 = WM_USER + 6;
 pub(crate) const WM_GPUI_GPU_DEVICE_LOST: u32 = WM_USER + 7;
 pub(crate) const WM_GPUI_KEYDOWN: u32 = WM_USER + 8;
 pub(crate) const WM_GPUI_DISPLAYS_CHANGED: u32 = WM_USER + 10;
+pub(crate) const WM_GPUI_COLOR_CHANGED: u32 = WM_USER + 11;
 
 const SIZE_MOVE_LOOP_TIMER_ID: usize = 1;
 
@@ -105,6 +106,10 @@ impl WindowsWindowInner {
             WM_NCCALCSIZE => self.handle_calc_client_size(handle, wparam, lparam),
             WM_DPICHANGED => self.handle_dpi_changed_msg(handle, wparam, lparam),
             WM_DISPLAYCHANGE => self.handle_display_change_msg(handle),
+            WM_GPUI_COLOR_CHANGED => {
+                self.mark_color_dirty();
+                Some(0)
+            }
             WM_NCHITTEST => self.handle_hit_test_msg(handle, lparam),
             WM_PAINT => self.handle_paint_msg(handle),
             WM_CLOSE => self.handle_close_msg(),
@@ -325,6 +330,7 @@ impl WindowsWindowInner {
     }
 
     fn handle_destroy_msg(&self, handle: HWND) -> Option<isize> {
+        self.state.color_watcher.borrow_mut().take();
         let callback = { self.state.callbacks.close.take() };
         // Re-enable parent window if this was a modal dialog
         if let Some(parent_hwnd) = self.parent_hwnd {
@@ -945,6 +951,7 @@ impl WindowsWindowInner {
     }
 
     fn set_display(&self, display: WindowsDisplay) {
+        self.mark_color_dirty();
         self.state.display.set(display);
         if let Some(mut callback) = self.state.callbacks.display_changed.take() {
             callback();
@@ -1205,6 +1212,7 @@ impl WindowsWindowInner {
         wparam: WPARAM,
         lparam: LPARAM,
     ) -> Option<isize> {
+        self.mark_color_dirty();
         if wparam.0 != 0 {
             self.state.click_state.system_update(wparam.0);
             self.state.border_offset.update(handle).log_err();
@@ -1294,6 +1302,7 @@ impl WindowsWindowInner {
     }
 
     fn handle_device_lost(&self, lparam: LPARAM) -> Option<isize> {
+        self.mark_color_dirty();
         let devices = lparam.0 as *const DirectXDevices;
         let devices = unsafe { &*devices };
         if let Err(err) = self

@@ -2,6 +2,53 @@ use super::*;
 use std::prelude::v1::test;
 use windows::Win32::Foundation::HMODULE;
 
+#[test]
+fn float_capture_preserves_hdr_and_reallocates_when_target_format_changes() {
+    let mut h = Harness::new(80, 64);
+    let filter = blur([0., 0., 80., 64.], 4.);
+    h.upload(|_, _| [80, 100, 120, 255]);
+    h.draw(&filter);
+    let allocations = h.pipeline.stats.texture_allocations;
+    h.target = Texture::new(&h.device, [80, 64], DXGI_FORMAT_R16G16B16A16_FLOAT, true).unwrap();
+    let data: Vec<u8> = (0..64)
+        .flat_map(|_| {
+            (0..80).flat_map(|x| {
+                [-0.25, if x < 40 { 0. } else { 8. }, 12.5, 0.5]
+                    .into_iter()
+                    .flat_map(|v| half::f16::from_f32(v).to_bits().to_le_bytes())
+            })
+        })
+        .collect();
+    unsafe {
+        h.context
+            .UpdateSubresource(&h.target.texture, 0, None, data.as_ptr().cast(), 80 * 8, 0);
+    }
+    h.draw(&filter);
+    let result = read_render_target(
+        &h.device,
+        &h.context,
+        &h.target.texture,
+        RenderImageFormat::Rgba16FloatScRgb,
+    )
+    .unwrap();
+    let pixel = |x: usize, y: usize| -> [f32; 4] {
+        let p = &result.as_bytes()[(y * 80 + x) * 8..][..8];
+        std::array::from_fn(|c| {
+            half::f16::from_bits(u16::from_le_bytes([p[c * 2], p[c * 2 + 1]])).to_f32()
+        })
+    };
+    for x in [0, 20, 39, 40, 60, 79] {
+        let p = pixel(x, 32);
+        assert!((p[0] + 0.25).abs() < 0.003, "{p:?}");
+        assert!((p[2] - 12.5).abs() < 0.04, "{p:?}");
+        assert!((p[3] - 0.5).abs() < 0.003, "{p:?}");
+    }
+    assert!(pixel(39, 32)[1] > 1. && pixel(39, 32)[1] < 4.);
+    assert!(pixel(40, 32)[1] > 4. && pixel(40, 32)[1] < 7.);
+    assert_eq!(h.pipeline.stats.texture_allocations, allocations + 3);
+    assert!(h.pipeline.stats.peak_scratch_bytes <= MAX_SCRATCH_BYTES);
+}
+
 fn blur(rect: [f32; 4], sigma: f32) -> BackdropBlur {
     let bounds = Bounds::new(
         point(ScaledPixels(rect[0]), ScaledPixels(rect[1])),
@@ -240,7 +287,7 @@ fn report(name: &str, phase: &str, frames: &[FrameTiming], stats: &Stats, pipeli
         stats.copied_pixels / frames.len() as u64,
         stats.work_pixels / frames.len() as u64
     );
-    if phase == "envelope" {
+    if matches!(phase, "envelope" | "optimized" | "reference") {
         return;
     }
     println!(
@@ -249,6 +296,17 @@ fn report(name: &str, phase: &str, frames: &[FrameTiming], stats: &Stats, pipeli
     println!(
         "PROFILE_GPU {name},{phase},copy/downsample/horizontal/vertical/composite_us={gpu_stages:.3?}"
     );
+}
+
+fn add_stats(total: &mut Stats, frame: &Stats) {
+    total.regions += frame.regions;
+    total.copied_pixels += frame.copied_pixels;
+    total.work_pixels += frame.work_pixels;
+    total.texture_allocations += frame.texture_allocations;
+    total.kernel_rebuilds += frame.kernel_rebuilds;
+    total.initialization_clears += frame.initialization_clears;
+    total.skipped_regions += frame.skipped_regions;
+    total.peak_scratch_bytes = total.peak_scratch_bytes.max(frame.peak_scratch_bytes);
 }
 
 /// A single timestamp pair around all regions, with the production profiler
@@ -411,6 +469,10 @@ fn profile_hardware() {
             h.pipeline.stats.kernel_rebuilds, 0,
             "Steady frames must reuse kernels"
         );
+        assert_eq!(
+            h.pipeline.stats.initialization_clears, 0,
+            "No per-frame initialization clears"
+        );
         report(
             name,
             "steady",
@@ -441,6 +503,34 @@ fn profile_hardware() {
             &h.pipeline.stats,
             h.pipeline_create_us,
         );
+        let mut measured = [Vec::new(), Vec::new()];
+        let mut totals = [Stats::default(), Stats::default()];
+        // Same device, images and scratch, with alternating AB/BA order.
+        for frame in 0..160 {
+            for variant in if frame % 2 == 0 { [0, 1] } else { [1, 0] } {
+                h.pipeline.full_work_reference = variant == 1;
+                h.pipeline.stats = Stats::default();
+                if let Some(sample) = timer.frame(&mut h, regions) {
+                    if frame >= 32 {
+                        measured[variant].push(sample);
+                        add_stats(&mut totals[variant], &h.pipeline.stats);
+                    }
+                }
+            }
+        }
+        for (variant, phase) in ["optimized", "reference"].into_iter().enumerate() {
+            assert!(measured[variant].len() >= 100);
+            assert_eq!(totals[variant].texture_allocations, 0);
+            assert_eq!(totals[variant].kernel_rebuilds, 0);
+            assert_eq!(totals[variant].initialization_clears, 0);
+            report(
+                name,
+                phase,
+                &measured[variant],
+                &totals[variant],
+                h.pipeline_create_us,
+            );
+        }
     }
 }
 fn pixel(data: &[u8], width: usize, x: usize, y: usize) -> [u8; 4] {
@@ -499,8 +589,9 @@ fn planning_is_local_clipped_dpi_bounded_and_noop_safe() {
     let plan = Plan::new(&b, 3840, 2160).unwrap();
     assert_eq!(plan.copy, [312, 202, 336, 136]);
     assert_eq!(plan.work, [168, 68]);
+    assert_eq!(plan.filtered, [22, 22, 124, 24]);
     assert_eq!(
-        scratch_bytes(capacity([336, 136], [0; 2]), capacity([168, 68], [0; 2])),
+        scratch_bytes(capacity([336, 136], [0; 2]), capacity([168, 68], [0; 2]), 4),
         688128
     );
     assert!(plan.copy[2] * plan.copy[3] < 3840 * 2160 / 100);
@@ -644,7 +735,11 @@ fn warp_reduced_resolution_edges_and_scratch_reuse_are_stable() {
 fn oversized_region_does_not_allocate_or_disable_smaller_regions() {
     let mut h = Harness::new(64, 64);
     let oversized = Plan::new(&blur([0., 0., 8192., 8192.], 1.), 8192, 8192).unwrap();
-    assert!(!h.pipeline.ensure_scratch(&h.device, oversized).unwrap());
+    assert!(
+        !h.pipeline
+            .ensure_scratch(&h.device, oversized, RENDER_TARGET_FORMAT)
+            .unwrap()
+    );
     assert!(h.pipeline.scratch.is_none());
     assert_eq!(h.pipeline.stats.texture_allocations, 0);
     assert_eq!(h.pipeline.stats.skipped_regions, 1);
@@ -652,6 +747,125 @@ fn oversized_region_does_not_allocate_or_disable_smaller_regions() {
     h.draw(&blur([12., 12., 32., 32.], 8.));
     assert_eq!(h.pipeline.stats.regions, 1);
     assert!(h.pipeline.stats.peak_scratch_bytes < MAX_SCRATCH_BYTES);
+}
+
+#[test]
+fn cropped_work_matches_full_passes_even_with_poisoned_unused_texels() {
+    let mut h = Harness::new(256, 192);
+    h.pipeline.force_crop = true;
+    let cases = [
+        [60., 70., 100., 18.],
+        [60.25, 70.75, 100.5, 18.25],
+        [0., 0., 39., 27.],
+        [230.75, 170.25, 40., 40.],
+        [-4.25, 70.1, 9.5, 12.],
+        [100.3, 40.7, 1.2, 0.9],
+        [30., 20., 180., 140.],
+        [72.5, 58.75, 32., 32.],
+    ];
+    for (case, rect) in cases.into_iter().enumerate() {
+        for sigma in [0.25, 1., 2., 7.9, 8., 16., 32., 64.] {
+            h.upload(|x, y| {
+                let alpha = 90 + ((x * 7 + y * 11 + case as u32 * 13) % 166) as u8;
+                [
+                    ((x * 29 + y * 5) % (u32::from(alpha) + 1)) as u8,
+                    ((x * 3 + y * 37) % (u32::from(alpha) + 1)) as u8,
+                    ((x ^ y) % (u32::from(alpha) + 1)) as u8,
+                    alpha,
+                ]
+            });
+            h.save_background();
+            let mut region = blur(rect, sigma);
+            if case % 2 == 1 {
+                region.opacity = 0.57;
+                region.quad.corner_radii = Corners::all(ScaledPixels(11.5));
+                region.quad.content_mask.bounds = Bounds::new(
+                    point(ScaledPixels(rect[0] + 0.4), ScaledPixels(rect[1] + 0.2)),
+                    size(ScaledPixels(rect[2] - 0.5), ScaledPixels(rect[3] - 0.3)),
+                );
+            }
+            let plan = Plan::new(&region, 256, 192).unwrap();
+            h.pipeline
+                .ensure_scratch(&h.device, plan, RENDER_TARGET_FORMAT)
+                .unwrap();
+            let scratch = h.pipeline.scratch.as_mut().unwrap();
+            // A tiny floating-point interpolation spill must not read stale
+            // or uninitialized NaNs just beyond a partially drawn rectangle.
+            for texture in [&scratch.horizontal, &scratch.vertical] {
+                let [width, height] = texture.capacity;
+                let mut bits = vec![0u16; (width * height * 4) as usize];
+                for y in 0..plan.work[1] {
+                    for x in 0..plan.work[0] {
+                        bits[((y * width + x) * 4) as usize..((y * width + x) * 4 + 4) as usize]
+                            .fill(0x7e00);
+                    }
+                }
+                unsafe {
+                    h.context.UpdateSubresource(
+                        &texture.texture,
+                        0,
+                        None,
+                        bits.as_ptr().cast(),
+                        width * 8,
+                        0,
+                    );
+                }
+            }
+            scratch.initialized = true; // Explicit fixture data already includes finite bucket padding.
+            h.pipeline.full_work_reference = false;
+            h.draw(&region);
+            let optimized = h.read();
+            h.reset_background();
+            h.pipeline.full_work_reference = true;
+            h.draw(&region);
+            let reference = h.read();
+            let delta = optimized
+                .iter()
+                .zip(&reference)
+                .map(|(a, b)| a.abs_diff(*b))
+                .max()
+                .unwrap();
+            // Exact physical texel centers replace interpolated UVs. On sharp
+            // 8-bit noise, floating-point/half-float rounding may differ by 2.
+            assert!(
+                delta <= 2,
+                "case={case}, sigma={sigma}: max channel error={delta}"
+            );
+        }
+    }
+}
+
+#[test]
+fn new_half_float_padding_is_initialized_once_and_not_per_frame() {
+    let mut h = Harness::new(256, 192);
+    let original = h.upload(|_, _| [63, 99, 121, 128]);
+    let region = blur([32., 24., 180., 140.], 2.);
+    let plan = Plan::new(&region, 256, 192).unwrap();
+    h.pipeline
+        .ensure_scratch(&h.device, plan, RENDER_TARGET_FORMAT)
+        .unwrap();
+    let scratch = h.pipeline.scratch.as_ref().unwrap();
+    unsafe {
+        h.context
+            .ClearRenderTargetView(scratch.horizontal.rtv.as_ref().unwrap(), &[f32::NAN; 4]);
+        h.context
+            .ClearRenderTargetView(scratch.vertical.rtv.as_ref().unwrap(), &[f32::NAN; 4]);
+    }
+    h.draw(&region);
+    assert_eq!(h.pipeline.stats.initialization_clears, 2);
+    let result = h.read();
+    assert!(
+        result
+            .iter()
+            .zip(&original)
+            .all(|(a, b)| a.abs_diff(*b) <= 1)
+    );
+    h.draw(&region);
+    assert_eq!(
+        h.pipeline.stats.initialization_clears, 2,
+        "No per-frame full clears"
+    );
+    assert_eq!(h.pipeline.stats.texture_allocations, 3);
 }
 
 #[test]

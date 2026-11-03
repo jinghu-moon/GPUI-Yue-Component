@@ -5,11 +5,54 @@ fn vp() -> Viewport {
         size: [600., 440.],
         scale: 1.5,
         inset: 12.,
-        bottom: 44.,
     }
 }
 fn close(a: f32, b: f32) {
     assert!((a - b).abs() < 0.001, "{a} != {b}");
+}
+#[test]
+fn viewport_uses_symmetric_insets_and_the_full_viewport_center() {
+    let v = vp();
+    assert_eq!(v.safe_size(), [576., 416.]);
+    assert_eq!(v.midpoint(), [320., 250.]);
+    let image = [600., 1200.];
+    let c = v.fit(image, ImagePreviewFit::FitAll);
+    close(c.zoom(image), 416. * v.scale / image[1]);
+    let o = c.top_left(image, v);
+    let size = c.display_size(image, v.scale);
+    close(o[0] + size[0] / 2., v.midpoint()[0]);
+    close(o[1] + size[1] / 2., v.midpoint()[1]);
+}
+#[test]
+fn pixel_grid_is_image_anchored_visible_and_bounded_at_fractional_dpi() {
+    for scale in [1., 1.25, 1.5, 2.] {
+        let v = Viewport { scale, ..vp() };
+        let image = [100000., 500000.];
+        let c = Camera {
+            center: [0.734, 0.812],
+            width: image[0] * 4.,
+        };
+        let grid = PixelGrid::new(c, image, v).unwrap();
+        for axis in 0..2 {
+            close(grid.step[axis], 4. / scale);
+            for index in grid.indices[axis].clone() {
+                let line = grid.origin[axis] + index as f32 * grid.step[axis];
+                assert!(line >= grid.clip[axis] - 0.1 && line <= grid.clip[axis + 2] + 0.1);
+            }
+            assert!(grid.indices[axis].clone().count() <= (v.size[axis] * scale / 4.) as usize + 2);
+        }
+        assert!(
+            PixelGrid::new(
+                Camera {
+                    width: image[0] * 3.99,
+                    ..c
+                },
+                image,
+                v
+            )
+            .is_none()
+        );
+    }
 }
 #[test]
 fn physical_actual_size_accounts_for_dpi() {
@@ -19,6 +62,43 @@ fn physical_actual_size_accounts_for_dpi() {
     };
     assert_eq!(c.display_size([1440., 900.], 1.5), [960., 600.]);
     close(c.zoom([1440., 900.]), 1.);
+}
+
+#[test]
+fn settled_integer_zoom_snaps_by_at_most_half_a_device_pixel() {
+    for scale in [1., 1.25, 1.5, 2.] {
+        let v = Viewport {
+            origin: [20.125, 30.375],
+            size: [601.5, 401.25],
+            scale,
+            ..vp()
+        };
+        let image = [641., 403.];
+        for zoom in [1., 2., 4., 8.] {
+            let original = Camera {
+                center: [0.371, 0.617],
+                width: image[0] * zoom,
+            };
+            let aligned = original.pixel_aligned(image, v);
+            let a = original.top_left(image, v);
+            let b = aligned.top_left(image, v);
+            close(aligned.width, original.width);
+            for axis in 0..2 {
+                close(b[axis] * scale, (b[axis] * scale).round());
+                assert!((b[axis] - a[axis]).abs() * scale <= 0.501);
+            }
+            assert_eq!(
+                aligned.pixel_aligned(image, v),
+                aligned,
+                "no accumulating drift"
+            );
+        }
+        let fractional = Camera {
+            center: [0.371, 0.617],
+            width: image[0] * 1.25,
+        };
+        assert_eq!(fractional.pixel_aligned(image, v), fractional);
+    }
 }
 #[test]
 fn fit_uses_safe_area_and_does_not_upscale_small_images() {

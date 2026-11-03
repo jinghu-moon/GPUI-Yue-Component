@@ -29,6 +29,7 @@ pub(super) struct SnapshotImage {
     pub(super) data: Arc<RenderImage>,
     pub(super) frame_index: usize,
     pub(super) grayscale: bool,
+    pub(super) sampling: u32,
     pub(super) mask: ContentMask<Pixels>,
     pub(super) opacity: f32,
 }
@@ -113,13 +114,14 @@ impl Window {
                     let opacity = self.element_opacity;
                     self.element_opacity = image.opacity;
                     self.with_content_mask(Some(mask), |window| {
-                        let _ = window.paint_image(
+                        let _ = window.paint_image_sampled(
                             bounds,
                             image_bounds,
                             image.corner_radii,
                             image.data.clone(),
                             image.frame_index,
                             image.grayscale,
+                            image.sampling,
                         );
                     });
                     self.element_opacity = opacity;

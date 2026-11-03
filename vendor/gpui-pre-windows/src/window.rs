@@ -65,6 +65,9 @@ pub struct WindowsWindowState {
     pub direct_manipulation: DirectManipulationHandler,
 
     pub renderer: RefCell<DirectXRenderer>,
+    pub(crate) color_policy: WindowColorPolicy,
+    pub(crate) color_dirty: Cell<bool>,
+    pub(crate) color_watcher: RefCell<Option<crate::color_output::DisplayWatcher>>,
     /// Set when the next `draw_window` call must be treated as a forced
     /// render. Used after a GPU device-lost recovery, where the next frame
     /// must both re-enable drawing (via `mark_drawable`) and bypass the GPUI
@@ -121,6 +124,7 @@ impl WindowsWindowState {
         min_size: Option<Size<Pixels>>,
         appearance: WindowAppearance,
         disable_direct_composition: bool,
+        color_policy: WindowColorPolicy,
         invalidate_devices: Arc<AtomicBool>,
         draw_coordinator: Rc<DrawCoordinator>,
     ) -> Result<Self> {
@@ -142,8 +146,30 @@ impl WindowsWindowState {
         };
         let border_offset = WindowBorderOffset::default();
         let restore_from_minimized = None;
-        let renderer = DirectXRenderer::new(hwnd, directx_devices, disable_direct_composition)
-            .context("Creating DirectX renderer")?;
+        let watcher = if color_policy == WindowColorPolicy::AutomaticHdr {
+            crate::color_output::DisplayWatcher::new(hwnd).log_err()
+        } else {
+            None
+        };
+        let output = watcher
+            .as_ref()
+            .map(|w| w.snapshot(hwnd))
+            .transpose()
+            .unwrap_or_else(|error| {
+                Some(WindowColorOutput {
+                    fallback_reason: Some(format!("{error:#}").into()),
+                    ..Default::default()
+                })
+            })
+            .unwrap_or_default();
+        let renderer = DirectXRenderer::new(
+            hwnd,
+            directx_devices,
+            disable_direct_composition,
+            color_policy,
+            output,
+        )
+        .context("Creating DirectX renderer")?;
         let callbacks = Callbacks::default();
         let input_handler = None;
         let pending_surrogate = None;
@@ -178,6 +204,11 @@ impl WindowsWindowState {
             hovered: Cell::new(hovered),
             last_visibility: Cell::new(None),
             renderer: RefCell::new(renderer),
+            color_policy,
+            // WM_NCCREATE may be too early for GetForWindow; the first frame
+            // retries after the HWND has completed creation and placement.
+            color_dirty: Cell::new(color_policy == WindowColorPolicy::AutomaticHdr),
+            color_watcher: RefCell::new(watcher),
             force_render_pending: Cell::new(false),
             click_state,
             current_cursor: Cell::new(current_cursor),
@@ -254,6 +285,15 @@ impl WindowsWindowState {
 }
 
 impl WindowsWindowInner {
+    pub(crate) fn mark_color_dirty(&self) {
+        if self.state.color_policy == WindowColorPolicy::AutomaticHdr {
+            self.state.color_dirty.set(true);
+            self.state.force_render_pending.set(true);
+            unsafe {
+                InvalidateRect(Some(self.hwnd), None, false).ok().log_err();
+            }
+        }
+    }
     /// Whether the window is being presented: shown and not minimized. Windows
     /// has no notification for a window fully covered by other windows, so
     /// that case reports `Visible`.
@@ -278,6 +318,7 @@ impl WindowsWindowInner {
             context.min_size,
             context.appearance,
             context.disable_direct_composition,
+            context.color_policy,
             context.invalidate_devices.clone(),
             context.draw_coordinator.clone(),
         )?;
@@ -411,6 +452,7 @@ pub(crate) struct Callbacks {
 }
 
 struct WindowCreateContext {
+    color_policy: WindowColorPolicy,
     inner: Option<Result<Rc<WindowsWindowInner>>>,
     handle: AnyWindowHandle,
     hide_title_bar: bool,
@@ -524,6 +566,7 @@ impl WindowsWindow {
         .context("failed to find any monitor")?;
         let appearance = system_appearance().unwrap_or_default();
         let mut context = WindowCreateContext {
+            color_policy: params.color_policy,
             inner: None,
             handle,
             hide_title_bar,
@@ -610,6 +653,7 @@ impl rwh::HasDisplayHandle for WindowsWindow {
 
 impl Drop for WindowsWindow {
     fn drop(&mut self) {
+        self.0.state.color_watcher.borrow_mut().take();
         self.0.dialog_owner.close();
         unsafe { ShowWindowAsync(self.0.hwnd, SW_HIDE).ok().log_err() };
         // `DestroyWindow` below sends `WM_SHOWWINDOW`; without a callback the
@@ -632,6 +676,49 @@ impl Drop for WindowsWindow {
 }
 
 impl PlatformWindow for WindowsWindow {
+    fn color_output(&self) -> WindowColorOutput {
+        self.state.renderer.borrow().color_output()
+    }
+
+    fn prepare_frame(&self) -> bool {
+        if self.state.color_policy == WindowColorPolicy::Sdr || !self.state.color_dirty.take() {
+            return false;
+        }
+        // Retry activation after an initial unavailable API/display. Existing
+        // subscriptions remain attached to this HWND and follow monitor moves.
+        if self.state.color_watcher.borrow().is_none() {
+            *self.state.color_watcher.borrow_mut() =
+                crate::color_output::DisplayWatcher::new(self.hwnd).log_err();
+        }
+        let snapshot = self
+            .state
+            .color_watcher
+            .borrow()
+            .as_ref()
+            .map(|w| w.snapshot(self.hwnd))
+            .transpose();
+        let snapshot = match snapshot {
+            Ok(Some(value)) => value,
+            Ok(None) => WindowColorOutput {
+                fallback_reason: Some("Windows Advanced Color API is unavailable".into()),
+                ..Default::default()
+            },
+            Err(error) => WindowColorOutput {
+                fallback_reason: Some(format!("{error:#}").into()),
+                ..Default::default()
+            },
+        };
+        match self.state.renderer.borrow_mut().refresh_output(snapshot) {
+            Ok(changed) => changed,
+            Err(error) => {
+                log::error!("Refreshing color output: {error:#}");
+                self.state
+                    .invalidate_devices
+                    .store(true, std::sync::atomic::Ordering::SeqCst);
+                true
+            }
+        }
+    }
     fn bounds(&self) -> Bounds<Pixels> {
         self.state.bounds()
     }
@@ -1047,6 +1134,14 @@ impl PlatformWindow for WindowsWindow {
             .renderer
             .borrow_mut()
             .render_to_image(scene, self.state.background_appearance.get())
+    }
+
+    #[cfg(any(test, feature = "test-support"))]
+    fn render_to_native_image(&self, scene: &Scene) -> anyhow::Result<RenderTargetReadback> {
+        self.state
+            .renderer
+            .borrow_mut()
+            .render_to_native_image(scene, self.state.background_appearance.get())
     }
 
     fn sprite_atlas(&self) -> Arc<dyn PlatformAtlas> {

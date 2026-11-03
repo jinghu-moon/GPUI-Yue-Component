@@ -25,7 +25,6 @@ fn viewport() -> Viewport {
         size: [600., 400.],
         scale: 1.5,
         inset: 12.,
-        bottom: 44.,
     }
 }
 fn close(a: f32, b: f32) {

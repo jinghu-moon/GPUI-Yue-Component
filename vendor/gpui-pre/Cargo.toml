@@ -373,6 +373,11 @@ features = [
 ]
 default-features = false
 
+[dependencies.half]
+version = "2.7.1"
+default-features = false
+features = ["std"]
+
 [dependencies.inventory]
 version = "0.3.19"
 

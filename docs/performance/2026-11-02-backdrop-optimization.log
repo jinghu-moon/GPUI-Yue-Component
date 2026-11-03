@@ -1,0 +1,205 @@
+# 2026-11-02 | First retained optimization | RTX 4070 Ti SUPER | Release | 3840x2160
+# Command: pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
+# optimized/reference: same-device alternating AB/BA, 32 warm-up pairs, 128 valid frames per variant.
+# Reference: original full intermediate passes and original UV-based Gaussian shader.
+# Production only crops work >= 16384 texels; two work-texel reconstruction guard.
+# Background restoration and query waiting excluded. CPU and GPU are asynchronous intervals, in microseconds.
+# No HWND, swapchain, Present, layout, image decode, or user UI.
+
+# Run 1
+PROFILE_ADAPTER name="NVIDIA GeForce RTX 4070 Ti SUPER",vendor=0x10de,device=0x2689,feature=D3D_FEATURE_LEVEL(45056),viewport=3840x2160,release=true
+PROFILE_ROW toolbar_100,cold,n=1,cpu_p50_us=275.200,cpu_p95_us=275.200,gpu_p50_us=529.408,gpu_p95_us=529.408,pipeline_create_us=270.500,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[227.700, 25.200, 13.500, 1.000, 0.700, 1.200]
+PROFILE_GPU toolbar_100,cold,copy/downsample/horizontal/vertical/composite_us=[3.072, 519.168, 3.072, 2.048, 2.048]
+PROFILE_ROW toolbar_100,steady,n=128,cpu_p50_us=17.300,cpu_p95_us=22.200,gpu_p50_us=12.064,gpu_p95_us=12.512,pipeline_create_us=270.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.506, 1.355, 5.707, 5.653, 3.344, 0.698]
+PROFILE_GPU toolbar_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.767, 3.472, 2.736, 2.968, 1.128]
+PROFILE_ROW toolbar_100,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=16.900,gpu_p50_us=11.456,gpu_p95_us=11.872,pipeline_create_us=270.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,optimized,n=128,cpu_p50_us=1.400,cpu_p95_us=18.000,gpu_p50_us=11.392,gpu_p95_us=11.904,pipeline_create_us=270.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,reference,n=128,cpu_p50_us=1.400,cpu_p95_us=19.300,gpu_p50_us=11.360,gpu_p95_us=11.872,pipeline_create_us=270.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,cold,n=1,cpu_p50_us=131.800,cpu_p95_us=131.800,gpu_p50_us=245.760,gpu_p95_us=245.760,pipeline_create_us=360.300,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[119.000, 4.400, 5.000, 0.900, 0.600, 0.900]
+PROFILE_GPU toolbar_200,cold,copy/downsample/horizontal/vertical/composite_us=[3.072, 235.520, 2.048, 3.072, 2.048]
+PROFILE_ROW toolbar_200,steady,n=128,cpu_p50_us=16.800,cpu_p95_us=22.800,gpu_p50_us=13.344,gpu_p95_us=13.952,pipeline_create_us=360.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.255, 0.911, 4.375, 0.834, 1.934, 3.680]
+PROFILE_GPU toolbar_200,steady,copy/downsample/horizontal/vertical/composite_us=[2.460, 3.853, 2.648, 2.944, 1.416]
+PROFILE_ROW toolbar_200,envelope,n=128,cpu_p50_us=1.400,cpu_p95_us=20.000,gpu_p50_us=12.672,gpu_p95_us=13.280,pipeline_create_us=360.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,optimized,n=128,cpu_p50_us=1.300,cpu_p95_us=17.300,gpu_p50_us=12.672,gpu_p95_us=13.184,pipeline_create_us=360.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,reference,n=128,cpu_p50_us=1.300,cpu_p95_us=17.500,gpu_p50_us=12.640,gpu_p95_us=13.184,pipeline_create_us=360.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW grip_100,cold,n=1,cpu_p50_us=361.200,cpu_p95_us=361.200,gpu_p50_us=243.712,gpu_p95_us=243.712,pipeline_create_us=288.900,allocations=3,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[182.900, 81.000, 11.500, 1.100, 0.900, 82.700]
+PROFILE_GPU grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[2.048, 234.496, 3.072, 3.072, 1.024]
+PROFILE_ROW grip_100,steady,n=128,cpu_p50_us=1.900,cpu_p95_us=10.500,gpu_p50_us=11.488,gpu_p95_us=12.032,pipeline_create_us=288.900,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.403, 0.798, 2.016, 0.242, 0.197, 0.208]
+PROFILE_GPU grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.609, 3.454, 2.552, 2.840, 1.048]
+PROFILE_ROW grip_100,envelope,n=128,cpu_p50_us=1.200,cpu_p95_us=3.700,gpu_p50_us=10.816,gpu_p95_us=11.296,pipeline_create_us=288.900,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,optimized,n=128,cpu_p50_us=1.400,cpu_p95_us=18.000,gpu_p50_us=10.880,gpu_p95_us=11.264,pipeline_create_us=288.900,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,reference,n=128,cpu_p50_us=1.400,cpu_p95_us=19.200,gpu_p50_us=10.784,gpu_p95_us=11.296,pipeline_create_us=288.900,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW toolbar_grip_100,cold,n=1,cpu_p50_us=153.800,cpu_p95_us=153.800,gpu_p50_us=257.024,gpu_p95_us=257.024,pipeline_create_us=231.400,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[113.800, 4.800, 6.200, 1.600, 1.000, 25.100]
+PROFILE_GPU toolbar_grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[6.144, 237.568, 5.120, 6.144, 2.048]
+PROFILE_ROW toolbar_grip_100,steady,n=128,cpu_p50_us=19.800,cpu_p95_us=24.600,gpu_p50_us=23.872,gpu_p95_us=24.480,pipeline_create_us=231.400,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.803, 11.656, 1.394, 0.522, 1.729, 0.475]
+PROFILE_GPU toolbar_grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[4.217, 6.379, 5.352, 5.728, 2.240]
+PROFILE_ROW toolbar_grip_100,envelope,n=128,cpu_p50_us=16.700,cpu_p95_us=18.000,gpu_p50_us=23.136,gpu_p95_us=23.648,pipeline_create_us=231.400,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,optimized,n=128,cpu_p50_us=16.700,cpu_p95_us=18.900,gpu_p50_us=23.264,gpu_p95_us=23.808,pipeline_create_us=231.400,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,reference,n=128,cpu_p50_us=16.500,cpu_p95_us=20.000,gpu_p50_us=23.200,gpu_p95_us=23.744,pipeline_create_us=231.400,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,cold,n=1,cpu_p50_us=156.000,cpu_p95_us=156.000,gpu_p50_us=259.072,gpu_p95_us=259.072,pipeline_create_us=238.800,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[114.900, 4.600, 6.500, 1.800, 1.200, 25.800]
+PROFILE_GPU toolbar_grip_200,cold,copy/downsample/horizontal/vertical/composite_us=[7.168, 238.592, 5.120, 6.144, 2.048]
+PROFILE_ROW toolbar_grip_200,steady,n=128,cpu_p50_us=7.600,cpu_p95_us=24.700,gpu_p50_us=25.664,gpu_p95_us=26.432,pipeline_create_us=238.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.466, 7.195, 1.359, 0.573, 1.909, 0.585]
+PROFILE_GPU toolbar_grip_200,steady,copy/downsample/horizontal/vertical/composite_us=[5.272, 6.832, 5.312, 5.816, 2.440]
+PROFILE_ROW toolbar_grip_200,envelope,n=128,cpu_p50_us=5.200,cpu_p95_us=20.300,gpu_p50_us=25.056,gpu_p95_us=25.632,pipeline_create_us=238.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,optimized,n=128,cpu_p50_us=3.300,cpu_p95_us=18.100,gpu_p50_us=25.024,gpu_p95_us=25.472,pipeline_create_us=238.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,reference,n=128,cpu_p50_us=3.500,cpu_p95_us=18.300,gpu_p50_us=24.960,gpu_p95_us=25.632,pipeline_create_us=238.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW large_panel,cold,n=1,cpu_p50_us=197.000,cpu_p95_us=197.000,gpu_p50_us=309.248,gpu_p95_us=309.248,pipeline_create_us=229.500,allocations=3,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[182.200, 4.200, 6.300, 1.300, 0.800, 1.100]
+PROFILE_GPU large_panel,cold,copy/downsample/horizontal/vertical/composite_us=[8.192, 270.336, 12.288, 10.240, 8.192]
+PROFILE_ROW large_panel,steady,n=128,cpu_p50_us=18.600,cpu_p95_us=23.000,gpu_p50_us=42.272,gpu_p95_us=43.104,pipeline_create_us=229.500,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.409, 10.496, 2.428, 1.595, 0.277, 0.244]
+PROFILE_GPU large_panel,steady,copy/downsample/horizontal/vertical/composite_us=[6.878, 6.431, 11.736, 11.088, 6.248]
+PROFILE_ROW large_panel,envelope,n=128,cpu_p50_us=16.000,cpu_p95_us=16.900,gpu_p50_us=41.664,gpu_p95_us=42.304,pipeline_create_us=229.500,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,optimized,n=128,cpu_p50_us=15.900,cpu_p95_us=17.200,gpu_p50_us=41.760,gpu_p95_us=42.208,pipeline_create_us=229.500,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,reference,n=128,cpu_p50_us=15.900,cpu_p95_us=17.300,gpu_p50_us=44.160,gpu_p95_us=44.672,pipeline_create_us=229.500,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=870912
+PROFILE_ROW sixteen_toolbars,cold,n=1,cpu_p50_us=420.000,cpu_p95_us=420.000,gpu_p50_us=438.272,gpu_p95_us=438.272,pipeline_create_us=257.600,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[121.600, 9.000, 88.400, 43.000, 12.700, 139.900]
+PROFILE_GPU sixteen_toolbars,cold,copy/downsample/horizontal/vertical/composite_us=[47.104, 280.576, 43.008, 48.128, 19.456]
+PROFILE_ROW sixteen_toolbars,steady,n=128,cpu_p50_us=19.700,cpu_p95_us=31.900,gpu_p50_us=203.136,gpu_p95_us=204.032,pipeline_create_us=257.600,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[1.847, 4.121, 4.062, 2.877, 3.008, 2.964]
+PROFILE_GPU sixteen_toolbars,steady,copy/downsample/horizontal/vertical/composite_us=[44.411, 48.144, 43.800, 48.232, 18.536]
+PROFILE_ROW sixteen_toolbars,envelope,n=128,cpu_p50_us=11.100,cpu_p95_us=26.300,gpu_p50_us=200.416,gpu_p95_us=201.536,pipeline_create_us=257.600,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,optimized,n=128,cpu_p50_us=13.600,cpu_p95_us=26.200,gpu_p50_us=200.544,gpu_p95_us=201.344,pipeline_create_us=257.600,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,reference,n=128,cpu_p50_us=12.800,cpu_p95_us=27.200,gpu_p50_us=200.544,gpu_p95_us=201.440,pipeline_create_us=257.600,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+
+# Run 2
+PROFILE_ADAPTER name="NVIDIA GeForce RTX 4070 Ti SUPER",vendor=0x10de,device=0x2689,feature=D3D_FEATURE_LEVEL(45056),viewport=3840x2160,release=true
+PROFILE_ROW toolbar_100,cold,n=1,cpu_p50_us=149.000,cpu_p95_us=149.000,gpu_p50_us=414.720,gpu_p95_us=414.720,pipeline_create_us=295.300,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[125.500, 6.100, 11.900, 1.300, 0.600, 0.900]
+PROFILE_GPU toolbar_100,cold,copy/downsample/horizontal/vertical/composite_us=[3.072, 404.480, 3.072, 3.072, 1.024]
+PROFILE_ROW toolbar_100,steady,n=128,cpu_p50_us=17.200,cpu_p95_us=24.900,gpu_p50_us=11.616,gpu_p95_us=12.160,pipeline_create_us=295.300,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.645, 1.808, 6.736, 4.174, 2.316, 0.444]
+PROFILE_GPU toolbar_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.706, 3.388, 2.584, 2.808, 1.144]
+PROFILE_ROW toolbar_100,envelope,n=128,cpu_p50_us=1.400,cpu_p95_us=17.700,gpu_p50_us=11.008,gpu_p95_us=11.392,pipeline_create_us=295.300,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,optimized,n=128,cpu_p50_us=1.400,cpu_p95_us=19.200,gpu_p50_us=11.008,gpu_p95_us=11.456,pipeline_create_us=295.300,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,reference,n=128,cpu_p50_us=1.400,cpu_p95_us=17.800,gpu_p50_us=10.912,gpu_p95_us=11.552,pipeline_create_us=295.300,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,cold,n=1,cpu_p50_us=128.100,cpu_p95_us=128.100,gpu_p50_us=235.520,gpu_p95_us=235.520,pipeline_create_us=254.800,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[113.300, 5.300, 5.200, 1.200, 0.700, 1.100]
+PROFILE_GPU toolbar_200,cold,copy/downsample/horizontal/vertical/composite_us=[3.072, 226.304, 2.048, 3.072, 1.024]
+PROFILE_ROW toolbar_200,steady,n=128,cpu_p50_us=16.900,cpu_p95_us=21.100,gpu_p50_us=12.768,gpu_p95_us=13.312,pipeline_create_us=254.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.494, 0.766, 3.779, 2.804, 4.863, 1.243]
+PROFILE_GPU toolbar_200,steady,copy/downsample/horizontal/vertical/composite_us=[2.364, 3.635, 2.656, 2.776, 1.352]
+PROFILE_ROW toolbar_200,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=17.000,gpu_p50_us=12.160,gpu_p95_us=12.640,pipeline_create_us=254.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,optimized,n=128,cpu_p50_us=1.300,cpu_p95_us=17.300,gpu_p50_us=12.160,gpu_p95_us=12.736,pipeline_create_us=254.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,reference,n=128,cpu_p50_us=1.400,cpu_p95_us=19.100,gpu_p50_us=12.160,gpu_p95_us=12.672,pipeline_create_us=254.800,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW grip_100,cold,n=1,cpu_p50_us=142.100,cpu_p95_us=142.100,gpu_p50_us=234.496,gpu_p95_us=234.496,pipeline_create_us=248.400,allocations=3,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[127.800, 4.300, 6.100, 1.200, 0.700, 1.000]
+PROFILE_GPU grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[3.072, 225.280, 2.048, 3.072, 1.024]
+PROFILE_ROW grip_100,steady,n=128,cpu_p50_us=16.700,cpu_p95_us=21.400,gpu_p50_us=11.040,gpu_p95_us=11.520,pipeline_create_us=248.400,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.245, 0.766, 2.090, 4.154, 4.056, 0.337]
+PROFILE_GPU grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.561, 3.253, 2.504, 2.768, 0.968]
+PROFILE_ROW grip_100,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=3.700,gpu_p50_us=10.496,gpu_p95_us=10.848,pipeline_create_us=248.400,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,optimized,n=128,cpu_p50_us=1.300,cpu_p95_us=18.000,gpu_p50_us=10.368,gpu_p95_us=10.880,pipeline_create_us=248.400,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,reference,n=128,cpu_p50_us=1.300,cpu_p95_us=17.000,gpu_p50_us=10.400,gpu_p95_us=10.944,pipeline_create_us=248.400,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW toolbar_grip_100,cold,n=1,cpu_p50_us=158.000,cpu_p95_us=158.000,gpu_p50_us=247.808,gpu_p95_us=247.808,pipeline_create_us=254.900,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[115.900, 4.900, 7.100, 1.800, 1.200, 25.900]
+PROFILE_GPU toolbar_grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[5.120, 230.400, 4.096, 6.144, 2.048]
+PROFILE_ROW toolbar_grip_100,steady,n=128,cpu_p50_us=5.400,cpu_p95_us=22.400,gpu_p50_us=23.104,gpu_p95_us=23.616,pipeline_create_us=254.900,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.503, 6.758, 2.149, 0.445, 0.388, 0.420]
+PROFILE_GPU toolbar_grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[4.038, 6.144, 5.080, 5.712, 2.128]
+PROFILE_ROW toolbar_grip_100,envelope,n=128,cpu_p50_us=2.000,cpu_p95_us=19.700,gpu_p50_us=22.304,gpu_p95_us=22.976,pipeline_create_us=254.900,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,optimized,n=128,cpu_p50_us=2.900,cpu_p95_us=19.700,gpu_p50_us=22.368,gpu_p95_us=23.008,pipeline_create_us=254.900,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,reference,n=128,cpu_p50_us=2.900,cpu_p95_us=19.700,gpu_p50_us=22.336,gpu_p95_us=22.816,pipeline_create_us=254.900,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,cold,n=1,cpu_p50_us=153.600,cpu_p95_us=153.600,gpu_p50_us=249.856,gpu_p95_us=249.856,pipeline_create_us=236.300,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[113.600, 3.600, 6.400, 2.000, 1.400, 25.300]
+PROFILE_GPU toolbar_grip_200,cold,copy/downsample/horizontal/vertical/composite_us=[6.144, 230.400, 5.120, 6.144, 2.048]
+PROFILE_ROW toolbar_grip_200,steady,n=128,cpu_p50_us=6.500,cpu_p95_us=20.800,gpu_p50_us=24.576,gpu_p95_us=25.184,pipeline_create_us=236.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.374, 1.967, 8.108, 0.437, 0.345, 0.497]
+PROFILE_GPU toolbar_grip_200,steady,copy/downsample/horizontal/vertical/composite_us=[4.929, 6.633, 5.160, 5.456, 2.448]
+PROFILE_ROW toolbar_grip_200,envelope,n=128,cpu_p50_us=1.900,cpu_p95_us=17.300,gpu_p50_us=24.032,gpu_p95_us=24.480,pipeline_create_us=236.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,optimized,n=128,cpu_p50_us=6.500,cpu_p95_us=18.800,gpu_p50_us=24.096,gpu_p95_us=24.672,pipeline_create_us=236.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,reference,n=128,cpu_p50_us=6.600,cpu_p95_us=18.300,gpu_p50_us=24.000,gpu_p95_us=24.576,pipeline_create_us=236.300,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW large_panel,cold,n=1,cpu_p50_us=187.900,cpu_p95_us=187.900,gpu_p50_us=309.248,gpu_p95_us=309.248,pipeline_create_us=235.000,allocations=3,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[173.300, 4.000, 6.200, 1.300, 0.900, 1.200]
+PROFILE_GPU large_panel,cold,copy/downsample/horizontal/vertical/composite_us=[8.192, 269.312, 12.288, 11.264, 8.192]
+PROFILE_ROW large_panel,steady,n=128,cpu_p50_us=18.900,cpu_p95_us=24.600,gpu_p50_us=42.336,gpu_p95_us=42.976,pipeline_create_us=235.000,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.404, 15.127, 2.477, 0.480, 0.251, 0.246]
+PROFILE_GPU large_panel,steady,copy/downsample/horizontal/vertical/composite_us=[6.879, 6.475, 11.648, 11.152, 6.248]
+PROFILE_ROW large_panel,envelope,n=128,cpu_p50_us=1.700,cpu_p95_us=17.300,gpu_p50_us=41.632,gpu_p95_us=42.304,pipeline_create_us=235.000,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,optimized,n=128,cpu_p50_us=16.000,cpu_p95_us=17.800,gpu_p50_us=41.696,gpu_p95_us=42.304,pipeline_create_us=235.000,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,reference,n=128,cpu_p50_us=15.900,cpu_p95_us=16.700,gpu_p50_us=44.256,gpu_p95_us=44.800,pipeline_create_us=235.000,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=870912
+PROFILE_ROW sixteen_toolbars,cold,n=1,cpu_p50_us=1169.800,cpu_p95_us=1169.800,gpu_p50_us=438.272,gpu_p95_us=438.272,pipeline_create_us=240.000,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[134.500, 10.100, 24.700, 10.200, 43.900, 938.900]
+PROFILE_GPU sixteen_toolbars,cold,copy/downsample/horizontal/vertical/composite_us=[45.056, 280.576, 45.056, 48.128, 19.456]
+PROFILE_ROW sixteen_toolbars,steady,n=128,cpu_p50_us=19.200,cpu_p95_us=26.800,gpu_p50_us=203.072,gpu_p95_us=203.808,pipeline_create_us=240.000,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[1.823, 4.184, 3.923, 2.802, 3.118, 2.714]
+PROFILE_GPU sixteen_toolbars,steady,copy/downsample/horizontal/vertical/composite_us=[44.275, 48.000, 43.824, 48.256, 18.648]
+PROFILE_ROW sixteen_toolbars,envelope,n=128,cpu_p50_us=20.800,cpu_p95_us=26.700,gpu_p50_us=200.544,gpu_p95_us=201.600,pipeline_create_us=240.000,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,optimized,n=128,cpu_p50_us=13.100,cpu_p95_us=27.500,gpu_p50_us=192.576,gpu_p95_us=193.888,pipeline_create_us=240.000,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,reference,n=128,cpu_p50_us=13.000,cpu_p95_us=25.700,gpu_p50_us=192.608,gpu_p95_us=193.344,pipeline_create_us=240.000,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+
+# Run 3
+PROFILE_ADAPTER name="NVIDIA GeForce RTX 4070 Ti SUPER",vendor=0x10de,device=0x2689,feature=D3D_FEATURE_LEVEL(45056),viewport=3840x2160,release=true
+PROFILE_ROW toolbar_100,cold,n=1,cpu_p50_us=168.900,cpu_p95_us=168.900,gpu_p50_us=235.520,gpu_p95_us=235.520,pipeline_create_us=356.500,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[141.800, 6.700, 13.700, 1.100, 0.600, 0.800]
+PROFILE_GPU toolbar_100,cold,copy/downsample/horizontal/vertical/composite_us=[4.096, 225.280, 2.048, 3.072, 1.024]
+PROFILE_ROW toolbar_100,steady,n=128,cpu_p50_us=17.300,cpu_p95_us=24.100,gpu_p50_us=11.648,gpu_p95_us=12.256,pipeline_create_us=356.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_CPU toolbar_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.381, 2.109, 6.880, 4.320, 3.101, 0.935]
+PROFILE_GPU toolbar_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.723, 3.433, 2.592, 2.800, 1.112]
+PROFILE_ROW toolbar_100,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=17.300,gpu_p50_us=11.008,gpu_p95_us=11.424,pipeline_create_us=356.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,optimized,n=128,cpu_p50_us=1.300,cpu_p95_us=18.600,gpu_p50_us=10.880,gpu_p95_us=11.488,pipeline_create_us=356.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_100,reference,n=128,cpu_p50_us=1.300,cpu_p95_us=18.300,gpu_p50_us=10.944,gpu_p95_us=11.456,pipeline_create_us=356.500,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=45696,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,cold,n=1,cpu_p50_us=134.900,cpu_p95_us=134.900,gpu_p50_us=510.976,gpu_p95_us=510.976,pipeline_create_us=263.500,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[121.700, 3.900, 5.900, 1.000, 0.600, 0.800]
+PROFILE_GPU toolbar_200,cold,copy/downsample/horizontal/vertical/composite_us=[4.096, 500.736, 2.048, 3.072, 1.024]
+PROFILE_ROW toolbar_200,steady,n=128,cpu_p50_us=17.000,cpu_p95_us=22.900,gpu_p50_us=12.800,gpu_p95_us=13.440,pipeline_create_us=263.500,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_CPU toolbar_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.406, 1.152, 2.662, 5.725, 3.390, 0.378]
+PROFILE_GPU toolbar_200,steady,copy/downsample/horizontal/vertical/composite_us=[2.365, 3.671, 2.616, 2.824, 1.360]
+PROFILE_ROW toolbar_200,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=6.700,gpu_p50_us=12.224,gpu_p95_us=12.672,pipeline_create_us=263.500,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,optimized,n=128,cpu_p50_us=1.400,cpu_p95_us=17.600,gpu_p50_us=12.128,gpu_p95_us=12.608,pipeline_create_us=263.500,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW toolbar_200,reference,n=128,cpu_p50_us=1.500,cpu_p95_us=20.400,gpu_p50_us=12.160,gpu_p95_us=12.672,pipeline_create_us=263.500,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=182784,work_px_per_frame=34272
+PROFILE_ROW grip_100,cold,n=1,cpu_p50_us=134.400,cpu_p95_us=134.400,gpu_p50_us=233.472,gpu_p95_us=233.472,pipeline_create_us=210.100,allocations=3,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[118.700, 5.600, 6.200, 1.200, 0.700, 1.000]
+PROFILE_GPU grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[2.048, 225.280, 3.072, 2.048, 1.024]
+PROFILE_ROW grip_100,steady,n=128,cpu_p50_us=1.900,cpu_p95_us=17.300,gpu_p50_us=11.104,gpu_p95_us=11.648,pipeline_create_us=210.100,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_CPU grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.241, 0.448, 2.618, 0.455, 0.880, 0.449]
+PROFILE_GPU grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[1.560, 3.316, 2.456, 2.776, 1.000]
+PROFILE_ROW grip_100,envelope,n=128,cpu_p50_us=1.300,cpu_p95_us=14.500,gpu_p50_us=10.464,gpu_p95_us=10.912,pipeline_create_us=210.100,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,optimized,n=128,cpu_p50_us=1.300,cpu_p95_us=17.100,gpu_p50_us=10.368,gpu_p95_us=10.848,pipeline_create_us=210.100,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW grip_100,reference,n=128,cpu_p50_us=1.300,cpu_p95_us=17.100,gpu_p50_us=10.432,gpu_p95_us=10.880,pipeline_create_us=210.100,allocations=0,peak_scratch_bytes=131072,copied_px_per_frame=16384,work_px_per_frame=12288
+PROFILE_ROW toolbar_grip_100,cold,n=1,cpu_p50_us=166.500,cpu_p95_us=166.500,gpu_p50_us=247.808,gpu_p95_us=247.808,pipeline_create_us=235.700,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[123.000, 5.300, 8.000, 1.800, 1.100, 25.600]
+PROFILE_GPU toolbar_grip_100,cold,copy/downsample/horizontal/vertical/composite_us=[7.168, 228.352, 5.120, 5.120, 2.048]
+PROFILE_ROW toolbar_grip_100,steady,n=128,cpu_p50_us=8.700,cpu_p95_us=21.500,gpu_p50_us=23.040,gpu_p95_us=23.552,pipeline_create_us=235.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_100,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.505, 8.841, 1.120, 0.572, 1.353, 0.520]
+PROFILE_GPU toolbar_grip_100,steady,copy/downsample/horizontal/vertical/composite_us=[4.151, 6.083, 5.096, 5.600, 2.128]
+PROFILE_ROW toolbar_grip_100,envelope,n=128,cpu_p50_us=1.900,cpu_p95_us=18.400,gpu_p50_us=22.336,gpu_p95_us=22.912,pipeline_create_us=235.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,optimized,n=128,cpu_p50_us=3.800,cpu_p95_us=19.200,gpu_p50_us=22.368,gpu_p95_us=22.880,pipeline_create_us=235.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_100,reference,n=128,cpu_p50_us=4.900,cpu_p95_us=20.000,gpu_p50_us=22.272,gpu_p95_us=22.848,pipeline_create_us=235.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=62080,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,cold,n=1,cpu_p50_us=186.600,cpu_p95_us=186.600,gpu_p50_us=249.856,gpu_p95_us=249.856,pipeline_create_us=237.700,allocations=3,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[132.700, 4.400, 7.300, 1.800, 11.900, 27.100]
+PROFILE_GPU toolbar_grip_200,cold,copy/downsample/horizontal/vertical/composite_us=[6.144, 229.376, 5.120, 6.144, 3.072]
+PROFILE_ROW toolbar_grip_200,steady,n=128,cpu_p50_us=5.300,cpu_p95_us=22.000,gpu_p50_us=24.704,gpu_p95_us=25.280,pipeline_create_us=237.700,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_CPU toolbar_grip_200,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.395, 6.347, 1.083, 1.585, 0.371, 0.505]
+PROFILE_GPU toolbar_grip_200,steady,copy/downsample/horizontal/vertical/composite_us=[5.037, 6.585, 5.088, 5.648, 2.368]
+PROFILE_ROW toolbar_grip_200,envelope,n=128,cpu_p50_us=2.700,cpu_p95_us=16.800,gpu_p50_us=24.000,gpu_p95_us=24.544,pipeline_create_us=237.700,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,optimized,n=128,cpu_p50_us=8.800,cpu_p95_us=20.200,gpu_p50_us=24.032,gpu_p95_us=24.608,pipeline_create_us=237.700,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW toolbar_grip_200,reference,n=128,cpu_p50_us=4.000,cpu_p95_us=18.500,gpu_p50_us=24.032,gpu_p95_us=24.480,pipeline_create_us=237.700,allocations=0,peak_scratch_bytes=1294336,copied_px_per_frame=248320,work_px_per_frame=46560
+PROFILE_ROW large_panel,cold,n=1,cpu_p50_us=185.100,cpu_p95_us=185.100,gpu_p50_us=308.224,gpu_p95_us=308.224,pipeline_create_us=246.300,allocations=3,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[169.900, 4.700, 6.600, 1.100, 0.700, 1.100]
+PROFILE_GPU large_panel,cold,copy/downsample/horizontal/vertical/composite_us=[7.168, 269.312, 12.288, 11.264, 8.192]
+PROFILE_ROW large_panel,steady,n=128,cpu_p50_us=3.700,cpu_p95_us=22.900,gpu_p50_us=42.560,gpu_p95_us=43.072,pipeline_create_us=246.300,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_CPU large_panel,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[0.358, 4.629, 0.752, 0.233, 1.782, 0.280]
+PROFILE_GPU large_panel,steady,copy/downsample/horizontal/vertical/composite_us=[6.900, 6.402, 11.800, 11.168, 6.256]
+PROFILE_ROW large_panel,envelope,n=128,cpu_p50_us=1.400,cpu_p95_us=16.700,gpu_p50_us=41.792,gpu_p95_us=42.304,pipeline_create_us=246.300,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,optimized,n=128,cpu_p50_us=16.100,cpu_p95_us=17.200,gpu_p50_us=41.728,gpu_p95_us=42.240,pipeline_create_us=246.300,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=804912
+PROFILE_ROW large_panel,reference,n=128,cpu_p50_us=16.000,cpu_p95_us=16.800,gpu_p50_us=44.224,gpu_p95_us=44.768,pipeline_create_us=246.300,allocations=0,peak_scratch_bytes=9863168,copied_px_per_frame=1161216,work_px_per_frame=870912
+PROFILE_ROW sixteen_toolbars,cold,n=1,cpu_p50_us=1006.100,cpu_p95_us=1006.100,gpu_p50_us=438.272,gpu_p95_us=438.272,pipeline_create_us=247.700,allocations=3,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,cold,prepare/copy/downsample/horizontal/vertical/composite_us=[114.700, 9.800, 61.400, 12.000, 10.700, 791.100]
+PROFILE_GPU sixteen_toolbars,cold,copy/downsample/horizontal/vertical/composite_us=[45.056, 283.648, 41.984, 48.128, 19.456]
+PROFILE_ROW sixteen_toolbars,steady,n=128,cpu_p50_us=19.600,cpu_p95_us=28.200,gpu_p50_us=203.072,gpu_p95_us=204.160,pipeline_create_us=247.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_CPU sixteen_toolbars,steady,prepare/copy/downsample/horizontal/vertical/composite_us=[1.796, 4.244, 4.843, 2.637, 2.483, 2.591]
+PROFILE_GPU sixteen_toolbars,steady,copy/downsample/horizontal/vertical/composite_us=[44.512, 48.049, 43.648, 48.328, 18.584]
+PROFILE_ROW sixteen_toolbars,envelope,n=128,cpu_p50_us=24.300,cpu_p95_us=26.400,gpu_p50_us=200.544,gpu_p95_us=201.664,pipeline_create_us=247.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,optimized,n=128,cpu_p50_us=24.400,cpu_p95_us=26.200,gpu_p50_us=192.864,gpu_p95_us=200.672,pipeline_create_us=247.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352
+PROFILE_ROW sixteen_toolbars,reference,n=128,cpu_p50_us=24.300,cpu_p95_us=27.400,gpu_p50_us=192.768,gpu_p95_us=200.832,pipeline_create_us=247.700,allocations=0,peak_scratch_bytes=688128,copied_px_per_frame=731136,work_px_per_frame=548352

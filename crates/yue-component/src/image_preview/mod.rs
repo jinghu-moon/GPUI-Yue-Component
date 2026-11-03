@@ -1,6 +1,22 @@
 //! Embedded static image viewing and aligned before/after comparison.
-//! Hosts retain State and supply decoded, versioned resources. No window,
-//! encoder, file service or renderer patch is owned by this component.
+//! Hosts retain State and supply versioned resources. CPU helpers prepare raw
+//! pixels or static encoded bytes on a host worker. No window, encoder, file
+//! service, background task or image cache is owned by this component.
+//!
+//! ```
+//! use yue_component::{ImagePreviewImage, ImagePreviewLimits, ImagePreviewPixels};
+//! // Owned pixels move; borrowed pixels copy only when a full-size resource is
+//! // needed. Decode/resize belongs on the host's background executor.
+//! let preview = ImagePreviewImage::from_rgba8(1, 1, vec![255, 0, 0, 127], "红色")?;
+//! assert_eq!(preview.image().as_bytes(0), Some([0, 0, 255, 127].as_slice()));
+//! let source = vec![255; 16 * 16 * 4];
+//! let proxy = ImagePreviewPixels::from_bgra8(16, 16, source.as_slice())?
+//!     .into_preview(&ImagePreviewLimits::default().texture_budget(8, 256), "代理预览")?;
+//! assert_eq!(proxy.pixel_size(), [16, 16]);
+//! assert_eq!(proxy.texture_size(), [8, 8]);
+//! assert!(proxy.is_proxy());
+//! # Ok::<(), yue_component::ImagePreviewError>(())
+//! ```
 //!
 //! ```no_run
 //! use std::sync::Arc;
@@ -20,12 +36,17 @@
 //!     Ok(state)
 //! }
 //! ```
+mod color;
 mod element;
 mod geometry;
 mod model;
 mod paint;
+mod resource;
 mod state;
 pub use model::*;
+pub use resource::{
+    ImagePreviewColorSpace, ImagePreviewImage, ImagePreviewLimits, ImagePreviewPixels,
+};
 pub use state::YueImagePreviewState;
 
 use gpui_kit::{AnyElement, App, Entity, IntoElement, RenderOnce, SharedString, Window};
@@ -33,6 +54,7 @@ use std::rc::Rc;
 
 type FooterRenderer = Box<dyn FnOnce(&mut Window, &mut App) -> AnyElement>;
 type OverlayRenderer = Rc<dyn Fn(ImagePreviewOverlay, &mut Window, &mut App)>;
+type ExpandHandler = Rc<dyn Fn(&ImagePreviewView, &mut Window, &mut App)>;
 
 /// Read-only, logical-window geometry for non-interactive paint overlays.
 /// Draw only within this viewport; image positions are normalized to the frame.
@@ -70,6 +92,7 @@ pub struct YueImagePreview {
     result_label: SharedString,
     footer: Option<FooterRenderer>,
     overlay: Option<OverlayRenderer>,
+    on_expand: Option<ExpandHandler>,
 }
 impl YueImagePreview {
     pub fn new(state: &Entity<YueImagePreviewState>) -> Self {
@@ -85,6 +108,7 @@ impl YueImagePreview {
             result_label: "处理后".into(),
             footer: None,
             overlay: None,
+            on_expand: None,
         }
     }
     pub fn theme(mut self, theme: crate::YueTheme) -> Self {
@@ -107,10 +131,21 @@ impl YueImagePreview {
         self.background_picker = value;
         self
     }
+    /// Show a larger-preview command. The host opens its own Dialog/window and
+    /// restores the supplied view into a separately retained preview State.
+    pub fn on_expand(
+        mut self,
+        handler: impl Fn(&ImagePreviewView, &mut Window, &mut App) + 'static,
+    ) -> Self {
+        self.on_expand = Some(Rc::new(handler));
+        self
+    }
+    /// Floating overlays the full viewport; Footer allocates a separate row.
     pub fn toolbar(mut self, position: ImagePreviewToolbar) -> Self {
         self.toolbar = position;
         self
     }
+    /// Floating toolbar visibility does not change image fitting or the camera.
     pub fn show_toolbar(mut self, value: bool) -> Self {
         self.toolbar_visible = value;
         self
@@ -150,6 +185,7 @@ pub(crate) fn init(cx: &mut App) {
         KeyBinding::new("-", ZoomOut, Some("YueImagePreview")),
         KeyBinding::new("0", FitAll, Some("YueImagePreview")),
         KeyBinding::new("1", ActualSize, Some("YueImagePreview")),
+        KeyBinding::new("w", FitWidth, Some("YueImagePreview")),
         KeyBinding::new("left", PanLeft, Some("YueImagePreview")),
         KeyBinding::new("right", PanRight, Some("YueImagePreview")),
         KeyBinding::new("up", PanUp, Some("YueImagePreview")),
@@ -161,5 +197,7 @@ pub(crate) fn init(cx: &mut App) {
     ]);
 }
 
+#[cfg(test)]
+mod resource_tests;
 #[cfg(test)]
 mod tests;

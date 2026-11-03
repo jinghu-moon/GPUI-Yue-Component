@@ -12,12 +12,15 @@ const BUCKET: u32 = 64;
 // tint without disabling subsequent small filters or risking allocation churn.
 const MAX_SCRATCH_BYTES: u64 = 64 * 1024 * 1024;
 const KERNEL_CACHE: usize = 8;
+// Rasterizing thin partial quads did not improve the measured small surfaces.
+const CROP_MIN_WORK_PIXELS: u64 = 16 * 1024;
 
 #[derive(Clone, Copy, Debug)]
 struct Plan {
     output: [f32; 4],
     copy: [u32; 4],
     work: [u32; 2],
+    filtered: [u32; 4],
     sigma: [f32; 2],
 }
 
@@ -52,10 +55,26 @@ impl Plan {
             (blur.sigma.0 * work[0] as f32 / size[0] as f32).min(WORK_SIGMA),
             (blur.sigma.0 * work[1] as f32 / size[1] as f32).min(WORK_SIGMA),
         ];
+        // Include every reconstruction texel plus two guards (one for each
+        // intermediate/reconstruction interpolation). Source
+        // Gaussian halos and the physical/work sampling grids stay unchanged.
+        let scale = [
+            work[0] as f32 / size[0] as f32,
+            work[1] as f32 / size[1] as f32,
+        ];
+        let start = [
+            (((left - x as f32) * scale[0]).floor() as u32).saturating_sub(2),
+            (((top - y as f32) * scale[1]).floor() as u32).saturating_sub(2),
+        ];
+        let end = [
+            ((((right - x as f32) * scale[0]).ceil() as u32).saturating_add(2)).min(work[0]),
+            ((((bottom - y as f32) * scale[1]).ceil() as u32).saturating_add(2)).min(work[1]),
+        ];
         Some(Self {
             output: [left, top, right - left, bottom - top],
             copy: [x, y, size[0], size[1]],
             work,
+            filtered: [start[0], start[1], end[0] - start[0], end[1] - start[1]],
             sigma,
         })
     }
@@ -133,6 +152,7 @@ struct Texture {
     srv: Option<ID3D11ShaderResourceView>,
     rtv: Option<ID3D11RenderTargetView>,
     capacity: [u32; 2],
+    format: DXGI_FORMAT,
 }
 impl Texture {
     fn new(
@@ -176,6 +196,7 @@ impl Texture {
             srv,
             rtv,
             capacity,
+            format,
         })
     }
 }
@@ -184,6 +205,7 @@ struct Scratch {
     capture: Texture,
     horizontal: Texture,
     vertical: Texture,
+    initialized: bool,
 }
 
 /// No resources exist until a visible filter is encountered. The renderer owns
@@ -191,6 +213,7 @@ struct Scratch {
 pub(super) struct BackdropPipeline {
     vertex: ID3D11VertexShader,
     fragment: ID3D11PixelShader,
+    cropped_fragment: Option<ID3D11PixelShader>,
     constants: Option<ID3D11Buffer>,
     sampler: Option<ID3D11SamplerState>,
     scratch: Option<Scratch>,
@@ -198,6 +221,10 @@ pub(super) struct BackdropPipeline {
     next_kernel: usize,
     warned_budget: bool,
     profiler: Option<profile::Profiler>,
+    #[cfg(test)]
+    full_work_reference: bool,
+    #[cfg(test)]
+    force_crop: bool,
     pub(super) stats: Stats,
 }
 
@@ -210,6 +237,7 @@ pub(super) struct Stats {
     skipped_regions: u32,
     peak_scratch_bytes: u64,
     kernel_rebuilds: u32,
+    initialization_clears: u32,
 }
 
 fn capacity(required: [u32; 2], previous: [u32; 2]) -> [u32; 2] {
@@ -219,8 +247,9 @@ fn capacity(required: [u32; 2], previous: [u32; 2]) -> [u32; 2] {
     ]
 }
 
-fn scratch_bytes(capture: [u32; 2], work: [u32; 2]) -> u64 {
-    u64::from(capture[0]) * u64::from(capture[1]) * 4 + u64::from(work[0]) * u64::from(work[1]) * 16
+fn scratch_bytes(capture: [u32; 2], work: [u32; 2], capture_bpp: u64) -> u64 {
+    u64::from(capture[0]) * u64::from(capture[1]) * capture_bpp
+        + u64::from(work[0]) * u64::from(work[1]) * 16
 }
 
 impl BackdropPipeline {
@@ -267,6 +296,7 @@ impl BackdropPipeline {
         Ok(Self {
             vertex,
             fragment,
+            cropped_fragment: None,
             constants,
             sampler,
             scratch: None,
@@ -274,6 +304,10 @@ impl BackdropPipeline {
             next_kernel: 0,
             warned_budget: false,
             profiler: profile::Profiler::from_env(device),
+            #[cfg(test)]
+            full_work_reference: false,
+            #[cfg(test)]
+            force_crop: false,
             stats: Stats::default(),
         })
     }
@@ -289,18 +323,28 @@ impl BackdropPipeline {
         kernel
     }
 
-    fn ensure_scratch(&mut self, device: &ID3D11Device, plan: Plan) -> Result<bool> {
-        let old = self.scratch.as_ref();
+    fn ensure_scratch(
+        &mut self,
+        device: &ID3D11Device,
+        plan: Plan,
+        format: DXGI_FORMAT,
+    ) -> Result<bool> {
+        let capture_bpp = match format {
+            DXGI_FORMAT_B8G8R8A8_UNORM => 4,
+            DXGI_FORMAT_R16G16B16A16_FLOAT => 8,
+            _ => anyhow::bail!("unsupported backdrop target format"),
+        };
+        let old = self.scratch.as_ref().filter(|s| s.capture.format == format);
         let mut capture = capacity(
             [plan.copy[2], plan.copy[3]],
             old.map_or([0; 2], |s| s.capture.capacity),
         );
         let mut work = capacity(plan.work, old.map_or([0; 2], |s| s.horizontal.capacity));
-        if scratch_bytes(capture, work) > MAX_SCRATCH_BYTES {
+        if scratch_bytes(capture, work, capture_bpp) > MAX_SCRATCH_BYTES {
             // Wide then tall surfaces must not grow a historical square forever.
             capture = capacity([plan.copy[2], plan.copy[3]], [0; 2]);
             work = capacity(plan.work, [0; 2]);
-            if scratch_bytes(capture, work) > MAX_SCRATCH_BYTES {
+            if scratch_bytes(capture, work, capture_bpp) > MAX_SCRATCH_BYTES {
                 self.stats.skipped_regions += 1;
                 if !self.warned_budget {
                     log::warn!(
@@ -311,19 +355,20 @@ impl BackdropPipeline {
                 return Ok(false);
             }
         }
-        self.stats.peak_scratch_bytes = self
-            .stats
-            .peak_scratch_bytes
-            .max(scratch_bytes(capture, work));
+        self.stats.peak_scratch_bytes =
+            self.stats
+                .peak_scratch_bytes
+                .max(scratch_bytes(capture, work, capture_bpp));
         if old.is_some_and(|s| s.capture.capacity == capture && s.horizontal.capacity == work) {
             return Ok(true);
         }
         // Allocate coherently before replacing the old set. Buckets eliminate
         // per-pixel reallocation during drags and repeated small layout changes.
         self.scratch = Some(Scratch {
-            capture: Texture::new(device, capture, RENDER_TARGET_FORMAT, false)?,
+            capture: Texture::new(device, capture, format, false)?,
             horizontal: Texture::new(device, work, DXGI_FORMAT_R16G16B16A16_FLOAT, true)?,
             vertical: Texture::new(device, work, DXGI_FORMAT_R16G16B16A16_FLOAT, true)?,
+            initialized: false,
         });
         self.stats.texture_allocations += 3;
         Ok(true)
@@ -373,10 +418,47 @@ impl BackdropPipeline {
         let Some(plan) = Plan::new(blur, viewport.Width as u32, viewport.Height as u32) else {
             return Ok(());
         };
-        if !self.ensure_scratch(device, plan)? {
+        let crop = u64::from(plan.work[0]) * u64::from(plan.work[1]) >= CROP_MIN_WORK_PIXELS
+            && plan.filtered != [0, 0, plan.work[0], plan.work[1]];
+        #[cfg(test)]
+        let crop = (crop || self.force_crop) && !self.full_work_reference;
+        let plan = if crop {
+            plan
+        } else {
+            Plan {
+                filtered: [0, 0, plan.work[0], plan.work[1]],
+                ..plan
+            }
+        };
+        let mut desc = D3D11_TEXTURE2D_DESC::default();
+        unsafe {
+            render_target.GetDesc(&mut desc);
+        }
+        if !self.ensure_scratch(device, plan, desc.Format)? {
             return Ok(());
         }
+        if let Some(scratch) = self.scratch.as_mut().filter(|scratch| !scratch.initialized) {
+            // Uninitialized half-float padding can contain NaNs, which may
+            // leak through nominally zero-weight bilinear neighbors.
+            unsafe {
+                context.ClearRenderTargetView(scratch.horizontal.rtv.as_ref().unwrap(), &[0.; 4]);
+                context.ClearRenderTargetView(scratch.vertical.rtv.as_ref().unwrap(), &[0.; 4]);
+            }
+            scratch.initialized = true;
+            self.stats.initialization_clears += 2;
+        }
+        if crop && self.cropped_fragment.is_none() {
+            self.cropped_fragment = Some(create_fragment_shader(
+                device,
+                RawShaderBytes::new(ShaderModule::BackdropCrop, ShaderTarget::Fragment)?.as_bytes(),
+            )?);
+        }
         let kernels = plan.sigma.map(|sigma| self.kernel(sigma));
+        let fragment = if crop {
+            self.cropped_fragment.as_ref().unwrap()
+        } else {
+            &self.fragment
+        };
         if let Some(profiler) = &mut self.profiler {
             profiler.begin(
                 context,
@@ -415,7 +497,7 @@ impl BackdropPipeline {
             context.IASetInputLayout(None);
             context.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
             context.VSSetShader(&self.vertex, None);
-            context.PSSetShader(&self.fragment, None);
+            context.PSSetShader(fragment, None);
             // Replace, NOT source-over: filtered framebuffer already includes
             // the original alpha. Default blend state is disabled, write RGBA.
             context.OMSetBlendState(None, None, u32::MAX);
@@ -458,6 +540,12 @@ impl BackdropPipeline {
                 profiler.mark(context, 2);
             }
             params.step = [1., 0.];
+            params.target = [
+                plan.filtered[0] as f32,
+                0.,
+                plan.filtered[2] as f32,
+                plan.work[1] as f32,
+            ];
             kernels[0].apply(&mut params);
             Self::pass(
                 &self.constants,
@@ -473,6 +561,7 @@ impl BackdropPipeline {
             params.source_size = plan.work.map(|n| n as f32);
             params.source_capacity = scratch.horizontal.capacity.map(|n| n as f32);
             params.step = [0., 1.];
+            params.target = plan.filtered.map(|n| n as f32);
             kernels[1].apply(&mut params);
             Self::pass(
                 &self.constants,
@@ -537,9 +626,13 @@ impl BackdropPipeline {
         if result.is_ok() {
             self.stats.regions += 1;
             self.stats.copied_pixels += u64::from(width) * u64::from(height);
-            self.stats.work_pixels += u64::from(plan.work[0])
-                * u64::from(plan.work[1])
-                * if plan.work == [width, height] { 2 } else { 3 };
+            self.stats.work_pixels += u64::from(plan.filtered[2])
+                * (u64::from(plan.work[1]) + u64::from(plan.filtered[3]))
+                + if plan.work == [width, height] {
+                    0
+                } else {
+                    u64::from(plan.work[0]) * u64::from(plan.work[1])
+                };
         }
         result
     }

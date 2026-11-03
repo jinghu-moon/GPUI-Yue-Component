@@ -216,19 +216,34 @@ Retain an `Entity<YueImagePreviewState>` in the host and render
 monotonic revision and decoded single-frame `ImagePreviewImage` resources. The host
 owns loading, encoding and cancellation; user operations emit `ImagePreviewEvent`.
 
+Prepare images on the host's background executor with
+`ImagePreviewImage::from_rgba8(...)`, `from_bgra8(...)` or
+`from_encoded(&bytes, &limits, description)`. `ImagePreviewPixels` also exposes
+decoded pixels for hosts that retain the original for copying/exporting. Owned
+native-size buffers move; borrowed native-size buffers copy once. Default limits
+bound decoding and texture preparation. Oversized textures become explicit
+proxies: `pixel_size()` is the original size, `texture_size()` is available detail,
+and 100% always uses the original dimensions. EXIF orientation is applied; embedded
+ICC/non-sRGB metadata is reported as unmanaged, without an ICC conversion claim.
+
 Source, Compare and Result share one camera. The viewport supports pointer-anchored
 zoom, captured panning, fit/100%, four transparency backgrounds, scoped keyboard
-commands, loading/error feedback and previous-result retention during updates.
+commands, smooth/nearest display, loading/error feedback and previous-result retention during updates.
 Comparison requires declared full-frame alignment and compatible aspect ratios.
 View commands use 260ms travel and mode changes use 180ms; gestures respond directly
-and reduced motion snaps to the target.
+and reduced motion snaps to the target. Windows pixel grids require full-resolution
+images and at least 400% zoom; proxies retain the preference but suppress grids
+and nearest sampling. Static integer zooms align to physical pixels.
 
 Browse **组件 → 图片预览 ImagePreview** for the two user-provided screenshots,
 actual JPEG/half-size results, transparency and Dialog composition. Fixtures live in
 [the Showcase asset directory](examples/windows-showcase/assets/image-preview/README.md),
-with original hashes recorded. See [the ImagePreview guide](docs/25-image-preview.md).
-Pixel grids, nearest-neighbor selection, editing and animated-image playback are
-outside this implementation. No new framework patch is required.
+with original hashes recorded. See [the ImagePreview guide](docs/25-image-preview.md)
+and [resource measurements and limits](docs/performance/2026-11-03-image-preview-resources.md).
+Full-frame linear/nearest sampling and upload retirement use the maintained GPUI
+core and Windows patches in `vendor`; consumers must use both patches. Editing,
+animated-image playback, tiled original-detail loading and full ICC/HDR management
+are outside this implementation.
 
 ## Icons and fonts
 
@@ -260,6 +275,8 @@ pwsh -NoProfile -File tools/test-gpui-snapshot.ps1 -Offline
 pwsh -NoProfile -File tools/test-gpui-backdrop.ps1
 pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Release
 pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
+pwsh -NoProfile -File tools/test-gpui-hdr.ps1
+pwsh -NoProfile -File tools/test-gpui-hdr.ps1 -Release
 ```
 
 `headless-tests` is opt-in and enables Base observation directly, without Kit's optional Fast backend. Workspace tests now support this feature together with the Base-only showcase. Tests dispatch real input in headless windows and check callbacks, focus, layout and submitted drawing data; Windows reader output, GPU pixels, DPI and IME still require native-window validation. The Windows CI runs these checks.
@@ -292,3 +309,4 @@ See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先
 - [Collapse design and implementation](docs/23-collapse.md)
 - [ImagePreview design and implementation](docs/25-image-preview.md)
 - [Local Gaussian backdrop foundation](docs/26-backdrop-blur.md)
+- [Windows HDR pipeline and implementation status](docs/27-hdr-pipeline.md) — high-precision resources and opt-in Windows scRGB output are implemented for verification; native-display acceptance and SnapClip capture/consumer migration remain incomplete. See [evidence and outstanding gates](docs/performance/2026-11-03-hdr-resources.md).

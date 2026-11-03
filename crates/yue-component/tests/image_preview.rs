@@ -5,12 +5,13 @@ use gpui_kit::{
     MouseDownEvent, MouseUpEvent, ParentElement as _, Point, Render, Role, ScrollDelta,
     ScrollWheelEvent, Styled as _, TestAppContext, VisualTestContext, Window, div, point, px,
 };
+use std::time::Duration;
 use std::{cell::RefCell, rc::Rc};
 use yue_component::{
-    Accent, ImagePreviewDocument, ImagePreviewError, ImagePreviewEvent, ImagePreviewFit,
-    ImagePreviewImage, ImagePreviewLoad, ImagePreviewMode, ImagePreviewSnapshot,
-    ImagePreviewToolbar, InputState, NeutralTone, ThemeMode, YueButton, YueImagePreview,
-    YueImagePreviewState, YueInput, YueTheme,
+    Accent, DialogFooter, ImagePreviewDocument, ImagePreviewError, ImagePreviewEvent,
+    ImagePreviewFit, ImagePreviewImage, ImagePreviewLoad, ImagePreviewMode, ImagePreviewSnapshot,
+    ImagePreviewToolbar, InputState, NeutralTone, ThemeMode, YueButton, YueDialog, YueDialogState,
+    YueImagePreview, YueImagePreviewState, YueInput, YueTheme,
 };
 
 struct Probe {
@@ -22,7 +23,13 @@ struct Probe {
     _subscription: gpui_kit::Subscription,
     input: Entity<InputState>,
     toolbar: ImagePreviewToolbar,
+    toolbar_visible: bool,
+    animated: bool,
     preview_size: [f32; 2],
+    large: Entity<YueImagePreviewState>,
+    dialog: Entity<YueDialogState>,
+    expand_enabled: bool,
+    expansions: usize,
 }
 impl Probe {
     fn new(w: &mut Window, cx: &mut Context<Self>) -> Self {
@@ -60,7 +67,13 @@ impl Probe {
             _subscription: subscription,
             input: cx.new(|cx| InputState::new(w, cx)),
             toolbar: ImagePreviewToolbar::Floating,
+            toolbar_visible: true,
+            animated: false,
             preview_size: [600., 380.],
+            large: cx.new(|cx| YueImagePreviewState::new("large-preview", w, cx)),
+            dialog: cx.new(YueDialogState::new),
+            expand_enabled: true,
+            expansions: 0,
         }
     }
 }
@@ -75,7 +88,21 @@ fn document(
         .full_frame(true)
 }
 impl Render for Probe {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        let mut preview = YueImagePreview::new(&self.state)
+            .animated(self.animated)
+            .disabled(self.disabled)
+            .toolbar(self.toolbar)
+            .show_toolbar(self.toolbar_visible);
+        if self.expand_enabled {
+            preview = preview.on_expand(cx.listener(|p, view, w, cx| {
+                p.large
+                    .update(cx, |s, cx| s.restore_view(view, w, cx).unwrap());
+                p.expansions += 1;
+                p.dialog.update(cx, |s, cx| s.open(w, cx).unwrap());
+                cx.notify();
+            }));
+        }
         div()
             .size_full()
             .flex()
@@ -87,12 +114,7 @@ impl Render for Probe {
                 div()
                     .w(px(self.preview_size[0]))
                     .h(px(self.preview_size[1]))
-                    .child(
-                        YueImagePreview::new(&self.state)
-                            .animated(false)
-                            .disabled(self.disabled)
-                            .toolbar(self.toolbar),
-                    )
+                    .child(preview)
                     .into_any_element()
             } else {
                 div().h(px(380.)).into_any_element()
@@ -106,11 +128,28 @@ impl Render for Probe {
                 .accessibility_label("旁边的输入框"),
             )
             .child(YueButton::new("after-preview", "之后"))
+            .child(
+                YueDialog::new(
+                    "large-preview-dialog",
+                    yue_component::current_theme(cx),
+                    &self.dialog,
+                )
+                .title("放大预览")
+                .close_label("关闭放大预览")
+                .footer(DialogFooter::None)
+                .width(gpui_kit::rems(44.))
+                .child(
+                    div()
+                        .h(px(440.))
+                        .child(YueImagePreview::new(&self.large).animated(false)),
+                ),
+            )
     }
 }
 fn draw(cx: &mut VisualTestContext) {
     cx.run_until_parked();
     cx.update(|w, cx| {
+        w.simulate_next_frame(cx);
         w.refresh();
         w.draw(cx).clear(cx);
     });
@@ -144,9 +183,46 @@ fn snap(view: &Entity<Probe>, cx: &VisualTestContext) -> ImagePreviewSnapshot {
     view.read_with(cx, |p, cx| p.state.read(cx).snapshot())
 }
 fn click(cx: &mut VisualTestContext, label: &str) {
-    let p = node(cx, label).bounds().center();
+    let target = cx
+        .update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .find(|n| n.label() == Some(label) && n.role() == Some(Role::Button))
+        })
+        .unwrap_or_else(|| node(cx, label));
+    let p = target.bounds().center();
     cx.simulate_click(p, Modifiers::default());
     draw(cx);
+}
+fn toolbar_opacity(cx: &mut VisualTestContext) -> f32 {
+    cx.update(|w, _| {
+        w.painted_primitives()
+            .into_iter()
+            .find_map(|p| match p {
+                gpui_kit::Primitive::BackdropBlur(b) if b.quad.bounds.size.width.0 > 80. => {
+                    Some(b.opacity)
+                }
+                _ => None,
+            })
+            .expect("floating toolbar must paint one glass surface")
+    })
+}
+fn command_has_outline(cx: &mut VisualTestContext, label: &str) -> bool {
+    let bounds = node(cx, label).bounds();
+    cx.update(|w, _| {
+        let scale = w.scale_factor();
+        w.painted_primitives().iter().any(|p| match p {
+            gpui_kit::Primitive::Quad(q) => {
+                q.border_color.a > 0.
+                    && q.border_widths.left.0 > 0.
+                    && (q.bounds.origin.x.0 / scale - f32::from(bounds.left())).abs() < 2.
+                    && (q.bounds.origin.y.0 / scale - f32::from(bounds.top())).abs() < 2.
+                    && (q.bounds.size.width.0 / scale - f32::from(bounds.size.width)).abs() < 4.
+                    && (q.bounds.size.height.0 / scale - f32::from(bounds.size.height)).abs() < 4.
+            }
+            _ => false,
+        })
+    })
 }
 fn down(cx: &mut VisualTestContext, p: Point<gpui_kit::Pixels>) {
     cx.simulate_event(MouseDownEvent {
@@ -164,6 +240,16 @@ fn up(cx: &mut VisualTestContext, p: Point<gpui_kit::Pixels>) {
         click_count: 1,
         ..Default::default()
     });
+    draw(cx);
+}
+fn press(cx: &mut VisualTestContext, key: &str) {
+    let keystroke = gpui_kit::Keystroke::parse(key).unwrap();
+    cx.simulate_event(gpui_kit::KeyDownEvent {
+        keystroke: keystroke.clone(),
+        is_held: false,
+        prefer_character_input: false,
+    });
+    cx.simulate_event(gpui_kit::KeyUpEvent { keystroke });
     draw(cx);
 }
 #[gpui_kit::test]
@@ -237,6 +323,563 @@ fn toolbar_zoom_and_actual_size_use_production_geometry(cx: &mut TestAppContext)
     assert_eq!(snap(&view, cx).zoom(), 1.);
     click(cx, "适应窗口");
     assert!((snap(&view, cx).zoom() - first.zoom()).abs() < 0.001);
+}
+
+#[gpui_kit::test]
+fn toolbar_fit_width_uses_the_command_and_keyboard_stays_local(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    click(cx, "适应宽度");
+    assert_eq!(snap(&view, cx).fit(), ImagePreviewFit::FitWidth);
+    assert!(command_has_outline(cx, "适应宽度"));
+    assert!(!command_has_outline(cx, "适应窗口"));
+    assert!(node(cx, "适应宽度").description().unwrap().contains("当前"));
+    click(cx, "图片预览");
+    cx.simulate_keystrokes("0 w");
+    draw(cx);
+    assert_eq!(snap(&view, cx).fit(), ImagePreviewFit::FitWidth);
+    click(cx, "旁边的输入框");
+    cx.simulate_keystrokes("w");
+    draw(cx);
+    assert_eq!(
+        view.read_with(cx, |p, cx| p.input.read(cx).value().to_string()),
+        "w"
+    );
+}
+
+#[gpui_kit::test]
+fn more_menu_switches_background_and_centers_only_comparison(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    let before = snap(&view, cx);
+    click(cx, "更多预览操作");
+    assert_eq!(node(cx, "深色棋盘格").selected(), Some(true));
+    assert!(!cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("对比归中（50%）"))
+    }));
+    click(cx, "纯白");
+    assert_eq!(
+        snap(&view, cx).background(),
+        yue_component::ImagePreviewBackground::White
+    );
+    assert_eq!(snap(&view, cx).zoom(), before.zoom());
+    assert_eq!(snap(&view, cx).center(), before.center());
+    click(cx, "对比");
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| s.set_split(0.2, w, cx).unwrap())
+        })
+    });
+    let before = snap(&view, cx);
+    click(cx, "更多预览操作");
+    click(cx, "对比归中（50%）");
+    let after = snap(&view, cx);
+    assert_eq!(after.split(), 0.5);
+    assert_eq!(after.zoom(), before.zoom());
+    assert_eq!(after.center(), before.center());
+}
+
+#[gpui_kit::test]
+fn pixel_grid_menu_enforces_threshold_and_paints_native_nearest_sprites(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    click(cx, "更多预览操作");
+    click(cx, "像素网格（≥400%）");
+    assert!(!snap(&view, cx).is_pixel_grid_enabled());
+    press(cx, "escape");
+    draw(cx);
+    let center = node(cx, "图片预览").bounds().center();
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                s.zoom_at(4., [center.x.into(), center.y.into()], false, w, cx)
+                    .unwrap()
+            })
+        })
+    });
+    draw(cx);
+    click(cx, "更多预览操作");
+    click(cx, "像素网格（≥400%）");
+    assert!(snap(&view, cx).is_pixel_grid_enabled());
+    let theme = YueTheme::new(ThemeMode::Light, Accent::Azure);
+    let color: gpui_kit::Background = theme
+        .token("--image-preview-pixel-grid-color")
+        .unwrap()
+        .rgba()
+        .unwrap()
+        .into();
+    let background: gpui_kit::Background = theme
+        .token("--image-preview-checker-dark-a")
+        .unwrap()
+        .rgba()
+        .unwrap()
+        .into();
+    for scale in [1., 1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        draw(cx);
+        cx.update(|w, _| {
+            let primitives = w.painted_primitives();
+            let viewport = primitives
+                .iter()
+                .find_map(|p| match p {
+                    gpui_kit::Primitive::Quad(q)
+                        if q.background == background && q.corner_radii.top_left.0 > 0. =>
+                    {
+                        Some(q)
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            assert!(
+                primitives.iter().any(
+                    |p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 1 != 0)
+                )
+            );
+            let lines: Vec<_> = primitives
+                .iter()
+                .filter_map(|p| match p {
+                    gpui_kit::Primitive::Quad(q) if q.background == color => Some(q),
+                    _ => None,
+                })
+                .collect();
+            assert!(!lines.is_empty());
+            assert!(
+                lines.len() < 2048,
+                "only visible pixel boundaries are drawn"
+            );
+            for line in lines {
+                assert!(line.bounds.size.width.0 == 1. || line.bounds.size.height.0 == 1.);
+                let visible = line.bounds.intersect(&line.content_mask.bounds);
+                let radius = viewport.corner_radii.top_left.0;
+                for x in [visible.left().0, visible.right().0] {
+                    for y in [visible.top().0, visible.bottom().0] {
+                        let dx = (viewport.bounds.left().0 + radius - x)
+                            .max(x - viewport.bounds.right().0 + radius)
+                            .max(0.);
+                        let dy = (viewport.bounds.top().0 + radius - y)
+                            .max(y - viewport.bounds.bottom().0 + radius)
+                            .max(0.);
+                        assert!(
+                            dx * dx + dy * dy <= radius * radius + 0.01,
+                            "grid line must stay inside rounded viewport: {visible:?}"
+                        );
+                    }
+                }
+            }
+        });
+    }
+    assert!(view.read_with(cx, |p, _| {
+        p.events
+            .borrow()
+            .iter()
+            .any(|e| matches!(e, ImagePreviewEvent::PixelGridChanged(_, _)))
+    }));
+    click(cx, "对比");
+    cx.update(|w, _| {
+        let mut images: Vec<_> = w
+            .painted_primitives()
+            .into_iter()
+            .filter_map(|p| match p {
+                gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 1 != 0 => Some(s),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(images.len(), 2);
+        images.sort_by(|a, b| {
+            a.content_mask
+                .bounds
+                .left()
+                .0
+                .total_cmp(&b.content_mask.bounds.left().0)
+        });
+        assert!(images[0].corner_radii.top_left.0 > 0.);
+        assert_eq!(images[0].corner_radii.top_right.0, 0.);
+        assert_eq!(images[1].corner_radii.top_left.0, 0.);
+        assert!(images[1].corner_radii.top_right.0 > 0.);
+        assert_eq!(
+            images[0].bounds, images[1].bounds,
+            "comparison shares full-image sampling geometry"
+        );
+    });
+    click(cx, "适应窗口");
+    assert!(
+        snap(&view, cx).is_pixel_grid_enabled(),
+        "remember the preference below threshold"
+    );
+    cx.update(|w, _| {
+        assert!(
+            !w.painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 1 != 0))
+        )
+    });
+}
+
+#[gpui_kit::test]
+fn expand_opens_independent_dialog_with_camera_and_retained_result(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    click(cx, "对比");
+    click(cx, "回到100%");
+    click(cx, "放大");
+    let p = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+    down(cx, p);
+    let to = p + point(px(30.), px(15.));
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    up(cx, to);
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            let doc = document(&p.image, 2, ImagePreviewLoad::Loading);
+            p.state
+                .update(cx, |s, cx| s.set_document(doc, w, cx).unwrap());
+        })
+    });
+    draw(cx);
+    let before = snap(&view, cx);
+    assert_eq!(before.result_revision(), Some(1));
+    click(cx, "放大预览");
+    assert!(view.read_with(cx, |p, cx| p.dialog.read(cx).is_open()));
+    assert_eq!(view.read_with(cx, |p, _| p.expansions), 1);
+    assert_eq!(
+        view.read_with(cx, |p, cx| p.large.read(cx).snapshot()),
+        before
+    );
+    view.update(cx, |p, cx| {
+        p.large.update(cx, |s, cx| {
+            s.set_background(yue_component::ImagePreviewBackground::White, cx)
+        })
+    });
+    draw(cx);
+    assert_eq!(
+        snap(&view, cx),
+        before,
+        "larger view edits remain independent"
+    );
+    let more = cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .find(|n| {
+                n.label() == Some("更多预览操作")
+                    && n.role() == Some(Role::Button)
+                    && n.path().contains(&"large-preview-dialog".into())
+            })
+            .expect("dialog's own more button")
+            .bounds()
+            .center()
+    });
+    cx.simulate_click(more, Modifiers::default());
+    draw(cx);
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("深色棋盘格"))));
+    press(cx, "escape");
+    assert!(
+        view.read_with(cx, |p, cx| p.dialog.read(cx).is_open()),
+        "Escape closes the child menu first"
+    );
+    assert!(!cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("深色棋盘格"))));
+    // Returning focus may show the trigger's help tooltip. Give the viewport
+    // focus before checking the preview's own unhandled Escape path.
+    let viewport = cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .find(|n| {
+                n.label() == Some("图片预览") && n.path().contains(&"large-preview-dialog".into())
+            })
+            .unwrap()
+            .bounds()
+    });
+    cx.simulate_click(
+        viewport.origin + point(px(40.), px(40.)),
+        Modifiers::default(),
+    );
+    draw(cx);
+    press(cx, "escape");
+    draw(cx);
+    assert!(!view.read_with(cx, |p, cx| p.dialog.read(cx).is_open()));
+    assert_eq!(
+        cx.update(|w, _| snapshots(w)
+            .into_iter()
+            .find(|n| n.label() == Some("放大预览") && n.role() == Some(Role::Button))
+            .unwrap()
+            .focused()),
+        Some(true)
+    );
+}
+#[gpui_kit::test]
+fn expand_refits_automatic_views_preserves_alignment_and_requires_a_host(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            let doc =
+                document(&p.image, 2, ImagePreviewLoad::Ready(p.image.clone())).full_frame(false);
+            p.state
+                .update(cx, |s, cx| s.set_document(doc, w, cx).unwrap());
+        })
+    });
+    draw(cx);
+    let before = snap(&view, cx);
+    click(cx, "放大预览");
+    draw(cx);
+    let large = view.read_with(cx, |p, cx| p.large.read(cx).snapshot());
+    assert_eq!(large.fit(), ImagePreviewFit::FitAll);
+    assert!(
+        large.zoom() > before.zoom(),
+        "FitAll uses the larger dialog viewport"
+    );
+    assert_eq!(large.center(), [0.5, 0.5]);
+    assert!(
+        !view.read_with(cx, |p, cx| p
+            .large
+            .read(cx)
+            .is_mode_available(ImagePreviewMode::Compare)),
+        "opening a dialog cannot invent full-frame correspondence"
+    );
+    assert_eq!(snap(&view, cx), before);
+    press(cx, "escape");
+    draw(cx);
+    view.update(cx, |p, cx| {
+        p.expand_enabled = false;
+        cx.notify();
+    });
+    draw(cx);
+    assert!(
+        !cx.update(|w, _| snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("放大预览") && n.role() == Some(Role::Button))),
+        "no inert expand button without a host callback"
+    );
+}
+#[gpui_kit::test]
+fn toolbar_exposes_fit_and_actual_size_as_distinct_current_commands(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    assert!(command_has_outline(cx, "适应窗口"));
+    assert!(!command_has_outline(cx, "回到100%"));
+    assert!(node(cx, "适应窗口").description().unwrap().contains("当前"));
+    assert!(!node(cx, "回到100%").description().unwrap().contains("当前"));
+    let width = node(cx, "回到100%").bounds().size.width;
+    click(cx, "回到100%");
+    assert!(command_has_outline(cx, "回到100%"));
+    assert!(!command_has_outline(cx, "适应窗口"));
+    assert!(node(cx, "回到100%").description().unwrap().contains("当前"));
+    assert!(!node(cx, "适应窗口").description().unwrap().contains("当前"));
+    assert_eq!(node(cx, "回到100%").bounds().size.width, width);
+    click(cx, "放大");
+    assert!(!node(cx, "回到100%").description().unwrap().contains("当前"));
+    assert!(!node(cx, "适应窗口").description().unwrap().contains("当前"));
+    view.update(cx, |p, cx| {
+        p.preview_size = [720., 560.];
+        cx.notify();
+    });
+    draw(cx);
+    click(cx, "适应窗口");
+    assert_eq!(snap(&view, cx).zoom(), 1.);
+    assert!(node(cx, "适应窗口").description().unwrap().contains("当前"));
+    assert!(!node(cx, "回到100%").description().unwrap().contains("当前"));
+}
+#[gpui_kit::test]
+fn floating_toolbar_dims_only_while_panning_and_restores_on_hover_and_release(
+    cx: &mut TestAppContext,
+) {
+    let (_, cx) = open(cx);
+    let start = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+    down(cx, start);
+    assert_eq!(toolbar_opacity(cx), 1., "a press alone must not dim chrome");
+    let to = start + point(px(36.), px(24.));
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 0.5);
+    let zoom = node(cx, "放大").bounds().center();
+    cx.simulate_mouse_move(zoom, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert_eq!(
+        toolbar_opacity(cx),
+        1.,
+        "hover must restore during pointer capture"
+    );
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 0.5);
+    up(cx, to);
+    assert_eq!(toolbar_opacity(cx), 1.);
+}
+#[gpui_kit::test]
+fn toolbar_focus_and_comparison_drag_keep_chrome_clear(cx: &mut TestAppContext) {
+    let (_, cx) = open(cx);
+    let p = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+    down(cx, p);
+    cx.simulate_mouse_move(
+        p + point(px(36.), px(24.)),
+        Some(MouseButton::Left),
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 0.5);
+    cx.simulate_keystrokes("tab");
+    draw(cx);
+    assert!(
+        ["缩小", "回到100%", "放大", "适应窗口"]
+            .iter()
+            .any(|name| node(cx, name).focused() == Some(true))
+    );
+    assert_eq!(toolbar_opacity(cx), 1.);
+    up(cx, p);
+    click(cx, "对比");
+    let grip = node(cx, "对比分割线").bounds().center();
+    down(cx, grip);
+    let to = grip + point(px(30.), px(0.));
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 1.);
+    up(cx, to);
+}
+#[gpui_kit::test]
+fn toolbar_fade_reverses_continuously_and_stops_requesting_frames(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    view.update(cx, |p, cx| {
+        p.animated = true;
+        cx.notify();
+    });
+    draw(cx);
+    let p = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+    down(cx, p);
+    let to = p + point(px(36.), px(24.));
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 1.);
+    cx.executor().advance_clock(Duration::from_millis(50));
+    draw(cx);
+    let halfway = toolbar_opacity(cx);
+    assert!(
+        (halfway - 0.75).abs() < 0.001,
+        "linear fade midpoint: {halfway}"
+    );
+    let zoom = node(cx, "放大").bounds().center();
+    cx.simulate_mouse_move(zoom, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert!(
+        (toolbar_opacity(cx) - halfway).abs() < 0.001,
+        "hover reverses without jumping"
+    );
+    cx.executor().advance_clock(Duration::from_millis(25));
+    draw(cx);
+    let restoring = toolbar_opacity(cx);
+    assert!(restoring > halfway && restoring < 1.);
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    draw(cx);
+    assert!((toolbar_opacity(cx) - restoring).abs() < 0.001);
+    up(cx, to);
+    cx.executor().advance_clock(Duration::from_millis(500));
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 1.);
+    cx.update(|w, cx| {
+        w.simulate_next_frame(cx);
+    });
+    draw(cx);
+    assert_eq!(
+        cx.update(|w, cx| w.simulate_next_frame(cx)),
+        0,
+        "settled toolbar must stop frame demand"
+    );
+}
+#[gpui_kit::test]
+fn reduced_motion_and_disabled_preview_settle_toolbar_immediately(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    view.update(cx, |p, cx| {
+        p.animated = true;
+        cx.notify();
+    });
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    draw(cx);
+    let p = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+    down(cx, p);
+    cx.simulate_mouse_move(
+        p + point(px(36.), px(24.)),
+        Some(MouseButton::Left),
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 0.5);
+    cx.simulate_keystrokes("tab");
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 1.);
+    up(cx, p);
+    down(cx, p);
+    cx.simulate_mouse_move(
+        p + point(px(36.), px(24.)),
+        Some(MouseButton::Left),
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 0.5);
+    view.update(cx, |p, cx| {
+        p.disabled = true;
+        cx.notify();
+    });
+    draw(cx);
+    assert_eq!(toolbar_opacity(cx), 1.);
+    assert!(cx.update(|w, _| w.captured_hitbox().is_none()));
+}
+#[gpui_kit::test]
+fn floating_toolbar_visibility_preserves_viewport_and_fitted_camera(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    view.update(cx, |p, cx| {
+        p.preview_size = [600., 280.];
+        cx.notify();
+    });
+    for scale in [1., 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        draw(cx);
+        click(cx, "适应窗口");
+        let viewport = node(cx, "图片预览").bounds();
+        let before = snap(&view, cx);
+        assert!(
+            before.zoom() < 1.,
+            "fixture must constrain the fitted image"
+        );
+        let zoom = node(cx, "放大").bounds();
+        assert_eq!(viewport.intersect(&zoom), zoom);
+        let events_before = view.read_with(cx, |p, _| p.events.borrow().len());
+        for visible in [false, true] {
+            view.update(cx, |p, cx| {
+                p.toolbar_visible = visible;
+                cx.notify();
+            });
+            draw(cx);
+            assert_eq!(node(cx, "图片预览").bounds(), viewport);
+            assert_eq!(snap(&view, cx), before, "toolbar visibility changed FitAll");
+            assert_eq!(
+                view.read_with(cx, |p, _| p.events.borrow().len()),
+                events_before,
+                "toolbar visibility must not emit camera changes"
+            );
+        }
+    }
+}
+#[gpui_kit::test]
+fn floating_toolbar_visibility_preserves_zoomed_and_panned_camera(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    click(cx, "回到100%");
+    click(cx, "放大");
+    let viewport = node(cx, "图片预览").bounds();
+    let p = viewport.center() - point(px(90.), px(30.));
+    down(cx, p);
+    let to = p + point(px(36.), px(24.));
+    cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+    up(cx, to);
+    let before = snap(&view, cx);
+    assert_eq!(before.fit(), ImagePreviewFit::Manual);
+    assert_ne!(before.center(), [0.5, 0.5]);
+    for visible in [false, true] {
+        view.update(cx, |p, cx| {
+            p.toolbar_visible = visible;
+            cx.notify();
+        });
+        draw(cx);
+        assert_eq!(node(cx, "图片预览").bounds(), viewport);
+        assert_eq!(snap(&view, cx), before);
+    }
 }
 #[gpui_kit::test]
 fn mode_and_split_keyboard_keep_one_camera_and_restore_middle(cx: &mut TestAppContext) {
@@ -721,5 +1364,232 @@ fn glass_tokens_keep_readable_foreground_over_the_brightest_background() {
                 assert!(contrast >= 4.5, "{mode:?}/{accent:?}/{tone:?}: {contrast}");
             }
         }
+    }
+}
+
+#[gpui_kit::test]
+fn actual_size_snaps_static_raster_origin_to_device_pixels_at_every_dpi(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    for scale in [1., 1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        view.update(cx, |p, cx| {
+            p.preview_size = [601.5, 381.25];
+            cx.notify();
+        });
+        draw(cx);
+        click(cx, "回到100%");
+        let pos = node(cx, "图片预览").bounds().center() - point(px(90.), px(30.));
+        down(cx, pos);
+        let to = pos + point(px(0.25), px(0.75));
+        cx.simulate_mouse_move(to, Some(MouseButton::Left), Modifiers::default());
+        up(cx, to);
+        let reference = snap(&view, cx).reference_size().unwrap();
+        cx.update(|w, _| {
+            let images: Vec<_> = w
+                .painted_primitives()
+                .into_iter()
+                .filter_map(|p| match p {
+                    gpui_kit::Primitive::PolychromeSprite(s) => Some(s),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(images.len(), 1);
+            assert_eq!(
+                images[0].bounds.size.width.0, reference[0] as f32,
+                "100% must retain full-image geometry even when clipped"
+            );
+            assert_eq!(images[0].bounds.size.height.0, reference[1] as f32);
+            for value in [images[0].bounds.origin.x.0, images[0].bounds.origin.y.0] {
+                assert!(
+                    (value - value.round()).abs() < 0.001,
+                    "DPI {scale}: fractional raster origin {value}"
+                );
+            }
+        });
+    }
+}
+
+#[gpui_kit::test]
+fn proxy_uses_original_dimensions_preserves_camera_on_upgrade_and_suppresses_pixel_grid(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = open(cx);
+    let full = ImagePreviewImage::from_rgba8(1200, 800, vec![255; 1200 * 800 * 4], "full").unwrap();
+    let proxy = yue_component::ImagePreviewPixels::from_rgba8(1200, 800, vec![255; 1200 * 800 * 4])
+        .unwrap()
+        .into_preview(
+            &yue_component::ImagePreviewLimits::default().texture_budget(300, 300 * 300 * 4),
+            "proxy",
+        )
+        .unwrap();
+    let state = view.read_with(cx, |p, _| p.state.clone());
+    cx.update(|w, cx| {
+        state.update(cx, |s, cx| {
+            s.set_document(
+                ImagePreviewDocument::new("proxy-upgrade", 1)
+                    .with_source(ImagePreviewLoad::Ready(proxy)),
+                w,
+                cx,
+            )
+            .unwrap();
+        })
+    });
+    draw(cx);
+    cx.update(|w, cx| {
+        state.update(cx, |s, cx| {
+            s.zoom_at(4., [200., 160.], false, w, cx).unwrap();
+            s.set_pixel_grid_enabled(true, cx);
+        })
+    });
+    draw(cx);
+    let before = snap(&view, cx);
+    assert_eq!(before.reference_size(), Some([1200, 800]));
+    assert_eq!(before.texture_size(), Some([300, 200]));
+    assert!(before.is_proxy());
+    assert!(!before.is_pixel_grid_available());
+    cx.update(|w, _| {
+        assert!(
+            !w.painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 1 != 0))
+        )
+    });
+    cx.update(|w, cx| {
+        state.update(cx, |s, cx| {
+            s.set_document(
+                ImagePreviewDocument::new("proxy-upgrade", 2)
+                    .with_source(ImagePreviewLoad::Ready(full)),
+                w,
+                cx,
+            )
+            .unwrap();
+        })
+    });
+    draw(cx);
+    let after = snap(&view, cx);
+    assert_eq!(before.zoom(), after.zoom());
+    assert_eq!(before.center(), after.center());
+    assert!(!after.is_proxy());
+    assert!(after.is_pixel_grid_available());
+    cx.update(|w, _| {
+        assert!(
+            w.painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad & 1 != 0))
+        )
+    });
+}
+
+#[gpui_kit::test]
+fn compare_with_only_source_proxy_suppresses_grid_and_nearest_until_result_only(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = open(cx);
+    let full = ImagePreviewImage::from_rgba8(1200, 800, vec![255; 1200 * 800 * 4], "full").unwrap();
+    let proxy = yue_component::ImagePreviewPixels::from_rgba8(1200, 800, vec![255; 1200 * 800 * 4])
+        .unwrap()
+        .into_preview(
+            &yue_component::ImagePreviewLimits::default().texture_budget(300, 300 * 300 * 4),
+            "source proxy",
+        )
+        .unwrap();
+    let state = view.read_with(cx, |p, _| p.state.clone());
+    cx.update(|w, cx| {
+        state.update(cx, |s, cx| {
+            s.set_document(
+                ImagePreviewDocument::new("mixed-proxy", 1)
+                    .with_source(ImagePreviewLoad::Ready(proxy))
+                    .with_result(ImagePreviewLoad::Ready(full))
+                    .full_frame(true),
+                w,
+                cx,
+            )
+            .unwrap();
+            s.set_pixel_grid_enabled(true, cx);
+            s.set_sampling(yue_component::ImagePreviewSampling::Nearest, cx);
+        });
+    });
+    draw(cx);
+    for mode in [ImagePreviewMode::Compare, ImagePreviewMode::Result] {
+        cx.update(|w, cx| {
+            state.update(cx, |s, cx| {
+                s.set_mode(mode, w, cx).unwrap();
+                s.zoom_at(4., [200., 160.], false, w, cx).unwrap();
+            });
+        });
+        draw(cx);
+        let comparing = mode == ImagePreviewMode::Compare;
+        let current = snap(&view, cx);
+        assert_eq!(current.texture_size(), Some([1200, 800]));
+        assert_eq!(current.is_proxy(), comparing);
+        assert_eq!(current.is_pixel_grid_available(), !comparing);
+        if comparing {
+            node(cx, "代理预览；100% 按原始尺寸，细节已缩减");
+        }
+        cx.update(|w, _| {
+            let images: Vec<_> = w
+                .painted_primitives()
+                .into_iter()
+                .filter_map(|p| match p {
+                    gpui_kit::Primitive::PolychromeSprite(s) => Some(s),
+                    _ => None,
+                })
+                .collect();
+            assert_eq!(images.len(), if comparing { 2 } else { 1 });
+            assert!(
+                images
+                    .iter()
+                    .all(|s| s.pad == if comparing { 2 } else { 1 })
+            );
+        });
+    }
+}
+
+#[gpui_kit::test]
+fn sampling_menu_switches_native_path_and_reports_exactly_one_event(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    click(cx, "回到100%");
+    click(cx, "更多预览操作");
+    click(cx, "像素显示");
+    assert_eq!(
+        snap(&view, cx).sampling(),
+        yue_component::ImagePreviewSampling::Nearest
+    );
+    assert_eq!(
+        view.read_with(cx, |p, _| p
+            .events
+            .borrow()
+            .iter()
+            .filter(|e| matches!(e, ImagePreviewEvent::SamplingChanged(_, _)))
+            .count()),
+        1
+    );
+    cx.update(|w, _| {
+        assert!(
+            w.painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad == 1))
+        )
+    });
+    click(cx, "更多预览操作");
+    click(cx, "平滑显示");
+    cx.update(|w, _| {
+        assert!(
+            w.painted_primitives()
+                .iter()
+                .any(|p| matches!(p, gpui_kit::Primitive::PolychromeSprite(s) if s.pad == 2))
+        )
+    });
+    let image = view.read_with(cx, |p, _| p.image.image().clone());
+    for scale in [1., 1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        draw(cx);
+        click(cx, "放大");
+        cx.update(|w, _| {
+            assert!(
+                w.has_image_atlas_entry(&image),
+                "reuse original resource at DPI {scale}"
+            )
+        });
     }
 }

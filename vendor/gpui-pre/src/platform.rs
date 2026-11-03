@@ -1191,6 +1191,10 @@ pub enum TextInputStateChange {
 
 #[expect(missing_docs)]
 pub trait PlatformWindow: HasWindowHandle + HasDisplayHandle {
+    /// Current output snapshot. Unsupported backends keep encoded SDR.
+    fn color_output(&self) -> WindowColorOutput {
+        WindowColorOutput::default()
+    }
     fn bounds(&self) -> Bounds<Pixels>;
     fn is_maximized(&self) -> bool;
     fn window_bounds(&self) -> WindowBounds;
@@ -1397,12 +1401,19 @@ pub trait PlatformWindow: HasWindowHandle + HasDisplayHandle {
         None
     }
 
-    /// Renders the given scene to a texture and returns the pixel data as an RGBA image.
+    /// Renders the given scene to an SDR, straight-alpha RGBA image on Windows.
+    /// HDR windows use an explicit SDR display derivative, not an FP16 byte cast.
     /// This does not present the frame to screen - useful for visual testing where we want
     /// to capture what would be rendered without displaying it or requiring the window to be visible.
     #[cfg(any(test, feature = "test-support"))]
     fn render_to_image(&self, _scene: &Scene) -> Result<RgbaImage> {
         anyhow::bail!("render_to_image not implemented for this platform")
+    }
+    /// Read back a scene in its native encoding and associated alpha, without
+    /// presenting. Unlike `RgbaImage`, this can represent an FP16 HDR target.
+    #[cfg(any(test, feature = "test-support"))]
+    fn render_to_native_image(&self, _scene: &Scene) -> Result<crate::RenderTargetReadback> {
+        anyhow::bail!("native render-target readback is not implemented for this platform")
     }
 }
 
@@ -1716,7 +1727,11 @@ impl AtlasKey {
                 }
             }
             AtlasKey::Svg(_) => AtlasTextureKind::Monochrome,
-            AtlasKey::Image(_) => AtlasTextureKind::Polychrome,
+            AtlasKey::Image(params) => match params.format {
+                crate::RenderImageFormat::Bgra8Srgb => AtlasTextureKind::Polychrome,
+                crate::RenderImageFormat::Rgba16FloatLinearSrgb
+                | crate::RenderImageFormat::Rgba16FloatScRgb => AtlasTextureKind::PolychromeFloat,
+            },
         }
     }
 }
@@ -1960,6 +1975,7 @@ pub enum AtlasTextureKind {
     Monochrome = 0,
     Polychrome = 1,
     Subpixel = 2,
+    PolychromeFloat = 3,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -2486,9 +2502,69 @@ pub enum TextInputAction {
     Send,
 }
 
+/// Requested output behavior; it never changes the meaning of image pixels.
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
+pub enum WindowColorPolicy {
+    /// Existing encoded eight-bit output. No FP16 window allocation.
+    #[default]
+    Sdr,
+    /// Opt into a linear FP16 window when Windows can present scRGB.
+    AutomaticHdr,
+}
+
+/// Current system display state, distinct from actual renderer output.
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
+pub enum DisplayColorKind {
+    /// The platform could not establish a reliable display state.
+    #[default]
+    Unknown,
+    /// Standard dynamic range.
+    Sdr,
+    /// Wide color without HDR luminance.
+    WideColor,
+    /// HDR is currently enabled.
+    Hdr,
+}
+
+/// Actual swap-chain encoding and luminance scale.
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
+pub enum WindowColorMode {
+    /// Encoded sRGB eight-bit output.
+    #[default]
+    Sdr,
+    /// FP16 relative-linear SDR, with mapped HDR display derivatives.
+    LinearSdr,
+    /// FP16 absolute scRGB, 1.0 = 80 nit.
+    HdrScRgb,
+}
+
+/// Event-driven snapshot. Capability, system state and successful output are
+/// reported independently. None means unknown, never a fabricated peak.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct WindowColorOutput {
+    /// Display associated with the window at the time of this snapshot.
+    pub display_id: Option<DisplayId>,
+    /// Actual renderer encoding.
+    pub mode: WindowColorMode,
+    /// Current Windows display color state.
+    pub display_kind: DisplayColorKind,
+    /// Whether the associated monitor can use HDR.
+    pub hdr_supported: Option<bool>,
+    /// System SDR white in nit, meaningful for absolute HDR output.
+    pub sdr_white_nits: Option<f32>,
+    /// Reported display peak in nit; not image content metadata.
+    pub max_luminance_nits: Option<f32>,
+    /// Monotonic per-window reconfiguration revision.
+    pub generation: u64,
+    /// Why the requested output could not be established.
+    pub fallback_reason: Option<SharedString>,
+}
+
 /// The variables that can be configured when creating a new window
 #[derive(Debug)]
 pub struct WindowOptions {
+    /// Windows output policy. Other backends currently use SDR.
+    pub color_policy: WindowColorPolicy,
     /// Specifies the state and bounds of the window in screen coordinates.
     /// - `None`: Inherit the bounds.
     /// - `Some(WindowBounds)`: Open a window with corresponding state and its restore size.
@@ -2570,6 +2646,7 @@ pub struct WindowOptions {
 )]
 #[allow(missing_docs)]
 pub struct WindowParams {
+    pub color_policy: WindowColorPolicy,
     pub bounds: Bounds<Pixels>,
 
     /// The titlebar configuration of the window
@@ -2662,6 +2739,7 @@ impl WindowBounds {
 impl Default for WindowOptions {
     fn default() -> Self {
         Self {
+            color_policy: WindowColorPolicy::Sdr,
             window_bounds: None,
             titlebar: Some(TitlebarOptions {
                 title: Default::default(),
@@ -3520,6 +3598,7 @@ mod atlas_tests {
         AtlasKey::Image(RenderImageParams {
             image_id: crate::ImageId(image_id),
             frame_index: 0,
+            format: crate::RenderImageFormat::Bgra8Srgb,
         })
     }
 

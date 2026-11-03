@@ -2100,6 +2100,7 @@ dependencies = [
  "gpui-pre-shared-string",
  "gpui-pre-sum-tree",
  "gpui-pre-util",
+ "half",
  "heapless",
  "image",
  "inventory",
@@ -2468,6 +2469,7 @@ dependencies = [
  "gpui-pre-collections",
  "gpui-pre-scheduler",
  "gpui-pre-util",
+ "half",
  "image",
  "itertools 0.14.0",
  "log",
@@ -7087,7 +7089,12 @@ version = "0.1.0"
 dependencies = [
  "gpui-base",
  "gpui-kit",
+ "half",
+ "image",
  "lyon",
+ "moxcms",
+ "png 0.18.1",
+ "windows 0.62.2",
  "yue-component-icons",
 ]
 

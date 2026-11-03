@@ -30,7 +30,10 @@ cbuffer GlobalParams: register(b0) {
     float grayscale_enhanced_contrast;
     float subpixel_enhanced_contrast;
     uint is_bgr;
-    uint3 global_pad;
+    // 0: encoded BGRA8 SDR, 1: absolute scRGB HDR, 2: relative linear SDR.
+    uint output_hdr;
+    float sdr_white;
+    float output_peak;
 };
 
 cbuffer BatchParams: register(b1) {
@@ -40,6 +43,55 @@ cbuffer BatchParams: register(b1) {
 
 Texture2D<float4> t_sprite: register(t0);
 SamplerState s_sprite: register(s0);
+
+// Exact sRGB transfer. The legacy 8-bit SDR renderer remains unchanged;
+// these functions are the explicit high-precision/output boundary.
+float3 hdr_srgb_decode(float3 v) {
+    float3 a = abs(v);
+    return sign(v) * float3(a.r <= .04045 ? a.r / 12.92 : pow((a.r+.055)/1.055,2.4), a.g <= .04045 ? a.g/12.92 : pow((a.g+.055)/1.055,2.4), a.b <= .04045 ? a.b/12.92 : pow((a.b+.055)/1.055,2.4));
+}
+float3 hdr_srgb_encode(float3 v) {
+    float3 a = abs(v);
+    return sign(v) * float3(a.r <= .0031308 ? a.r*12.92 : 1.055*pow(a.r,1./2.4)-.055, a.g <= .0031308 ? a.g*12.92 : 1.055*pow(a.g,1./2.4)-.055, a.b <= .0031308 ? a.b*12.92 : 1.055*pow(a.b,1./2.4)-.055);
+}
+float hdr_pq_encode(float nits) {
+    float p = pow(max(nits,0.) / 10000., 2610./16384.);
+    return pow((3424./4096.+2413./128.*p)/(1.+2392./128.*p),2523./32.);
+}
+float hdr_pq_decode(float v) {
+    float p = pow(max(v,0.),32./2523.);
+    return 10000.*pow(max(p-3424./4096.,0.)/(2413./128.-2392./128.*p),16384./2610.);
+}
+float hdr_map_luminance(float nits, float source_peak, float target_peak) {
+    if (source_peak <= target_peak || nits <= 0.) return max(nits,0.);
+    float black = hdr_pq_encode(0.);
+    float range = hdr_pq_encode(min(source_peak,10000.))-black;
+    float maximum = (hdr_pq_encode(min(target_peak,10000.))-black)/range;
+    float knee = saturate(1.5*maximum-.5);
+    float v = saturate((hdr_pq_encode(min(nits,source_peak))-black)/range);
+    if (v > knee && knee < 1.) {
+        float t = (v-knee)/(1.-knee);
+        float t2 = t*t, t3 = t2*t;
+        v = (2.*t3-3.*t2+1.)*knee + (t3-2.*t2+t)*(1.-knee) + (-2.*t3+3.*t2)*maximum;
+    }
+    return hdr_pq_decode(v*range+black);
+}
+float3 hdr_to_sdr(float3 rgb, float source_peak) {
+    float luminance = dot(rgb,float3(.2126,.7152,.0722));
+    if (luminance <= 0.) return 0.;
+    float neutral = saturate(hdr_map_luminance(luminance*80.,max(source_peak,100.),100.)/100.);
+    float3 scaled = rgb/luminance*neutral;
+    float chroma = 1.;
+    [unroll] for (uint c=0; c<3; ++c) {
+        if (scaled[c] < 0.) chroma = min(chroma,neutral/(neutral-scaled[c]));
+        else if (scaled[c] > 1.) chroma = min(chroma,(1.-neutral)/(scaled[c]-neutral));
+    }
+    return saturate(neutral+(scaled-neutral)*saturate(chroma));
+}
+float4 hdr_ui_output(float4 color) {
+    if (output_hdr != 0u) color.rgb = hdr_srgb_decode(color.rgb)*(output_hdr == 1u ? sdr_white : 1.);
+    return color;
+}
 
 struct SubpixelSpriteFragmentOutput {
     float4 foreground : SV_Target0;
@@ -151,11 +203,13 @@ float4 distance_from_clip_rect_transformed(float2 unit_vertex, Bounds bounds, Bo
 
 // Convert linear RGB to sRGB
 float3 linear_to_srgb(float3 color) {
+    if (output_hdr != 0u) return hdr_srgb_encode(color);
     return pow(color, float3(1.0 / 2.2, 1.0 / 2.2, 1.0 / 2.2));
 }
 
 // Convert sRGB to linear RGB
 float3 srgb_to_linear(float3 color) {
+    if (output_hdr != 0u) return hdr_srgb_decode(color);
     return pow(color, float3(2.2, 2.2, 2.2));
 }
 
@@ -359,9 +413,9 @@ float4 backdrop_sample(float2 p) {
     return t_backdrop_source.SampleLevel(s_backdrop, p / backdrop_source_capacity, 0.);
 }
 
-float4 backdrop_blur_fragment(BackdropVertexOutput input): SV_Target {
+float4 backdrop_fragment(BackdropVertexOutput input, bool cropped) {
     if (backdrop_mode == 0) {
-        float2 p = input.uv * backdrop_source_size;
+        float2 p = cropped ? input.position.xy : input.uv * backdrop_source_size;
         float4 color = backdrop_sample(p) * backdrop_center_weight;
         [loop] for (uint i = 0; i < backdrop_pair_count; ++i) {
             float2 offset = backdrop_step * backdrop_pairs[i].x;
@@ -393,6 +447,18 @@ float4 backdrop_blur_fragment(BackdropVertexOutput input): SV_Target {
     filtered_pos = clamp(filtered_pos, float2(.5, .5), backdrop_work_size - .5);
     float4 filtered = t_backdrop_filtered.SampleLevel(s_backdrop, filtered_pos / backdrop_source_capacity, 0.);
     return lerp(original, filtered, coverage);
+}
+
+float4 backdrop_blur_fragment(BackdropVertexOutput input): SV_Target {
+    return backdrop_fragment(input, false);
+}
+
+BackdropVertexOutput backdrop_crop_vertex(uint vertex_id: SV_VertexID) {
+    return backdrop_blur_vertex(vertex_id);
+}
+
+float4 backdrop_crop_fragment(BackdropVertexOutput input): SV_Target {
+    return backdrop_fragment(input, true);
 }
 
 GradientColor prepare_gradient_color(uint tag, uint color_space, Hsla solid, LinearColorStop colors[2]) {
@@ -477,7 +543,7 @@ float4 gradient_color(Background background,
             // Triangular-distributed noise breaks up 8-bit quantization steps.
             // ±2/255 for RGB (enough for dark-on-dark compositing),
             // ±3/255 for alpha (needs more because alpha × dark color = tiny steps).
-            {
+            if (output_hdr == 0u) {
                 float2 seed = position * 0.6180339887; // golden ratio spread
                 float r1 = frac(sin(dot(seed, float2(12.9898, 78.233))) * 43758.5453);
                 float r2 = frac(sin(dot(seed, float2(39.3460, 11.135))) * 24634.6345);
@@ -639,8 +705,8 @@ QuadVertexOutput quad_vertex(uint vertex_id: SV_VertexID, uint instance_id: SV_I
 
 float4 quad_fragment(QuadFragmentInput input): SV_Target {
     Quad quad = quads[input.quad_id];
-    float4 background_color = gradient_color(quad.background, input.position.xy, quad.bounds,
-    input.background_solid, input.background_color0, input.background_color1);
+    float4 background_color = hdr_ui_output(gradient_color(quad.background, input.position.xy, quad.bounds,
+    input.background_solid, input.background_color0, input.background_color1));
 
     bool unrounded = quad.corner_radii.top_left == 0.0 &&
         quad.corner_radii.top_right == 0.0 &&
@@ -747,7 +813,7 @@ float4 quad_fragment(QuadFragmentInput input): SV_Target {
 
     float4 color = background_color;
     if (border_sdf < antialias_threshold) {
-        float4 border_color = input.border_color;
+        float4 border_color = hdr_ui_output(input.border_color);
         // Dashed border logic when border_style == 1
         if (quad.border_style == 1) {
             // Position along the perimeter in "dash space", where each dash
@@ -1031,7 +1097,7 @@ float4 shadow_fragment(ShadowFragmentInput input): SV_TARGET {
         alpha *= saturate(0.5 - element_distance);
     }
 
-    return input.color * float4(1., 1., 1., alpha);
+    return hdr_ui_output(input.color) * float4(1., 1., 1., alpha);
 }
 
 /*
@@ -1097,6 +1163,7 @@ float4 path_rasterization_fragment(PathFragmentInput input): SV_Target {
 
     float4 color = gradient_color(background, input.position.xy, bounds,
         gradient.solid, gradient.color0, gradient.color1);
+    color = hdr_ui_output(color);
     return float4(color.rgb * color.a * alpha, alpha * color.a);
 }
 
@@ -1206,9 +1273,9 @@ float4 underline_fragment(UnderlineFragmentInput input): SV_Target {
         float distance_from_bottom_border = distance_in_pixels + half_thickness;
         float alpha = saturate(
             0.5 - max(-distance_from_bottom_border, distance_from_top_border));
-        return input.color * float4(1., 1., 1., alpha);
+        return hdr_ui_output(input.color) * float4(1., 1., 1., alpha);
     } else {
-        return input.color;
+        return hdr_ui_output(input.color);
     }
 }
 
@@ -1264,8 +1331,10 @@ MonochromeSpriteVertexOutput monochrome_sprite_vertex(uint vertex_id: SV_VertexI
 
 float4 monochrome_sprite_fragment(MonochromeSpriteFragmentInput input): SV_Target {
     float sample = t_sprite.Sample(s_sprite, input.tile_position).r;
-    float alpha_corrected = apply_contrast_and_gamma_correction(sample, input.color.rgb, grayscale_enhanced_contrast, gamma_ratios);
-    return float4(input.color.rgb, input.color.a * alpha_corrected);
+    // Coverage is already geometric. Legacy gamma compensation is only for
+    // encoded SDR blending, not for the linear HDR/SDR target.
+    float alpha_corrected = output_hdr != 0u ? sample : apply_contrast_and_gamma_correction(sample, input.color.rgb, grayscale_enhanced_contrast, gamma_ratios);
+    return hdr_ui_output(float4(input.color.rgb, input.color.a * alpha_corrected));
 }
 
 MonochromeSpriteVertexOutput subpixel_sprite_vertex(uint vertex_id: SV_VertexID, uint instance_id: SV_InstanceID) {
@@ -1278,10 +1347,11 @@ SubpixelSpriteFragmentOutput subpixel_sprite_fragment(MonochromeSpriteFragmentIn
         sample = sample.bgr;
     }
     float3 alpha_corrected = apply_contrast_and_gamma_correction3(sample, input.color.rgb, subpixel_enhanced_contrast, gamma_ratios);
+    if (output_hdr != 0u) alpha_corrected = dot(sample, float3(1./3.,1./3.,1./3.)).xxx;
 
     SubpixelSpriteFragmentOutput output;
-    output.foreground = float4(input.color.rgb, 1.0f);
-    output.alpha = float4(input.color.a * alpha_corrected, 1.0f);
+    output.foreground = hdr_ui_output(float4(input.color.rgb, 1.0f));
+    output.alpha = float4(input.color.a * alpha_corrected, input.color.a * dot(alpha_corrected,float3(1./3.,1./3.,1./3.)));
     return output;
 }
 
@@ -1336,8 +1406,48 @@ PolychromeSpriteVertexOutput polychrome_sprite_vertex(uint vertex_id: SV_VertexI
 
 float4 polychrome_sprite_fragment(PolychromeSpriteFragmentInput input): SV_Target {
     PolychromeSprite sprite = poly_sprites[input.sprite_id];
-    float4 sample = t_sprite.Sample(s_sprite, input.tile_position);
-    float distance = quad_sdf(input.position.xy, sprite.bounds, sprite.corner_radii);
+    uint encoding = (sprite.pad >> 2u) & 3u;
+    bool decode_srgb = encoding == 0u && output_hdr != 0u;
+    float4 sample;
+    if ((sprite.pad & 1u) != 0u) {
+        int2 first = int2(sprite.tile.bounds.origin);
+        float2 source_position = (input.position.xy - sprite.bounds.origin) / sprite.bounds.size * float2(sprite.tile.bounds.size);
+        int2 texel = first + int2(floor(source_position));
+        int2 last = first + int2(sprite.tile.bounds.size) - 1;
+        sample = t_sprite.Load(int3(clamp(texel, first, last), 0));
+        if (decode_srgb) sample.rgb = hdr_srgb_decode(sample.rgb);
+    } else if ((sprite.pad & 2u) != 0u || decode_srgb) {
+        uint texture_width, texture_height;
+        t_sprite.GetDimensions(texture_width, texture_height);
+        float2 dimensions = float2(texture_width, texture_height);
+        float2 source = input.tile_position * dimensions - 0.5;
+        int2 base = int2(floor(source));
+        float2 weight = frac(source);
+        int2 first = int2(sprite.tile.bounds.origin);
+        int2 last = first + int2(sprite.tile.bounds.size) - 1;
+        float4 a = t_sprite.Load(int3(clamp(base, first, last), 0));
+        float4 b = t_sprite.Load(int3(clamp(base + int2(1, 0), first, last), 0));
+        float4 c = t_sprite.Load(int3(clamp(base + int2(0, 1), first, last), 0));
+        float4 d = t_sprite.Load(int3(clamp(base + int2(1, 1), first, last), 0));
+        if (decode_srgb) {
+            a.rgb = hdr_srgb_decode(a.rgb); b.rgb = hdr_srgb_decode(b.rgb);
+            c.rgb = hdr_srgb_decode(c.rgb); d.rgb = hdr_srgb_decode(d.rgb);
+        }
+        // GPUI retains straight-alpha sources. Filter associated RGB, then
+        // return straight RGB for the existing SRC_ALPHA blend state.
+        a.rgb *= a.a; b.rgb *= b.a; c.rgb *= c.a; d.rgb *= d.a;
+        float4 associated = lerp(lerp(a, b, weight.x), lerp(c, d, weight.x), weight.y);
+        sample = float4(associated.a > 0. ? associated.rgb / associated.a : float3(0., 0., 0.), associated.a);
+    } else {
+        sample = t_sprite.Sample(s_sprite, input.tile_position);
+    }
+    Bounds shape = sprite.bounds;
+    if ((sprite.pad & 3u) != 0u) {
+        float2 end = min(shape.origin + shape.size, sprite.content_mask.origin + sprite.content_mask.size);
+        shape.origin = max(shape.origin, sprite.content_mask.origin);
+        shape.size = max(float2(0., 0.), end - shape.origin);
+    }
+    float distance = quad_sdf(input.position.xy, shape, sprite.corner_radii);
 
     float4 color = sample;
     if (sprite.grayscale != 0u) {
@@ -1345,5 +1455,19 @@ float4 polychrome_sprite_fragment(PolychromeSpriteFragmentInput input): SV_Targe
         color = float4(grayscale, sample.a);
     }
     color.a *= sprite.opacity * saturate(0.5 - distance);
+    if (encoding != 0u) {
+        float peak = f16tof32(sprite.pad >> 16u)*80.;
+        if (output_hdr == 1u) {
+            if (encoding == 1u) color.rgb *= sdr_white;
+            else if (peak > output_peak) {
+                // Match CPU luminance mapping; the immutable source is unchanged.
+                float luma = dot(color.rgb,float3(.2126,.7152,.0722))*80.;
+                if (luma > 0.) color.rgb *= hdr_map_luminance(luma,peak,output_peak)/luma;
+            }
+        } else {
+            if (encoding == 2u) color.rgb = hdr_to_sdr(color.rgb,peak);
+            if (output_hdr == 0u) color.rgb = hdr_srgb_encode(color.rgb);
+        }
+    } else if (decode_srgb && output_hdr == 1u) color.rgb *= sdr_white;
     return color;
 }

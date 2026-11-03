@@ -80,6 +80,8 @@ pub struct YueImagePreviewState {
     pub(super) fit: ImagePreviewFit,
     initial_fit: ImagePreviewFit,
     pub(super) background: ImagePreviewBackground,
+    pub(super) pixel_grid: bool,
+    pub(super) sampling: ImagePreviewSampling,
     pub(super) camera: Camera,
     pub(super) viewport: Viewport,
     pub(super) split: f32,
@@ -139,6 +141,8 @@ impl YueImagePreviewState {
             fit: ImagePreviewFit::FitAll,
             initial_fit: ImagePreviewFit::FitAll,
             background: ImagePreviewBackground::CheckerDark,
+            pixel_grid: false,
+            sampling: ImagePreviewSampling::Smooth,
             camera: Camera::default(),
             viewport: Viewport::default(),
             split: 1.,
@@ -182,7 +186,12 @@ impl YueImagePreviewState {
             center: self.camera.center,
             split: self.split,
             background: self.background,
+            pixel_grid: self.pixel_grid,
             reference_size: image.map(|i| i.pixel_size()),
+            texture_size: image.map(|i| i.texture_size()),
+            proxy: self.has_proxy(),
+            pixel_grid_available: self.is_pixel_grid_available(),
+            sampling: self.sampling,
         }
     }
     pub fn set_document(
@@ -209,7 +218,7 @@ impl YueImagePreviewState {
         let same_source = self
             .source()
             .zip(document.source.ready())
-            .is_some_and(|(a, b)| a.image.id == b.image.id);
+            .is_some_and(|(a, b)| a.image.id == b.image.id && a.pixel_size() == b.pixel_size());
         self.cancel_gesture(window);
         self.finish_motion();
         self.render_errors.clear();
@@ -275,6 +284,79 @@ impl YueImagePreviewState {
             self.background = background;
             cx.notify();
         }
+    }
+    pub fn set_pixel_grid_enabled(&mut self, enabled: bool, cx: &mut Context<Self>) {
+        if self.pixel_grid != enabled {
+            self.pixel_grid = enabled;
+            cx.notify();
+        }
+    }
+    pub fn set_sampling(&mut self, sampling: ImagePreviewSampling, cx: &mut Context<Self>) {
+        if self.sampling != sampling {
+            self.sampling = sampling;
+            cx.notify();
+        }
+    }
+    pub fn is_pixel_grid_available(&self) -> bool {
+        cfg!(target_os = "windows")
+            && !self.has_proxy()
+            && self
+                .reference()
+                .is_some_and(|i| self.camera.zoom(i.dimensions()) >= 4.)
+    }
+    pub(super) fn has_proxy(&self) -> bool {
+        self.reference().is_some_and(ImagePreviewImage::is_proxy)
+            || (self.mode == ImagePreviewMode::Compare
+                && self.source().is_some_and(ImagePreviewImage::is_proxy))
+    }
+    pub fn capture_view(&self) -> ImagePreviewView {
+        ImagePreviewView {
+            document: self.document.clone(),
+            result: self.result.clone(),
+            snapshot: self.snapshot(),
+            last_middle: self.last_middle,
+        }
+    }
+    /// Silently restore an independent view, including a retained older result.
+    /// Automatic fits use this viewport; Manual retains physical zoom and center.
+    pub fn restore_view(
+        &mut self,
+        view: &ImagePreviewView,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Result<(), ImagePreviewError> {
+        if view.document.is_none() || view.snapshot.reference_size.is_none() {
+            return Err(ImagePreviewError::UnavailableMode);
+        }
+        self.cancel_gesture(window);
+        self.finish_motion();
+        self.render_errors.clear();
+        self.document = view.document.clone();
+        self.result = view.result.clone();
+        let snapshot = &view.snapshot;
+        self.result_revision = snapshot.result_revision;
+        self.mode = snapshot.mode;
+        self.fit = snapshot.fit;
+        self.background = snapshot.background;
+        self.pixel_grid = snapshot.pixel_grid;
+        self.sampling = snapshot.sampling;
+        self.split = snapshot.split;
+        self.last_middle = view.last_middle;
+        self.camera = Camera {
+            center: snapshot.center,
+            width: snapshot.zoom * snapshot.reference_size.unwrap()[0] as f32,
+        };
+        self.needs_fit = self.fit != ImagePreviewFit::Manual;
+        if self.viewport.is_valid() {
+            self.measure(self.viewport);
+            if self.fit == ImagePreviewFit::Manual {
+                self.camera = self
+                    .camera
+                    .constrained(self.reference().unwrap().dimensions(), self.viewport);
+            }
+        }
+        cx.notify();
+        Ok(())
     }
     pub fn fit_all(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.fit_to(ImagePreviewFit::FitAll, window, cx);
@@ -686,8 +768,30 @@ impl YueImagePreviewState {
             cx.emit(ImagePreviewEvent::SplitChanged(next.clone(), source));
         }
         if before.background != next.background {
-            cx.emit(ImagePreviewEvent::BackgroundChanged(next, source));
+            cx.emit(ImagePreviewEvent::BackgroundChanged(next.clone(), source));
         }
+        if before.pixel_grid != next.pixel_grid {
+            cx.emit(ImagePreviewEvent::PixelGridChanged(next, source));
+        }
+    }
+    pub(super) fn user_pixel_grid(&mut self, enabled: bool, cx: &mut Context<Self>) {
+        if self.disabled || self.pixel_grid == enabled {
+            return;
+        }
+        let before = self.snapshot();
+        self.pixel_grid = enabled;
+        self.emit_changes(before, ImagePreviewChangeSource::Toolbar, cx);
+        cx.notify();
+    }
+    pub(super) fn user_sampling(&mut self, sampling: ImagePreviewSampling, cx: &mut Context<Self>) {
+        if self.disabled || self.sampling == sampling {
+            return;
+        }
+        self.set_sampling(sampling, cx);
+        cx.emit(ImagePreviewEvent::SamplingChanged(
+            self.snapshot(),
+            ImagePreviewChangeSource::Toolbar,
+        ));
     }
     pub(super) fn cancel_gesture(&mut self, w: &mut Window) {
         if let Some(g) = self.gesture.take()

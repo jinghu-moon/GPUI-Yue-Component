@@ -1229,6 +1229,9 @@ pub struct Window {
     is_resizable: bool,
     is_minimizable: bool,
     sprite_atlas: Arc<dyn PlatformAtlas>,
+    // Precise direct-paint resources do not pass through ImageCache. Weak keys
+    // retire uploads after all hosts, views and frozen snapshots release them.
+    image_uploads: FxHashMap<RenderImageParams, Weak<RenderImage>>,
     text_system: Arc<WindowTextSystem>,
     text_rendering_mode: Rc<Cell<TextRenderingMode>>,
     rem_size: Pixels,
@@ -1583,6 +1586,7 @@ impl Window {
         cx: &mut App,
     ) -> Result<Self> {
         let WindowOptions {
+            color_policy,
             window_bounds,
             titlebar,
             focus,
@@ -1615,6 +1619,7 @@ impl Window {
         let mut platform_window = cx.platform.open_window(
             handle,
             WindowParams {
+                color_policy,
                 bounds: window_bounds.get_bounds(),
                 titlebar,
                 kind,
@@ -2137,6 +2142,7 @@ impl Window {
             is_resizable,
             is_minimizable,
             sprite_atlas,
+            image_uploads: FxHashMap::default(),
             text_system,
             text_rendering_mode: cx.text_rendering_mode.clone(),
             rem_size: px(16.),
@@ -2870,13 +2876,22 @@ impl Window {
         self.platform_window.bounds()
     }
 
-    /// Renders the current frame's scene to a texture and returns the pixel data as an RGBA image.
+    /// Renders the current frame to an SDR, straight-alpha RGBA image on Windows.
+    /// Use `render_to_native_image` to retain native FP16 output and associated alpha.
     /// This does not present the frame to screen - useful for visual testing where we want
     /// to capture what would be rendered without displaying it or requiring the window to be visible.
     #[cfg(any(test, feature = "test-support"))]
     pub fn render_to_image(&self) -> anyhow::Result<image::RgbaImage> {
         self.platform_window
             .render_to_image(&self.rendered_frame.scene)
+    }
+
+    /// Read the current frame without presenting, preserving the native storage
+    /// format and output encoding. Pixels retain render-target associated alpha.
+    #[cfg(any(test, feature = "test-support"))]
+    pub fn render_to_native_image(&self) -> anyhow::Result<crate::RenderTargetReadback> {
+        self.platform_window
+            .render_to_native_image(&self.rendered_frame.scene)
     }
 
     /// Returns the quads in the most recently rendered frame's scene, so tests can assert on
@@ -2942,6 +2957,11 @@ impl Window {
     /// Returns the appearance of the current window.
     pub fn appearance(&self) -> WindowAppearance {
         self.appearance
+    }
+
+    /// Current platform output, independently of the content's color encoding.
+    pub fn color_output(&self) -> crate::WindowColorOutput {
+        self.platform_window.color_output()
     }
 
     /// Returns the size of the drawable area within the window.
@@ -3532,6 +3552,15 @@ impl Window {
         let previous_window_active = self.rendered_frame.window_active;
         mem::swap(&mut self.rendered_frame, &mut self.next_frame);
         self.next_frame.clear();
+        let atlas = &self.sprite_atlas;
+        self.image_uploads.retain(|params, image| {
+            if image.strong_count() == 0 {
+                atlas.remove(&params.clone().into());
+                false
+            } else {
+                true
+            }
+        });
         let current_focus_path = self.rendered_frame.focus_path();
         let current_window_active = self.rendered_frame.window_active;
         let mut focus_before_listeners = self.focus;
@@ -5117,7 +5146,89 @@ impl Window {
         frame_index: usize,
         grayscale: bool,
     ) -> Result<()> {
+        self.paint_image_sampled(
+            bounds,
+            image_bounds,
+            corner_radii,
+            data,
+            frame_index,
+            grayscale,
+            0,
+        )
+    }
+
+    /// Linear image sampling with full-frame UVs and viewport clipping. Windows
+    /// only: unlike the ordinary image path this never rounds a source sub-tile.
+    /// Use for cameras whose physical scale must survive partial visibility.
+    pub fn paint_image_precise(
+        &mut self,
+        bounds: Bounds<Pixels>,
+        image_bounds: Bounds<Pixels>,
+        corner_radii: Corners<Pixels>,
+        data: Arc<RenderImage>,
+        frame_index: usize,
+        grayscale: bool,
+    ) -> Result<()> {
+        anyhow::ensure!(
+            cfg!(target_os = "windows"),
+            "precise image sampling requires the Windows backend"
+        );
+        self.paint_image_sampled(
+            bounds,
+            image_bounds,
+            corner_radii,
+            data,
+            frame_index,
+            grayscale,
+            2,
+        )
+    }
+
+    /// Paint source texels without interpolation, using the existing atlas.
+    /// Currently supported by the maintained Windows D3D11 backend only.
+    /// Full-image UVs and the visible content mask preserve fractional pan/crop
+    /// alignment; no resized bitmap, readback or additional upload is created.
+    pub fn paint_image_nearest(
+        &mut self,
+        bounds: Bounds<Pixels>,
+        image_bounds: Bounds<Pixels>,
+        corner_radii: Corners<Pixels>,
+        data: Arc<RenderImage>,
+        frame_index: usize,
+        grayscale: bool,
+    ) -> Result<()> {
+        anyhow::ensure!(
+            cfg!(target_os = "windows"),
+            "nearest image sampling requires the Windows backend"
+        );
+        self.paint_image_sampled(
+            bounds,
+            image_bounds,
+            corner_radii,
+            data,
+            frame_index,
+            grayscale,
+            1,
+        )
+    }
+
+    fn paint_image_sampled(
+        &mut self,
+        bounds: Bounds<Pixels>,
+        image_bounds: Bounds<Pixels>,
+        corner_radii: Corners<Pixels>,
+        data: Arc<RenderImage>,
+        frame_index: usize,
+        grayscale: bool,
+        sampling: u32,
+    ) -> Result<()> {
         self.invalidator.debug_assert_paint();
+        let sampling = if data.format() != crate::RenderImageFormat::Bgra8Srgb && sampling == 0 {
+            2
+        } else {
+            sampling
+        };
+        let precise = sampling != 0;
 
         let visible_bounds = bounds.intersect(&image_bounds);
         if visible_bounds.size.width <= Pixels::ZERO || visible_bounds.size.height <= Pixels::ZERO {
@@ -5130,11 +5241,12 @@ impl Window {
         let params = RenderImageParams {
             image_id: data.id,
             frame_index,
+            format: data.format(),
         };
 
         let tile = self
             .sprite_atlas
-            .get_or_insert_with(params.into(), &mut || {
+            .get_or_insert_with(params.clone().into(), &mut || {
                 Ok(Some((
                     data.size(frame_index),
                     Cow::Borrowed(
@@ -5145,9 +5257,15 @@ impl Window {
             })?
             .expect("Callback above only returns Some");
 
+        if precise {
+            self.image_uploads
+                .entry(params)
+                .or_insert_with(|| Arc::downgrade(&data));
+        }
+
         let visible_bounds_snapped = self.snap_bounds(visible_bounds);
 
-        let sub_tile = if visible_bounds == image_bounds {
+        let sub_tile = if precise || visible_bounds == image_bounds {
             tile
         } else {
             let x_offset_ratio =
@@ -5187,18 +5305,50 @@ impl Window {
             }
         };
 
-        let content_mask = self.snapped_content_mask();
-        let corner_radii = corner_radii
+        let mut content_mask = self.snapped_content_mask();
+        if precise {
+            content_mask.bounds = content_mask.bounds.intersect(&self.snap_bounds(bounds));
+        }
+        let mut corner_radii = corner_radii
             .clamp_radii_for_quad_size(visible_bounds.size)
             .scale(self.scale_factor());
+        if precise {
+            let visible = visible_bounds.scale(self.scale_factor());
+            let clip = visible.intersect(&content_mask.bounds);
+            if clip.left() > visible.left() || clip.top() > visible.top() {
+                corner_radii.top_left = ScaledPixels(0.);
+            }
+            if clip.right() < visible.right() || clip.top() > visible.top() {
+                corner_radii.top_right = ScaledPixels(0.);
+            }
+            if clip.left() > visible.left() || clip.bottom() < visible.bottom() {
+                corner_radii.bottom_left = ScaledPixels(0.);
+            }
+            if clip.right() < visible.right() || clip.bottom() < visible.bottom() {
+                corner_radii.bottom_right = ScaledPixels(0.);
+            }
+        }
         let opacity = self.element_opacity();
 
         let snapshot_index = self.next_frame.scene.len();
         self.next_frame.scene.insert_primitive(PolychromeSprite {
             order: 0,
-            pad: 0,
+            pad: sampling
+                | match data.format() {
+                    crate::RenderImageFormat::Bgra8Srgb => 0,
+                    crate::RenderImageFormat::Rgba16FloatLinearSrgb => 4,
+                    crate::RenderImageFormat::Rgba16FloatScRgb => {
+                        8 | ((half::f16::from_f32(data.peak_nits().unwrap_or(0.) / 80.).to_bits()
+                            as u32)
+                            << 16)
+                    }
+                },
             grayscale: grayscale.into(),
-            bounds: visible_bounds_snapped,
+            bounds: if precise {
+                image_bounds.scale(self.scale_factor())
+            } else {
+                visible_bounds_snapped
+            },
             content_mask,
             corner_radii,
             tile: sub_tile,
@@ -5216,6 +5366,7 @@ impl Window {
                     data,
                     frame_index,
                     grayscale,
+                    sampling,
                     mask,
                     opacity,
                 });
@@ -5252,9 +5403,11 @@ impl Window {
             let params = RenderImageParams {
                 image_id: data.id,
                 frame_index,
+                format: data.format(),
             };
 
             self.sprite_atlas.remove(&params.clone().into());
+            self.image_uploads.remove(&params);
         }
 
         Ok(())
@@ -5269,10 +5422,32 @@ impl Window {
                     &RenderImageParams {
                         image_id: data.id,
                         frame_index,
+                        format: data.format(),
                     }
                     .into(),
                 )
             })
+    }
+
+    /// Observes an actual atlas key without retaining the image under test.
+    #[cfg(any(test, feature = "test-support"))]
+    pub fn has_image_atlas_frame(&self, image_id: crate::ImageId, frame_index: usize) -> bool {
+        [
+            crate::RenderImageFormat::Bgra8Srgb,
+            crate::RenderImageFormat::Rgba16FloatLinearSrgb,
+            crate::RenderImageFormat::Rgba16FloatScRgb,
+        ]
+        .into_iter()
+        .any(|format| {
+            self.sprite_atlas.contains(
+                &RenderImageParams {
+                    image_id,
+                    frame_index,
+                    format,
+                }
+                .into(),
+            )
+        })
     }
 
     /// Add a node to the layout tree for the current frame. Takes the `Style` of the element for which

@@ -68,10 +68,11 @@ pub use gpui_kit;
 pub use gpui_kit::base::input::{InputEvent, InputState, TextareaState};
 pub use icon::{IconSize, YueIcon};
 pub use image_preview::{
-    ImagePreviewBackground, ImagePreviewChangeSource, ImagePreviewDocument, ImagePreviewError,
-    ImagePreviewEvent, ImagePreviewFit, ImagePreviewImage, ImagePreviewLoad, ImagePreviewMode,
-    ImagePreviewOverlay, ImagePreviewSnapshot, ImagePreviewToolbar, YueImagePreview,
-    YueImagePreviewState,
+    ImagePreviewBackground, ImagePreviewChangeSource, ImagePreviewColorSpace, ImagePreviewDocument,
+    ImagePreviewError, ImagePreviewEvent, ImagePreviewFit, ImagePreviewImage, ImagePreviewLimits,
+    ImagePreviewLoad, ImagePreviewMode, ImagePreviewOverlay, ImagePreviewPixels,
+    ImagePreviewSampling, ImagePreviewSnapshot, ImagePreviewToolbar, ImagePreviewView,
+    YueImagePreview, YueImagePreviewState,
 };
 pub use input::{
     InputSize, InputStatus, InputTextAlign, InputType, YueInput, YueNumberInput, YueTextarea,

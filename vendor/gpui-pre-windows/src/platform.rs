@@ -51,6 +51,7 @@ impl TrackedWindow {
 }
 
 pub struct WindowsPlatform {
+    display_queue: Option<crate::color_output::DisplayQueueOwner>,
     inner: Rc<WindowsPlatformInner>,
     raw_window_handles: Arc<RwLock<SmallVec<[TrackedWindow; 4]>>>,
     /// The windowing mode to start in, applied when `run` starts. Windowed when unset.
@@ -266,6 +267,11 @@ impl WindowsPlatform {
         };
 
         Ok(Self {
+            display_queue: if headless {
+                None
+            } else {
+                crate::color_output::DisplayQueueOwner::new().log_err()
+            },
             inner,
             handle,
             raw_window_handles,
@@ -1403,6 +1409,12 @@ impl WindowsPlatformInner {
 
 impl Drop for WindowsPlatform {
     fn drop(&mut self) {
+        for entry in self.raw_window_handles.read().iter() {
+            if let Some(window) = window_from_hwnd(entry.as_raw()) {
+                window.state.color_watcher.borrow_mut().take();
+            }
+        }
+        self.display_queue.take();
         if let Some(stop) = self.vsync_stop.borrow_mut().take() {
             stop.store(true, Ordering::Release);
         }

@@ -1,45 +1,6 @@
-use gpui_kit::{RenderImage, SharedString};
-use std::{fmt, sync::Arc};
-
-/// Static decoded pixels. The host owns I/O, decoding, orientation and encoding.
-#[derive(Clone, Debug, PartialEq)]
-pub struct ImagePreviewImage {
-    pub(super) image: Arc<RenderImage>,
-    pub(super) description: SharedString,
-}
-impl ImagePreviewImage {
-    pub fn new(
-        image: Arc<RenderImage>,
-        description: impl Into<SharedString>,
-    ) -> Result<Self, ImagePreviewError> {
-        let s = image.size(0);
-        if image.frame_count() != 1 || s.width.0 <= 0 || s.height.0 <= 0 {
-            return Err(ImagePreviewError::InvalidImage);
-        }
-        let description = description.into();
-        Ok(Self {
-            image,
-            description: if description.trim().is_empty() {
-                "图片预览".into()
-            } else {
-                description
-            },
-        })
-    }
-    pub fn pixel_size(&self) -> [u32; 2] {
-        let s = self.image.size(0);
-        [s.width.0 as u32, s.height.0 as u32]
-    }
-    pub fn description(&self) -> &SharedString {
-        &self.description
-    }
-    pub fn image(&self) -> &Arc<RenderImage> {
-        &self.image
-    }
-    pub(super) fn dimensions(&self) -> [f32; 2] {
-        self.pixel_size().map(|v| v as f32)
-    }
-}
+use super::ImagePreviewImage;
+use gpui_kit::SharedString;
+use std::fmt;
 
 /// Explicit host-supplied state. Refreshing may retain a previously ready result.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -123,6 +84,7 @@ impl ImagePreviewMode {
         }
     }
 }
+
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ImagePreviewFit {
     #[default]
@@ -154,6 +116,14 @@ pub enum ImagePreviewToolbar {
     Floating,
     Footer,
 }
+/// Smooth browsing is the default. Pixel inspection uses nearest sampling on
+/// Windows; proxy resources always stay smooth because detail is unavailable.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum ImagePreviewSampling {
+    #[default]
+    Smooth,
+    Nearest,
+}
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ImagePreviewChangeSource {
     Pointer,
@@ -173,7 +143,12 @@ pub struct ImagePreviewSnapshot {
     pub(super) center: [f32; 2],
     pub(super) split: f32,
     pub(super) background: ImagePreviewBackground,
+    pub(super) pixel_grid: bool,
     pub(super) reference_size: Option<[u32; 2]>,
+    pub(super) texture_size: Option<[u32; 2]>,
+    pub(super) proxy: bool,
+    pub(super) pixel_grid_available: bool,
+    pub(super) sampling: ImagePreviewSampling,
 }
 impl ImagePreviewSnapshot {
     pub fn document_id(&self) -> Option<&SharedString> {
@@ -205,8 +180,39 @@ impl ImagePreviewSnapshot {
     pub fn background(&self) -> ImagePreviewBackground {
         self.background
     }
+    pub fn is_pixel_grid_enabled(&self) -> bool {
+        self.pixel_grid
+    }
     pub fn reference_size(&self) -> Option<[u32; 2]> {
         self.reference_size
+    }
+    pub fn texture_size(&self) -> Option<[u32; 2]> {
+        self.texture_size
+    }
+    /// In Compare, true when either visible resource is a proxy.
+    pub fn is_proxy(&self) -> bool {
+        self.proxy
+    }
+    pub fn is_pixel_grid_available(&self) -> bool {
+        self.pixel_grid_available
+    }
+    pub fn sampling(&self) -> ImagePreviewSampling {
+        self.sampling
+    }
+}
+
+/// A captured document and view for opening an independent, larger viewer.
+/// Decoded images are shared; focus, gestures, layout and animation are not.
+#[derive(Clone, Debug)]
+pub struct ImagePreviewView {
+    pub(super) document: Option<ImagePreviewDocument>,
+    pub(super) result: Option<ImagePreviewImage>,
+    pub(super) snapshot: ImagePreviewSnapshot,
+    pub(super) last_middle: f32,
+}
+impl ImagePreviewView {
+    pub fn snapshot(&self) -> &ImagePreviewSnapshot {
+        &self.snapshot
     }
 }
 
@@ -216,6 +222,8 @@ pub enum ImagePreviewEvent {
     ViewChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
     SplitChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
     BackgroundChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
+    PixelGridChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
+    SamplingChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
     RetryRequested {
         document_id: SharedString,
         revision: u64,
@@ -223,9 +231,13 @@ pub enum ImagePreviewEvent {
     },
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum ImagePreviewError {
     InvalidImage,
+    InvalidPixels,
+    InvalidLimits,
+    ResourceLimit(String),
+    Decode(String),
     EmptyDocumentId,
     StaleRevision,
     UnavailableMode,
@@ -233,8 +245,20 @@ pub enum ImagePreviewError {
 }
 impl fmt::Display for ImagePreviewError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ResourceLimit(message) => return write!(f, "image resource limit: {message}"),
+            Self::Decode(message) => return write!(f, "image decoding failed: {message}"),
+            _ => {}
+        }
         f.write_str(match self {
             Self::InvalidImage => "image must contain one non-empty static frame",
+            Self::InvalidPixels => {
+                "image pixels must have valid dimensions and a tightly packed four-channel buffer"
+            }
+            Self::InvalidLimits => {
+                "image budgets must be positive; texture edge must not exceed 8192"
+            }
+            Self::ResourceLimit(_) | Self::Decode(_) => unreachable!(),
             Self::EmptyDocumentId => "document identity must not be empty",
             Self::StaleRevision => "document revision is older than the current request",
             Self::UnavailableMode => "requested preview mode is unavailable or unaligned",

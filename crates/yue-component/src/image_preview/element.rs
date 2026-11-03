@@ -1,8 +1,10 @@
+use super::state::Gesture;
 use super::*;
 use crate::{
     ButtonSize, ButtonVariant, FeedbackSize, SegmentedDistribution, SegmentedSize, YueButton,
     YueSegmented, YueSegmentedOption, YueSpinner,
-    tokens::{pixels, rems, rgba, shadow},
+    motion::{MotionDuration, MotionEase},
+    tokens::{number, pixels, rems, rgba, shadow},
 };
 use gpui_kit::base::TestSupportExt as _;
 use gpui_kit::{
@@ -65,21 +67,8 @@ impl RenderOnce for YueImagePreview {
         let compare_available = s.mode_available(ImagePreviewMode::Compare);
         let result_available = s.mode_available(ImagePreviewMode::Result);
         let disabled = self.disabled;
-        let available = s.reference().is_some();
         let (status, busy, error) = s.status();
         let snap = s.snapshot();
-        let zoom = if let Some(image) = s.reference() {
-            s.display_camera(Instant::now()).zoom(image.dimensions())
-        } else {
-            1.
-        };
-        let percentage = if zoom < 0.01 {
-            format!("{:.3}%", zoom * 100.)
-        } else if zoom < 0.1 {
-            format!("{:.1}%", zoom * 100.)
-        } else {
-            format!("{:.0}%", zoom * 100.)
-        };
         let source_size = s.source().map(|i| i.pixel_size());
         let result_size = s.result.as_ref().map(|i| i.pixel_size());
         let description = s
@@ -87,19 +76,6 @@ impl RenderOnce for YueImagePreview {
             .map(|i| i.description.clone())
             .unwrap_or_else(|| "图片预览".into());
         let focus_visible = focus.is_focused(w) && w.last_input_was_keyboard();
-        let limits = s
-            .reference()
-            .map(|i| s.viewport.zoom_limits(i.dimensions()))
-            .unwrap_or([0.05, 8.]);
-        let toolbar = zoom_toolbar(
-            &state,
-            theme,
-            self.toolbar == ImagePreviewToolbar::Floating,
-            disabled || !available,
-            percentage,
-            [zoom > limits[0] + 0.000001, zoom < limits[1] - 0.000001],
-            cx,
-        );
         let mut viewport = div()
             .id(viewport_id)
             .test_support()
@@ -120,12 +96,7 @@ impl RenderOnce for YueImagePreview {
             }))
             .when(!disabled, |d| d.track_focus(&focus))
             .key_context("YueImagePreview")
-            .child(paint::viewport(
-                &state,
-                theme,
-                self.toolbar_visible && self.toolbar == ImagePreviewToolbar::Floating,
-                self.overlay,
-            ));
+            .child(paint::viewport(&state, theme, self.overlay));
         macro_rules! action {
             ($view:ident,$ty:ty,$op:expr) => {{
                 let owner = state.clone();
@@ -283,11 +254,23 @@ impl RenderOnce for YueImagePreview {
             .text_sm()
             .text_color(gpui_kit::rgb(theme.text_secondary()));
         if let Some([width, height]) = source_size {
-            footer = footer.child(div().child(format!("原始 {width} × {height}")));
+            let proxy = s.source().filter(|i| i.is_proxy()).map(|i| {
+                let [tw, th] = i.texture_size();
+                format!(" · 代理纹理 {tw} × {th}")
+            });
+            footer = footer.child(div().child(format!(
+                "原始 {width} × {height}{}",
+                proxy.unwrap_or_default()
+            )));
         }
         if let Some([width, height]) = result_size {
+            let proxy = s.result.as_ref().filter(|i| i.is_proxy()).map(|i| {
+                let [tw, th] = i.texture_size();
+                format!(" · 代理纹理 {tw} × {th}")
+            });
             footer = footer.child(div().child(format!(
-                "输出 {width} × {height}{}",
+                "输出 {width} × {height}{}{}",
+                proxy.unwrap_or_default(),
                 if snap.result_revision() != Some(snap.revision()) {
                     " · 上一版"
                 } else {
@@ -295,36 +278,33 @@ impl RenderOnce for YueImagePreview {
                 }
             )));
         }
-        if self.background_picker {
-            let value = state.read(cx).background;
-            let owner = state.clone();
-            let bg = YueSegmented::new(
-                state.read(cx).child_id("background"),
-                theme,
-                bg_value(value),
-            )
-            .accessibility_label("预览背景")
-            .size(SegmentedSize::Small)
-            .disabled(disabled)
-            .options(
-                [
-                    ImagePreviewBackground::CheckerDark,
-                    ImagePreviewBackground::CheckerLight,
-                    ImagePreviewBackground::White,
-                    ImagePreviewBackground::Black,
-                ]
-                .map(|v| YueSegmentedOption::new(bg_value(v), v.label())),
-            )
-            .on_change(move |v, _, cx| {
-                let bg = match v.as_ref() {
-                    "light" => ImagePreviewBackground::CheckerLight,
-                    "white" => ImagePreviewBackground::White,
-                    "black" => ImagePreviewBackground::Black,
-                    _ => ImagePreviewBackground::CheckerDark,
-                };
-                owner.update(cx, |s, cx| s.user_background(bg, cx));
-            });
-            footer = footer.child(bg);
+        if s.has_proxy() {
+            footer = footer.child(
+                div()
+                    .id(s.child_id("proxy-info"))
+                    .test_support()
+                    .aria_label("代理预览；100% 按原始尺寸，细节已缩减")
+                    .child("代理预览；100% 按原始尺寸，细节已缩减"),
+            );
+        }
+        if s.reference()
+            .is_some_and(|i| i.color_space() == ImagePreviewColorSpace::ScRgb)
+            || (mode == ImagePreviewMode::Compare
+                && s.source()
+                    .is_some_and(|i| i.color_space() == ImagePreviewColorSpace::ScRgb))
+        {
+            let label = if w.color_output().mode == gpui_kit::WindowColorMode::HdrScRgb {
+                "HDR"
+            } else {
+                "SDR预览 · HDR原图保留"
+            };
+            footer = footer.child(
+                div()
+                    .id(s.child_id("hdr-info"))
+                    .test_support()
+                    .aria_label(label)
+                    .child(label),
+            );
         }
         if let Some(renderer) = self.footer {
             footer = footer.child(renderer(w, cx));
@@ -363,6 +343,15 @@ impl RenderOnce for YueImagePreview {
             );
         }
         if self.toolbar_visible {
+            let toolbar = zoom_toolbar(
+                &state,
+                theme,
+                self.toolbar == ImagePreviewToolbar::Floating,
+                self.background_picker,
+                self.on_expand,
+                w,
+                cx,
+            );
             if self.toolbar == ImagePreviewToolbar::Floating {
                 viewport = viewport.child(div().absolute().bottom_3().right_3().child(toolbar));
             } else {
@@ -380,15 +369,90 @@ fn bg_value(bg: ImagePreviewBackground) -> &'static str {
         ImagePreviewBackground::Black => "black",
     }
 }
+struct ToolbarInteraction {
+    focus: gpui_kit::FocusHandle,
+    hovered: bool,
+    menu_open: bool,
+    _subscriptions: [gpui_kit::Subscription; 2],
+}
 fn zoom_toolbar(
     state: &Entity<YueImagePreviewState>,
     theme: crate::YueTheme,
     floating: bool,
-    disabled: bool,
-    percentage: String,
-    zoom_enabled: [bool; 2],
-    cx: &App,
+    background_picker: bool,
+    on_expand: Option<ExpandHandler>,
+    w: &mut Window,
+    cx: &mut App,
 ) -> AnyElement {
+    let s = state.read(cx);
+    let available = s.reference().is_some();
+    let disabled = s.disabled || !available;
+    let zoom = s.reference().map_or(1., |i| {
+        s.display_camera(Instant::now()).zoom(i.dimensions())
+    });
+    let percentage = if zoom < 0.01 {
+        format!("{:.3}%", zoom * 100.)
+    } else if zoom < 0.1 {
+        format!("{:.1}%", zoom * 100.)
+    } else {
+        format!("{:.0}%", zoom * 100.)
+    };
+    let limits = s
+        .reference()
+        .map(|i| s.viewport.zoom_limits(i.dimensions()))
+        .unwrap_or([0.05, 8.]);
+    let zoom_enabled = [zoom > limits[0] + 0.000001, zoom < limits[1] - 0.000001];
+    let fit_current = available && s.fit == ImagePreviewFit::FitAll;
+    let width_current = available && s.fit == ImagePreviewFit::FitWidth;
+    let actual_current = s.fit == ImagePreviewFit::Manual
+        && s.reference()
+            .is_some_and(|i| (s.camera.zoom(i.dimensions()) - 1.).abs() < 0.000001);
+    let panning = matches!(s.gesture, Some(Gesture::Pan { moved: true, .. }));
+    let animated = s.animated && w.is_visible() && w.is_window_active();
+    let toolbar_id = s.child_id("zoom-toolbar");
+    let interaction_id = s.child_id("toolbar-interaction");
+    let fade_id = s.child_id("toolbar-opacity");
+    let interaction = w.use_keyed_state(interaction_id, cx, |w, cx| {
+        let focus = cx.focus_handle().tab_stop(false);
+        let focus_in = cx.on_focus_in(&focus, w, |_, w, cx| {
+            cx.notify();
+            w.refresh();
+        });
+        let focus_out = cx.on_focus_out(&focus, w, |_, _, w, cx| {
+            cx.notify();
+            w.refresh();
+        });
+        ToolbarInteraction {
+            focus,
+            hovered: false,
+            menu_open: false,
+            _subscriptions: [focus_in, focus_out],
+        }
+    });
+    let focus = interaction.read(cx).focus.clone();
+    let focused = focus.contains_focused(w, cx);
+    let dim = floating
+        && !disabled
+        && panning
+        && !interaction.read(cx).hovered
+        && !interaction.read(cx).menu_open
+        && !focused;
+    let duration = if animated && !focused {
+        MotionDuration::Interaction.duration(theme)
+    } else {
+        std::time::Duration::ZERO
+    };
+    let opacity = gpui_kit::base::transition(
+        fade_id,
+        if dim {
+            number(theme, "--image-preview-toolbar-opacity-dragged").clamp(0., 1.)
+        } else {
+            1.
+        },
+        gpui_kit::base::Transition::new(duration).ease(MotionEase::Fade.easing(theme)),
+        w,
+        cx,
+    );
     let controls_theme = if floating {
         crate::YueTheme::new(crate::ThemeMode::Dark, theme.accent()).with_neutral(theme.neutral())
     } else {
@@ -399,7 +463,22 @@ fn zoom_toolbar(
     let actual = state.clone();
     let inside = state.clone();
     let fit = state.clone();
-    div()
+    let fit_width = state.clone();
+    let more = more_menu(state, controls_theme, background_picker, &interaction, cx);
+    let mut toolbar = div()
+        .id(toolbar_id)
+        .test_support()
+        .role(Role::Toolbar)
+        .aria_label("缩放工具条")
+        .track_focus(&focus)
+        .on_hover(w.listener_for(&interaction, |s, hovered, w, cx| {
+            if s.hovered != *hovered {
+                s.hovered = *hovered;
+                cx.notify();
+                w.refresh();
+            }
+        }))
+        .opacity(opacity)
         .flex()
         .items_center()
         .gap_1()
@@ -449,11 +528,24 @@ fn zoom_toolbar(
             YueButton::new(id("actual-size"), percentage)
                 .theme(controls_theme)
                 .accessibility_label("回到100%")
+                .accessibility_description(if actual_current {
+                    "当前：100%；一个图像像素对应一个屏幕物理像素"
+                } else {
+                    "回到100%；一个图像像素对应一个屏幕物理像素"
+                })
                 .size(ButtonSize::Small)
-                .variant(ButtonVariant::Ghost)
+                .variant(if actual_current {
+                    ButtonVariant::Outline
+                } else {
+                    ButtonVariant::Ghost
+                })
                 .width(gpui_kit::rems(4.5))
                 .disabled(disabled)
-                .tooltip("100%：一个图像像素对应一个屏幕物理像素（1）")
+                .tooltip(if actual_current {
+                    "当前：100%（1）"
+                } else {
+                    "100%：一个图像像素对应一个屏幕物理像素（1）"
+                })
                 .on_click(move |_, w, cx| {
                     actual.update(cx, |s, cx| {
                         s.user_fit(
@@ -497,10 +589,23 @@ fn zoom_toolbar(
                 crate::outline::ArrowsMaximize,
                 "适应窗口",
             )
+            .accessibility_description(if fit_current {
+                "当前：适应窗口；自动随视口调整"
+            } else {
+                "适应窗口；自动随视口调整"
+            })
             .size(ButtonSize::Small)
-            .variant(ButtonVariant::Ghost)
+            .variant(if fit_current {
+                ButtonVariant::Outline
+            } else {
+                ButtonVariant::Ghost
+            })
             .disabled(disabled)
-            .tooltip("适应窗口（0）")
+            .tooltip(if fit_current {
+                "当前：适应窗口（0）"
+            } else {
+                "适应窗口（0）"
+            })
             .on_click(move |_, w, cx| {
                 fit.update(cx, |s, cx| {
                     s.user_fit(
@@ -513,7 +618,172 @@ fn zoom_toolbar(
                 })
             }),
         )
-        .into_any_element()
+        .child(
+            YueButton::icon(
+                id("fit-width"),
+                controls_theme,
+                crate::outline::ArrowsHorizontal,
+                "适应宽度",
+            )
+            .size(ButtonSize::Small)
+            .variant(if width_current {
+                ButtonVariant::Outline
+            } else {
+                ButtonVariant::Ghost
+            })
+            .accessibility_description(if width_current {
+                "当前：适应宽度；长图从顶部开始查看"
+            } else {
+                "适应宽度；长图从顶部开始查看"
+            })
+            .disabled(disabled)
+            .tooltip(if width_current {
+                "当前：适应宽度（W）"
+            } else {
+                "适应宽度（W）"
+            })
+            .on_click(move |_, w, cx| {
+                fit_width.update(cx, |s, cx| {
+                    s.user_fit(
+                        ImagePreviewFit::FitWidth,
+                        false,
+                        ImagePreviewChangeSource::Toolbar,
+                        w,
+                        cx,
+                    )
+                })
+            }),
+        );
+    if let Some(expand) = on_expand {
+        let owner = state.clone();
+        toolbar = toolbar.child(
+            YueButton::icon(
+                id("expand"),
+                controls_theme,
+                crate::outline::ArrowsDiagonal,
+                "放大预览",
+            )
+            .size(ButtonSize::Small)
+            .variant(ButtonVariant::Ghost)
+            .disabled(disabled)
+            .tooltip("放大预览")
+            .on_click(move |_, w, cx| {
+                let view = owner.update(cx, |s, _| {
+                    s.cancel_gesture(w);
+                    s.finish_motion();
+                    s.capture_view()
+                });
+                expand(&view, w, cx);
+            }),
+        );
+    }
+    toolbar.child(more).into_any_element()
+}
+
+fn more_menu(
+    state: &Entity<YueImagePreviewState>,
+    theme: crate::YueTheme,
+    background_picker: bool,
+    interaction: &Entity<ToolbarInteraction>,
+    cx: &App,
+) -> crate::YueDropdownMenu {
+    use crate::{DropdownAlign, DropdownPlacement, YueDropdownMenu, YueMenuItem};
+    let s = state.read(cx);
+    let disabled = s.disabled || s.reference().is_none();
+    let mut items = Vec::new();
+    for (sampling, label, id) in [
+        (ImagePreviewSampling::Smooth, "平滑显示", "sampling-smooth"),
+        (
+            ImagePreviewSampling::Nearest,
+            "像素显示",
+            "sampling-nearest",
+        ),
+    ] {
+        let owner = state.clone();
+        items.push(
+            YueMenuItem::new(label)
+                .id(id)
+                .radio(s.sampling == sampling)
+                .disabled(
+                    sampling == ImagePreviewSampling::Nearest
+                        && (!cfg!(target_os = "windows") || s.has_proxy()),
+                )
+                .on_click(move |_, _, cx| owner.update(cx, |s, cx| s.user_sampling(sampling, cx))),
+        );
+    }
+    items.push(YueMenuItem::separator());
+    if background_picker {
+        items.push(YueMenuItem::heading("预览背景"));
+        for background in [
+            ImagePreviewBackground::CheckerDark,
+            ImagePreviewBackground::CheckerLight,
+            ImagePreviewBackground::White,
+            ImagePreviewBackground::Black,
+        ] {
+            let owner = state.clone();
+            items.push(
+                YueMenuItem::new(background.label())
+                    .id(bg_value(background))
+                    .radio(s.background == background)
+                    .on_click(move |_, _, cx| {
+                        owner.update(cx, |s, cx| s.user_background(background, cx))
+                    }),
+            );
+        }
+        items.push(YueMenuItem::separator());
+    }
+    let owner = state.clone();
+    let can_grid = s.is_pixel_grid_available();
+    items.push(
+        YueMenuItem::new("像素网格（≥400%）")
+            .id("pixel-grid")
+            .checked(s.pixel_grid)
+            .disabled(!can_grid)
+            .on_click(move |_, _, cx| {
+                owner.update(cx, |s, cx| s.user_pixel_grid(!s.pixel_grid, cx))
+            }),
+    );
+    if s.mode == ImagePreviewMode::Compare {
+        let owner = state.clone();
+        items.push(YueMenuItem::separator());
+        items.push(
+            YueMenuItem::new("对比归中（50%）")
+                .id("center-comparison")
+                .on_click(move |_, _, cx| {
+                    owner.update(cx, |s, cx| {
+                        s.user_split(0.5, ImagePreviewChangeSource::Toolbar, cx)
+                    })
+                }),
+        );
+    }
+    let owner = interaction.clone();
+    YueDropdownMenu::new(
+        s.child_id("more-menu"),
+        theme,
+        YueButton::icon(
+            s.child_id("more-trigger"),
+            theme,
+            crate::outline::Dots,
+            "更多预览操作",
+        )
+        .size(ButtonSize::Small)
+        .variant(ButtonVariant::Ghost)
+        .disabled(disabled)
+        .tooltip("更多预览操作"),
+    )
+    .label("更多预览操作")
+    .placement(DropdownPlacement::Above)
+    .align(DropdownAlign::End)
+    .items(items)
+    .on_open_change(move |open, w, cx| {
+        owner.update(cx, |s, cx| {
+            if s.menu_open != *open {
+                s.menu_open = *open;
+                cx.notify();
+                w.refresh();
+            }
+        })
+    })
 }
 fn grip(
     state: &Entity<YueImagePreviewState>,

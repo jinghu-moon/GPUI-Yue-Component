@@ -100,6 +100,11 @@ features = [
 ]
 default-features = false
 
+[target.'cfg(target_os = "windows")'.dependencies.half]
+version = "2.7.1"
+default-features = false
+features = ["std"]
+
 [target.'cfg(target_os = "windows")'.dependencies.itertools]
 version = "0.14.0"
 
@@ -151,6 +156,10 @@ features = [
 version = "0.62"
 features = [
     "Win32_Foundation",
+    "Foundation",
+    "Graphics_Display",
+    "System",
+    "Win32_System_WinRT",
     "Win32_Graphics_Gdi",
     "Win32_Security",
     "Win32_Storage_FileSystem",

@@ -22,7 +22,6 @@ pub(super) struct Viewport {
     pub size: [f32; 2],
     pub scale: f32,
     pub inset: f32,
-    pub bottom: f32,
 }
 impl Viewport {
     pub fn is_valid(self) -> bool {
@@ -33,7 +32,7 @@ impl Viewport {
     pub fn safe_size(self) -> [f32; 2] {
         [
             (self.size[0] - self.inset * 2.).max(1.),
-            (self.size[1] - self.inset * 2. - self.bottom).max(1.),
+            (self.size[1] - self.inset * 2.).max(1.),
         ]
     }
     pub fn midpoint(self) -> [f32; 2] {
@@ -76,6 +75,25 @@ impl Viewport {
     }
 }
 impl Camera {
+    /// Quantize only a settled, integer physical zoom. Never round fractional
+    /// zoom/active gestures; doing so makes smooth panning and zooming jitter.
+    pub fn pixel_aligned(self, image: [f32; 2], vp: Viewport) -> Self {
+        let zoom = self.zoom(image);
+        if !vp.is_valid() || zoom < 1. || (zoom - zoom.round()).abs() > 0.00001 {
+            return self;
+        }
+        let origin = self.top_left(image, vp);
+        let snapped = origin.map(|v| (v * vp.scale).round() / vp.scale);
+        let size = self.display_size(image, vp.scale);
+        let midpoint = vp.midpoint();
+        Self {
+            center: [
+                (midpoint[0] - snapped[0]) / size[0],
+                (midpoint[1] - snapped[1]) / size[1],
+            ],
+            ..self
+        }
+    }
     pub fn zoom(self, image: [f32; 2]) -> f32 {
         self.width / image[0]
     }
@@ -190,6 +208,53 @@ impl CheckerGrid {
 pub(super) fn aligned(a: [f32; 2], b: [f32; 2]) -> bool {
     // At most one output pixel of aspect-ratio rounding, in either axis.
     (a[0] / a[1] * b[1] - b[0]).abs() <= 1.01 || (a[1] / a[0] * b[0] - b[1]).abs() <= 1.01
+}
+
+/// Visible source-pixel boundaries, independent of bitmap area. Each axis is
+/// bounded even for extreme offscreen images; no source-sized allocation.
+pub(super) struct PixelGrid {
+    pub origin: [f32; 2],
+    pub step: [f32; 2],
+    pub clip: [f32; 4],
+    pub indices: [std::ops::RangeInclusive<u32>; 2],
+}
+impl PixelGrid {
+    pub fn new(camera: Camera, image: [f32; 2], vp: Viewport) -> Option<Self> {
+        if !vp.is_valid() || camera.zoom(image) < 4. {
+            return None;
+        }
+        let origin = camera.top_left(image, vp);
+        let size = camera.display_size(image, vp.scale);
+        let step = [size[0] / image[0], size[1] / image[1]];
+        let clip = [
+            origin[0].max(vp.origin[0]),
+            origin[1].max(vp.origin[1]),
+            (origin[0] + size[0]).min(vp.origin[0] + vp.size[0]),
+            (origin[1] + size[1]).min(vp.origin[1] + vp.size[1]),
+        ];
+        if clip[2] <= clip[0] || clip[3] <= clip[1] {
+            return None;
+        }
+        let indices = std::array::from_fn(|axis| {
+            let first = ((clip[axis] - origin[axis]) / step[axis]).ceil().max(1.) as u32;
+            let last = ((clip[axis + 2] - origin[axis]) / step[axis])
+                .floor()
+                .min(image[axis] - 1.)
+                .max(0.) as u32;
+            first..=last
+        });
+        if indices.iter().any(|range: &std::ops::RangeInclusive<u32>| {
+            !range.is_empty() && range.end() - range.start() >= 4096
+        }) {
+            return None;
+        }
+        Some(Self {
+            origin,
+            step,
+            clip,
+            indices,
+        })
+    }
 }
 pub(super) fn snap_split(v: f32) -> f32 {
     if v < 0.012 {

@@ -76,6 +76,8 @@ pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
 
 ## 6. 首轮热点记录（2026-11-02）
 
+本节保留优化前的历史测量。根据这些结果实施的首轮优化及交替对照见第8节，不能直接比较不同轮次的绝对数字来计算收益。
+
 环境：Windows D3D11、**NVIDIA GeForce RTX 4070 Ti SUPER**、feature level 11_0、Release预编译shader、4K离屏目标。同配置连续运行3轮，每种稳定测量均为128有效帧。尺寸和sigma按物理像素传入；100%／200%仅表示等效DPI几何，不是实际切换显示器。没有进行GPUI实窗验收。
 
 ### 6.1 关闭分阶段诊断的基线
@@ -114,7 +116,7 @@ pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
 
 本轮交付测量入口、可复现数据和热点判断；不根据单台独显数字设置全平台性能门槛，也不据此继续叠加未验证的算法优化。
 
-## 7. 验证与交接
+## 7. 首版验证与交接
 
 | 检查 | 实际结果 |
 | --- | --- |
@@ -136,3 +138,43 @@ pwsh -NoProfile -File tools/test-gpui-backdrop.ps1 -Profile
 本地完整验证输出保留于`target/backdrop-*.log`；硬件测量原始数据随文档保存。真实UI、玻璃观感、高DPI及Narrator仍由用户检查；未启动GPUI实窗或实施GPUI截图验收。若用户报告实际卡顿，下一轮应对该具体操作采集整帧CPU／GPU时间线，再决定改动位置。
 
 时间查询依据：Microsoft [D3D11_QUERY](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_query)、[GetData](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/nf-d3d11-id3d11devicecontext-getdata)及[DONOTFLUSH](https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_async_getdata_flag)。
+
+## 8. 首轮优化与保留依据（2026-11-02）
+
+### 8.1 实际采用的改动
+
+仅对工作纹理面积至少16,384 texel、且确实能缩小中间绘制矩形的区域启用裁剪。此阈值是本轮的保守启用策略，不承诺所有形状或硬件都有同样收益；小工具条和握把继续使用原shader路径。
+
+- 保留原始ROI、3σ扩边、工作分辨率、sigma、采样权重、两遍高斯顺序与RGBA16F精度。没有降低模糊质量档位，也没有缓存背景结果。
+- 在工作网格上计算最终双线性重建需要的矩形，再保留**两圈texel保护边**。水平高斯只绘制所需列，仍覆盖完整高度以提供垂直卷积halo；垂直高斯只绘制最终重建需要的矩形。纹理容量和64MiB保留预算不变。
+- 裁剪shader使用物理像素中心 `SV_Position` 作为工作纹理坐标，避免把裁剪矩形重新映射成整张纹理。小表面的原shader仍以原UV路径执行，裁剪shader仅在首次实际需要时创建。
+- 两张半浮点纹理每次新分配后仅初始化清零一次，避免未初始化padding中的NaN污染双线性读取。此项增加首用工作，不是每帧清屏；`initialization_clears`计数可验证稳定帧为0。两圈保护边隔离局部未绘制texel及浮点插值边界，不能擅自缩成一圈。
+- `work_pixels`改为记录实际绘制面积之和，不再把未绘制的完整中间纹理也计入。大面板由870,912降至804,912 texel／帧，减少**7.58%**；这不是显存减少比例。
+
+### 8.2 对照方法与实测收益
+
+`-Profile`现增加 `optimized`／`reference` 两组：同一个device、背景、核、纹理池和计时器，关闭分阶段诊断，按AB／BA交替执行，预热32对、每组测128帧。reference强制原始完整中间pass及原UV shader；两组均使用新增的一次性纹理初始化，稳定计时不含该初始化。各自有效帧至少100，稳定期纹理创建、核重建和初始化清零都须为0。
+
+RTX 4070 Ti SUPER、Release、4K离屏，连续3轮结果如下。范围是每轮分位数的最小～最大值，不是置信区间；百分比按**同轮**两组数据计算。
+
+| 场景／指标 | 原完整pass reference | 优化路径 | 判断 |
+| --- | --- | --- | --- |
+| 1200×800、sigma16：GPU P50 | 44.160–44.256µs | 41.696–41.760µs | 每轮降低5.43%／5.78%／5.64% |
+| 同面板：GPU P95 | 44.672–44.800µs | 42.208–42.304µs | 三轮均下降 |
+| 同面板：CPU P50 | 15.9–16.0µs | 15.9–16.1µs | 没有可确认CPU收益 |
+| 工具条＋握把100%：GPU P50 | 22.272–23.200µs | 22.368–23.264µs | 原小表面路径；无可确认收益 |
+| 工具条＋握把200%：GPU P50 | 24.000–24.960µs | 24.032–25.024µs | 原小表面路径；无可确认收益 |
+| 16个工具条：GPU P50 | 192.608–200.544µs | 192.576–200.544µs | 同轮差异不超过0.05%，无可确认收益 |
+
+本轮保留的是大面积表面的稳定GPU收益，不能声称当前ImagePreview两处小玻璃或整个应用快了5.6%。没有减少绘制区域数量、合并跨屏障背景采样，也没有改变多层玻璃的读取顺序。完整记录见 [三轮优化对照](performance/2026-11-02-backdrop-optimization.log)。第5节列出的离屏、排空队列及整帧测量限制仍适用。
+
+### 8.3 未采用的方案
+
+全尺寸统一裁剪在工具条／握把上未见收益，故不对小表面启用。固定上限循环展开的独立Gaussian shader在16工具条对照中约214.2µs，而原路径约196.0µs，反而变慢，已撤回。直接采样framebuffer配合混合合成的实验在透明边缘未满足原像素合同，也已撤回；最终代码没有该路径，不修改swapchain采样能力和原替换合成方式。上述实验记录位于本地`target/backdrop-optimization-*.log`，不作为保留方案的成绩。
+
+### 8.4 回归与交接
+
+- Windows离屏正确性Debug／Release均10项通过，性能基准默认显式ignored，`-Profile`单独执行通过。
+- 新增64种矩形／sigma组合，与完整pass逐像素比较，覆盖分数坐标、四边裁切、极小区域、圆角、半透明及有意填入NaN的未绘制区域。新对照允许单通道最多2／255差异，用于物理像素中心与插值UV的浮点／半浮点取整；不声称字节完全相同。原alpha、ROI外像素及顺序测试的断言保持不变。
+- 另有新分配padding初始化及后续帧不重复清零的专项测试。全workspace headless回归通过，含组件库321、ImagePreview21和Showcase18；backend及workspace Clippy、格式检查通过。常规Showcase构建因既有`windows-showcase.exe`被占用而失败；改用 `cargo rustc -p windows-showcase --bin windows-showcase --locked --offline -- -C extra-filename=-backdrop-opt` 通过，独立产物为`target/debug/deps/windows_showcase-backdrop-opt.exe`，未启动。
+- 本轮不修改组件样式、token或设计源，没有重跑外部设计源的浏览器门禁；第7节已有的外部全量失败状态未解决。未启动GPUI实窗，实际观感仍由用户检查。

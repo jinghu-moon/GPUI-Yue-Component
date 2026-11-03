@@ -981,7 +981,10 @@ impl TextViewState {
         self.selectable
     }
 
-    pub(crate) fn is_all_selected(&self) -> bool {
+    /// Whether the current selection was created by Select All. A caller that
+    /// retains original plain text can use it without copying rendered markup,
+    /// normalized line endings, or synthetic paragraph separators.
+    pub fn is_all_selected(&self) -> bool {
         self.select_all
     }
 
@@ -2217,11 +2220,14 @@ mod tests {
         let state = cx.update(|cx| cx.new(|cx| TextViewState::markdown("**quick** value", cx)));
         cx.run_until_parked();
 
+        state.read_with(cx, |state, _| assert!(!state.is_all_selected()));
+
         state.update(cx, |state, cx| {
             state.select_all(cx);
         });
 
         state.read_with(cx, |state, _| {
+            assert!(state.is_all_selected());
             assert!(state.has_view_selection());
             assert_eq!(state.selected_text().trim(), "quick value");
         });
@@ -2231,6 +2237,7 @@ mod tests {
         });
 
         state.read_with(cx, |state, _| {
+            assert!(!state.is_all_selected());
             assert!(!state.has_view_selection());
             assert_eq!(state.selected_text(), "");
         });

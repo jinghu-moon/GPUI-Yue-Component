@@ -1,11 +1,12 @@
 //! Host-side fixture decoding, revision handling and Dialog composition.
 use super::super::*;
-use gpui_kit::{AppContext as _, Entity, Image, ImageFormat, Subscription, Task};
+use gpui_kit::{AppContext as _, Entity, Subscription, Task};
 use std::time::Duration;
 use yue_component::{
     DialogFooter, DialogSize, ImagePreviewDocument, ImagePreviewEvent, ImagePreviewImage,
-    ImagePreviewLoad, ImagePreviewMode, ImagePreviewToolbar, YueDialog, YueDialogState,
-    YueImagePreview, YueImagePreviewState, YueSegmented, YueSegmentedOption,
+    ImagePreviewLimits, ImagePreviewLoad, ImagePreviewMode, ImagePreviewToolbar, ImagePreviewView,
+    YueDialog, YueDialogState, YueImagePreview, YueImagePreviewState, YueSegmented,
+    YueSegmentedOption,
 };
 
 const DESKTOP: &[u8] = include_bytes!("../../assets/image-preview/desktop.png");
@@ -88,7 +89,6 @@ impl ImagePreviewPage {
         self.result = None;
         let doc = self.document(ImagePreviewLoad::Loading);
         let _ = self.preview.update(cx, |s, cx| s.set_document(doc, w, cx));
-        let svg = cx.svg_renderer();
         let generation = self.generation;
         self.task = Some(cx.spawn_in(w, async move |weak, cx| {
             let images = cx
@@ -98,16 +98,24 @@ impl ImagePreviewPage {
                         "alpha" => ALPHA,
                         _ => DESKTOP,
                     };
-                    let source = Image::from_bytes(ImageFormat::Png, bytes.to_vec())
-                        .to_image_data(svg.clone())
-                        .map_err(|e| e.to_string())?;
+                    let limits = if choice == "proxy" {
+                        ImagePreviewLimits::default().texture_budget(240, 240 * 240 * 4)
+                    } else {
+                        ImagePreviewLimits::default()
+                    };
+                    let source =
+                        ImagePreviewImage::from_encoded(bytes, &limits, "用户提供的测试截图")
+                            .map_err(|e| e.to_string())?;
                     let result = match choice.as_ref() {
                         "desktop" | "half" => {
                             let b = if choice == "half" { HALF } else { JPEG };
                             Some(
-                                Image::from_bytes(ImageFormat::Jpeg, b.to_vec())
-                                    .to_image_data(svg)
-                                    .map_err(|e| e.to_string())?,
+                                ImagePreviewImage::from_encoded(
+                                    b,
+                                    &limits,
+                                    "真实JPEG编码结果，quality=70",
+                                )
+                                .map_err(|e| e.to_string())?,
                             )
                         }
                         _ => None,
@@ -121,14 +129,8 @@ impl ImagePreviewPage {
                 }
                 match images {
                     Ok((source, result)) => {
-                        p.source = Some(
-                            ImagePreviewImage::new(source, "用户提供的测试截图")
-                                .expect("valid fixture"),
-                        );
-                        p.result = result.map(|i| {
-                            ImagePreviewImage::new(i, "真实JPEG编码结果，quality=70")
-                                .expect("valid fixture")
-                        });
+                        p.source = Some(source);
+                        p.result = result;
                         let doc = p.document(
                             p.result
                                 .clone()
@@ -141,7 +143,12 @@ impl ImagePreviewPage {
                                 let _ = s.set_mode(ImagePreviewMode::Compare, w, cx);
                             }
                         });
-                        p.last = "图片已就绪 · JPEG为真实编码样本".into();
+                        p.last = if p.result.is_some() {
+                            "图片已就绪 · JPEG为真实编码样本"
+                        } else {
+                            "图片已就绪"
+                        }
+                        .into();
                     }
                     Err(error) => {
                         let doc = ImagePreviewDocument::new(p.choice.clone(), p.revision)
@@ -184,24 +191,14 @@ impl ImagePreviewPage {
         }));
         cx.notify();
     }
-    fn open_large(&mut self, w: &mut Window, cx: &mut Context<Self>) {
-        let Some(source) = self.source.clone() else {
-            return;
-        };
-        let doc = ImagePreviewDocument::new(self.choice.clone(), self.revision)
-            .with_source(ImagePreviewLoad::Ready(source))
-            .with_result(
-                self.result
-                    .clone()
-                    .map_or(ImagePreviewLoad::Empty, ImagePreviewLoad::Ready),
-            )
-            .full_frame(true);
-        let mode = self.preview.read(cx).snapshot().mode();
-        self.large_preview.update(cx, |s, cx| {
-            let _ = s.set_document(doc, w, cx);
-            let _ = s.set_mode(mode, w, cx);
-        });
-        let _ = self.dialog.update(cx, |s, cx| s.open(w, cx));
+    fn open_large(&mut self, view: &ImagePreviewView, w: &mut Window, cx: &mut Context<Self>) {
+        if self
+            .large_preview
+            .update(cx, |s, cx| s.restore_view(view, w, cx))
+            .is_ok()
+        {
+            let _ = self.dialog.update(cx, |s, cx| s.open(w, cx));
+        }
     }
 }
 impl Render for ImagePreviewPage {
@@ -230,6 +227,7 @@ impl Render for ImagePreviewPage {
                         YueSegmentedOption::new("half", "半尺寸结果"),
                         YueSegmentedOption::new("long", "长截图"),
                         YueSegmentedOption::new("alpha", "透明图片"),
+                        YueSegmentedOption::new("proxy", "代理预览"),
                     ])
                     .on_change(move |v, w, cx| owner.update(cx, |p, cx| p.load(v.clone(), w, cx))),
             )
@@ -277,18 +275,7 @@ impl Render for ImagePreviewPage {
                     },
                 ),
             ));
-        let state = self.preview.clone();
-        let actual = self.preview.clone();
         let commands = row()
-            .child(
-                YueButton::new("preview-width", "适应宽度")
-                    .on_click(move |_, w, cx| state.update(cx, |s, cx| s.fit_width(w, cx))),
-            )
-            .child(
-                YueButton::new("preview-native", "100%").on_click(move |_, w, cx| {
-                    let _ = actual.update(cx, |s, cx| s.actual_size(w, cx));
-                }),
-            )
             .child(
                 YueButton::new("preview-refresh", "模拟更新")
                     .disabled(self.result.is_none())
@@ -298,11 +285,6 @@ impl Render for ImagePreviewPage {
                 YueButton::new("preview-failure", "模拟失败")
                     .disabled(self.result.is_none())
                     .on_click(cx.listener(|p, _, w, cx| p.refresh(true, w, cx))),
-            )
-            .child(
-                YueButton::new("preview-large", "大图查看…")
-                    .disabled(self.source.is_none())
-                    .on_click(cx.listener(|p, _, w, cx| p.open_large(w, cx))),
             );
         let mut preview = YueImagePreview::new(&self.preview)
             .animated(self.animated)
@@ -312,7 +294,8 @@ impl Render for ImagePreviewPage {
             } else {
                 ImagePreviewToolbar::Footer
             })
-            .result_label("编码后");
+            .result_label("编码后")
+            .on_expand(cx.listener(|p, view, w, cx| p.open_large(view, w, cx)));
         if self.markers {
             preview = preview.image_overlay(move |overlay, w, _| {
                 for v in [0.25, 0.5, 0.75] {
@@ -330,7 +313,7 @@ impl Render for ImagePreviewPage {
         }
         div().size_full().min_h_0().min_w_0().flex().flex_col().p_6().gap_4()
             .child(div().text_xl().child("图片预览 ImagePreview"))
-            .child("滚轮围绕指针缩放，左键拖动平移；分割握把可拖动或用左右键调整。预览获得焦点后：0适应、1原始比例、+ / −缩放。")
+            .child("滚轮围绕指针缩放，左键拖动平移；分割握把可拖动或用左右键调整。预览获得焦点后：0适应窗口、W适应宽度、1原始比例、+ / −缩放。更多菜单可切换背景、开启400%以上像素网格；对比模式可归中。")
             .child(controls).child(commands)
             .child(div().flex_1().min_h(gpui_kit::rems(20.)).min_w_0().child(preview))
             .child(div().text_sm().text_color(gpui_kit::rgb(theme.text_secondary())).child(self.last.clone()))

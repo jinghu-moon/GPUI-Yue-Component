@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "revision": "7a154f98aa63def6482ab105ce4ea757f77e1ea7",
     "dirty": true,
-    "contentSha256": "82594a0fdafa2b41d90d7076837b2c4029a70eb09f9d07058c943c39a771ace6",
+    "contentSha256": "a9fce4fc9127093472641acc0bb52e2917cec0146a82bee845bb961d0fd5e8b8",
     "files": [
       [
         "packages/tokens/README.md",
@@ -89,7 +89,7 @@
       ],
       [
         "packages/tokens/src/component-tokens/image-preview.css",
-        "295f92e28cd7642c7fbf4c157ea4e71b53fcab853b5d54111d6c2ae04bf7e686"
+        "c91c5ea3db1a87db07d377f2ac4de1e9304a8d99c326bba51beaa7b02c4012ed"
       ],
       [
         "packages/tokens/src/component-tokens/input.css",
@@ -301,7 +301,7 @@
       ]
     ]
   },
-  "payloadSha256": "03e57c12dfd0882b5d30459b3b29837e488064e7b24388e0b25ff58b61009ae0",
+  "payloadSha256": "48768455f5758eb8275b963a8208c63dd7baa03df03f0980f54d4327e597b80c",
   "inventory": {
     "generatedFrom": {
       "entry": "packages/tokens/src/index.css",
@@ -372,8 +372,8 @@
       "dark/neutral"
     ],
     "counts": {
-      "tokens": 1397,
-      "declared": 1397,
+      "tokens": 1400,
+      "declared": 1400,
       "byNamespace": {
         "accent": 18,
         "action": 6,
@@ -406,7 +406,7 @@
         "green": 11,
         "haze": 15,
         "icon": 3,
-        "image": 27,
+        "image": 30,
         "info": 4,
         "input": 42,
         "layer": 7,
@@ -465,13 +465,13 @@
         "yellow": 11
       },
       "byLayer": {
-        "components": 941,
+        "components": 944,
         "primitives": 331,
         "semantics": 125
       },
-      "publicOverride": 941,
+      "publicOverride": 944,
       "internal": 0,
-      "unreferenced": 813
+      "unreferenced": 816
     },
     "oldTokenNames": [
       "--accent-100",
@@ -1032,8 +1032,11 @@
       "--image-preview-grip-size",
       "--image-preview-inset",
       "--image-preview-pan-step",
+      "--image-preview-pixel-grid-color",
+      "--image-preview-pixel-grid-shadow-color",
       "--image-preview-radius",
       "--image-preview-toolbar-clearance",
+      "--image-preview-toolbar-opacity-dragged",
       "--image-preview-view-duration",
       "--image-preview-view-ease",
       "--image-preview-white",
@@ -12315,6 +12318,40 @@
         }
       },
       {
+        "name": "--image-preview-pixel-grid-color",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #ffffff 50%, transparent)",
+          "dark/azure": "color-mix(in srgb, #ffffff 50%, transparent)",
+          "light/neutral": "color-mix(in srgb, #ffffff 50%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #ffffff 50%, transparent)"
+        }
+      },
+      {
+        "name": "--image-preview-pixel-grid-shadow-color",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #000000 40%, transparent)",
+          "dark/azure": "color-mix(in srgb, #000000 40%, transparent)",
+          "light/neutral": "color-mix(in srgb, #000000 40%, transparent)",
+          "dark/neutral": "color-mix(in srgb, #000000 40%, transparent)"
+        }
+      },
+      {
         "name": "--image-preview-radius",
         "namespace": "image",
         "declaredIn": [
@@ -12346,6 +12383,23 @@
           "dark/azure": "44px",
           "light/neutral": "44px",
           "dark/neutral": "44px"
+        }
+      },
+      {
+        "name": "--image-preview-toolbar-opacity-dragged",
+        "namespace": "image",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/image-preview.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": ".5",
+          "dark/azure": ".5",
+          "light/neutral": ".5",
+          "dark/neutral": ".5"
         }
       },
       {

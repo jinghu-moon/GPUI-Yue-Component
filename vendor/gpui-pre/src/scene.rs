@@ -832,6 +832,11 @@ impl From<SubpixelSprite> for Primitive {
 #[expect(missing_docs)]
 pub struct PolychromeSprite {
     pub order: DrawOrder,
+    /// Yue: bit 0 requests nearest source-texel sampling, bit 1 precise linear
+    /// full-frame UVs on Windows. Zero preserves the original linear path.
+    /// Bits 2..3: 0 encoded sRGB, 1 relative linear SDR, 2 absolute scRGB.
+    /// Bits 16..31: FP16 source MaxRGB in scRGB units (not display peak).
+    /// The GPU instance ABI is unchanged.
     pub pad: u32,
     pub grayscale: PaddedBool32,
     pub opacity: f32,

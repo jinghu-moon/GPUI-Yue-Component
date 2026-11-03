@@ -20,6 +20,7 @@ struct DirectXAtlasTextures {
     device_context: ID3D11DeviceContext,
     monochrome_textures: AtlasTextureList<DirectXAtlasTexture>,
     polychrome_textures: AtlasTextureList<DirectXAtlasTexture>,
+    float_textures: AtlasTextureList<DirectXAtlasTexture>,
     subpixel_textures: AtlasTextureList<DirectXAtlasTexture>,
 }
 
@@ -39,6 +40,7 @@ impl DirectXAtlas {
             device_context: device_context.clone(),
             monochrome_textures: Default::default(),
             polychrome_textures: Default::default(),
+            float_textures: Default::default(),
             subpixel_textures: Default::default(),
         })))
     }
@@ -67,6 +69,7 @@ impl DirectXAtlas {
             textures.device_context = device_context.clone();
             textures.monochrome_textures = AtlasTextureList::default();
             textures.polychrome_textures = AtlasTextureList::default();
+            textures.float_textures = AtlasTextureList::default();
             textures.subpixel_textures = AtlasTextureList::default();
         });
     }
@@ -95,6 +98,18 @@ impl AtlasBackend for DirectXAtlasTextures {
         size: Size<DevicePixels>,
         bytes: &[u8],
     ) -> anyhow::Result<AtlasTile> {
+        let bpp = match kind {
+            AtlasTextureKind::Monochrome => 1,
+            AtlasTextureKind::PolychromeFloat => 8,
+            _ => 4,
+        };
+        let expected = (size.width.0.max(0) as usize)
+            .checked_mul(size.height.0.max(0) as usize)
+            .and_then(|n| n.checked_mul(bpp));
+        anyhow::ensure!(
+            size.width.0 > 0 && size.height.0 > 0 && expected == Some(bytes.len()),
+            "atlas pixels do not match dimensions and format"
+        );
         let tile = self
             .allocate(size, kind)
             .ok_or_else(|| anyhow::anyhow!("failed to allocate"))?;
@@ -112,6 +127,7 @@ impl AtlasBackend for DirectXAtlasTextures {
             AtlasTextureKind::Monochrome => &mut self.monochrome_textures,
             AtlasTextureKind::Polychrome => &mut self.polychrome_textures,
             AtlasTextureKind::Subpixel => &mut self.subpixel_textures,
+            AtlasTextureKind::PolychromeFloat => &mut self.float_textures,
         };
 
         let Some(texture_slot) = textures.textures.get_mut(id.index as usize) else {
@@ -141,6 +157,7 @@ impl DirectXAtlasTextures {
                 AtlasTextureKind::Monochrome => &mut self.monochrome_textures,
                 AtlasTextureKind::Polychrome => &mut self.polychrome_textures,
                 AtlasTextureKind::Subpixel => &mut self.subpixel_textures,
+                AtlasTextureKind::PolychromeFloat => &mut self.float_textures,
             };
 
             if let Some(tile) = textures
@@ -186,6 +203,11 @@ impl DirectXAtlasTextures {
                 bind_flag = D3D11_BIND_SHADER_RESOURCE;
                 bytes_per_pixel = 4;
             }
+            AtlasTextureKind::PolychromeFloat => {
+                pixel_format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+                bind_flag = D3D11_BIND_SHADER_RESOURCE;
+                bytes_per_pixel = 8;
+            }
             AtlasTextureKind::Subpixel => {
                 pixel_format = DXGI_FORMAT_R8G8B8A8_UNORM;
                 bind_flag = D3D11_BIND_SHADER_RESOURCE;
@@ -221,6 +243,7 @@ impl DirectXAtlasTextures {
             AtlasTextureKind::Monochrome => &mut self.monochrome_textures,
             AtlasTextureKind::Polychrome => &mut self.polychrome_textures,
             AtlasTextureKind::Subpixel => &mut self.subpixel_textures,
+            AtlasTextureKind::PolychromeFloat => &mut self.float_textures,
         };
         let index = texture_list.free_list.pop();
         let view = unsafe {
@@ -255,6 +278,7 @@ impl DirectXAtlasTextures {
             AtlasTextureKind::Monochrome => &self.monochrome_textures,
             AtlasTextureKind::Polychrome => &self.polychrome_textures,
             AtlasTextureKind::Subpixel => &self.subpixel_textures,
+            AtlasTextureKind::PolychromeFloat => &self.float_textures,
         };
         textures.textures.get(id.index as usize)?.as_ref()
     }
@@ -376,7 +400,69 @@ mod tests {
         AtlasKey::Image(RenderImageParams {
             image_id: ImageId(image_id),
             frame_index: 0,
+            format: gpui::RenderImageFormat::Bgra8Srgb,
         })
+    }
+
+    #[test]
+    fn float_atlas_format_eviction_and_device_reset() {
+        let atlas = create_atlas().expect("WARP is required for this test");
+        let bytes: Vec<u8> = [0xb400_u16, 0x4a40, 0x4000, 0x3c00]
+            .into_iter()
+            .cycle()
+            .take(24)
+            .flat_map(u16::to_le_bytes)
+            .collect();
+        let key = AtlasKey::Image(RenderImageParams {
+            image_id: ImageId(12345),
+            frame_index: 0,
+            format: gpui::RenderImageFormat::Rgba16FloatScRgb,
+        });
+        let size = gpui::size(DevicePixels(3), DevicePixels(2));
+        assert!(
+            atlas
+                .get_or_insert_with(key.clone(), &mut || Ok(Some((
+                    size,
+                    Cow::Borrowed(&bytes[..24])
+                ))))
+                .is_err()
+        );
+        let tile = atlas
+            .get_or_insert_with(key.clone(), &mut || Ok(Some((size, Cow::Borrowed(&bytes)))))
+            .unwrap()
+            .unwrap();
+        assert_eq!(tile.texture_id.kind, AtlasTextureKind::PolychromeFloat);
+        {
+            let lock = atlas.0.lock();
+            let texture = lock.backend.texture(tile.texture_id).unwrap();
+            let mut desc = D3D11_TEXTURE2D_DESC::default();
+            unsafe {
+                texture.texture.GetDesc(&mut desc);
+            }
+            assert_eq!(desc.Format, DXGI_FORMAT_R16G16B16A16_FLOAT);
+            assert_eq!(texture.bytes_per_pixel, 8);
+        }
+        atlas.remove(&key);
+        assert!(atlas.get_texture_view(tile.texture_id).is_none());
+        let tile = atlas
+            .get_or_insert_with(key.clone(), &mut || Ok(Some((size, Cow::Borrowed(&bytes)))))
+            .unwrap()
+            .unwrap();
+        let (device, context) = {
+            let lock = atlas.0.lock();
+            (
+                lock.backend.device.clone(),
+                lock.backend.device_context.clone(),
+            )
+        };
+        atlas.handle_device_lost(&device, &context);
+        assert!(atlas.get_texture_view(tile.texture_id).is_none());
+        assert!(
+            atlas
+                .get_or_insert_with(key, &mut || Ok(Some((size, Cow::Borrowed(&bytes)))))
+                .unwrap()
+                .is_some()
+        );
     }
 
     fn insert_tile(atlas: &DirectXAtlas, key: AtlasKey, size: Size<DevicePixels>) -> AtlasTile {

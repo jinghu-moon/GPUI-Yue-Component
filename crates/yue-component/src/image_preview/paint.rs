@@ -1,5 +1,5 @@
 use super::{
-    geometry::{CheckerGrid, Viewport},
+    geometry::{CheckerGrid, PixelGrid, Viewport},
     *,
 };
 use crate::{
@@ -16,7 +16,6 @@ use std::time::Instant;
 pub(super) fn viewport(
     state: &Entity<YueImagePreviewState>,
     theme: YueTheme,
-    floating: bool,
     overlay: Option<OverlayRenderer>,
 ) -> AnyElement {
     let measure = state.clone();
@@ -30,11 +29,6 @@ pub(super) fn viewport(
                 size: [b.size.width.into(), b.size.height.into()],
                 scale: w.scale_factor(),
                 inset: pixels(theme, "--image-preview-inset") * rem,
-                bottom: if floating {
-                    pixels(theme, "--image-preview-toolbar-clearance") * rem
-                } else {
-                    0.
-                },
             };
             let changed = measure.update(cx, |s, _| {
                 s.bind_hitbox(hit.id, w);
@@ -54,7 +48,7 @@ pub(super) fn viewport(
                 paint.update(cx, |s, _| s.finish_motion());
             }
             let s = paint.read(cx);
-            let camera = s.display_camera(now);
+            let mut camera = s.display_camera(now);
             let compare = s.is_comparing(now);
             let split = s.display_split(now);
             let vp = s.viewport;
@@ -63,8 +57,27 @@ pub(super) fn viewport(
             let source = s.source().cloned();
             let result = s.result.clone();
             let background = s.background;
+            let proxy = reference.as_ref().is_some_and(ImagePreviewImage::is_proxy)
+                || (compare
+                    && (source.as_ref().is_some_and(ImagePreviewImage::is_proxy)
+                        || result.as_ref().is_some_and(ImagePreviewImage::is_proxy)));
+            let pixel_grid = s.pixel_grid
+                && !proxy
+                && cfg!(target_os = "windows")
+                && reference
+                    .as_ref()
+                    .is_some_and(|i| camera.zoom(i.dimensions()) >= 4.);
             let moving = s.gesture.is_some();
             let active = s.is_animating(now) && w.is_visible() && !cx.reduce_motion();
+            if !moving
+                && !active
+                && let Some(image) = &reference
+            {
+                camera = camera.pixel_aligned(image.dimensions(), vp);
+            }
+            let nearest = cfg!(target_os = "windows")
+                && !proxy
+                && (pixel_grid || s.sampling == ImagePreviewSampling::Nearest);
             let radius =
                 px(pixels(theme, "--image-preview-radius") * f32::from(w.rem_size()) / 16.);
             let mut errors = Vec::new();
@@ -82,9 +95,14 @@ pub(super) fn viewport(
                             return;
                         }
                         let id = image.image.id;
-                        if let Err(error) =
+                        let painted = if nearest {
+                            w.paint_image_nearest(b, image_bounds, corners, image.image, 0, false)
+                        } else if cfg!(target_os = "windows") {
+                            w.paint_image_precise(b, image_bounds, corners, image.image, 0, false)
+                        } else {
                             w.paint_image(b, image_bounds, corners, image.image, 0, false)
-                        {
+                        };
+                        if let Err(error) = painted {
                             errors.push((id, error.to_string()));
                         }
                     };
@@ -111,20 +129,27 @@ pub(super) fn viewport(
                                 draw_image(result, w);
                             });
                         }
+                    } else {
+                        draw_image(image, w);
+                    }
+                    if pixel_grid && let Some(grid) = PixelGrid::new(camera, d, vp) {
+                        paint_pixel_grid(grid, b, radius, theme, w);
+                    }
+                    if compare && split > 0. && split < 1. {
+                        let edge = px((f32::from(b.left() + b.size.width * split)
+                            * w.scale_factor())
+                        .round()
+                            / w.scale_factor());
                         let width = px(pixels(theme, "--image-preview-divider-width")
                             * f32::from(w.rem_size())
                             / 16.);
-                        if split > 0. && split < 1. {
-                            w.paint_quad(fill(
-                                Bounds::new(
-                                    point(edge - width / 2., b.top()),
-                                    size(width, b.size.height),
-                                ),
-                                rgba(theme, "--image-preview-divider-color"),
-                            ));
-                        }
-                    } else {
-                        draw_image(image, w);
+                        w.paint_quad(fill(
+                            Bounds::new(
+                                point(edge - width / 2., b.top()),
+                                size(width, b.size.height),
+                            ),
+                            rgba(theme, "--image-preview-divider-color"),
+                        ));
                     }
                     if let Some(overlay) = &overlay {
                         overlay(
@@ -290,6 +315,93 @@ pub(super) fn viewport(
     .absolute()
     .inset_0()
     .into_any_element()
+}
+
+fn paint_pixel_grid(
+    grid: PixelGrid,
+    viewport: Bounds<gpui_kit::Pixels>,
+    radius: gpui_kit::Pixels,
+    theme: YueTheme,
+    w: &mut Window,
+) {
+    let scale = w.scale_factor();
+    let pixel = 1. / scale;
+    let r = f32::from(
+        radius
+            .min(viewport.size.width / 2.)
+            .min(viewport.size.height / 2.),
+    );
+    let layers = [
+        (
+            2. * pixel,
+            rgba(theme, "--image-preview-pixel-grid-shadow-color"),
+        ),
+        (pixel, rgba(theme, "--image-preview-pixel-grid-color")),
+    ];
+    let clip = Bounds::new(
+        point(px(grid.clip[0]), px(grid.clip[1])),
+        size(
+            px(grid.clip[2] - grid.clip[0]),
+            px(grid.clip[3] - grid.clip[1]),
+        ),
+    );
+    w.with_content_mask(Some(ContentMask { bounds: clip }), |w| {
+        for axis in 0..2 {
+            for index in grid.indices[axis].clone() {
+                let coordinate =
+                    (((grid.origin[axis] + index as f32 * grid.step[axis]) * scale).floor() + 0.5)
+                        / scale;
+                for (width, color) in layers {
+                    let mut bounds = if axis == 0 {
+                        Bounds::new(
+                            point(px(coordinate - width / 2.), clip.top()),
+                            size(px(width), clip.size.height),
+                        )
+                    } else {
+                        Bounds::new(
+                            point(clip.left(), px(coordinate - width / 2.)),
+                            size(clip.size.width, px(width)),
+                        )
+                    };
+                    // Rectangular content masks do not clip rounded corners.
+                    // Shorten just the few edge strips to the circle's inner
+                    // span, rounded inward to whole physical pixels.
+                    let visible = bounds.intersect(&clip);
+                    let distance = if axis == 0 {
+                        f32::from(visible.left() - viewport.left())
+                            .min(f32::from(viewport.right() - visible.right()))
+                    } else {
+                        f32::from(visible.top() - viewport.top())
+                            .min(f32::from(viewport.bottom() - visible.bottom()))
+                    }
+                    .clamp(0., r);
+                    let inset = if distance < r {
+                        r - (r * r - (r - distance).powi(2)).max(0.).sqrt()
+                    } else {
+                        0.
+                    };
+                    if axis == 0 {
+                        let top = f32::from(bounds.top()).max(f32::from(viewport.top()) + inset);
+                        let bottom =
+                            f32::from(bounds.bottom()).min(f32::from(viewport.bottom()) - inset);
+                        bounds.origin.y = px((top * scale).ceil() / scale);
+                        bounds.size.height =
+                            (px((bottom * scale).floor() / scale) - bounds.origin.y).max(px(0.));
+                    } else {
+                        let left = f32::from(bounds.left()).max(f32::from(viewport.left()) + inset);
+                        let right =
+                            f32::from(bounds.right()).min(f32::from(viewport.right()) - inset);
+                        bounds.origin.x = px((left * scale).ceil() / scale);
+                        bounds.size.width =
+                            (px((right * scale).floor() / scale) - bounds.origin.x).max(px(0.));
+                    }
+                    if bounds.size.width > px(0.) && bounds.size.height > px(0.) {
+                        w.paint_quad(fill(bounds, color));
+                    }
+                }
+            }
+        }
+    });
 }
 fn near_split(x: f32, vp: Viewport, split: f32, theme: YueTheme, w: &Window) -> bool {
     let half = pixels(theme, "--image-preview-divider-hit-width") * f32::from(w.rem_size()) / 32.;
