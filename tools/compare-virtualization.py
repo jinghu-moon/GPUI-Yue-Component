@@ -37,7 +37,7 @@ def main():
     parser.add_argument("--date", default="2026-11-04", help="ISO date for output artifacts; defaults to the original workload date")
     parser.add_argument("--filter", default="series_")
     parser.add_argument("--workload", default="docs/research/virtual-list-optimization-series-2026-11-04.rs")
-    parser.add_argument("--after-feature", choices=["masonry-views", "grid-views", "directional-overscan", "masonry-cache", "grid-cells", "measured-motion"], default=None)
+    parser.add_argument("--after-feature", choices=["masonry-views", "grid-views", "directional-overscan", "masonry-cache", "grid-cells", "measured-motion", "grid-rtl", "content-probe"], default=None)
     parser.add_argument("--native", action="store_true", help="Run the opt-in production Showcase frame workload on the real Windows platform")
     args = parser.parse_args()
     try:
@@ -49,6 +49,10 @@ def main():
         args.filter = "pages::virtual_layouts::native_profile::native_frame_workload"
     if not args.label.replace("-", "").isalnum():
         parser.error("label must contain only letters, digits or hyphens")
+    logs = CACHE / args.label
+    destination = ROOT / f"docs/research/virtual-list-series-{args.label}-{args.date}.csv"
+    if destination.exists() or (logs / "identity.json").exists():
+        parser.error("comparison label already has recorded evidence; choose a new label")
     reference = run(["git", "rev-parse", args.before], capture_output=True, text=True).stdout.strip()
     archive = run(["git", "archive", "--format=zip", reference,
                    "vendor/gpui-base", "vendor/gpui-pre"], capture_output=True).stdout
@@ -63,7 +67,6 @@ def main():
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists() or destination.read_bytes() != data:
             destination.write_bytes(data)
-    logs = CACHE / args.label
     logs.mkdir(parents=True, exist_ok=True)
     executables = {}
     build_identity = {}
@@ -93,6 +96,8 @@ directional-overscan = []
 masonry-cache = []
 grid-cells = []
 measured-motion = []
+grid-rtl = []
+content-probe = []
 """
         manifest = manifest.replace(
             (ROOT / 'docs/research/virtual-list-optimization-series-2026-11-04.rs').as_posix(),
@@ -201,7 +206,6 @@ measured-motion = []
         print(f"Completed {args.label} {version}/{round_}", flush=True)
     if not rows:
         raise ValueError("no measurement rows")
-    destination = ROOT / f"docs/research/virtual-list-series-{args.label}-{args.date}.csv"
     with destination.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
         writer.writeheader()
