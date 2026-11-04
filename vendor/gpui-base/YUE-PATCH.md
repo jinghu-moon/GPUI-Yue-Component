@@ -568,3 +568,13 @@ read-only capabilities, and rejects unsupported motion before cancelling an
 active command. Reduced motion remains instant. Grid exposes and reuses a
 typed, side-effect-free axes preflight. Keep layout-specific unsupported
 boundaries explicit; remove when upstream supplies these same contracts.
+
+## Single Masonry feedback (2026-11-04)
+
+Handle a single measurement without a sorting buffer or per-lane Vec directory.
+Keep the private helper out of the multi-item hot body, retaining validation,
+no-op, anchor, one-revision and frozen-snapshot semantics. Batch storage remains
+unchanged: inline-buffer and SmallVec experiments were measured and reverted.
+Two Release ABBA runs support single-item CPU/allocation gains; the full batch
+and frame guard matrix records the limits. No persistent cache or dependency
+is added. Remove when upstream supplies equivalent single/batch tradeoffs.

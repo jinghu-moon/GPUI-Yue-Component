@@ -3,7 +3,7 @@ use gpui_kit::size;
 use yue_component::{VirtualGrid, VirtualMasonryState};
 
 #[test]
-fn masonry_feedback_batches_preserve_atomicity_and_frozen_geometry_at_buffer_boundaries() {
+fn masonry_feedback_batches_preserve_atomicity_and_frozen_geometry_across_batch_shapes() {
     for count in [0, 1, 31, 32, 33, 256] {
         let mut state =
             VirtualMasonryState::new(source(0, 300), VirtualizerSizing::measured(px(20.)), 3)
@@ -22,6 +22,8 @@ fn masonry_feedback_batches_preserve_atomicity_and_frozen_geometry_at_buffer_bou
                 px(if ix < count { 30. } else { 20. })
             );
             assert_eq!(frozen.item(ix).unwrap().item().extent(), px(20.));
+            assert_eq!(next.item(ix).unwrap().item().is_measured(), ix < count);
+            assert!(!frozen.item(ix).unwrap().item().is_measured());
         }
         state.update_sizes(&updates).unwrap();
         assert_eq!(
