@@ -638,13 +638,24 @@ impl VirtualMasonryState {
         offset
     }
     pub(super) fn commit_anchor(&mut self, snapshot: &VirtualMasonrySnapshot) {
-        self.anchor = snapshot
-            .working_indices()
+        self.commit_anchor_items(
+            snapshot.offset,
+            snapshot
+                .working_indices()
+                .into_iter()
+                .filter_map(|ix| snapshot.item(ix).ok()),
+        );
+    }
+    pub(super) fn commit_anchor_items(
+        &mut self,
+        offset: f64,
+        items: impl IntoIterator<Item = VirtualMasonryItem>,
+    ) {
+        self.anchor = items
             .into_iter()
-            .filter_map(|ix| snapshot.item(ix).ok())
             .filter(|item| {
-                item.item.start() <= snapshot.offset
-                    && item.item.start() + f64::from(item.item.extent()) > snapshot.offset
+                item.item.start() <= offset
+                    && item.item.start() + f64::from(item.item.extent()) > offset
             })
             .min_by(|a, b| {
                 a.item
@@ -652,7 +663,7 @@ impl VirtualMasonryState {
                     .total_cmp(&b.item.start())
                     .then_with(|| a.item.index().cmp(&b.item.index()))
             })
-            .map(|item| (item.item.key().clone(), snapshot.offset - item.item.start()));
+            .map(|item| (item.item.key().clone(), offset - item.item.start()));
     }
     pub(super) fn focus_keys(
         &mut self,

@@ -220,14 +220,21 @@ impl Element for VirtualMasonry {
         let mut retained = snapshot.retained.to_vec();
         retained.extend(focus);
         snapshot.retained = retained.into();
+        // One immutable final-geometry workset serves fallback layout, prepaint
+        // and anchor commit. Never reuse it across a geometry revision.
+        let items: Vec<_> = snapshot
+            .working_indices()
+            .into_iter()
+            .map(|ix| snapshot.item(ix).unwrap())
+            .collect();
         let mut deferred = false;
-        for ix in snapshot.working_indices() {
+        for item in &items {
+            let ix = item.item().index();
             if built.contains_key(&ix) {
                 continue;
             }
             // Budget exhaustion leaves estimated slots, never missing cards.
             // Clip their content to the estimate until next frame measures it.
-            let item = snapshot.item(ix).unwrap();
             let width = item.cross_extent();
             let height = item.item().extent();
             let mut element = div()
@@ -235,7 +242,7 @@ impl Element for VirtualMasonry {
                 .w(width)
                 .h(height)
                 .overflow_hidden()
-                .child((self.render)(item, w, cx))
+                .child((self.render)(item.clone(), w, cx))
                 .test_support()
                 .into_any_element();
             element.layout_as_root(
@@ -259,9 +266,8 @@ impl Element for VirtualMasonry {
             cx,
             |_, _, hitbox, w, cx| {
                 w.with_content_mask(Some(ContentMask { bounds }), |w| {
-                    for ix in snapshot.working_indices() {
-                        if let Some(mut element) = built.remove(&ix) {
-                            let item = snapshot.item(ix).unwrap();
+                    for item in &items {
+                        if let Some(mut element) = built.remove(&item.item().index()) {
                             element.prepaint_at(
                                 bounds.origin
                                     + point(
@@ -278,7 +284,8 @@ impl Element for VirtualMasonry {
                 hitbox
             },
         );
-        self.state.update(cx, |s, _| s.commit_anchor(&snapshot));
+        self.state
+            .update(cx, |s, _| s.commit_anchor_items(snapshot.offset(), items));
         if deferred && progressed {
             // Schedule only after real geometry progress. No invalid-prefix
             // redraw loop, and no cross-frame AnyElement cache.

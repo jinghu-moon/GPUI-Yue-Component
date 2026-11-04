@@ -493,3 +493,9 @@ union and direct seek contract. Explicit working_indices still returns a Vec.
 The per-change before/after CPU, allocation and regression evidence is recorded
 in docs/research/2026-11-04-virtual-list-optimization-series.md. Adopt upstream
 only after the same ordered identity, sparse-work and measurement contracts pass.
+
+Masonry reuses one final-geometry item workset for fallback presentation,
+prepaint and reading-anchor commit. Geometry-changing passes still recompute;
+no elements or writable snapshots are cached across frames. Production source
+query counts and all original coverage/budget/input regressions are verified
+in the optimization series before/after evidence.
