@@ -229,7 +229,9 @@ impl VirtualizerCapabilities {
         true
     }
     pub fn supports_smooth(&self) -> bool {
-        self.sizing != VirtualizerSizingKind::Measured
+        // Measured requires a bounded, already measured path; unknown geometry
+        // falls back to instant convergence, never full-path measurement.
+        true
     }
     pub fn supports_scroll_to_offset(&self) -> bool {
         true
@@ -286,6 +288,12 @@ pub enum VirtualizerMotion {
     #[default]
     Instant,
     Smooth {
+        duration: Duration,
+        max_distance: Pixels,
+    },
+    /// Measured linear lists only: jump near a distant target, then animate a
+    /// bounded measured tail. This does not animate the intervening distance.
+    JumpThenSmooth {
         duration: Duration,
         max_distance: Pixels,
     },

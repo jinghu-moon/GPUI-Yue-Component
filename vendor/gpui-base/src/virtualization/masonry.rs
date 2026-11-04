@@ -746,6 +746,9 @@ impl VirtualMasonryState {
         target: MasonryTarget,
         options: VirtualizerScrollOptions,
     ) -> Result<u64, VirtualizerError> {
+        if matches!(options.motion, VirtualizerMotion::JumpThenSmooth { .. }) {
+            return Err(VirtualizerError::Unsupported("masonry jump-then-smooth"));
+        }
         if let VirtualizerMotion::Smooth {
             duration,
             max_distance,

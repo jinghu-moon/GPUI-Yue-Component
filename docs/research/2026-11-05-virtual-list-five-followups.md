@@ -53,3 +53,15 @@
 验证采用 row 扫线＋活跃列区间 O(S log S)，包含查询用 row-max interval tree 剪枝；每帧扫描 S 个稀疏矩形与轴工作索引交集，不扫描跨度覆盖面积。极端同一 row 上有很多不相交跨度时单次包含查询仍可能访问 O(S)，这里不承诺完整二维索引的 O(log S)。没有把这项新能力宣传为速度优化。
 
 回归覆盖列 span、行 span、offscreen origin、唯一 click、冻结区域、原子拒绝、稳定 key splice 与 Known 尺寸反馈；百万行列中一个 100000×100000 span 只产生一个 cell，source reads 有界。默认路径两轮 Release ABBA 的 allocations/peak/reads/builds 全部相同，CPU 有不利项：未冻结 prefix +0.24%/+5.36%，冻结 hidden +1.58%/+1.96%，冻结 prefix +0.39%/+3.78%。其余场景及全部原始样本见 [第一轮](virtual-list-series-grid-span-default-2026-11-05.csv)／[复测](virtual-list-series-grid-span-default-repeat-2026-11-05.csv)。按明确功能需求与默认空间成本不增长采用，不能声称零 CPU 代价。
+
+## 4. Measured smooth 与独立末段策略
+
+一维 Measured 的 Smooth 只播放已测、有界短路径（viewport 与 max_distance 中较小值，几何检查另受 measurement_budget 限制）。未测或过密路径即时收敛，不扫描／冻结全部沿途项。capability 代表存在受限动画能力。Masonry Measured 仍不播放动画。
+
+可选 `JumpThenSmooth` 仅用于一维 Measured：先跳至目标前方半个有界距离，下一个时间样本在已测路径播放末段，否则即时收敛。Fixed/Known 和 Masonry 类型化拒绝此策略；普通 Smooth 的长距即时行为保留。它不是全程连续动画。
+
+动画状态只在请求时分配；相同 now 重求复用样本，动画不消耗几何重试预算，保留 8 次拒绝和 2 秒总截止。几何改变目标／校正实际位置时，从宿主实际位置按剩余截止时间衔接。五项新增 UI integration tests 覆盖横纵轴 1ms 高刷新率、同 now 重求、尺寸失效、未知尺寸降级、真实 wheel、目标删除、no-op、reduced motion、隐藏、拒绝宿主、超时与一次终态。长距测试检查 builds 有界，不构建沿途 900 行。
+
+试验先后暴露“拒绝宿主仍重设起点返回原地”和“等尺寸新增测量重启段落”问题；拒绝／高刷新率用例先失败后修正。[trial 原始采样](virtual-list-series-measured-motion-trial-2026-11-05.csv) 保留，仅是被拒候选。最终源码重跑两轮 ABBA，baseline `7237b55`，最终误差均为 0；[固定 workload](virtual-list-measured-motion-2026-11-05.rs)、[最终第一轮](virtual-list-series-measured-motion-final-2026-11-05.csv)、[复测](virtual-list-series-measured-motion-final-repeat-2026-11-05.csv) 完整保存。
+
+第一轮 CPU：idle +3.53%，reduced +1.30%，short +13.64%，tail +12.78%。short builds 1610→1938、分配约 20230→22414、peak 16440→17488 bytes；tail builds 1610→1941、分配 21381→23538、peak 19864→27400。idle 各空间／工作量计数相同，reduced 两个命令多两个 motion 分配。动画的中间位置不同、工作量更多，这是功能成本，不是等画面提速。按用户要求采用并公开代价。阶段专项全量为 170 passed / 0 failed / 8 ignored。

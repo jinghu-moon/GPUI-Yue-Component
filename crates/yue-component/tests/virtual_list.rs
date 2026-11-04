@@ -49,6 +49,8 @@ mod masonry_follow_tail;
 mod masonry_offset;
 #[path = "virtual_list/masonry_smooth.rs"]
 mod masonry_smooth;
+#[path = "virtual_list/measured_smooth.rs"]
+mod measured_smooth;
 #[path = "virtual_list/optimizations.rs"]
 mod optimizations;
 #[path = "virtual_list/owner.rs"]

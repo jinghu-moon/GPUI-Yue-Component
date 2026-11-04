@@ -59,3 +59,109 @@ impl CommandProgress {
         self.stalled >= 8
     }
 }
+
+/// Optional state only for Measured smooth requests. Re-resolution within one
+/// frame returns one sample. Geometry changes rebase at the actual owner offset
+/// with the original deadline, rather than restarting from an obsolete origin.
+#[derive(Default)]
+pub(super) struct MeasuredMotion {
+    sampled_at: Option<Instant>,
+    segment_start: Option<Instant>,
+    deadline: Option<Instant>,
+    from: f64,
+    destination: f64,
+    sample: f64,
+    complete: bool,
+    disabled: bool,
+    tail_pending: bool,
+    advanced: bool,
+    geometry_revision: u64,
+}
+pub(super) struct MotionGeometry {
+    pub current: f64,
+    pub destination: f64,
+    pub extent: f64,
+    pub known: bool,
+    pub revision: u64,
+}
+impl MeasuredMotion {
+    pub fn is_animating(&self, now: Instant) -> bool {
+        !self.disabled && (self.tail_pending || self.deadline.is_none_or(|end| now <= end))
+    }
+    pub fn sample(
+        &mut self,
+        options: VirtualizerScrollOptions,
+        now: Instant,
+        geometry: MotionGeometry,
+    ) -> (f64, bool, bool) {
+        let MotionGeometry {
+            current,
+            destination,
+            extent,
+            known,
+            revision,
+        } = geometry;
+        if options.reduced_motion || (destination - current).abs() <= 0.01 {
+            self.disabled = true;
+            return (destination, true, false);
+        }
+        let (duration, max_distance, jump) = match options.motion {
+            VirtualizerMotion::Smooth {
+                duration,
+                max_distance,
+            } => (duration, f64::from(max_distance).min(extent), false),
+            VirtualizerMotion::JumpThenSmooth {
+                duration,
+                max_distance,
+            } => (duration, f64::from(max_distance).min(extent), true),
+            VirtualizerMotion::Instant => return (destination, true, false),
+        };
+        if self.disabled {
+            return (destination, true, false);
+        }
+        if self.sampled_at == Some(now) {
+            return (self.sample, self.complete, self.advanced);
+        }
+        let first = self.sampled_at.is_none();
+        self.advanced = self.sampled_at.is_some_and(|old| now > old);
+        self.sampled_at = Some(now);
+        if first && (destination - current).abs() > max_distance && jump && max_distance > 0. {
+            self.tail_pending = true;
+            self.sample = destination - (destination - current).signum() * max_distance * 0.5;
+            self.complete = false;
+            return (self.sample, false, false);
+        }
+        if first || self.tail_pending {
+            self.tail_pending = false;
+            if !known || extent <= 0. || (destination - current).abs() > max_distance {
+                self.disabled = true;
+                return (destination, true, false);
+            }
+            self.from = current;
+            self.destination = destination;
+            self.segment_start = Some(now);
+            self.deadline = Some(now + duration);
+        } else if (destination - self.destination).abs() > 0.01
+            || revision != self.geometry_revision && (current - self.sample).abs() > 0.5
+        {
+            self.from = current;
+            self.destination = destination;
+            self.segment_start = Some(now);
+        }
+        self.geometry_revision = revision;
+        let end = self.deadline.expect("motion deadline");
+        self.complete = now >= end;
+        if self.complete {
+            self.sample = destination;
+        } else if !known {
+            self.sample = current;
+        } else {
+            let start = self.segment_start.unwrap();
+            let t = (now.saturating_duration_since(start).as_secs_f64()
+                / end.saturating_duration_since(start).as_secs_f64())
+            .clamp(0., 1.);
+            self.sample = self.from + (destination - self.from) * (1. - (1. - t).powi(3));
+        }
+        (self.sample, self.complete, self.advanced && !self.complete)
+    }
+}

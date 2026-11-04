@@ -391,6 +391,7 @@ struct Command {
     progress: super::command::CommandProgress,
     from: f64,
     time_progressed: bool,
+    measured_motion: Option<Box<super::command::MeasuredMotion>>,
 }
 enum CommandTarget {
     Key(ElementId),
@@ -1152,11 +1153,22 @@ impl VirtualizerState {
         if let VirtualizerMotion::Smooth {
             duration,
             max_distance,
+        }
+        | VirtualizerMotion::JumpThenSmooth {
+            duration,
+            max_distance,
         } = options.motion
         {
             if duration.is_zero() || !valid_positive(max_distance) {
                 return Err(VirtualizerError::InvalidGeometry("smooth bounds"));
             }
+        }
+        if self.measured.is_none()
+            && matches!(options.motion, VirtualizerMotion::JumpThenSmooth { .. })
+        {
+            return Err(VirtualizerError::Unsupported(
+                "jump-then-smooth requires measured list",
+            ));
         }
         self.finish_command(VirtualizerCommandOutcome::Cancelled);
         if let Some(list) = &self.measured {
@@ -1173,6 +1185,9 @@ impl VirtualizerState {
             progress: super::command::CommandProgress::default(),
             from: self.viewport.as_ref().map_or(0.0, |v| v.offset),
             time_progressed: false,
+            measured_motion: (self.measured.is_some()
+                && !matches!(options.motion, VirtualizerMotion::Instant))
+            .then(|| Box::default()),
         });
         self.outstanding = None;
         Ok(self.serial)
@@ -1386,7 +1401,13 @@ impl VirtualizerState {
         }
         self.viewport = Some(viewport.clone());
         if let Some(command) = &mut self.command {
-            let exceeded = command.progress.advance(now);
+            let exceeded = if let Some(motion) = &command.measured_motion {
+                command
+                    .progress
+                    .advance_with_motion(now, motion.is_animating(now))
+            } else {
+                command.progress.advance(now)
+            };
             if self.measured.is_some() && exceeded {
                 self.finish_command(VirtualizerCommandOutcome::NoProgress);
             }
@@ -1431,7 +1452,38 @@ impl VirtualizerState {
                 Ok((destination, measured)) => {
                     let destination = destination.clamp(0.0, self.scroll_limit(viewport));
                     target = Some(destination);
-                    if self.capabilities().supports_smooth() {
+                    if command.measured_motion.is_some() {
+                        let options = command.options;
+                        let padding = viewport.origin + f64::from(self.layout.padding_start);
+                        let start = viewport.offset.min(destination) - padding;
+                        let end =
+                            viewport.offset.max(destination) + f64::from(viewport.extent) - padding;
+                        let range = self.geometry.range(start, (end - start).max(0.));
+                        let known = viewport.extent > gpui::px(0.)
+                            && range.len() <= self.layout.measurement_budget
+                            && self.geometry.items(range).all(|(_, _, measured)| measured);
+                        let (offset, complete, advanced) = self
+                            .command
+                            .as_mut()
+                            .unwrap()
+                            .measured_motion
+                            .as_mut()
+                            .unwrap()
+                            .sample(
+                                options,
+                                now,
+                                super::command::MotionGeometry {
+                                    current: viewport.offset,
+                                    destination,
+                                    extent: viewport.extent.into(),
+                                    known,
+                                    revision: self.geometry_revision,
+                                },
+                            );
+                        target = Some(offset);
+                        settled = complete;
+                        motion_progressed = advanced;
+                    } else if self.capabilities().supports_smooth() {
                         let (offset, complete) = super::command::sample_offset(
                             command.options,
                             now.saturating_duration_since(command.progress.started().unwrap()),
