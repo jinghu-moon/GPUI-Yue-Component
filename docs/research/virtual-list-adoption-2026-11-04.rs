@@ -285,3 +285,55 @@ fn adopt_metadata_memory() {
         }
     }
 }
+
+struct NativeResizeHarness {
+    list: gpui_kit::ListState,
+    width: f32,
+}
+impl Render for NativeResizeHarness {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        gpui_kit::list(self.list.clone(), |_, _, _| {
+            div().h(px(20.)).into_any_element()
+        })
+        .w(px(self.width))
+        .h(px(100.))
+    }
+}
+#[gpui_kit::test]
+fn adopt_width_dense(cx: &mut TestAppContext) {
+    for n in [10_000, 100_000] {
+        for sample in 0..5 {
+            let state = gpui_kit::ListState::new_with_uniform_height(
+                n,
+                gpui_kit::ListAlignment::Top,
+                px(0.),
+                px(20.),
+            );
+            let (view, cx) = cx.add_window_view(|_, _| NativeResizeHarness {
+                list: state.clone(),
+                width: 300.,
+            });
+            cx.update(|w, cx| w.draw(cx).clear(cx));
+            state.set_item_sizes(
+                &(0..n)
+                    .map(|ix| (ix, size(px(300.), px(20.))))
+                    .collect::<Vec<_>>(),
+                true,
+            );
+            let frozen = state.geometry();
+            let (_, ns, stats) = measured(|| {
+                view.update(cx, |v, cx| {
+                    v.width = 360.;
+                    cx.notify();
+                });
+                cx.update(|w, cx| w.draw(cx).clear(cx));
+            });
+            assert_eq!(frozen.measured_count(), n);
+            assert!(state.geometry().measured_count() < 20);
+            println!(
+                "SERIES,case=resize-dense-{n},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
+                stats.count, stats.peak
+            );
+        }
+    }
+}

@@ -3,6 +3,41 @@ use gpui::{
     div, list, px, uniform_list_range,
 };
 
+#[gpui::test]
+fn width_invalidation_keeps_sparse_hints_and_frozen_geometry(cx: &mut TestAppContext) {
+    for dense in [false, true] {
+        let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.));
+        let (view, cx) = cx.add_window_view(|_, _| View {
+            list: state.clone(),
+            width: px(240.),
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let updates: Vec<_> = (0..1000)
+            .filter(|ix| dense || *ix == 900 || *ix == 999)
+            .map(|ix| (ix, gpui::size(px(240.), px(37.))))
+            .collect();
+        state.set_item_sizes(&updates, true);
+        let frozen = state.geometry();
+        view.update(cx, |v, cx| {
+            v.width = px(480.);
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let next = state.geometry();
+        for ix in [900, 999] {
+            assert!(!next.item(ix).unwrap().is_measured());
+            assert_eq!(next.item(ix).unwrap().extent(), px(37.));
+            assert!(frozen.item(ix).unwrap().is_measured());
+            assert_eq!(frozen.item(ix).unwrap().cross_extent(), px(240.));
+        }
+        assert!(
+            next.measured_items()
+                .iter()
+                .all(|(_, extent)| extent.width == px(480.))
+        );
+    }
+}
+
 #[test]
 fn scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input() {
     let scroll = gpui::ScrollHandle::new();

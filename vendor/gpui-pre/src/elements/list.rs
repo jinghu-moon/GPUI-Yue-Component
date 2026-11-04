@@ -594,6 +594,7 @@ struct ListItemSummary {
     height: f64,
     has_focus_handles: bool,
     has_unknown_height: bool,
+    has_measured_items: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
@@ -1605,15 +1606,47 @@ impl StateInner {
             .last_layout_bounds
             .is_some_and(|bounds| bounds.size.width != width)
         {
-            self.items = SumTree::from_iter(
-                self.items.iter().map(|item| ListItem::Unmeasured {
-                    size_hint: item
-                        .size_hint()
-                        .or_else(|| self.default_item_height.map(|height| size(px(0.), height))),
-                    focus_handle: item.focus_handle(),
-                }),
-                (),
-            );
+            let invalidate = |item: &ListItem| ListItem::Unmeasured {
+                size_hint: item
+                    .size_hint()
+                    .or_else(|| self.default_item_height.map(|height| size(px(0.), height))),
+                focus_handle: item.focus_handle(),
+            };
+            // Preserve unchanged estimated subtrees. Invalid Measured variants
+            // must also become hints, so valid measurement counts are insufficient.
+            let threshold = self.items.summary().count / 4;
+            let dense =
+                self.items.summary().count - self.items.summary().unrendered_count > threshold;
+            let fill_unknown = self.default_item_height.is_some();
+            let mut candidates = self.items.filter::<_, Count>((), |s| {
+                s.has_measured_items || (fill_unknown && s.has_unknown_height)
+            });
+            let mut updates = Vec::new();
+            if !dense {
+                candidates.next();
+                while let Some(item) = candidates.item() {
+                    updates.push((candidates.start().0, invalidate(item)));
+                    if updates.len() > threshold {
+                        break;
+                    }
+                    candidates.next();
+                }
+            }
+            drop(candidates);
+            if dense || updates.len() > threshold {
+                self.items = SumTree::from_iter(self.items.iter().map(invalidate), ());
+            } else if !updates.is_empty() {
+                let mut cursor = self.items.cursor::<Count>(());
+                let mut tree = SumTree::new(());
+                for (ix, item) in updates {
+                    tree.append(cursor.slice(&Count(ix), Bias::Right), ());
+                    tree.push(item, ());
+                    cursor.seek_forward(&Count(ix + 1), Bias::Right);
+                }
+                tree.append(cursor.suffix(), ());
+                drop(cursor);
+                self.items = tree;
+            }
             self.measuring_behavior.reset();
             self.geometry_revision += 1;
             if let Some(scroll_top) = self.logical_scroll_top {
@@ -2504,6 +2537,7 @@ impl sum_tree::Item for ListItem {
                 height: size_hint.map_or(0., |size| f64::from(size.height)),
                 has_focus_handles: focus_handle.is_some(),
                 has_unknown_height: size_hint.is_none(),
+                has_measured_items: false,
             },
             ListItem::Measured {
                 size,
@@ -2515,6 +2549,7 @@ impl sum_tree::Item for ListItem {
                 height: f64::from(size.height),
                 has_focus_handles: focus_handle.is_some(),
                 has_unknown_height: false,
+                has_measured_items: true,
             },
         }
     }
@@ -2531,6 +2566,7 @@ impl sum_tree::ContextLessSummary for ListItemSummary {
         self.height += summary.height;
         self.has_focus_handles |= summary.has_focus_handles;
         self.has_unknown_height |= summary.has_unknown_height;
+        self.has_measured_items |= summary.has_measured_items;
     }
 }
 
