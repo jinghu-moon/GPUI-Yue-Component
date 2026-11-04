@@ -9,6 +9,8 @@ pub use element::VirtualMasonry;
 #[path = "masonry_index.rs"]
 mod index;
 use index::IndexVector;
+#[path = "masonry_activity.rs"]
+mod activity;
 
 struct MasonryCommand {
     id: u64,
@@ -194,6 +196,7 @@ pub struct VirtualMasonryState {
     invalid_reported: bool,
     focus_fallback: Option<gpui::FocusHandle>,
     removed_focus: Vec<gpui::FocusHandle>,
+    activity: Option<Box<activity::MasonryActivity>>,
 }
 impl gpui::EventEmitter<VirtualizerEvent> for VirtualMasonryState {}
 
@@ -267,6 +270,7 @@ impl VirtualMasonryState {
             invalid_reported: false,
             focus_fallback: None,
             removed_focus: Vec::new(),
+            activity: None,
         })
     }
     pub fn scroll_handle(&self) -> &ScrollHandle {
@@ -867,6 +871,7 @@ impl VirtualMasonryState {
     /// Observe native user activity before the scroll owner applies its delta.
     /// Final frame geometry then decides whether the reader left or reached tail.
     pub fn user_scroll_activity(&mut self) {
+        self.record_input_direction(None);
         self.follow_tail_input_pending = self.follow_tail.is_some();
         self.finish_command(VirtualizerCommandOutcome::Cancelled);
     }
@@ -894,6 +899,17 @@ impl VirtualMasonryState {
     pub(super) fn observe_input(&mut self) {
         let offset = (-self.scroll.precise_offset().y).max(0.0);
         if self.last_offset.is_some_and(|old| old != offset) {
+            let direction = self
+                .last_offset
+                .filter(|old| (offset - old).abs() > 0.01)
+                .map(|old| {
+                    if offset > old {
+                        VirtualizerScrollDirection::Forward
+                    } else {
+                        VirtualizerScrollDirection::Backward
+                    }
+                });
+            self.record_input_direction(direction);
             self.cancel_scroll();
             // Native input supersedes the last layout anchor. Retaining it would
             // let the next measurement pass snap a user-displaced viewport back.
@@ -1159,6 +1175,7 @@ impl VirtualMasonryState {
             self.revision += 1;
             self.cancel_scroll();
             self.last_offset = None;
+            self.end_scrolling();
         }
     }
 }

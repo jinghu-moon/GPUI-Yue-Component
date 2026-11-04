@@ -33,6 +33,8 @@ mod followup;
 mod followup_edges;
 #[path = "virtual_list/masonry_follow_tail.rs"]
 mod masonry_follow_tail;
+#[path = "virtual_list/masonry_activity.rs"]
+mod masonry_activity;
 #[path = "virtual_list/masonry_offset.rs"]
 mod masonry_offset;
 #[path = "virtual_list/masonry_smooth.rs"]
