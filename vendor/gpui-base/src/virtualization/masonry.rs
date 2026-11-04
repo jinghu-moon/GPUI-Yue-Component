@@ -11,6 +11,9 @@ mod index;
 use index::IndexVector;
 #[path = "masonry_activity.rs"]
 mod activity;
+#[path = "masonry_cache.rs"]
+mod cache;
+pub use cache::{VirtualMasonryCache, VirtualMasonryCacheItem};
 
 struct MasonryCommand {
     id: u64,
@@ -978,8 +981,12 @@ impl VirtualMasonryState {
             }
             self.revision += 1;
         }
+        let first = self.viewport.is_none();
         self.cross = Some(width);
         self.viewport = Some(viewport);
+        if first && self.anchor.is_some() {
+            self.restore_anchor();
+        }
     }
     pub(super) fn resolve_offset(&mut self) -> f64 {
         let viewport = self.viewport.unwrap();

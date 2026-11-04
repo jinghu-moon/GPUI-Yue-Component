@@ -12,7 +12,7 @@ pub use anchor::VirtualizerAnchorPosition;
 pub use element::VirtualList;
 pub use grid::{VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridSnapshot};
 pub use masonry::{
-    VirtualMasonry, VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot,
+    VirtualMasonry, VirtualMasonryCache, VirtualMasonryCacheItem, VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot,
     VirtualMasonryState,
 };
 pub use state::*;
