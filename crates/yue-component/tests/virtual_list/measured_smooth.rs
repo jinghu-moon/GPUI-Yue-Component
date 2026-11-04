@@ -6,6 +6,7 @@ struct Harness {
     extent: Rc<Cell<f32>>,
     builds: Rc<Cell<usize>>,
     horizontal: bool,
+    viewport: f32,
 }
 impl Render for Harness {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -16,8 +17,8 @@ impl Render for Harness {
             let main = if item.index() == 0 { extent.get() } else { 20. };
             div().w(px(main)).h(px(main))
         })
-        .w(px(if self.horizontal { 100. } else { 240. }))
-        .h(px(100.))
+        .w(px(if self.horizontal { self.viewport } else { 240. }))
+        .h(px(if self.horizontal { 100. } else { self.viewport }))
     }
 }
 fn harness(cx: &mut Context<Harness>, horizontal: bool) -> Harness {
@@ -40,6 +41,7 @@ fn harness(cx: &mut Context<Harness>, horizontal: bool) -> Harness {
         extent: Rc::new(Cell::new(20.)),
         builds: Rc::default(),
         horizontal,
+        viewport: 100.,
     }
 }
 #[gpui_kit::test]
@@ -81,6 +83,54 @@ fn options(tail: bool) -> VirtualizerScrollOptions {
                 max_distance: px(100.),
             }
         })
+}
+
+#[gpui_kit::test]
+fn measured_smooth_later_viewport_shrink_falls_back_within_the_new_bound(cx: &mut TestAppContext) {
+    for horizontal in [false, true] {
+        let (view, cx) = cx.add_window_view(|_, cx| harness(cx, horizontal));
+        cx.update(|w, _| w.activate_window());
+        cx.run_until_parked();
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let state = view.read_with(cx, |v, _| v.state.clone());
+        state.update(cx, |s, cx| {
+            s.scroll_to_key(2usize.into(), options(false)).unwrap();
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        view.update(cx, |v, cx| {
+            v.viewport = 20.;
+            cx.notify();
+        });
+        frame(cx, 50);
+        assert!(
+            (offset(&state, cx) - 40.).abs() < 0.01,
+            "new short-path bound must apply during motion"
+        );
+        assert!(!state.read_with(cx, |s, _| s.has_scroll_command()));
+    }
+}
+
+#[gpui_kit::test]
+fn measured_smooth_later_unknown_path_falls_back_without_waiting_for_the_deadline(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, false));
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let state = view.read_with(cx, |v, _| v.state.clone());
+    state.update(cx, |s, _| {
+        let input = s.viewport().unwrap().clone();
+        let now = Instant::now();
+        s.scroll_to_key(2usize.into(), options(false)).unwrap();
+        s.prepare(&input, now).unwrap();
+        s.invalidate_items(0..1).unwrap();
+        let (_, request) = s.prepare(&input, now + Duration::from_millis(50)).unwrap();
+        assert_eq!(
+            request.unwrap().offset(),
+            40.,
+            "unknown path must use bounded instant convergence"
+        );
+    });
 }
 
 #[gpui_kit::test]

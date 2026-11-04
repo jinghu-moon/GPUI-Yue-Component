@@ -136,12 +136,14 @@ impl MeasuredMotion {
             self.complete = false;
             return (self.sample, false, false);
         }
+        // The short measured path is a per-sample constraint: resize or
+        // invalidation can revoke it after a valid animation has started.
+        if !known || extent <= 0. || (destination - current).abs() > max_distance {
+            self.disabled = true;
+            return (destination, true, false);
+        }
         if first || self.tail_pending {
             self.tail_pending = false;
-            if !known || extent <= 0. || (destination - current).abs() > max_distance {
-                self.disabled = true;
-                return (destination, true, false);
-            }
             self.from = current;
             self.destination = destination;
             self.segment_start = Some(now);
@@ -158,8 +160,6 @@ impl MeasuredMotion {
         self.complete = now >= end;
         if self.complete {
             self.sample = destination;
-        } else if !known {
-            self.sample = current;
         } else {
             let start = self.segment_start.unwrap();
             let t = (now.saturating_duration_since(start).as_secs_f64()
