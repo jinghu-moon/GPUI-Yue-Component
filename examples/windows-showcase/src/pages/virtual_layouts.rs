@@ -305,6 +305,10 @@ impl Render for VirtualLayoutsPage {
     }
 }
 
+#[cfg(all(test, target_os = "windows"))]
+#[path = "virtual_layouts/native_tests.rs"]
+mod native_tests;
+
 #[cfg(all(test, feature = "headless-tests"))]
 mod tests {
     use super::*;
