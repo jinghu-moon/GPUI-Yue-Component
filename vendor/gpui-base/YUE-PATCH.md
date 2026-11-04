@@ -595,3 +595,25 @@ unchanged: inline-buffer and SmallVec experiments were measured and reverted.
 Two Release ABBA runs support single-item CPU/allocation gains; the full batch
 and frame guard matrix records the limits. No persistent cache or dependency
 is added. Remove when upstream supplies equivalent single/batch tradeoffs.
+
+## Multi-item linear feedback buffer (2026-11-04)
+
+Reuse the existing indexed transaction Vec for sorted duplicate validation,
+no-op filtering and backend submission; remove the separate HashSet. Validate
+no-op duplicates before filtering and keep the complete batch atomic. The
+singleton specialization, stored-size/exact/cross equality, native measurement
+owner and anchor protocol stay unchanged. Two Release ABBA matrices record
+allocation/peak reductions and unchanged source reads; this is not a claim of
+GPU FPS improvement. Remove when upstream offers equivalent validated batches.
+
+## Masonry absolute offset commands (2026-11-04)
+
+Add instant finite nonnegative f64 offset targets to the existing one-command
+lifecycle and native ScrollHandle. Reuse preflight motion validation, bounded
+correction, native input cancellation, unmount cancellation and exactly-once
+terminal events. Clamp against current viewport/geometry; offset targets have
+no key alignment or persistent tail pin. Key APIs remain compatible. Publish
+offset support only; Attached, follow-tail and smooth remain unsupported. Six
+public-seam tests cover validation atomicity, pre-mount/empty/large coordinates,
+dynamic correction/source shrink, input/unmount and bounded termination.
+Remove when upstream provides the same command and ownership contracts.

@@ -12,9 +12,13 @@ use index::IndexVector;
 
 struct MasonryCommand {
     id: u64,
-    key: ElementId,
+    target: MasonryTarget,
     align: VirtualizerAlign,
     progress: super::command::CommandProgress,
+}
+enum MasonryTarget {
+    Key(ElementId),
+    Offset(f64),
 }
 
 #[derive(Clone)]
@@ -180,7 +184,7 @@ pub struct VirtualMasonryState {
 }
 impl gpui::EventEmitter<VirtualizerEvent> for VirtualMasonryState {}
 
-/// Masonry has a separate scroll owner and no attached/offset/motion adapter.
+/// Masonry owns instant key/offset positioning, with no attached/motion adapter.
 /// Query these boundaries before exposing controls shared with a linear list.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct VirtualMasonryCapabilities {
@@ -200,7 +204,7 @@ impl VirtualMasonryCapabilities {
         false
     }
     pub fn supports_scroll_to_offset(&self) -> bool {
-        false
+        true
     }
 }
 impl VirtualMasonryState {
@@ -375,11 +379,10 @@ impl VirtualMasonryState {
             .anchor
             .take()
             .filter(|(key, _, _)| self.source.index_of(key).is_some());
-        if self
-            .pending
-            .as_ref()
-            .is_some_and(|command| self.source.index_of(&command.key).is_none())
-        {
+        if self.pending.as_ref().is_some_and(|command| {
+            matches!(&command.target,
+                MasonryTarget::Key(key) if self.source.index_of(key).is_none())
+        }) {
             self.finish_command(VirtualizerCommandOutcome::Missing);
         }
         self.revision += 1;
@@ -661,7 +664,7 @@ impl VirtualMasonryState {
         self.update_sizes(updates)
     }
     /// Accept common scroll options or a legacy alignment. Masonry currently
-    /// supports instant key alignment only; an explicit smooth request fails
+    /// supports instant positioning only; an explicit smooth request fails
     /// before replacing the active command. Reduced motion requests are instant.
     pub fn scroll_to_key(
         &mut self,
@@ -671,7 +674,28 @@ impl VirtualMasonryState {
         if self.source.index_of(&key).is_none() {
             return Err(VirtualizerError::MissingKey);
         }
-        let options = options.into();
+        self.start_command(MasonryTarget::Key(key), options.into())
+    }
+    /// Position the native owner at a nonnegative, finite content offset.
+    /// It can be queued before mount and is clamped to current geometry during
+    /// layout. Alignment/scroll padding apply only to key targets. Unknown
+    /// offscreen sizes remain estimates; this is not a persistent tail pin.
+    /// Callers notify their owning entity after a successful request.
+    pub fn scroll_to_offset(
+        &mut self,
+        offset: f64,
+        options: impl Into<VirtualizerScrollOptions>,
+    ) -> Result<u64, VirtualizerError> {
+        if !offset.is_finite() || offset < 0.0 {
+            return Err(VirtualizerError::InvalidGeometry("scroll offset"));
+        }
+        self.start_command(MasonryTarget::Offset(offset), options.into())
+    }
+    fn start_command(
+        &mut self,
+        target: MasonryTarget,
+        options: VirtualizerScrollOptions,
+    ) -> Result<u64, VirtualizerError> {
         if let VirtualizerMotion::Smooth {
             duration,
             max_distance,
@@ -690,7 +714,7 @@ impl VirtualMasonryState {
         let id = self.next_command_id;
         self.pending = Some(MasonryCommand {
             id,
-            key,
+            target,
             align: options.align,
             progress: Default::default(),
         });
@@ -726,15 +750,21 @@ impl VirtualMasonryState {
     pub(super) fn confirm_command(&mut self, complete: bool) {
         let offset = (-self.scroll.precise_offset().y).max(0.);
         let settled = self.pending.as_ref().is_some_and(|command| {
-            let Some(ix) = self.source.index_of(&command.key) else {
-                return false;
-            };
-            let (lane, local) = self.slots[ix];
             complete
-                && self.lanes[lane]
-                    .geometry
-                    .item(local)
-                    .is_some_and(|(_, _, measured)| measured)
+                && match &command.target {
+                    MasonryTarget::Key(key) => self.source.index_of(key).is_some_and(|ix| {
+                        let (lane, local) = self.slots[ix];
+                        self.lanes[lane]
+                            .geometry
+                            .item(local)
+                            .is_some_and(|(_, _, measured)| measured)
+                    }),
+                    MasonryTarget::Offset(target) => self.viewport.is_some_and(|viewport| {
+                        let target =
+                            target.min((self.total_extent() - f64::from(viewport.height)).max(0.));
+                        (offset - target).abs() <= 0.01
+                    }),
+                }
         });
         if let Some(command) = &mut self.pending {
             let stalled = command.progress.confirm(offset, settled);
@@ -817,32 +847,35 @@ impl VirtualMasonryState {
         let viewport = self.viewport.unwrap();
         let old = (-self.scroll.precise_offset().y).max(0.0);
         let mut offset = old;
-        if self
-            .pending
-            .as_ref()
-            .is_some_and(|command| self.source.index_of(&command.key).is_none())
-        {
+        if self.pending.as_ref().is_some_and(|command| {
+            matches!(&command.target,
+                MasonryTarget::Key(key) if self.source.index_of(key).is_none())
+        }) {
             self.finish_command(VirtualizerCommandOutcome::Missing);
         }
-        if let Some(command) = &self.pending
-            && let Some(ix) = self.source.index_of(&command.key)
-        {
-            let snapshot = self.snapshot(old, viewport).unwrap();
-            let item = snapshot.item(ix).unwrap();
-            let v = VirtualizerViewport::new(
-                &VirtualizerBinding::new(),
-                0,
-                old,
-                viewport.height,
-                viewport.width,
-            );
-            offset = state::alignment_offset(
-                item.item(),
-                &v,
-                command.align,
-                self.layout.scroll_padding_start.into(),
-                self.layout.scroll_padding_end.into(),
-            );
+        if let Some(command) = &self.pending {
+            offset = match &command.target {
+                MasonryTarget::Offset(target) => *target,
+                MasonryTarget::Key(key) => {
+                    let ix = self.source.index_of(key).unwrap();
+                    let snapshot = self.snapshot(old, viewport).unwrap();
+                    let item = snapshot.item(ix).unwrap();
+                    let v = VirtualizerViewport::new(
+                        &VirtualizerBinding::new(),
+                        0,
+                        old,
+                        viewport.height,
+                        viewport.width,
+                    );
+                    state::alignment_offset(
+                        item.item(),
+                        &v,
+                        command.align,
+                        self.layout.scroll_padding_start.into(),
+                        self.layout.scroll_padding_end.into(),
+                    )
+                }
+            };
         }
         offset = offset.clamp(
             0.0,

@@ -68,7 +68,7 @@ fn masonry_options_validate_before_replacing_the_active_command() {
     assert!(!caps.supports_attached());
     assert!(!caps.supports_follow_tail());
     assert!(!caps.supports_smooth());
-    assert!(!caps.supports_scroll_to_offset());
+    assert!(caps.supports_scroll_to_offset());
     let old = state
         .scroll_to_key(1usize.into(), VirtualizerAlign::End)
         .unwrap();
