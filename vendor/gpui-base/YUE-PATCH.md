@@ -519,3 +519,12 @@ small increments to an absolute Pixels projection. Single-item Pixels and
 external-origin/scrollbar projection limits remain explicit. Upgrade tests and
 CPU/allocation tradeoffs, including the rejected wide summary, are recorded
 in the optimization series; this is a correctness change, not a speed claim.
+
+## Masonry command baseline (2026-11-04)
+
+Complete the checkpointed command/blank-anchor changes before optimization.
+Blank-region anchors carry the measured flag consistently. Command terminal
+events settle, cancel, report a missing key or stop after bounded no-progress;
+regression coverage asserts exactly one result and retains the existing owner.
+The full pre-experiment virtual_list suite passed 99 tests with 8 manual probes
+ignored; the added terminal-results test also passes.

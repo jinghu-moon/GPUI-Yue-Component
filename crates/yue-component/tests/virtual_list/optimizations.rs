@@ -367,3 +367,105 @@ fn masonry_blank_region_anchors_survive_padding_gap_and_trailing_changes(cx: &mu
     }
     assert!(failures.is_empty(), "blank region anchors: {failures:?}");
 }
+
+#[gpui_kit::test]
+fn masonry_commands_finish_once_on_settle_cancel_missing_and_stall(cx: &mut TestAppContext) {
+    use yue_component::{VirtualMasonry, VirtualMasonryState};
+    struct Harness(Entity<VirtualMasonryState>, bool);
+    impl Render for Harness {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            let invalid = self.1;
+            VirtualMasonry::new("command-results", &self.0, move |_, _, _| {
+                div().h(px(if invalid { 0. } else { 20. }))
+            })
+            .w(px(300.))
+            .h(px(100.))
+        }
+    }
+    for invalid in [false, true] {
+        let (view, cx) = cx.add_window_view(|_, cx| {
+            Harness(
+                cx.new(|_| {
+                    VirtualMasonryState::new(
+                        source(0, 1000),
+                        if invalid {
+                            VirtualizerSizing::measured(px(20.))
+                        } else {
+                            VirtualizerSizing::fixed(px(20.))
+                        },
+                        3,
+                    )
+                    .unwrap()
+                }),
+                invalid,
+            )
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let state = view.read_with(cx, |v, _| v.0.clone());
+        let results = Rc::new(std::cell::RefCell::new(Vec::new()));
+        let observed = results.clone();
+        let _subscription = cx.update(|_, cx| {
+            cx.subscribe(&state, move |_, e, _| {
+                if let VirtualizerEvent::CommandFinished { id, outcome } = e {
+                    observed.borrow_mut().push((*id, *outcome));
+                }
+            })
+        });
+        let id = state.update(cx, |s, cx| {
+            let id = s
+                .scroll_to_key(400usize.into(), VirtualizerAlign::Start)
+                .unwrap();
+            cx.notify();
+            id
+        });
+        for _ in 0..40 {
+            cx.update(|w, cx| {
+                w.refresh();
+                w.draw(cx).clear(cx);
+            });
+        }
+        assert_eq!(
+            *results.borrow(),
+            vec![(
+                id,
+                if invalid {
+                    VirtualizerCommandOutcome::NoProgress
+                } else {
+                    VirtualizerCommandOutcome::Settled
+                }
+            )]
+        );
+        assert!(!state.read_with(cx, |s, _| s.has_scroll_command()));
+        let cancelled = state.update(cx, |s, _| {
+            let id = s
+                .scroll_to_key(500usize.into(), VirtualizerAlign::Start)
+                .unwrap();
+            s.cancel_scroll();
+            s.cancel_scroll();
+            id
+        });
+        let events = state.update(cx, |s, _| s.take_events());
+        assert!(
+            matches!(&events[..], [VirtualizerEvent::CommandFinished { id, outcome: VirtualizerCommandOutcome::Cancelled }] if *id == cancelled)
+        );
+        let missing = state.update(cx, |s, _| {
+            let id = s
+                .scroll_to_key(500usize.into(), VirtualizerAlign::Start)
+                .unwrap();
+            s.replace_source(
+                source(0, 10),
+                if invalid {
+                    VirtualizerSizing::measured(px(20.))
+                } else {
+                    VirtualizerSizing::fixed(px(20.))
+                },
+            )
+            .unwrap();
+            id
+        });
+        let events = state.update(cx, |s, _| s.take_events());
+        assert!(
+            matches!(&events[..], [VirtualizerEvent::CommandFinished { id, outcome: VirtualizerCommandOutcome::Missing }] if *id == missing)
+        );
+    }
+}

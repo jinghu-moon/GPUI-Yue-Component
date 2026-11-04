@@ -768,7 +768,10 @@ impl VirtualMasonryState {
             })
             .or_else(|| self.blank_region_anchor(offset));
     }
-    fn blank_region_anchor(&self, offset: f64) -> Option<(ElementId, VirtualizerAnchorPosition)> {
+    fn blank_region_anchor(
+        &self,
+        offset: f64,
+    ) -> Option<(ElementId, VirtualizerAnchorPosition, bool)> {
         let mut best: Option<(u8, f64, usize, VirtualizerAnchorPosition)> = None;
         for lane in &self.lanes {
             if lane.indexes.is_empty() {
