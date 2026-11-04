@@ -66,6 +66,8 @@
 
 第一轮 CPU：idle +3.53%，reduced +1.30%，short +13.64%，tail +12.78%。short builds 1610→1938、分配约 20230→22414、peak 16440→17488 bytes；tail builds 1610→1941、分配 21381→23538、peak 19864→27400。idle 各空间／工作量计数相同，reduced 两个命令多两个 motion 分配。动画的中间位置不同、工作量更多，这是功能成本，不是等画面提速。按用户要求采用并公开代价。阶段专项全量为 170 passed / 0 failed / 8 ignored。
 
+后续组合审查再发现一个截止边界：动画完成的同 now 最后测量反馈不能继续复用旧的“最终对齐位置”。直接 `prepare→update_sizes→prepare` 回归先复现 40px（错误）而不是 50px，再修正为只冻结中间动画采样、完成后仍重求实际目标；另补 Owned 最后一帧真实布局反馈用例。最终整轮验证／重新采样覆盖此修正。
+
 ## 5a. 约束驱动 auto tracks
 
 采用显式 `VirtualGridTrack(minimum,maximum,weight)` 及纯函数 `resolve`。调用方传入实际可用 extent、gap、两端 padding；按权重分配剩余空间，达到 max 后再分配给其余轨道，不足时保留 min 并允许滚动。零权重固定在 min，达到全部 max 后留白，非法／非有限输入整体拒绝。解析采用 breakpoint water filling，O(T log T)，不查询 cell。结果交给 Known sizing 或现有 `update_sizes` 合批；消费者在约束变化时重算，不能每帧重建百万行 Known 数组。

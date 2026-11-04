@@ -120,6 +120,11 @@ impl MeasuredMotion {
             return (destination, true, false);
         }
         if self.sampled_at == Some(now) {
+            // Animation sampling is frozen, final alignment is not. A second
+            // measurement pass at the deadline can expose a new actual target.
+            if self.complete {
+                self.sample = destination;
+            }
             return (self.sample, self.complete, self.advanced);
         }
         let first = self.sampled_at.is_none();

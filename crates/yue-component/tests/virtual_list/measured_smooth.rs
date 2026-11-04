@@ -42,6 +42,31 @@ fn harness(cx: &mut Context<Harness>, horizontal: bool) -> Harness {
         horizontal,
     }
 }
+#[gpui_kit::test]
+fn measured_smooth_final_frame_feedback_must_settle_at_the_actual_target(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, false));
+    cx.update(|w, _| w.activate_window());
+    cx.run_until_parked();
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let state = view.read_with(cx, |v, _| v.state.clone());
+    state.update(cx, |s, cx| {
+        s.scroll_to_key(2usize.into(), options(false)).unwrap();
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    view.read_with(cx, |v, _| v.extent.set(30.));
+    state.update(cx, |s, cx| {
+        s.invalidate_items(0..1).unwrap();
+        cx.notify();
+    });
+    frame(cx, 200);
+    assert!(
+        (offset(&state, cx) - 50.).abs() < 0.01,
+        "deadline feedback offset={}",
+        offset(&state, cx)
+    );
+    assert!(!state.read_with(cx, |s, _| s.has_scroll_command()));
+}
 fn options(tail: bool) -> VirtualizerScrollOptions {
     VirtualizerScrollOptions::default()
         .align(VirtualizerAlign::Start)
@@ -56,6 +81,29 @@ fn options(tail: bool) -> VirtualizerScrollOptions {
                 max_distance: px(100.),
             }
         })
+}
+
+#[gpui_kit::test]
+fn measured_smooth_completed_sample_reresolves_same_time_size_feedback(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, false));
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let state = view.read_with(cx, |v, _| v.state.clone());
+    state.update(cx, |s, _| {
+        let input = s.viewport().unwrap().clone();
+        let now = Instant::now();
+        s.scroll_to_key(2usize.into(), options(false)).unwrap();
+        s.prepare(&input, now).unwrap();
+        let (_, request) = s.prepare(&input, now + Duration::from_millis(200)).unwrap();
+        assert_eq!(request.unwrap().offset(), 40.);
+        s.update_sizes(&[yue_component::VirtualizerSizeUpdate::new(0usize, px(30.))])
+            .unwrap();
+        let (_, request) = s.prepare(&input, now + Duration::from_millis(200)).unwrap();
+        assert_eq!(
+            request.unwrap().offset(),
+            50.,
+            "completed animation must still resolve actual geometry"
+        );
+    });
 }
 fn offset(state: &Entity<VirtualizerState>, cx: &gpui_kit::VisualTestContext) -> f64 {
     state.read_with(cx, |s, _| s.viewport().unwrap().offset())
