@@ -199,3 +199,88 @@ fn native_masonry_layout_corrects_fractional_feedback_then_stops_changing(cx: &m
     cx.update(|w, cx| w.simulate_next_frame(cx));
     assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
 }
+
+#[test]
+fn linear_feedback_keeps_empty_single_and_multi_batch_transactions_atomic() {
+    for axis in [Axis::Vertical, Axis::Horizontal] {
+        for mode in 0..3 {
+            for count in [0, 1, 32, 256] {
+                let sizing = if mode == 0 {
+                    VirtualizerSizing::known(vec![px(20.); 300])
+                } else {
+                    VirtualizerSizing::measured(px(20.))
+                };
+                let mut state = VirtualizerState::new(axis, source(0, 300), sizing).unwrap();
+                state
+                    .set_layout(VirtualizerLayout::default().gap(px(0.1)))
+                    .unwrap();
+                state.commit(&viewport(&state, 1, 105.)).unwrap();
+                let old = state.snapshot(&viewport(&state, 1, 105.)).unwrap();
+                let updates = (0..count)
+                    .rev()
+                    .map(|ix| VirtualizerSizeUpdate::new(ix, px(30.)))
+                    .collect::<Vec<_>>();
+                if mode == 2 {
+                    state.update_size_hints(&updates).unwrap();
+                } else {
+                    state.update_sizes(&updates).unwrap();
+                }
+                let next = state.snapshot(&viewport(&state, 1, 105.)).unwrap();
+                for ix in 0..300 {
+                    assert!(
+                        (f32::from(next.item(ix).unwrap().extent())
+                            - if ix < count { 30. } else { 20. })
+                        .abs()
+                            < 0.00001
+                    );
+                    assert_eq!(
+                        next.item(ix).unwrap().is_measured(),
+                        mode == 0 || mode == 1 && ix < count
+                    );
+                }
+                assert_eq!(state.validate_snapshot(&old).is_err(), count > 0);
+                if mode == 2 {
+                    state.update_size_hints(&updates).unwrap();
+                } else {
+                    state.update_sizes(&updates).unwrap();
+                }
+                state.validate_snapshot(&next).unwrap();
+                for bad in [
+                    vec![VirtualizerSizeUpdate::new(300usize, px(40.))],
+                    vec![VirtualizerSizeUpdate::new(0usize, px(f32::NAN))],
+                    vec![VirtualizerSizeUpdate::new(0usize, px(0.))],
+                    vec![VirtualizerSizeUpdate::new(0usize, px(f32::INFINITY))],
+                    vec![
+                        VirtualizerSizeUpdate::new(0usize, px(40.)),
+                        VirtualizerSizeUpdate::new(300usize, px(40.)),
+                    ],
+                    vec![
+                        VirtualizerSizeUpdate::new(0usize, px(30.)),
+                        VirtualizerSizeUpdate::new(0usize, px(40.)),
+                    ],
+                ] {
+                    let result = if mode == 2 {
+                        state.update_size_hints(&bad)
+                    } else {
+                        state.update_sizes(&bad)
+                    };
+                    assert!(result.is_err());
+                    state.validate_snapshot(&next).unwrap();
+                    assert_eq!(state.total_extent(), next.total_extent());
+                }
+                assert!((f32::from(old.item(0).unwrap().extent()) - 20.).abs() < 0.00001);
+            }
+        }
+    }
+    let mut state = fixed(3);
+    for updates in [vec![], vec![VirtualizerSizeUpdate::new(0usize, px(30.))]] {
+        assert_eq!(
+            state.update_sizes(&updates),
+            Err(VirtualizerError::WrongBackend)
+        );
+        assert_eq!(
+            state.update_size_hints(&updates),
+            Err(VirtualizerError::WrongBackend)
+        );
+    }
+}
