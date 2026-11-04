@@ -28,7 +28,7 @@ fn native_frozen_grid_and_masonry_cache_restore() {
             let checked: Result<(), String> = async {
                 let mut old = None;
                 let mut expected = None;
-                for phase in 0..5 {
+                for phase in 0..6 {
                     let mut ready = false;
                     for _ in 0..100 {
                         cx.background_executor()
@@ -44,8 +44,12 @@ fn native_frozen_grid_and_masonry_cache_restore() {
                                         && (-p.scroll.precise_offset().y - 35964.).abs() < 0.1
                                         && (-p.scroll.precise_offset().x - 14256.).abs() < 0.1
                                 }
-                                2 => p.masonry.read(cx).measurement_cache().is_ok(),
-                                3 => -p.masonry.read(cx).scroll_handle().precise_offset().y >= 499.,
+                                2 => {
+                                    (-p.scroll.precise_offset().y - 36213.75).abs() < 0.01
+                                        && (-p.scroll.precise_offset().x - 14280.75).abs() < 0.01
+                                }
+                                3 => p.masonry.read(cx).measurement_cache().is_ok(),
+                                4 => -p.masonry.read(cx).scroll_handle().precise_offset().y >= 499.,
                                 _ => {
                                     p.masonry.read(cx).measurement_cache().is_ok()
                                         && old.as_ref().is_some_and(
@@ -92,14 +96,36 @@ fn native_frozen_grid_and_masonry_cache_restore() {
                                         p.builds[0].get() < 5000,
                                         "native grid remains bounded"
                                     );
+                                    // The first visible body keys are row 1000
+                                    // and column 100. Leading padding and the
+                                    // frozen gap move the strip too; compensate
+                                    // only the scrollable difference.
+                                    for axis in [&p.rows, &p.columns] {
+                                        axis.update(cx, |s, cx| {
+                                            s.set_layout(
+                                                VirtualizerLayout::default()
+                                                    .gap(px(0.25))
+                                                    .padding(px(2.), px(3.)),
+                                            )
+                                            .unwrap();
+                                            cx.notify();
+                                        });
+                                    }
+                                }
+                                2 => {
+                                    for (axis, key) in [(&p.rows, 1000), (&p.columns, 100)] {
+                                        let s = axis.read(cx);
+                                        let snapshot = s.snapshot(s.viewport().unwrap()).unwrap();
+                                        assert_eq!(snapshot.visible_range().start, key);
+                                    }
                                     p.active = 1;
                                 }
-                                2 => p.masonry.update(cx, |s, cx| {
+                                3 => p.masonry.update(cx, |s, cx| {
                                     s.scroll_handle()
                                         .set_precise_offset(gpui_kit::point(0., -500.));
                                     cx.notify();
                                 }),
-                                3 => {
+                                4 => {
                                     let cache = p.masonry.read(cx).measurement_cache().unwrap();
                                     expected =
                                         cache.scroll_anchor().map(|(k, pos)| (k.clone(), pos));

@@ -342,3 +342,188 @@ fn frozen_grid_zero_body_area_rejects_inaccessible_body_target(cx: &mut TestAppC
         gpui_kit::point(0., 0.)
     );
 }
+
+fn check_size_feedback_reading_position(cx: &mut TestAppContext, frozen_item: bool) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, true));
+    // Three rows/columns obscure multiple ordinary items at a fractional
+    // offset. The reading anchor belongs at the body's clear leading edge.
+    view.update(cx, |v, cx| {
+        v.frozen = (3, 3);
+        v.scroll
+            .set_precise_offset(gpui_kit::point(-213.25, -103.5));
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let (rows, columns, before) = view.read_with(cx, |v, _| {
+        (v.rows.clone(), v.columns.clone(), v.scroll.precise_offset())
+    });
+    let anchor = |state: &Entity<VirtualizerState>,
+                  edge: f64,
+                  offset: f64,
+                  cx: &mut gpui_kit::VisualTestContext| {
+        state.read_with(cx, |s, _| {
+            let snap = s.snapshot(s.viewport().unwrap()).unwrap();
+            let item = snap.item(snap.visible_range().start).unwrap();
+            (item.index(), item.start() - offset - edge)
+        })
+    };
+    let row_before = anchor(&rows, 68., -before.y, cx);
+    let column_before = anchor(&columns, 157.25, -before.x, cx);
+    for (axis, state, reading) in [(true, &rows, row_before), (false, &columns, column_before)] {
+        state.update(cx, |s, cx| {
+            let ix = if frozen_item { 0 } else { reading.0 - 1 };
+            let extent = if axis { 20.5 } else { 50.25 };
+            s.update_sizes(&[yue_component::VirtualizerSizeUpdate::new(
+                ix,
+                px(extent + 7.25),
+            )])
+            .unwrap();
+            cx.notify();
+        });
+    }
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let after = view.read_with(cx, |v, _| v.scroll.precise_offset());
+    let strip_delta = if frozen_item { 7.25 } else { 0. };
+    let row_after = anchor(&rows, 68. + strip_delta, -after.y, cx);
+    let column_after = anchor(&columns, 157.25 + strip_delta, -after.x, cx);
+    println!(
+        "FROZEN_ANCHOR,frozen={frozen_item},before={before:?},after={after:?},rows={row_before:?}->{row_after:?},columns={column_before:?}->{column_after:?}"
+    );
+    assert_eq!(
+        row_after.0, row_before.0,
+        "row key changed; frozen={frozen_item}"
+    );
+    assert_eq!(
+        column_after.0, column_before.0,
+        "column key changed; frozen={frozen_item}"
+    );
+    assert!(
+        (row_after.1 - row_before.1).abs() < 0.001,
+        "row reading position moved: {row_before:?} -> {row_after:?}; frozen={frozen_item}"
+    );
+    assert!(
+        (column_after.1 - column_before.1).abs() < 0.001,
+        "column reading position moved: {column_before:?} -> {column_after:?}; frozen={frozen_item}"
+    );
+    let expected = if frozen_item {
+        before
+    } else {
+        before - gpui_kit::point(7.25, 7.25)
+    };
+    assert_eq!(
+        after, expected,
+        "native owner correction; frozen={frozen_item}"
+    );
+    let clicks = view.read_with(cx, |v, _| v.clicks.clone());
+    clicks.borrow_mut().clear();
+    cx.simulate_click(gpui_kit::point(px(190.), px(86.)), Default::default());
+    assert_eq!(clicks.borrow().as_slice(), &[(8, 7)]);
+}
+
+#[gpui_kit::test]
+fn frozen_grid_frozen_size_feedback_preserves_body_reading_position(cx: &mut TestAppContext) {
+    check_size_feedback_reading_position(cx, true);
+}
+
+#[gpui_kit::test]
+fn frozen_grid_hidden_body_feedback_preserves_body_reading_position(cx: &mut TestAppContext) {
+    check_size_feedback_reading_position(cx, false);
+}
+
+#[gpui_kit::test]
+fn frozen_grid_losing_body_or_moving_anchor_into_prefix_keeps_native_offset(
+    cx: &mut TestAppContext,
+) {
+    for remove_body in [true, false] {
+        let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, true));
+        view.update(cx, |v, cx| {
+            v.frozen = (3, 3);
+            v.scroll
+                .set_precise_offset(gpui_kit::point(-213.25, -103.5));
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let (rows, before) = view.read_with(cx, |v, _| (v.rows.clone(), v.scroll.precise_offset()));
+        rows.update(cx, |s, cx| {
+            if remove_body {
+                s.update_sizes(&[yue_component::VirtualizerSizeUpdate::new(0usize, px(500.))])
+                    .unwrap();
+            } else {
+                // The old body reading key is 7. It now belongs to the
+                // stationary prefix, so it cannot remain a scroll anchor.
+                s.replace_source(
+                    source(7, 100),
+                    VirtualizerSizing::known(vec![px(20.5); 100]),
+                    VirtualizerChange::Replace {
+                        preserve_anchor: true,
+                    },
+                )
+                .unwrap();
+            }
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        assert_eq!(
+            view.read_with(cx, |v, _| v.scroll.precise_offset()),
+            before,
+            "no scroll correction for an inaccessible body anchor; remove_body={remove_body}"
+        );
+    }
+}
+
+#[gpui_kit::test]
+fn frozen_grid_layout_changes_compensate_only_scrollable_geometry(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, true));
+    view.update(cx, |v, cx| {
+        v.frozen = (3, 3);
+        v.scroll
+            .set_precise_offset(gpui_kit::point(-213.25, -103.5));
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let (axes, before) = view.read_with(cx, |v, _| {
+        (
+            [v.rows.clone(), v.columns.clone()],
+            v.scroll.precise_offset(),
+        )
+    });
+    for state in &axes {
+        state.update(cx, |s, cx| {
+            let old = s.snapshot(s.viewport().unwrap()).unwrap();
+            s.set_layout(
+                VirtualizerLayout::default()
+                    .gap(px(1.5))
+                    .padding(px(2.), px(3.)),
+            )
+            .unwrap();
+            assert!(
+                s.validate_snapshot(&old).is_ok(),
+                "unchanged layout is a no-op"
+            );
+            s.set_layout(
+                VirtualizerLayout::default()
+                    .gap(px(2.75))
+                    .padding(px(8.), px(3.)),
+            )
+            .unwrap();
+            assert!(matches!(
+                s.validate_snapshot(&old),
+                Err(VirtualizerError::StaleSnapshot)
+            ));
+            cx.notify();
+        });
+    }
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    // Reading key 7 moves by 7*1.25+6; the frozen body edge by 3*1.25+6.
+    // Only the 5px difference belongs to the native scroll correction.
+    assert_eq!(
+        view.read_with(cx, |v, _| v.scroll.precise_offset()),
+        before - gpui_kit::point(5., 5.)
+    );
+    for state in &axes {
+        state.read_with(cx, |s, _| {
+            let snap = s.snapshot(s.viewport().unwrap()).unwrap();
+            assert_eq!(snap.visible_range().start, 7);
+        });
+    }
+}

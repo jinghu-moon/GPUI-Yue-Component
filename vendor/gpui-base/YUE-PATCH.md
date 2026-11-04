@@ -695,3 +695,18 @@ Unfrozen Grid keeps its ordinary cell storage; mask buffers are opt-in.
 See `docs/research/2026-11-05-virtual-list-next-implementation.md` for measured
 adoption costs, default guards, functional/native tests and rollback identities.
 Remove these patches when upstream satisfies the same tested contracts.
+
+### Frozen Grid reading-anchor clearance
+
+Capture Grid reading anchors at the body's unobscured leading edge. Resolve
+them against the current frozen-track extent after size, gap or content-padding
+changes, so stationary geometry is not counted again as scroll compensation.
+Do not apply a body anchor when its key moves into the frozen prefix or the
+prefix consumes the viewport. Ordinary unfrozen anchors retain their existing
+coordinates; no new owner, retained field or cache is introduced.
+
+See `docs/research/2026-11-05-virtual-list-frozen-anchor-review.md` for failing
+baseline observations, dual-axis regression and native coverage, Release ABBA
+costs and rollback evidence. In the hidden-track resize workload, the corrected
+workset is larger and costs more CPU; this patch is adopted for correctness,
+not as a speedup. Remove it when upstream satisfies the same tested contract.

@@ -1582,6 +1582,7 @@ impl VirtualizerState {
         // This tests the start edge, not item visibility: padding and gaps
         // inside this region remain valid reading positions.
         if self.source.is_empty()
+            || viewport.frozen_prefix > 0 && viewport.leading_occlusion >= viewport.extent
             || self.attachment == VirtualizerAttachment::Attached
                 && (viewport.offset < viewport.origin
                     || viewport.offset >= viewport.origin + self.total_extent())
@@ -1589,19 +1590,22 @@ impl VirtualizerState {
             self.anchor = None;
             self.pending_anchor = None;
         } else {
+            // A frozen strip does not scroll. Preserve the reading position at
+            // the body's clear leading edge, not an item hidden behind it.
+            let reading_offset = viewport.offset + f64::from(viewport.leading_occlusion);
             let mut index = self.geometry.index_at(
-                (viewport.offset - viewport.origin - f64::from(self.layout.padding_start)).max(0.0),
+                (reading_offset - viewport.origin - f64::from(self.layout.padding_start)).max(0.0),
             );
             let mut item = snapshot.item(index)?;
             // Attach inter-item space to the following item, so the distance
             // remains independent of the previous item's content size.
-            if viewport.offset >= item.start + f64::from(item.extent)
+            if reading_offset >= item.start + f64::from(item.extent)
                 && index + 1 < self.source.len()
             {
                 index += 1;
                 item = snapshot.item(index)?;
             }
-            let relative = viewport.offset - item.start;
+            let relative = reading_offset - item.start;
             let position = if relative < 0.0 {
                 VirtualizerAnchorPosition::Before(-relative)
             } else if relative > f64::from(item.extent) {
@@ -1754,6 +1758,23 @@ impl VirtualizerState {
     fn restore_anchor(&mut self) {
         self.pending_anchor = self.anchor.as_ref().and_then(|(key, position)| {
             self.source.index_of(key).and_then(|index| {
+                // Recompute clearance from current geometry: resizing frozen
+                // tracks moves the body edge as well as its content. A key
+                // reordered into the stationary prefix no longer anchors it.
+                let clearance = if let Some(viewport) = &self.viewport
+                    && viewport.frozen_prefix > 0
+                {
+                    if index < viewport.frozen_prefix {
+                        return None;
+                    }
+                    let clearance = self.frozen_extent(viewport.frozen_prefix);
+                    if clearance >= f64::from(viewport.extent) {
+                        return None;
+                    }
+                    clearance
+                } else {
+                    0.0
+                };
                 self.geometry.item(index).map(|(start, extent, _)| {
                     let extent = extent
                         - if self.measured.is_some() && index + 1 < self.source.len() {
@@ -1775,6 +1796,7 @@ impl VirtualizerState {
                         + self.viewport.as_ref().map_or(0.0, |v| v.origin)
                         + f64::from(self.layout.padding_start)
                         + position.resolve(extent, f64::from(before), f64::from(after))
+                        - clearance
                 })
             })
         });
