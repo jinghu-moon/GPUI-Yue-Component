@@ -103,26 +103,49 @@ masonry-views = []
         $_.Name -in @('rustc.exe', 'clippy-driver.exe') -or
         ($_.Name -eq 'cargo.exe' -and $_.CommandLine -notmatch '(?i)\\bcargo(?:\\.exe)?["\\x27]?\\s+dev(?:\\s|$)')
     }).Count"""
-    # Require two quiet observations before sampling.
-    quiet = 0
-    while True:
-        busy = run(["powershell", "-NoProfile", "-Command",
-                    compiler_query],
-                   capture_output=True, text=True).stdout.strip()
-        if busy == "0":
-            quiet += 1
-            if quiet >= 2:
-                break
-        else:
-            quiet = 0
-        print("Waiting for compiler processes before sampling", flush=True)
-        time.sleep(2)
+    def compiler_busy():
+        return run(["powershell", "-NoProfile", "-Command", compiler_query],
+                   capture_output=True, text=True).stdout.strip() != "0"
+
+    def wait_for_compilers():
+        # A different project can begin compiling after an earlier round.
+        quiet = 0
+        while quiet < 2:
+            quiet = 0 if compiler_busy() else quiet + 1
+            if quiet < 2:
+                print("Waiting for compiler processes before sampling", flush=True)
+                time.sleep(2)
+
     rows = []
+    discarded = []
     for version, round_ in [("before", 0), ("after", 0), ("after", 1), ("before", 1)]:
-        result = run([executables[version], args.filter, "--nocapture", "--test-threads=1"],
-                     capture_output=True, text=True, encoding="utf-8")
-        (logs / f"{version}-{round_}.txt").write_text(result.stdout + result.stderr, encoding="utf-8")
-        for line in result.stdout.splitlines():
+        for attempt in range(1, 4):
+            wait_for_compilers()
+            candidate = logs / f"{version}-{round_}-attempt-{attempt}.txt"
+            with candidate.open("w", encoding="utf-8") as stream:
+                process = subprocess.Popen(
+                    [executables[version], args.filter, "--nocapture", "--test-threads=1"],
+                    cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT,
+                )
+                busy = False
+                while True:
+                    try:
+                        process.wait(timeout=1)
+                        break
+                    except subprocess.TimeoutExpired:
+                        busy |= compiler_busy()
+                busy |= compiler_busy()
+            if process.returncode:
+                raise subprocess.CalledProcessError(process.returncode, process.args)
+            if not busy:
+                output = candidate.read_text(encoding="utf-8")
+                (logs / f"{version}-{round_}.txt").write_text(output, encoding="utf-8")
+                break
+            discarded.append(candidate.name)
+            print(f"Discarding {candidate.name}: compilation observed during sampling", flush=True)
+        else:
+            raise RuntimeError("compilation interrupted three sampling attempts; logs retained")
+        for line in output.splitlines():
             if "SERIES," in line:
                 values = dict(part.split("=", 1) for part in line.split("SERIES,", 1)[1].split(","))
                 rows.append({"version": version, "round": round_, **values})
@@ -139,7 +162,8 @@ masonry-views = []
         "workload": args.workload,
         "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
         "after_feature": args.after_feature,
-        "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": discarded,
         "order": ["before/0", "after/0", "after/1", "before/1"], "rows": len(rows)}, indent=2) + "\n", encoding="utf-8")
     print(destination)
 
