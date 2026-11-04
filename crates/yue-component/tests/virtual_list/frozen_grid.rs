@@ -78,6 +78,7 @@ struct Harness {
     clicks: Rc<RefCell<Vec<(usize, usize)>>>,
     seen: Rc<RefCell<Vec<ObservedCell>>>,
     viewport: (f32, f32),
+    rtl: bool,
 }
 impl Render for Harness {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -112,6 +113,7 @@ impl Render for Harness {
         )
         .frozen_rows(self.frozen.0)
         .frozen_columns(self.frozen.1)
+        .right_to_left(self.rtl)
         .w(px(self.viewport.0))
         .h(px(self.viewport.1))
         .role(Role::Grid)
@@ -159,6 +161,7 @@ fn harness(cx: &mut Context<Harness>, count: usize, known: bool) -> Harness {
         seen: Rc::default(),
         focus,
         viewport: (240., 100.),
+        rtl: false,
     }
 }
 #[gpui_kit::test]
@@ -237,6 +240,197 @@ fn frozen_grid_four_regions_are_unique_clipped_and_route_native_input(cx: &mut T
             before - gpui_kit::point(10., 10.)
         );
     }
+}
+
+#[gpui_kit::test]
+fn rtl_frozen_grid_mirrors_hit_masks_and_keeps_one_logical_owner(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, true));
+    view.update(cx, |v, cx| {
+        v.rtl = true;
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let axes = view.read_with(cx, |v, _| [v.rows.clone(), v.columns.clone()]);
+    for (axis, offset) in axes.iter().zip([30., 75.]) {
+        axis.update(cx, |s, cx| {
+            s.scroll_to_offset(offset, VirtualizerScrollOptions::default())
+                .unwrap();
+            cx.notify();
+        });
+    }
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    for (point, key) in [
+        ((230., 10.), (0, 0)),
+        ((170., 10.), (0, 2)),
+        ((230., 40.), (3, 0)),
+        ((170., 40.), (3, 2)),
+    ] {
+        view.read_with(cx, |v, _| v.clicks.borrow_mut().clear());
+        cx.simulate_click(
+            gpui_kit::point(px(point.0), px(point.1)),
+            Default::default(),
+        );
+        assert_eq!(
+            *view.read_with(cx, |v, _| v.clicks.clone()).borrow(),
+            vec![key]
+        );
+    }
+    for point in [(170., 23.), (187., 40.)] {
+        view.read_with(cx, |v, _| v.clicks.borrow_mut().clear());
+        cx.simulate_click(
+            gpui_kit::point(px(point.0), px(point.1)),
+            Default::default(),
+        );
+        assert!(
+            view.read_with(cx, |v, _| v.clicks.borrow().is_empty()),
+            "RTL frozen gap must block body hit"
+        );
+    }
+    for delta in [10., -10.] {
+        cx.simulate_event(gpui_kit::ScrollWheelEvent {
+            position: gpui_kit::point(px(100.), px(50.)),
+            delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(delta), px(0.))),
+            modifiers: Default::default(),
+            touch_phase: gpui_kit::TouchPhase::Moved,
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let expected = if delta > 0. { 85. } else { 75. };
+        assert!(
+            (axes[1].read_with(cx, |s, _| s.viewport().unwrap().offset()) - expected).abs() < 0.001
+        );
+    }
+    for rtl in [false, true] {
+        view.update(cx, |v, cx| {
+            v.rtl = rtl;
+            v.viewport = (280., 135.);
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        assert_eq!(
+            axes[1].read_with(cx, |s, _| s.viewport().unwrap().offset()),
+            75.
+        );
+        let maximum = axes[1].read_with(cx, |s, _| s.total_extent()) - 280.;
+        assert!(
+            (view.read_with(cx, |v, _| -v.scroll.precise_offset().x)
+                - if rtl { maximum - 75. } else { 75. })
+            .abs()
+                < 0.001
+        );
+    }
+    // An external scrollbar writes physical coordinates; Base observes logical 125.
+    view.update(cx, |v, cx| {
+        let maximum = v.columns.read(cx).total_extent() - 280.;
+        v.scroll
+            .set_precise_offset(gpui_kit::point(-(maximum - 125.), -30.));
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert_eq!(
+        axes[1].read_with(cx, |s, _| s.viewport().unwrap().offset()),
+        125.
+    );
+}
+
+#[gpui_kit::test]
+fn rtl_grid_alignments_smooth_and_large_logical_coordinates_stay_coherent(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, false));
+    cx.update(|w, _| w.activate_window());
+    cx.run_until_parked();
+    view.update(cx, |v, cx| {
+        v.rtl = true;
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let axes = view.read_with(cx, |v, _| [v.rows.clone(), v.columns.clone()]);
+    for align in [
+        VirtualizerAlign::Start,
+        VirtualizerAlign::Center,
+        VirtualizerAlign::End,
+        VirtualizerAlign::Nearest,
+    ] {
+        axes[1].update(cx, |s, cx| {
+            s.scroll_to_key(
+                5usize.into(),
+                VirtualizerScrollOptions::default().align(align),
+            )
+            .unwrap();
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let nodes = cx.update(|w, _| snapshots(w));
+        let cell = nodes.iter().find(|n| n.label() == Some("0:5")).unwrap();
+        assert!(
+            cell.bounds().origin.x >= px(0.) && cell.bounds().right() <= px(186.25) + px(0.001)
+        );
+    }
+    let from = axes
+        .clone()
+        .map(|s| s.read_with(cx, |s, _| s.viewport().unwrap().offset()));
+    for (axis, offset) in axes.iter().zip(from.map(|x| x + 20.)) {
+        axis.update(cx, |s, cx| {
+            s.scroll_to_offset(
+                offset,
+                VirtualizerScrollOptions::default().motion(VirtualizerMotion::Smooth {
+                    duration: Duration::from_millis(200),
+                    max_distance: px(100.),
+                }),
+            )
+            .unwrap();
+            cx.notify();
+        });
+    }
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    cx.executor().advance_clock(Duration::from_millis(50));
+    cx.update(|w, cx| {
+        w.simulate_next_frame(cx);
+        w.draw(cx).clear(cx);
+    });
+    for (axis, from) in axes.iter().zip(from) {
+        assert!(
+            (axis.read_with(cx, |s, _| s.viewport().unwrap().offset())
+                - (from + 20. * (1. - 0.75f64.powi(3))))
+            .abs()
+                < 0.01
+        );
+    }
+    cx.executor().advance_clock(Duration::from_millis(150));
+    cx.update(|w, cx| {
+        w.simulate_next_frame(cx);
+        w.draw(cx).clear(cx);
+    });
+    axes[1].update(cx, |s, cx| {
+        s.replace_source(
+            source(0, 1_000_000_000),
+            VirtualizerSizing::fixed(px(50.25)),
+            VirtualizerChange::Replace {
+                preserve_anchor: false,
+            },
+        )
+        .unwrap();
+        s.scroll_to_key(
+            800_000_000usize.into(),
+            VirtualizerScrollOptions::default().align(VirtualizerAlign::Start),
+        )
+        .unwrap();
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let expected = 800_000_000f64 * 51.75 + 2. - 53.75;
+    assert!(
+        (axes[1].read_with(cx, |s, _| s.viewport().unwrap().offset()) - expected).abs() < 0.0001
+    );
+    cx.simulate_event(gpui_kit::ScrollWheelEvent {
+        position: gpui_kit::point(px(100.), px(50.)),
+        delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.25), px(0.))),
+        modifiers: Default::default(),
+        touch_phase: gpui_kit::TouchPhase::Moved,
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(
+        (axes[1].read_with(cx, |s, _| s.viewport().unwrap().offset()) - expected - 0.25).abs()
+            < 0.0001
+    );
 }
 
 #[gpui_kit::test]

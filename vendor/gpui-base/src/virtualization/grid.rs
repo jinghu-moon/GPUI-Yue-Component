@@ -260,6 +260,7 @@ struct GridOptions {
     focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
     fallback: Option<gpui::FocusHandle>,
     spans: Option<super::grid_span::GridSpans>,
+    right_to_left: bool,
 }
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
 type ViewFactory = Rc<dyn Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> gpui::AnyView>;
@@ -403,6 +404,16 @@ impl VirtualGrid {
         self.options.get_or_insert_with(Default::default).fallback = Some(handle);
         self
     }
+    /// Mirror column presentation and map the single native physical scroll
+    /// owner to logical start/end offsets. Keys and source order stay unchanged.
+    pub fn right_to_left(mut self, enabled: bool) -> Self {
+        if enabled || self.options.is_some() {
+            self.options
+                .get_or_insert_with(Default::default)
+                .right_to_left = enabled;
+        }
+        self
+    }
     /// Validate sparse Fixed/Known spans before claiming a mount or mutating
     /// scroll state. Call after frozen_rows/columns, and rebuild each render
     /// from the current stable-key source transaction. Invalid input is atomic.
@@ -442,6 +453,11 @@ pub struct VirtualGridFrame {
     cells: Vec<(ElementId, AnyElement)>,
     masks: Option<Vec<Bounds<Pixels>>>,
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
+    mount: Entity<GridMount>,
+}
+struct GridHorizontal {
+    logical: f64,
+    physical: f64,
 }
 struct GridMount {
     rows: gpui::WeakEntity<VirtualizerState>,
@@ -451,6 +467,7 @@ struct GridMount {
     _subscriptions: Vec<gpui::Subscription>,
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
     focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
+    horizontal: Option<Box<GridHorizontal>>,
 }
 impl Element for VirtualGrid {
     type RequestLayoutState = VirtualGridFrame;
@@ -525,6 +542,7 @@ impl Element for VirtualGrid {
                     _subscriptions: subscriptions,
                     views: None,
                     focused: Vec::new(),
+                    horizontal: None,
                 }
             },
         );
@@ -570,6 +588,7 @@ impl Element for VirtualGrid {
                 m._subscriptions[0] = cx.observe(&self.rows, |_, _, cx| cx.notify());
             }
             if m.columns != self.columns || m.column_revision != column_revision {
+                m.horizontal = None;
                 m.views = None;
                 let _ = m
                     .columns
@@ -642,6 +661,7 @@ impl Element for VirtualGrid {
                 cells: Vec::new(),
                 masks: None,
                 views,
+                mount,
             },
         )
     }
@@ -668,6 +688,30 @@ impl Element for VirtualGrid {
             });
         }
         let offset = self.scroll.precise_offset();
+        let rtl = self.options.as_ref().is_some_and(|o| o.right_to_left);
+        let maximum = (self.columns.read(cx).total_extent() - f64::from(bounds.size.width)).max(0.);
+        let physical = (-offset.x).clamp(0., maximum);
+        let logical_x = if rtl {
+            if let Some(previous) = frame.mount.read(cx).horizontal.as_deref() {
+                // Native clamping after resize is not user movement. Apply only
+                // the delta beyond the previous physical position's new clamp.
+                let expected = previous.physical.clamp(0., maximum);
+                (previous.logical - (physical - expected)).clamp(0., maximum)
+            } else {
+                self.columns
+                    .read(cx)
+                    .viewport()
+                    .map_or(0., |v| v.offset())
+                    .clamp(0., maximum)
+            }
+        } else {
+            frame
+                .mount
+                .read(cx)
+                .horizontal
+                .as_deref()
+                .map_or(physical, |previous| previous.logical.clamp(0., maximum))
+        };
         let now = cx.background_executor().now();
         let observe = |state: &VirtualizerState, offset: f64, main, cross| {
             let old = state.viewport();
@@ -697,7 +741,7 @@ impl Element for VirtualGrid {
         );
         let mut cv = observe(
             self.columns.read(cx),
-            -offset.x,
+            logical_x,
             bounds.size.width,
             bounds.size.height,
         );
@@ -747,7 +791,24 @@ impl Element for VirtualGrid {
                 0.0,
                 (cs.total_extent() - f64::from(bounds.size.width)).max(0.0),
             );
-        self.scroll.set_precise_offset(point(-x, -y));
+        let physical_x = if rtl { maximum - x } else { x };
+        self.scroll.set_precise_offset(point(-physical_x, -y));
+        if rtl || frame.mount.read(cx).horizontal.is_some() {
+            frame.mount.update(cx, |m, _| {
+                if rtl {
+                    let state = m.horizontal.get_or_insert_with(|| {
+                        Box::new(GridHorizontal {
+                            logical: x,
+                            physical: physical_x,
+                        })
+                    });
+                    state.logical = x;
+                    state.physical = physical_x;
+                } else {
+                    m.horizontal = None;
+                }
+            });
+        }
         for (state, viewport, request, applied) in [
             (&self.rows, &rv, rr.as_ref(), y),
             (&self.columns, &cv, cr.as_ref(), x),
@@ -783,18 +844,38 @@ impl Element for VirtualGrid {
             |_, _, hitbox, w, cx| {
                 let regions = [
                     Bounds::new(
-                        bounds.origin + point(frozen_width, frozen_height),
+                        bounds.origin
+                            + point(if rtl { px(0.) } else { frozen_width }, frozen_height),
                         bounds.size - size(frozen_width, frozen_height),
                     ),
                     Bounds::new(
-                        bounds.origin + point(frozen_width, px(0.)),
+                        bounds.origin + point(if rtl { px(0.) } else { frozen_width }, px(0.)),
                         size(bounds.size.width - frozen_width, frozen_height),
                     ),
                     Bounds::new(
-                        bounds.origin + point(px(0.), frozen_height),
+                        bounds.origin
+                            + point(
+                                if rtl {
+                                    bounds.size.width - frozen_width
+                                } else {
+                                    px(0.)
+                                },
+                                frozen_height,
+                            ),
                         size(frozen_width, bounds.size.height - frozen_height),
                     ),
-                    Bounds::new(bounds.origin, size(frozen_width, frozen_height)),
+                    Bounds::new(
+                        bounds.origin
+                            + point(
+                                if rtl {
+                                    bounds.size.width - frozen_width
+                                } else {
+                                    px(0.)
+                                },
+                                px(0.),
+                            ),
+                        size(frozen_width, frozen_height),
+                    ),
                 ];
                 let mut ordinary = (!partitioned).then(|| snapshot.cells());
                 let mut ordered = partitioned.then(|| snapshot.partitioned_cells());
@@ -886,11 +967,16 @@ impl Element for VirtualGrid {
                         let row_key = cell.row.key().clone();
                         let column_key = cell.column.key().clone();
                         let extent = cell.extent();
+                        let column_offset = Pixels::from(
+                            cell.column.start() - if cell.frozen_column { 0. } else { x },
+                        );
                         let origin = bounds.origin
                             + point(
-                                Pixels::from(
-                                    cell.column.start() - if cell.frozen_column { 0. } else { x },
-                                ),
+                                if rtl {
+                                    bounds.size.width - column_offset - extent.width
+                                } else {
+                                    column_offset
+                                },
                                 Pixels::from(
                                     cell.row.start() - if cell.frozen_row { 0. } else { y },
                                 ),
