@@ -511,3 +511,54 @@ fn next_native_batch() {
         }
     }
 }
+
+#[test]
+fn four_masonry_feedback() {
+    for count in [0, 1, 30, 32, 33, 256] {
+        for changes in [false, true] {
+            for sample in 0..5 {
+                let calls = Rc::new(Cell::new(0));
+                let mut state = VirtualMasonryState::new(
+                    source(100_000, &calls),
+                    VirtualizerSizing::measured(px(40.)),
+                    3,
+                )
+                .unwrap();
+                let mut updates = (0..count)
+                    .rev()
+                    .map(|ix| VirtualizerSizeUpdate::new(ix, px(40.)))
+                    .collect::<Vec<_>>();
+                state.update_sizes(&updates).unwrap();
+                let frozen = state.snapshot(0., size(px(300.), px(600.))).unwrap();
+                calls.set(0);
+                let (_, ns, stats) = measured(|| {
+                    for pass in 0..2_000 {
+                        if changes {
+                            for (ix, update) in updates.iter_mut().enumerate() {
+                                *update = VirtualizerSizeUpdate::new(
+                                    count - ix - 1,
+                                    px(40. + (pass % 2) as f32),
+                                );
+                            }
+                        }
+                        state.update_sizes(&updates).unwrap();
+                    }
+                });
+                let snapshot = state.snapshot(0., size(px(300.), px(600.))).unwrap();
+                if count > 0 {
+                    assert_eq!(
+                        snapshot.item(0).unwrap().item().extent(),
+                        px(if changes { 41. } else { 40. })
+                    );
+                    assert_eq!(frozen.item(0).unwrap().item().extent(), px(40.));
+                }
+                println!(
+                    "SERIES,case=masonry-feedback-{count}-{changes},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={},builds=0",
+                    stats.count,
+                    stats.peak,
+                    calls.get()
+                );
+            }
+        }
+    }
+}

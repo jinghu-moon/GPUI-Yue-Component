@@ -3,6 +3,61 @@ use gpui_kit::size;
 use yue_component::{VirtualGrid, VirtualMasonryState};
 
 #[test]
+fn masonry_feedback_batches_preserve_atomicity_and_frozen_geometry_at_buffer_boundaries() {
+    for count in [0, 1, 31, 32, 33, 256] {
+        let mut state =
+            VirtualMasonryState::new(source(0, 300), VirtualizerSizing::measured(px(20.)), 3)
+                .unwrap();
+        let frozen = state.snapshot(0., size(px(300.), px(200.))).unwrap();
+        let mut updates = (0..count)
+            .rev()
+            .map(|ix| yue_component::VirtualizerSizeUpdate::new(ix, px(30.)))
+            .collect::<Vec<_>>();
+        state.update_sizes(&updates).unwrap();
+        let next = state.snapshot(0., size(px(300.), px(200.))).unwrap();
+        assert_eq!(next.revision(), frozen.revision() + u64::from(count > 0));
+        for ix in 0..300 {
+            assert_eq!(
+                next.item(ix).unwrap().item().extent(),
+                px(if ix < count { 30. } else { 20. })
+            );
+            assert_eq!(frozen.item(ix).unwrap().item().extent(), px(20.));
+        }
+        state.update_sizes(&updates).unwrap();
+        assert_eq!(
+            state
+                .snapshot(0., size(px(300.), px(200.)))
+                .unwrap()
+                .revision(),
+            next.revision()
+        );
+        updates.push(yue_component::VirtualizerSizeUpdate::new(300usize, px(40.)));
+        assert_eq!(
+            state.update_sizes(&updates),
+            Err(VirtualizerError::MissingKey)
+        );
+        updates.pop();
+        updates.push(yue_component::VirtualizerSizeUpdate::new(
+            0usize,
+            px(f32::NAN),
+        ));
+        assert!(state.update_sizes(&updates).is_err());
+        updates.pop();
+        if count > 0 {
+            updates.push(yue_component::VirtualizerSizeUpdate::new(0usize, px(50.)));
+            assert!(state.update_sizes(&updates).is_err());
+        }
+        assert_eq!(
+            state
+                .snapshot(0., size(px(300.), px(200.)))
+                .unwrap()
+                .revision(),
+            next.revision()
+        );
+    }
+}
+
+#[test]
 fn masonry_options_validate_before_replacing_the_active_command() {
     let mut state =
         VirtualMasonryState::new(source(0, 100), VirtualizerSizing::measured(px(20.)), 3).unwrap();
