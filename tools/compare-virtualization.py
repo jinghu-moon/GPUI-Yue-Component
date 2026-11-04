@@ -50,8 +50,8 @@ def main():
     if not args.label.replace("-", "").isalnum():
         parser.error("label must contain only letters, digits or hyphens")
     logs = CACHE / args.label
-    destination = ROOT / f"docs/research/virtual-list-series-{args.label}-{args.date}.csv"
-    if destination.exists() or (logs / "identity.json").exists():
+    output_path = ROOT / f"docs/research/virtual-list-series-{args.label}-{args.date}.csv"
+    if output_path.exists() or (logs / "identity.json").exists():
         parser.error("comparison label already has recorded evidence; choose a new label")
     reference = run(["git", "rev-parse", args.before], capture_output=True, text=True).stdout.strip()
     archive = run(["git", "archive", "--format=zip", reference,
@@ -206,7 +206,7 @@ content-probe = []
         print(f"Completed {args.label} {version}/{round_}", flush=True)
     if not rows:
         raise ValueError("no measurement rows")
-    with destination.open("w", newline="", encoding="utf-8") as stream:
+    with output_path.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
         writer.writeheader()
         writer.writerows(rows)
@@ -221,7 +221,7 @@ content-probe = []
         "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
         "discarded_samples": discarded,
         "order": ["before/0", "after/0", "after/1", "before/1"], "rows": len(rows)}, indent=2) + "\n", encoding="utf-8")
-    print(destination)
+    print(output_path)
 
 
 if __name__ == "__main__":
