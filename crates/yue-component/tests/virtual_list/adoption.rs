@@ -3,10 +3,18 @@ use gpui_kit::base::virtualization::{VirtualMasonry, VirtualMasonryState};
 use std::cell::RefCell;
 
 type PreparedRows = Rc<RefCell<Vec<(usize, gpui_kit::WeakEntity<MasonryRow>)>>>;
-struct MasonryRow;
+struct MasonryRow(Option<gpui_kit::FocusHandle>);
 impl Render for MasonryRow {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        div().h(px(20.))
+        if let Some(focus) = &self.0 {
+            div()
+                .id("prepared-focus")
+                .track_focus(focus)
+                .h(px(20.))
+                .into_any_element()
+        } else {
+            div().h(px(20.)).into_any_element()
+        }
     }
 }
 struct MasonryPreparation {
@@ -16,6 +24,7 @@ struct MasonryPreparation {
     mounted: bool,
     cached: bool,
     width: f32,
+    focus: Option<gpui_kit::FocusHandle>,
 }
 impl Render for MasonryPreparation {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -23,10 +32,17 @@ impl Render for MasonryPreparation {
             return div().into_any_element();
         }
         let rows = self.rows.clone();
+        let focus = self.focus.clone();
         let prepare = move |identity: yue_component::VirtualizerItemIdentity,
                             _: &mut Window,
                             cx: &mut App| {
-            let row = cx.new(|_| MasonryRow);
+            let row = cx.new(|_| {
+                MasonryRow(if identity.index() == 0 {
+                    focus.clone()
+                } else {
+                    None
+                })
+            });
             rows.borrow_mut().push((identity.index(), row.downgrade()));
             row
         };
@@ -82,6 +98,7 @@ fn masonry_preparation_reuses_geometry_and_refreshes_only_explicit_content(
             mounted: true,
             cached: true,
             width: 300.,
+            focus: None,
         });
         cx.update(|w, cx| w.draw(cx).clear(cx));
         let (state, rows) = view.read_with(cx, |v, _| (v.state.clone(), v.rows.clone()));
@@ -164,6 +181,7 @@ fn masonry_preparation_releases_evicted_swapped_and_unmounted_views(cx: &mut Tes
         mounted: true,
         cached: true,
         width: 300.,
+        focus: None,
     });
     cx.update(|w, cx| w.draw(cx).clear(cx));
     let (state, rows) = view.read_with(cx, |v, _| (v.state.clone(), v.rows.clone()));
@@ -286,4 +304,54 @@ fn masonry_append_crosses_index_blocks_without_changing_frozen_lane_assignments(
         assert_eq!(old.item(255).unwrap().item().extent(), px(20.));
         assert!(!old.item(255).unwrap().item().is_measured());
     }
+}
+
+#[gpui_kit::test]
+fn masonry_preparation_keeps_a_focused_remote_view_and_releases_it_after_focus_moves(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = cx.add_window_view(|_, cx| {
+        let focus = cx.focus_handle();
+        let mut state = VirtualMasonryState::new(source(0, 1000), sizing(2, 1000), 3).unwrap();
+        state
+            .set_focus_handle(0usize.into(), Some(focus.clone()))
+            .unwrap();
+        MasonryPreparation {
+            state: cx.new(|_| state),
+            rows: Rc::default(),
+            revision: 0,
+            mounted: true,
+            cached: true,
+            width: 300.,
+            focus: Some(focus),
+        }
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let (state, rows, focus) = view.read_with(cx, |v, _| {
+        (v.state.clone(), v.rows.clone(), v.focus.clone().unwrap())
+    });
+    cx.update(|w, cx| focus.focus(w, cx));
+    state.update(cx, |s, cx| {
+        s.scroll_to_key(900usize.into(), VirtualizerAlign::Start)
+            .unwrap();
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(rows.borrow()[0].1.upgrade().is_some());
+    assert_eq!(
+        rows.borrow().iter().filter(|(ix, _)| *ix == 0).count(),
+        1,
+        "focused content is prepared once"
+    );
+    assert!(cx.update(|w, _| focus.is_focused(w)));
+    state.update(cx, |s, cx| {
+        s.set_focus_handle(0usize.into(), None).unwrap();
+        cx.notify();
+    });
+    cx.update(|w, cx| {
+        w.blur(cx);
+        w.draw(cx).clear(cx);
+    });
+    cx.run_until_parked();
+    assert!(rows.borrow()[0].1.upgrade().is_none());
 }
