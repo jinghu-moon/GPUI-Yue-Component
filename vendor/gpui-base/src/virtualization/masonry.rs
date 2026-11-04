@@ -604,7 +604,7 @@ impl VirtualMasonryState {
         indexed.retain(|(ix, extent)| {
             let (lane, local) = self.slots[*ix];
             let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
-            (old - f64::from(*extent)).abs() > 0.01 || !measured
+            old != f64::from(*extent) || !measured
         });
         if indexed.is_empty() {
             return Ok(());
@@ -638,7 +638,7 @@ impl VirtualMasonryState {
         }
         let (lane, local) = self.slots[ix];
         let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
-        if measured && (old - f64::from(update.extent())).abs() <= 0.01 {
+        if measured && old == f64::from(update.extent()) {
             return Ok(());
         }
         self.capture_anchor();

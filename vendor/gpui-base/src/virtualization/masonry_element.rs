@@ -255,9 +255,7 @@ impl Element for VirtualMasonry {
                     cx,
                 );
                 if dynamic && valid_positive(measured.height) {
-                    if !was_measured
-                        || (f64::from(measured.height) - f64::from(height)).abs() > 0.01
-                    {
+                    if !was_measured || measured.height != height {
                         updates.push(VirtualizerSizeUpdate::new(key, measured.height));
                     }
                 } else if dynamic {

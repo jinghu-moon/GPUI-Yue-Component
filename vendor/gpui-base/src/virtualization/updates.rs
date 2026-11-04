@@ -70,12 +70,15 @@ impl VirtualizerState {
                 return Err(VirtualizerError::InvalidGeometry("size update"));
             }
             let gap = if self.measured.is_some() && ix + 1 < self.source.len() {
-                f64::from(self.layout.gap)
+                self.layout.gap
             } else {
-                0.0
+                px(0.)
             };
             if self.geometry.item(ix).is_some_and(|(_, extent, exact)| {
-                (extent - gap - f64::from(update.extent)).abs() < 0.001 && exact == measured
+                // Compare in the backend's stored units. Per-item epsilon
+                // losses accumulate down a long list; subtracting a native
+                // f32 gap first can also make an identical write look changed.
+                extent == f64::from(update.extent + gap) && exact == measured
             }) && self.measured.as_ref().is_none_or(|list| {
                 list.geometry().item(ix).is_some_and(|item| {
                     item.cross_extent() == self.viewport.as_ref().map_or(px(0.), |v| v.cross)
