@@ -1,0 +1,2592 @@
+{
+  "date": "2026-11-05",
+  "timezone": "Asia/Shanghai",
+  "recorded_local": "2026-11-05T05:04:04.960385+08:00",
+  "baseline": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+  "implementation_commit": "d24340b194d54200d1d44050c67907996b33d77c",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "production_vendor_sources_sha256": "a23c2f8947b8879381725f0e34606f4ffb03ce22b50d4467be190c727be67108",
+  "tested_source_sha256_lf": {
+    "vendor/gpui-base/src/virtualization/state.rs": "beb480ebb5d79b2d3c8a895afc04915028f111a0f77d9cc6e041ed61ffbc2fdd",
+    "crates/yue-component/tests/virtual_list/frozen_grid.rs": "5fba178ecd556bb2d5adf32e2b79349087943c0658fb793056c4af8346970e9a",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_tests.rs": "ddad3632a983b3cf81f6384abac5b80f0801a8543eb95ff925d65707ebba677c",
+    "docs/research/virtual-list-frozen-anchor-2026-11-05.rs": "ed83a4d913bf5aa76e3a0db6c2baf1cb0d22ab3f88065a7aa2ec071c52affa1f"
+  },
+  "reference_source_sha256_lf": {
+    "refer/virtual/virtual-main/packages/virtual-core/src/index.ts": "ec73ae69df7f60bc5a29f7650aa3ee9fa27764d01e76b01efca184a6090c5c8d",
+    "refer/virtual/virtua-main/src/core/store.ts": "8256f04615be57b5bcb1b3473c39037b5e9536eef3637f8a637ad9b89e4c912c",
+    "refer/virtual/vlist-main/src/core/pipeline.ts": "5a704dec25b3908eb5273cb310b5de8f006cf69cbcccb0889fc230bca6977e51",
+    "refer/virtual/vlist-main/src/core/create.ts": "b5e4fbdb32db8050147c2591ce26accd6144a7818b6a99bc1e474994a5fb592f",
+    "refer/virtual/vlist-main/src/plugins/grid/plugin.ts": "127d5d694b1a8b11870c928fb79e0ab0842bd0dfaefb99d6568cb0497039a2e8",
+    "refer/virtual/vlist-main/src/utils/scroll-padding.ts": "8bc261cd76576ba44da835cac3be545d558a1eb970b0be58e81e0677f5ca5bab"
+  },
+  "production_manifests_locks_and_references_unchanged": true,
+  "baseline_regression_observations": {
+    "source": "two assertion tests executed against unchanged b934f22 production source before the fix; recorded from tool output",
+    "passed": 0,
+    "failed": 2,
+    "cases": [
+      {
+        "frozen_track": true,
+        "before_offset": [
+          -213.25,
+          -103.5
+        ],
+        "incorrect_after_offset": [
+          -220.5,
+          -110.75
+        ],
+        "visible_row_key_before": 7,
+        "visible_row_key_after": 8,
+        "column_body_position_before": -6.25,
+        "column_body_position_after": -13.5
+      },
+      {
+        "frozen_track": false,
+        "before_offset": [
+          -213.25,
+          -103.5
+        ],
+        "incorrect_after_offset": [
+          -213.25,
+          -103.5
+        ],
+        "row_body_position_before": -15.5,
+        "row_body_position_after": -8.25,
+        "column_body_position_before": -6.25,
+        "column_body_position_after": 1.0
+      }
+    ]
+  },
+  "experiments": {
+    "frozen-anchor": {
+      "csv": "docs/research/virtual-list-series-frozen-anchor-2026-11-05.csv",
+      "csv_sha256_lf": "32fb35bba0a524caf8cf88efb1988a43c08008bcfdc1dc6f17e48644b6d574aa",
+      "identity": {
+        "before": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "filter": "frozen_anchor_workload",
+        "after_head": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "workload": "docs/research/virtual-list-frozen-anchor-2026-11-05.rs",
+        "workload_sha256": "ed83a4d913bf5aa76e3a0db6c2baf1cb0d22ab3f88065a7aa2ec071c52affa1f",
+        "after_feature": null,
+        "build_identity": {
+          "before": {
+            "manifest_sha256": "55544eba285b7944b977a9c419443da946dbd01e13fc45b08d4588fc8c3d8942",
+            "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "efa8bc4968dfc3b8743b17c735a72708fe1b8f5e442065d98ff4ddeb58afed60"
+          },
+          "after": {
+            "manifest_sha256": "b922eda6494c1743611391ce92ec838220d426365504c281e0f8ecd23a740f28",
+            "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "a23c2f8947b8879381725f0e34606f4ffb03ce22b50d4467be190c727be67108"
+          }
+        },
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 96
+      },
+      "logs": [
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor\\before-0.txt",
+          "sha256_lf": "f05e369443b7d77d1b24f63f3cf819827d814ea660f259d7cbec1acd45372815"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor\\before-1.txt",
+          "sha256_lf": "b64e4777e9444b10ab92bf245611801a71b981b6935cf239a6036fa571180e56"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor\\after-0.txt",
+          "sha256_lf": "a1ef8adf9f3b81c5529e85e4ef41a49de8ae142c589422ddc1432d119da7a1c1"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor\\after-1.txt",
+          "sha256_lf": "4d4081c408aeabd3784633051a0f9896425c6082bdc778e0f01b5be7ab22b05f"
+        }
+      ],
+      "cases": {
+        "anchor-grid-0-steady": {
+          "versions": {
+            "before": {
+              "ns": 25748250.0,
+              "p50": 155400.0,
+              "p95": 170400.0,
+              "p99": 231400.0,
+              "allocations": 65120.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24509900,
+              "ns_max": 26502800,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 24994700.0,
+              "p50": 153050.0,
+              "p95": 166650.0,
+              "p99": 261400.0,
+              "allocations": 65120.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24504700,
+              "ns_max": 25447200,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -2.926607
+        },
+        "anchor-grid-0-scroll": {
+          "versions": {
+            "before": {
+              "ns": 25022600.0,
+              "p50": 152600.0,
+              "p95": 176600.0,
+              "p99": 227950.0,
+              "allocations": 65440.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24499100,
+              "ns_max": 25831300,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 24944000.0,
+              "p50": 151750.0,
+              "p95": 176000.0,
+              "p99": 251600.0,
+              "allocations": 65440.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24054900,
+              "ns_max": 26180800,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -0.314116
+        },
+        "anchor-grid-0-prefix": {
+          "versions": {
+            "before": {
+              "ns": 25718350.0,
+              "p50": 154800.0,
+              "p95": 189800.0,
+              "p99": 270300.0,
+              "allocations": 68960.0,
+              "peak": 49416.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 23701100,
+              "ns_max": 27271300,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 24856800.0,
+              "p50": 153750.0,
+              "p95": 164700.0,
+              "p99": 227750.0,
+              "allocations": 68960.0,
+              "peak": 49416.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24337100,
+              "ns_max": 25801400,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -3.349943
+        },
+        "anchor-grid-0-hidden": {
+          "versions": {
+            "before": {
+              "ns": 23561050.0,
+              "p50": 153900.0,
+              "p95": 163950.0,
+              "p99": 210350.0,
+              "allocations": 66000.0,
+              "peak": 52896.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 22856800,
+              "ns_max": 24724000,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 23237000.0,
+              "p50": 151100.0,
+              "p95": 160100.0,
+              "p99": 220250.0,
+              "allocations": 66000.0,
+              "peak": 52896.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 22299500,
+              "ns_max": 23843500,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -1.375363
+        },
+        "anchor-grid-3-steady": {
+          "versions": {
+            "before": {
+              "ns": 25844600.0,
+              "p50": 156400.0,
+              "p95": 172450.0,
+              "p99": 260450.0,
+              "allocations": 69280.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25285000,
+              "ns_max": 26570500,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 25650150.0,
+              "p50": 156150.0,
+              "p95": 175850.0,
+              "p99": 266600.0,
+              "allocations": 69280.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24327800,
+              "ns_max": 26435700,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -0.752382
+        },
+        "anchor-grid-3-scroll": {
+          "versions": {
+            "before": {
+              "ns": 25830200.0,
+              "p50": 158900.0,
+              "p95": 175700.0,
+              "p99": 217650.0,
+              "allocations": 69600.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24209000,
+              "ns_max": 27994100,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 25628450.0,
+              "p50": 157850.0,
+              "p95": 180500.0,
+              "p99": 239600.0,
+              "allocations": 69600.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25001700,
+              "ns_max": 26819400,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -0.781062
+        },
+        "anchor-grid-3-prefix": {
+          "versions": {
+            "before": {
+              "ns": 24899350.0,
+              "p50": 157550.0,
+              "p95": 175150.0,
+              "p99": 210250.0,
+              "allocations": 70320.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 7.25,
+              "samples": 6,
+              "ns_min": 23783300,
+              "ns_max": 25092800,
+              "reading_error_max": 7.25
+            },
+            "after": {
+              "ns": 23933900.0,
+              "p50": 154900.0,
+              "p95": 165750.0,
+              "p99": 208850.0,
+              "allocations": 70160.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 23284900,
+              "ns_max": 24915000,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": -3.87741
+        },
+        "anchor-grid-3-hidden": {
+          "versions": {
+            "before": {
+              "ns": 24693200.0,
+              "p50": 157550.0,
+              "p95": 173700.0,
+              "p99": 312550.0,
+              "allocations": 70160.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 7.25,
+              "samples": 6,
+              "ns_min": 23915300,
+              "ns_max": 25582800,
+              "reading_error_max": 7.25
+            },
+            "after": {
+              "ns": 26871650.0,
+              "p50": 161000.0,
+              "p95": 199800.0,
+              "p99": 285250.0,
+              "allocations": 73120.0,
+              "peak": 53768.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 26100100,
+              "ns_max": 27364400,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 8.822064
+        }
+      }
+    },
+    "frozen-anchor-repeat": {
+      "csv": "docs/research/virtual-list-series-frozen-anchor-repeat-2026-11-05.csv",
+      "csv_sha256_lf": "66dfbfc9adf21bb5d5eaf067ddec2634a87eb67908ed06cf069df75f052d7f1a",
+      "identity": {
+        "before": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "filter": "frozen_anchor_workload",
+        "after_head": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "workload": "docs/research/virtual-list-frozen-anchor-2026-11-05.rs",
+        "workload_sha256": "ed83a4d913bf5aa76e3a0db6c2baf1cb0d22ab3f88065a7aa2ec071c52affa1f",
+        "after_feature": null,
+        "build_identity": {
+          "before": {
+            "manifest_sha256": "55544eba285b7944b977a9c419443da946dbd01e13fc45b08d4588fc8c3d8942",
+            "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "efa8bc4968dfc3b8743b17c735a72708fe1b8f5e442065d98ff4ddeb58afed60"
+          },
+          "after": {
+            "manifest_sha256": "b922eda6494c1743611391ce92ec838220d426365504c281e0f8ecd23a740f28",
+            "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "a23c2f8947b8879381725f0e34606f4ffb03ce22b50d4467be190c727be67108"
+          }
+        },
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 96
+      },
+      "logs": [
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-repeat\\before-0.txt",
+          "sha256_lf": "dbd4adba0be9d6da34275f9afab0d7f857bdb8030bf0f1c1760c7687bc739c42"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-repeat\\before-1.txt",
+          "sha256_lf": "2757cc6f002e8eac0f067488b48f2e289392d89b515d2c03c0981a95fbb33103"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-repeat\\after-0.txt",
+          "sha256_lf": "d81ac5f3ad5009276103cb330f2cde5730fa3c52c8aceac7949fae32ab593f3f"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-repeat\\after-1.txt",
+          "sha256_lf": "b718eb2b46072bdc16cabc95c75390385c66965992d9f9eadb9c837eec08817d"
+        }
+      ],
+      "cases": {
+        "anchor-grid-0-steady": {
+          "versions": {
+            "before": {
+              "ns": 24592050.0,
+              "p50": 150650.0,
+              "p95": 161200.0,
+              "p99": 183900.0,
+              "allocations": 65120.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24213700,
+              "ns_max": 25205300,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 25630100.0,
+              "p50": 153000.0,
+              "p95": 199400.0,
+              "p99": 290950.0,
+              "allocations": 65120.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24339200,
+              "ns_max": 25820300,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 4.22108
+        },
+        "anchor-grid-0-scroll": {
+          "versions": {
+            "before": {
+              "ns": 24287050.0,
+              "p50": 149250.0,
+              "p95": 164800.0,
+              "p99": 206200.0,
+              "allocations": 65440.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 23709800,
+              "ns_max": 24524200,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 24731350.0,
+              "p50": 151750.0,
+              "p95": 177550.0,
+              "p99": 230350.0,
+              "allocations": 65440.0,
+              "peak": 49416.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24246700,
+              "ns_max": 25139800,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 1.82937
+        },
+        "anchor-grid-0-prefix": {
+          "versions": {
+            "before": {
+              "ns": 24842600.0,
+              "p50": 152000.0,
+              "p95": 173150.0,
+              "p99": 223500.0,
+              "allocations": 68960.0,
+              "peak": 49416.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24120600,
+              "ns_max": 25521900,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 25289800.0,
+              "p50": 154600.0,
+              "p95": 162250.0,
+              "p99": 229200.0,
+              "allocations": 68960.0,
+              "peak": 49416.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24719600,
+              "ns_max": 25710600,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 1.800134
+        },
+        "anchor-grid-0-hidden": {
+          "versions": {
+            "before": {
+              "ns": 23228750.0,
+              "p50": 151550.0,
+              "p95": 165900.0,
+              "p99": 239500.0,
+              "allocations": 66000.0,
+              "peak": 52896.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 22786000,
+              "ns_max": 23954300,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 23323150.0,
+              "p50": 151650.0,
+              "p95": 173100.0,
+              "p99": 215300.0,
+              "allocations": 66000.0,
+              "peak": 52896.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 22743200,
+              "ns_max": 23918500,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 0.406393
+        },
+        "anchor-grid-3-steady": {
+          "versions": {
+            "before": {
+              "ns": 25458950.0,
+              "p50": 155250.0,
+              "p95": 189800.0,
+              "p99": 230500.0,
+              "allocations": 69280.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24048500,
+              "ns_max": 26533300,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 25693700.0,
+              "p50": 157800.0,
+              "p95": 167650.0,
+              "p99": 230950.0,
+              "allocations": 69280.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25414400,
+              "ns_max": 26368400,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 0.922073
+        },
+        "anchor-grid-3-scroll": {
+          "versions": {
+            "before": {
+              "ns": 25391800.0,
+              "p50": 155350.0,
+              "p95": 176700.0,
+              "p99": 246750.0,
+              "allocations": 69600.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25145500,
+              "ns_max": 26153900,
+              "reading_error_max": 0.0
+            },
+            "after": {
+              "ns": 26220150.0,
+              "p50": 158050.0,
+              "p95": 188300.0,
+              "p99": 243150.0,
+              "allocations": 69600.0,
+              "peak": 53768.0,
+              "reads": 8320.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25758900,
+              "ns_max": 26953000,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 3.262274
+        },
+        "anchor-grid-3-prefix": {
+          "versions": {
+            "before": {
+              "ns": 24517800.0,
+              "p50": 158150.0,
+              "p95": 174600.0,
+              "p99": 252100.0,
+              "allocations": 70320.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 7.25,
+              "samples": 6,
+              "ns_min": 24306000,
+              "ns_max": 24820200,
+              "reading_error_max": 7.25
+            },
+            "after": {
+              "ns": 24892850.0,
+              "p50": 159850.0,
+              "p95": 194650.0,
+              "p99": 247900.0,
+              "allocations": 70160.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 24397600,
+              "ns_max": 25539500,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 1.529705
+        },
+        "anchor-grid-3-hidden": {
+          "versions": {
+            "before": {
+              "ns": 24028050.0,
+              "p50": 158000.0,
+              "p95": 165200.0,
+              "p99": 229000.0,
+              "allocations": 70160.0,
+              "peak": 57248.0,
+              "reads": 8640.0,
+              "builds": 8800.0,
+              "reading_error": 7.25,
+              "samples": 6,
+              "ns_min": 23263800,
+              "ns_max": 24614500,
+              "reading_error_max": 7.25
+            },
+            "after": {
+              "ns": 26536650.0,
+              "p50": 160800.0,
+              "p95": 185550.0,
+              "p99": 315050.0,
+              "allocations": 73120.0,
+              "peak": 53768.0,
+              "reads": 8960.0,
+              "builds": 9600.0,
+              "reading_error": 0.0,
+              "samples": 6,
+              "ns_min": 25905100,
+              "ns_max": 27113800,
+              "reading_error_max": 0.0
+            }
+          },
+          "cpu_change_pct": 10.440298
+        }
+      }
+    },
+    "frozen-anchor-default": {
+      "csv": "docs/research/virtual-list-series-frozen-anchor-default-2026-11-05.csv",
+      "csv_sha256_lf": "a0abd8a75bbf79eab1e823aec3754cda8c94e262f984699a3b9e1682242be497",
+      "identity": {
+        "before": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "filter": "series_",
+        "after_head": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "build_identity": {
+          "before": {
+            "manifest_sha256": "52454b18cbb9aee6c39dab300bbbb6022f05ab8f619b2df1f1d04f3a65c6bd70",
+            "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "efa8bc4968dfc3b8743b17c735a72708fe1b8f5e442065d98ff4ddeb58afed60"
+          },
+          "after": {
+            "manifest_sha256": "93e8eeef115bd829d74422acb40bdcc64fb6bcd5991010351d155774c5ca2fa2",
+            "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "a23c2f8947b8879381725f0e34606f4ffb03ce22b50d4467be190c727be67108"
+          }
+        },
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "logs": [
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default\\before-0.txt",
+          "sha256_lf": "70df93268bbdb3537c01b0cf823447b81e9ca2f312ef8229b80413aaf535286f"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default\\before-1.txt",
+          "sha256_lf": "2933bb7c7e98471a861e9f2d197a4690b46d221db1246bd5bbe20a6c527fa273"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default\\after-0.txt",
+          "sha256_lf": "4fa47e70bdee6d95c9d6d2ee6c923ad5985b793d05d805b037f71c598c61cdb9"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default\\after-1.txt",
+          "sha256_lf": "ab8fb64e2ca6dae5e5be5ff0d2aa42d726250ee9b0a65934677b40aea873310f"
+        }
+      ],
+      "cases": {
+        "append-10000": {
+          "versions": {
+            "before": {
+              "ns": 7100.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 21704.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4500,
+              "ns_max": 49200
+            },
+            "after": {
+              "ns": 5400.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 21704.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4300,
+              "ns_max": 50100
+            }
+          },
+          "cpu_change_pct": -23.943662
+        },
+        "append-100000": {
+          "versions": {
+            "before": {
+              "ns": 12350.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 28640.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 9700,
+              "ns_max": 22400
+            },
+            "after": {
+              "ns": 12200.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 28640.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 9700,
+              "ns_max": 22600
+            }
+          },
+          "cpu_change_pct": -1.214575
+        },
+        "append-1000000": {
+          "versions": {
+            "before": {
+              "ns": 92950.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 55.0,
+              "peak": 87536.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 84800,
+              "ns_max": 102400
+            },
+            "after": {
+              "ns": 93050.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 55.0,
+              "peak": 87536.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 90600,
+              "ns_max": 120700
+            }
+          },
+          "cpu_change_pct": 0.107585
+        },
+        "idle-2000": {
+          "versions": {
+            "before": {
+              "ns": 628050.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 4025.0,
+              "peak": 876.0,
+              "reads": 0.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 614900,
+              "ns_max": 775900
+            },
+            "after": {
+              "ns": 711550.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 4025.0,
+              "peak": 876.0,
+              "reads": 0.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 616900,
+              "ns_max": 1178900
+            }
+          },
+          "cpu_change_pct": 13.29512
+        },
+        "masonry-noop": {
+          "versions": {
+            "before": {
+              "ns": 5326800.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 10000.0,
+              "peak": 480.0,
+              "reads": 300000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5171800,
+              "ns_max": 5867900
+            },
+            "after": {
+              "ns": 5384050.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 10000.0,
+              "peak": 480.0,
+              "reads": 300000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5253600,
+              "ns_max": 5857000
+            }
+          },
+          "cpu_change_pct": 1.074754
+        },
+        "measured-queries": {
+          "versions": {
+            "before": {
+              "ns": 1422350.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 20000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 1401900,
+              "ns_max": 1728200
+            },
+            "after": {
+              "ns": 1406550.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 20000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 1396100,
+              "ns_max": 1443100
+            }
+          },
+          "cpu_change_pct": -1.110838
+        },
+        "frames-0-steady": {
+          "versions": {
+            "before": {
+              "ns": 4581800.0,
+              "p50": 35450.0,
+              "p95": 62650.0,
+              "p99": 101500.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3818900,
+              "ns_max": 5350700
+            },
+            "after": {
+              "ns": 4309050.0,
+              "p50": 34000.0,
+              "p95": 39350.0,
+              "p99": 57300.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3812600,
+              "ns_max": 4777700
+            }
+          },
+          "cpu_change_pct": -5.952901
+        },
+        "frames-0-rapid": {
+          "versions": {
+            "before": {
+              "ns": 3675950.0,
+              "p50": 29350.0,
+              "p95": 34200.0,
+              "p99": 48050.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3518300,
+              "ns_max": 4209100
+            },
+            "after": {
+              "ns": 3530750.0,
+              "p50": 28700.0,
+              "p95": 31100.0,
+              "p99": 34500.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3352500,
+              "ns_max": 3961200
+            }
+          },
+          "cpu_change_pct": -3.949999
+        },
+        "frames-0-complex": {
+          "versions": {
+            "before": {
+              "ns": 31296250.0,
+              "p50": 253100.0,
+              "p95": 309250.0,
+              "p99": 422250.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 30327800,
+              "ns_max": 31859700
+            },
+            "after": {
+              "ns": 31334050.0,
+              "p50": 250950.0,
+              "p95": 320550.0,
+              "p99": 465200.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 30501700,
+              "ns_max": 32177500
+            }
+          },
+          "cpu_change_pct": 0.120781
+        },
+        "frames-0-resize": {
+          "versions": {
+            "before": {
+              "ns": 3799450.0,
+              "p50": 30500.0,
+              "p95": 32650.0,
+              "p99": 36000.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3574400,
+              "ns_max": 3967000
+            },
+            "after": {
+              "ns": 3893650.0,
+              "p50": 31150.0,
+              "p95": 37550.0,
+              "p99": 55250.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3735600,
+              "ns_max": 4029300
+            }
+          },
+          "cpu_change_pct": 2.479306
+        },
+        "frames-1-steady": {
+          "versions": {
+            "before": {
+              "ns": 3880100.0,
+              "p50": 32200.0,
+              "p95": 34000.0,
+              "p99": 39550.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3714900,
+              "ns_max": 4981200
+            },
+            "after": {
+              "ns": 3969100.0,
+              "p50": 31900.0,
+              "p95": 36550.0,
+              "p99": 55000.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3699900,
+              "ns_max": 4390400
+            }
+          },
+          "cpu_change_pct": 2.293755
+        },
+        "frames-1-rapid": {
+          "versions": {
+            "before": {
+              "ns": 3715150.0,
+              "p50": 30300.0,
+              "p95": 35000.0,
+              "p99": 41250.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3613600,
+              "ns_max": 4086000
+            },
+            "after": {
+              "ns": 3774500.0,
+              "p50": 30400.0,
+              "p95": 35850.0,
+              "p99": 67600.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3621400,
+              "ns_max": 3872400
+            }
+          },
+          "cpu_change_pct": 1.597513
+        },
+        "frames-1-complex": {
+          "versions": {
+            "before": {
+              "ns": 31552150.0,
+              "p50": 251300.0,
+              "p95": 343300.0,
+              "p99": 506050.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 29998000,
+              "ns_max": 33750200
+            },
+            "after": {
+              "ns": 31274700.0,
+              "p50": 250800.0,
+              "p95": 330050.0,
+              "p99": 445150.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 30311100,
+              "ns_max": 32738800
+            }
+          },
+          "cpu_change_pct": -0.879338
+        },
+        "frames-1-resize": {
+          "versions": {
+            "before": {
+              "ns": 4062750.0,
+              "p50": 32300.0,
+              "p95": 38150.0,
+              "p99": 66900.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3733000,
+              "ns_max": 4390000
+            },
+            "after": {
+              "ns": 3941650.0,
+              "p50": 31050.0,
+              "p95": 39150.0,
+              "p99": 42150.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3724900,
+              "ns_max": 4631600
+            }
+          },
+          "cpu_change_pct": -2.98074
+        },
+        "frames-2-steady": {
+          "versions": {
+            "before": {
+              "ns": 9593300.0,
+              "p50": 76550.0,
+              "p95": 92100.0,
+              "p99": 124700.0,
+              "allocations": 29103.0,
+              "peak": 29424.0,
+              "reads": 12960.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 8907600,
+              "ns_max": 10677800
+            },
+            "after": {
+              "ns": 9409450.0,
+              "p50": 76500.0,
+              "p95": 80500.0,
+              "p99": 110350.0,
+              "allocations": 29103.0,
+              "peak": 29424.0,
+              "reads": 12960.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 9200300,
+              "ns_max": 9625900
+            }
+          },
+          "cpu_change_pct": -1.916442
+        },
+        "frames-2-rapid": {
+          "versions": {
+            "before": {
+              "ns": 8548750.0,
+              "p50": 69500.0,
+              "p95": 76150.0,
+              "p99": 85650.0,
+              "allocations": 33120.0,
+              "peak": 27056.0,
+              "reads": 11520.0,
+              "builds": 2880.0,
+              "samples": 6,
+              "ns_min": 8288400,
+              "ns_max": 8916600
+            },
+            "after": {
+              "ns": 8905650.0,
+              "p50": 71600.0,
+              "p95": 88600.0,
+              "p99": 138050.0,
+              "allocations": 33120.0,
+              "peak": 27056.0,
+              "reads": 11520.0,
+              "builds": 2880.0,
+              "samples": 6,
+              "ns_min": 8683100,
+              "ns_max": 9706600
+            }
+          },
+          "cpu_change_pct": 4.174879
+        },
+        "frames-2-complex": {
+          "versions": {
+            "before": {
+              "ns": 21007450.0,
+              "p50": 170500.0,
+              "p95": 208350.0,
+              "p99": 257900.0,
+              "allocations": 101763.0,
+              "peak": 40372.0,
+              "reads": 2880.0,
+              "builds": 720.0,
+              "samples": 6,
+              "ns_min": 20721900,
+              "ns_max": 22006000
+            },
+            "after": {
+              "ns": 21029650.0,
+              "p50": 169300.0,
+              "p95": 206300.0,
+              "p99": 249400.0,
+              "allocations": 101763.0,
+              "peak": 40372.0,
+              "reads": 2880.0,
+              "builds": 720.0,
+              "samples": 6,
+              "ns_min": 20430300,
+              "ns_max": 23151300
+            }
+          },
+          "cpu_change_pct": 0.105677
+        },
+        "frames-2-resize": {
+          "versions": {
+            "before": {
+              "ns": 10485850.0,
+              "p50": 86450.0,
+              "p95": 103200.0,
+              "p99": 122750.0,
+              "allocations": 37803.0,
+              "peak": 36024.0,
+              "reads": 20340.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 10208600,
+              "ns_max": 10568500
+            },
+            "after": {
+              "ns": 10250400.0,
+              "p50": 86550.0,
+              "p95": 89550.0,
+              "p99": 94450.0,
+              "allocations": 37803.0,
+              "peak": 36024.0,
+              "reads": 20340.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 10181300,
+              "ns_max": 10839800
+            }
+          },
+          "cpu_change_pct": -2.245407
+        },
+        "frames-2-size": {
+          "versions": {
+            "before": {
+              "ns": 8244700.0,
+              "p50": 76450.0,
+              "p95": 93400.0,
+              "p99": 102300.0,
+              "allocations": 26721.0,
+              "peak": 35920.0,
+              "reads": 11934.0,
+              "builds": 2718.0,
+              "samples": 6,
+              "ns_min": 8161300,
+              "ns_max": 9210400
+            },
+            "after": {
+              "ns": 8531350.0,
+              "p50": 76850.0,
+              "p95": 97850.0,
+              "p99": 113250.0,
+              "allocations": 26721.0,
+              "peak": 35920.0,
+              "reads": 11934.0,
+              "builds": 2718.0,
+              "samples": 6,
+              "ns_min": 8169100,
+              "ns_max": 11103100
+            }
+          },
+          "cpu_change_pct": 3.476779
+        },
+        "frames-3-steady": {
+          "versions": {
+            "before": {
+              "ns": 5435750.0,
+              "p50": 44850.0,
+              "p95": 49650.0,
+              "p99": 52500.0,
+              "allocations": 15903.0,
+              "peak": 25352.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5416900,
+              "ns_max": 5597900
+            },
+            "after": {
+              "ns": 5773450.0,
+              "p50": 44850.0,
+              "p95": 61400.0,
+              "p99": 112000.0,
+              "allocations": 15903.0,
+              "peak": 25352.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5636400,
+              "ns_max": 6262500
+            }
+          },
+          "cpu_change_pct": 6.212574
+        },
+        "frames-3-rapid": {
+          "versions": {
+            "before": {
+              "ns": 7032050.0,
+              "p50": 61450.0,
+              "p95": 64750.0,
+              "p99": 82700.0,
+              "allocations": 18000.0,
+              "peak": 26176.0,
+              "reads": 4680.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 6827300,
+              "ns_max": 8081500
+            },
+            "after": {
+              "ns": 7123850.0,
+              "p50": 62100.0,
+              "p95": 65100.0,
+              "p99": 75500.0,
+              "allocations": 18000.0,
+              "peak": 26176.0,
+              "reads": 4680.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 6966500,
+              "ns_max": 7330900
+            }
+          },
+          "cpu_change_pct": 1.305451
+        },
+        "frames-3-complex": {
+          "versions": {
+            "before": {
+              "ns": 9240650.0,
+              "p50": 75450.0,
+              "p95": 82200.0,
+              "p99": 104250.0,
+              "allocations": 40563.0,
+              "peak": 27776.0,
+              "reads": 960.0,
+              "builds": 240.0,
+              "samples": 6,
+              "ns_min": 9048400,
+              "ns_max": 9795300
+            },
+            "after": {
+              "ns": 9456050.0,
+              "p50": 76200.0,
+              "p95": 85750.0,
+              "p99": 134300.0,
+              "allocations": 40563.0,
+              "peak": 27776.0,
+              "reads": 960.0,
+              "builds": 240.0,
+              "samples": 6,
+              "ns_min": 9172900,
+              "ns_max": 10378600
+            }
+          },
+          "cpu_change_pct": 2.331005
+        },
+        "frames-3-resize": {
+          "versions": {
+            "before": {
+              "ns": 6067450.0,
+              "p50": 49700.0,
+              "p95": 54650.0,
+              "p99": 67100.0,
+              "allocations": 19743.0,
+              "peak": 36448.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5892000,
+              "ns_max": 7029600
+            },
+            "after": {
+              "ns": 6129750.0,
+              "p50": 50100.0,
+              "p95": 57700.0,
+              "p99": 63100.0,
+              "allocations": 19743.0,
+              "peak": 36448.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5902300,
+              "ns_max": 6656900
+            }
+          },
+          "cpu_change_pct": 1.02679
+        },
+        "work-0-false": {
+          "versions": {
+            "before": {
+              "ns": 3706900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 3659500,
+              "ns_max": 4076600
+            },
+            "after": {
+              "ns": 3728550.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 3673100,
+              "ns_max": 4263300
+            }
+          },
+          "cpu_change_pct": 0.584046
+        },
+        "work-0-true": {
+          "versions": {
+            "before": {
+              "ns": 5956250.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5856500,
+              "ns_max": 6167700
+            },
+            "after": {
+              "ns": 6057900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5903100,
+              "ns_max": 6424700
+            }
+          },
+          "cpu_change_pct": 1.706611
+        },
+        "work-1-false": {
+          "versions": {
+            "before": {
+              "ns": 4126200.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4056800,
+              "ns_max": 4483800
+            },
+            "after": {
+              "ns": 4140650.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4107600,
+              "ns_max": 4616700
+            }
+          },
+          "cpu_change_pct": 0.350201
+        },
+        "work-1-true": {
+          "versions": {
+            "before": {
+              "ns": 7223900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 7128600,
+              "ns_max": 7531800
+            },
+            "after": {
+              "ns": 7419300.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 7219200,
+              "ns_max": 8267800
+            }
+          },
+          "cpu_change_pct": 2.70491
+        }
+      }
+    },
+    "frozen-anchor-default-repeat": {
+      "csv": "docs/research/virtual-list-series-frozen-anchor-default-repeat-2026-11-05.csv",
+      "csv_sha256_lf": "ee51e0c1b1bcde7fed5333ddbf33bf96a4fe7bc4f4961a7b06244779813e3793",
+      "identity": {
+        "before": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "filter": "series_",
+        "after_head": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "build_identity": {
+          "before": {
+            "manifest_sha256": "52454b18cbb9aee6c39dab300bbbb6022f05ab8f619b2df1f1d04f3a65c6bd70",
+            "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "efa8bc4968dfc3b8743b17c735a72708fe1b8f5e442065d98ff4ddeb58afed60"
+          },
+          "after": {
+            "manifest_sha256": "93e8eeef115bd829d74422acb40bdcc64fb6bcd5991010351d155774c5ca2fa2",
+            "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+            "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+            "vendor_sources_sha256": "a23c2f8947b8879381725f0e34606f4ffb03ce22b50d4467be190c727be67108"
+          }
+        },
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "logs": [
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default-repeat\\before-0.txt",
+          "sha256_lf": "9352055bc7bb4e6f22e2b64e801bf6e38a0b4296a882d8e79a933854a2d50c46"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default-repeat\\before-1.txt",
+          "sha256_lf": "dad2f5144a56a12ab8f293da78149d2ee6e1b41a7605e91dffe075bf65db69ba"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default-repeat\\after-0.txt",
+          "sha256_lf": "2fbd027704aafc435b6a7bdd3244c601c7f19ec2301c7a95d1eb8d60787f5fdd"
+        },
+        {
+          "path": "C:\\Temp\\gpui-yue-series-20261104\\frozen-anchor-default-repeat\\after-1.txt",
+          "sha256_lf": "9804de41cd7d57162822923a8bc0dca8d81a4354ab0231ea755a23c9ebe204bc"
+        }
+      ],
+      "cases": {
+        "append-10000": {
+          "versions": {
+            "before": {
+              "ns": 5200.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 21704.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4300,
+              "ns_max": 30900
+            },
+            "after": {
+              "ns": 5300.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 21704.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4500,
+              "ns_max": 32600
+            }
+          },
+          "cpu_change_pct": 1.923077
+        },
+        "append-100000": {
+          "versions": {
+            "before": {
+              "ns": 12100.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 28640.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 9100,
+              "ns_max": 22600
+            },
+            "after": {
+              "ns": 12450.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 46.0,
+              "peak": 28640.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 9700,
+              "ns_max": 22300
+            }
+          },
+          "cpu_change_pct": 2.892562
+        },
+        "append-1000000": {
+          "versions": {
+            "before": {
+              "ns": 100400.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 55.0,
+              "peak": 87536.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 93200,
+              "ns_max": 111600
+            },
+            "after": {
+              "ns": 96650.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 55.0,
+              "peak": 87536.0,
+              "reads": 4.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 79300,
+              "ns_max": 111900
+            }
+          },
+          "cpu_change_pct": -3.73506
+        },
+        "idle-2000": {
+          "versions": {
+            "before": {
+              "ns": 661200.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 4025.0,
+              "peak": 876.0,
+              "reads": 0.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 621700,
+              "ns_max": 731100
+            },
+            "after": {
+              "ns": 694000.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 4025.0,
+              "peak": 876.0,
+              "reads": 0.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 615500,
+              "ns_max": 762500
+            }
+          },
+          "cpu_change_pct": 4.960678
+        },
+        "masonry-noop": {
+          "versions": {
+            "before": {
+              "ns": 5402900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 10000.0,
+              "peak": 480.0,
+              "reads": 300000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5241000,
+              "ns_max": 6091200
+            },
+            "after": {
+              "ns": 5349650.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 10000.0,
+              "peak": 480.0,
+              "reads": 300000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5231600,
+              "ns_max": 5779700
+            }
+          },
+          "cpu_change_pct": -0.985582
+        },
+        "measured-queries": {
+          "versions": {
+            "before": {
+              "ns": 1474400.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 20000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 1399800,
+              "ns_max": 1707300
+            },
+            "after": {
+              "ns": 1433900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 20000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 1413200,
+              "ns_max": 1496400
+            }
+          },
+          "cpu_change_pct": -2.74688
+        },
+        "frames-0-steady": {
+          "versions": {
+            "before": {
+              "ns": 4474000.0,
+              "p50": 35300.0,
+              "p95": 41550.0,
+              "p99": 75650.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 4219200,
+              "ns_max": 5464000
+            },
+            "after": {
+              "ns": 4209100.0,
+              "p50": 32600.0,
+              "p95": 37300.0,
+              "p99": 41050.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3825100,
+              "ns_max": 5398700
+            }
+          },
+          "cpu_change_pct": -5.920876
+        },
+        "frames-0-rapid": {
+          "versions": {
+            "before": {
+              "ns": 3347350.0,
+              "p50": 27750.0,
+              "p95": 29750.0,
+              "p99": 31350.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3329900,
+              "ns_max": 3455800
+            },
+            "after": {
+              "ns": 3507700.0,
+              "p50": 28750.0,
+              "p95": 31350.0,
+              "p99": 38050.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3352500,
+              "ns_max": 3979400
+            }
+          },
+          "cpu_change_pct": 4.790357
+        },
+        "frames-0-complex": {
+          "versions": {
+            "before": {
+              "ns": 30724650.0,
+              "p50": 247350.0,
+              "p95": 294850.0,
+              "p99": 517300.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 29374100,
+              "ns_max": 33859300
+            },
+            "after": {
+              "ns": 32340100.0,
+              "p50": 253600.0,
+              "p95": 370800.0,
+              "p99": 521050.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 31504800,
+              "ns_max": 33012600
+            }
+          },
+          "cpu_change_pct": 5.25783
+        },
+        "frames-0-resize": {
+          "versions": {
+            "before": {
+              "ns": 3852550.0,
+              "p50": 31100.0,
+              "p95": 36450.0,
+              "p99": 41600.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3773000,
+              "ns_max": 4111700
+            },
+            "after": {
+              "ns": 3765300.0,
+              "p50": 31200.0,
+              "p95": 33350.0,
+              "p99": 36450.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3574100,
+              "ns_max": 4332200
+            }
+          },
+          "cpu_change_pct": -2.264734
+        },
+        "frames-1-steady": {
+          "versions": {
+            "before": {
+              "ns": 3857150.0,
+              "p50": 31550.0,
+              "p95": 32450.0,
+              "p99": 36300.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3673300,
+              "ns_max": 4081400
+            },
+            "after": {
+              "ns": 3938100.0,
+              "p50": 32250.0,
+              "p95": 37450.0,
+              "p99": 39450.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3890800,
+              "ns_max": 4171300
+            }
+          },
+          "cpu_change_pct": 2.0987
+        },
+        "frames-1-rapid": {
+          "versions": {
+            "before": {
+              "ns": 3746950.0,
+              "p50": 30150.0,
+              "p95": 35450.0,
+              "p99": 66250.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3613000,
+              "ns_max": 4037700
+            },
+            "after": {
+              "ns": 3693700.0,
+              "p50": 30350.0,
+              "p95": 34550.0,
+              "p99": 43300.0,
+              "allocations": 12960.0,
+              "peak": 10152.0,
+              "reads": 2400.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 3483700,
+              "ns_max": 3966100
+            }
+          },
+          "cpu_change_pct": -1.421156
+        },
+        "frames-1-complex": {
+          "versions": {
+            "before": {
+              "ns": 31620600.0,
+              "p50": 250850.0,
+              "p95": 367350.0,
+              "p99": 422950.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 29259100,
+              "ns_max": 32083100
+            },
+            "after": {
+              "ns": 31454250.0,
+              "p50": 252700.0,
+              "p95": 331400.0,
+              "p99": 501400.0,
+              "allocations": 153543.0,
+              "peak": 62216.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 31303900,
+              "ns_max": 32721400
+            }
+          },
+          "cpu_change_pct": -0.526081
+        },
+        "frames-1-resize": {
+          "versions": {
+            "before": {
+              "ns": 3915050.0,
+              "p50": 31550.0,
+              "p95": 36750.0,
+              "p99": 53400.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3693900,
+              "ns_max": 4105700
+            },
+            "after": {
+              "ns": 3923500.0,
+              "p50": 32600.0,
+              "p95": 34550.0,
+              "p99": 39900.0,
+              "allocations": 11703.0,
+              "peak": 11944.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 3816700,
+              "ns_max": 4785000
+            }
+          },
+          "cpu_change_pct": 0.215834
+        },
+        "frames-2-steady": {
+          "versions": {
+            "before": {
+              "ns": 9316450.0,
+              "p50": 76350.0,
+              "p95": 80200.0,
+              "p99": 100250.0,
+              "allocations": 29103.0,
+              "peak": 29424.0,
+              "reads": 12960.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 9142800,
+              "ns_max": 11743100
+            },
+            "after": {
+              "ns": 9660450.0,
+              "p50": 77400.0,
+              "p95": 88000.0,
+              "p99": 129600.0,
+              "allocations": 29103.0,
+              "peak": 29424.0,
+              "reads": 12960.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 9333800,
+              "ns_max": 10321500
+            }
+          },
+          "cpu_change_pct": 3.692394
+        },
+        "frames-2-rapid": {
+          "versions": {
+            "before": {
+              "ns": 8519300.0,
+              "p50": 70200.0,
+              "p95": 75600.0,
+              "p99": 94400.0,
+              "allocations": 33120.0,
+              "peak": 27056.0,
+              "reads": 11520.0,
+              "builds": 2880.0,
+              "samples": 6,
+              "ns_min": 8294200,
+              "ns_max": 9483900
+            },
+            "after": {
+              "ns": 8906500.0,
+              "p50": 71850.0,
+              "p95": 90350.0,
+              "p99": 118700.0,
+              "allocations": 33120.0,
+              "peak": 27056.0,
+              "reads": 11520.0,
+              "builds": 2880.0,
+              "samples": 6,
+              "ns_min": 8659000,
+              "ns_max": 9645400
+            }
+          },
+          "cpu_change_pct": 4.544974
+        },
+        "frames-2-complex": {
+          "versions": {
+            "before": {
+              "ns": 20800500.0,
+              "p50": 168300.0,
+              "p95": 204650.0,
+              "p99": 326150.0,
+              "allocations": 101763.0,
+              "peak": 40372.0,
+              "reads": 2880.0,
+              "builds": 720.0,
+              "samples": 6,
+              "ns_min": 20324300,
+              "ns_max": 22134300
+            },
+            "after": {
+              "ns": 21291650.0,
+              "p50": 169150.0,
+              "p95": 235900.0,
+              "p99": 327350.0,
+              "allocations": 101763.0,
+              "peak": 40372.0,
+              "reads": 2880.0,
+              "builds": 720.0,
+              "samples": 6,
+              "ns_min": 20804200,
+              "ns_max": 22427900
+            }
+          },
+          "cpu_change_pct": 2.361241
+        },
+        "frames-2-resize": {
+          "versions": {
+            "before": {
+              "ns": 10237200.0,
+              "p50": 86150.0,
+              "p95": 89300.0,
+              "p99": 91600.0,
+              "allocations": 37803.0,
+              "peak": 36024.0,
+              "reads": 20340.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 9869400,
+              "ns_max": 10518600
+            },
+            "after": {
+              "ns": 10727850.0,
+              "p50": 87000.0,
+              "p95": 106350.0,
+              "p99": 158900.0,
+              "allocations": 37803.0,
+              "peak": 36024.0,
+              "reads": 20340.0,
+              "builds": 3240.0,
+              "samples": 6,
+              "ns_min": 10115300,
+              "ns_max": 11191500
+            }
+          },
+          "cpu_change_pct": 4.792814
+        },
+        "frames-2-size": {
+          "versions": {
+            "before": {
+              "ns": 8198400.0,
+              "p50": 75800.0,
+              "p95": 92850.0,
+              "p99": 96400.0,
+              "allocations": 26721.0,
+              "peak": 35920.0,
+              "reads": 11934.0,
+              "builds": 2718.0,
+              "samples": 6,
+              "ns_min": 8113800,
+              "ns_max": 8399900
+            },
+            "after": {
+              "ns": 8426150.0,
+              "p50": 77050.0,
+              "p95": 96300.0,
+              "p99": 107900.0,
+              "allocations": 26721.0,
+              "peak": 35920.0,
+              "reads": 11934.0,
+              "builds": 2718.0,
+              "samples": 6,
+              "ns_min": 8226800,
+              "ns_max": 9746100
+            }
+          },
+          "cpu_change_pct": 2.777981
+        },
+        "frames-3-steady": {
+          "versions": {
+            "before": {
+              "ns": 5462450.0,
+              "p50": 44650.0,
+              "p95": 49050.0,
+              "p99": 66050.0,
+              "allocations": 15903.0,
+              "peak": 25352.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5181900,
+              "ns_max": 5720200
+            },
+            "after": {
+              "ns": 5473950.0,
+              "p50": 44900.0,
+              "p95": 48850.0,
+              "p99": 59900.0,
+              "allocations": 15903.0,
+              "peak": 25352.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5380600,
+              "ns_max": 6000000
+            }
+          },
+          "cpu_change_pct": 0.210528
+        },
+        "frames-3-rapid": {
+          "versions": {
+            "before": {
+              "ns": 6991900.0,
+              "p50": 60800.0,
+              "p95": 62500.0,
+              "p99": 72650.0,
+              "allocations": 18000.0,
+              "peak": 26176.0,
+              "reads": 4680.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 6799900,
+              "ns_max": 8271700
+            },
+            "after": {
+              "ns": 7119250.0,
+              "p50": 62050.0,
+              "p95": 66800.0,
+              "p99": 76900.0,
+              "allocations": 18000.0,
+              "peak": 26176.0,
+              "reads": 4680.0,
+              "builds": 960.0,
+              "samples": 6,
+              "ns_min": 6828800,
+              "ns_max": 8372100
+            }
+          },
+          "cpu_change_pct": 1.821393
+        },
+        "frames-3-complex": {
+          "versions": {
+            "before": {
+              "ns": 9545950.0,
+              "p50": 76250.0,
+              "p95": 90900.0,
+              "p99": 162750.0,
+              "allocations": 40563.0,
+              "peak": 27776.0,
+              "reads": 960.0,
+              "builds": 240.0,
+              "samples": 6,
+              "ns_min": 9212000,
+              "ns_max": 10084900
+            },
+            "after": {
+              "ns": 9410750.0,
+              "p50": 75700.0,
+              "p95": 85250.0,
+              "p99": 113400.0,
+              "allocations": 40563.0,
+              "peak": 27776.0,
+              "reads": 960.0,
+              "builds": 240.0,
+              "samples": 6,
+              "ns_min": 9183500,
+              "ns_max": 9909500
+            }
+          },
+          "cpu_change_pct": -1.416307
+        },
+        "frames-3-resize": {
+          "versions": {
+            "before": {
+              "ns": 6137600.0,
+              "p50": 50100.0,
+              "p95": 54350.0,
+              "p99": 87850.0,
+              "allocations": 19743.0,
+              "peak": 36448.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5888000,
+              "ns_max": 6728500
+            },
+            "after": {
+              "ns": 6086050.0,
+              "p50": 49700.0,
+              "p95": 54400.0,
+              "p99": 59750.0,
+              "allocations": 19743.0,
+              "peak": 36448.0,
+              "reads": 2640.0,
+              "builds": 1080.0,
+              "samples": 6,
+              "ns_min": 5815300,
+              "ns_max": 6873500
+            }
+          },
+          "cpu_change_pct": -0.839905
+        },
+        "work-0-false": {
+          "versions": {
+            "before": {
+              "ns": 3759900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 3644500,
+              "ns_max": 4200100
+            },
+            "after": {
+              "ns": 3659950.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 3649800,
+              "ns_max": 3721800
+            }
+          },
+          "cpu_change_pct": -2.658315
+        },
+        "work-0-true": {
+          "versions": {
+            "before": {
+              "ns": 5871950.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5796100,
+              "ns_max": 6207300
+            },
+            "after": {
+              "ns": 5983250.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 5900500,
+              "ns_max": 6484900
+            }
+          },
+          "cpu_change_pct": 1.895452
+        },
+        "work-1-false": {
+          "versions": {
+            "before": {
+              "ns": 4123150.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4075000,
+              "ns_max": 4719500
+            },
+            "after": {
+              "ns": 4070900.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 0.0,
+              "peak": 0.0,
+              "reads": 600000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 4020700,
+              "ns_max": 5135200
+            }
+          },
+          "cpu_change_pct": -1.267235
+        },
+        "work-1-true": {
+          "versions": {
+            "before": {
+              "ns": 7200800.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 7177500,
+              "ns_max": 7236900
+            },
+            "after": {
+              "ns": 7298000.0,
+              "p50": 0.0,
+              "p95": 0.0,
+              "p99": 0.0,
+              "allocations": 20000.0,
+              "peak": 480.0,
+              "reads": 660000.0,
+              "builds": 0.0,
+              "samples": 10,
+              "ns_min": 7208500,
+              "ns_max": 7890600
+            }
+          },
+          "cpu_change_pct": 1.34985
+        }
+      }
+    }
+  },
+  "validation": {
+    "workspace": {
+      "log": "C:\\Temp\\yue-frozen-anchor-20261105\\workspace.log",
+      "sha256_lf": "6037dec4028d18da8c754638245b22183db784b500760b44dba6d735ac0fde17",
+      "exit_code": 0,
+      "totals": {
+        "passed": 871,
+        "failed": 0,
+        "ignored": 12
+      }
+    },
+    "clippy": {
+      "log": "C:\\Temp\\yue-frozen-anchor-20261105\\clippy.log",
+      "sha256_lf": "b17609e6215e48a77c91dc46af930af839ced07c36991b4bf5807e8c4038e877",
+      "exit_code": 0
+    },
+    "contracts": {
+      "log": "C:\\Temp\\yue-frozen-anchor-20261105\\contracts.log",
+      "sha256_lf": "7498a5b3ea28ed5fda5221835ff9f0fed7abc98d340603b7e7271c4e16497169",
+      "exit_code": 0,
+      "required_passed": {
+        "native": 16,
+        "base": 2
+      }
+    },
+    "native": {
+      "log": "C:\\Temp\\yue-frozen-anchor-20261105\\native.log",
+      "sha256_lf": "734ec74a1574ae0aa554445640cc9576c7aa8a344ecfa7eebf050569e0dfb329",
+      "exit_code": 0,
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "format": {
+      "commands": [
+        "cargo fmt --all -- --check",
+        "rustfmt --check --edition 2024 vendor/gpui-base/src/virtualization/state.rs docs/research/virtual-list-frozen-anchor-2026-11-05.rs"
+      ],
+      "exit_code": 0
+    }
+  },
+  "rollback": {
+    "baseline": "b934f22465ab9955455f461675d9a07bc1fdbfeb",
+    "implementation_commit": "d24340b194d54200d1d44050c67907996b33d77c",
+    "restored_tree": "6e2a21a3924f975ba4afc83743c74c84a31c3d5a",
+    "expected_baseline_tree": "6e2a21a3924f975ba4afc83743c74c84a31c3d5a",
+    "matches": true,
+    "main_index_unchanged": true,
+    "temporary_index_removed": true,
+    "method": "temporary index read-tree implementation head; reverse git diff --binary baseline..implementation; write-tree comparison"
+  },
+  "environment": {
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "platform": "Windows x86_64-pc-windows-msvc",
+    "bench_profile": "release",
+    "benchmark_is_headless": true
+  },
+  "limits": [
+    "correctness adoption, not a general speedup",
+    "headless CPU/draw-cycle evidence is not GPU FPS, displayed frames or physical input latency",
+    "hidden-track resize corrects reading positions and presents more cells; CPU and allocation costs retained",
+    "default sample timing fluctuations and unfavorable results are retained; no universal zero-regression claim",
+    "native tests assert Windows layout/offset contracts; no new manual screenshot or cross-GPU/DPI validation",
+    "benchmark after_head predates implementation commit; verified after vendor source hash exactly equals tested committed implementation"
+  ]
+}

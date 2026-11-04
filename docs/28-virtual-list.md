@@ -934,6 +934,8 @@ Masonry `measurement_cache()` 返回 `VirtualMasonryCache` schema 1；它与一�
 
 Grid 冻结行／列默认为 0，按当前顺序 clamp；行纵坐标固定而横向随滚动，列相反，corner 两轴固定。body、冻结行、冻结列、corner 使用互斥 ContentMask，prepaint 命中和 paint 共用同一裁剪；不依靠遮盖。条带由原几何计算，包含内容 padding 和边界 gap；超视口前缀只创建实际可见部分和显式 retained／焦点项。每个 cell 身份与准备 View 唯一，切换冻结不更换 key 或焦点实体；Base 不指定颜色、边线、header role 或截获编辑器方向键。
 
+冻结 Grid 的阅读锚点位于未遮挡 body 的前缘；尺寸、gap、内容 padding 变化后，以当前冻结条带尺寸还原，避免把固定区域的变化重复补偿成滚动。body 消失或原锚点 key 进入冻结前缀时不使用该正文锚点。双轴失败基线、回归、原生验证与完整成本见[冻结阅读位置对标](research/2026-11-05-virtual-list-frozen-anchor-review.md)：采用理由是消除跳动，修正工作集可能增加 CPU，不能当作普遍提速。
+
 key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 scroll padding；可见冻结目标不滚回 0。完全藏在超大冻结前缀中的目标、或 body 为零时的非冻结目标，以 NoProgress 结束。`scroll_to_offset` 仍是原生内容 offset。帧级遮挡约束不持久改写 axis layout。轴 snapshot 的 visible/rendered 描述 body，working items 额外合入可见冻结前缀和 retained；自然 item.start 不变，冻结位移只在 Grid 呈现中应用。Showcase 有冻结切换与 Masonry 缓存后销毁重建的真实控件。
 
 逐项采用依据、默认路径代价、失败基线、Release ABBA、Windows 原生验证及 Git 回退见[本轮记录](research/2026-11-05-virtual-list-next-implementation.md)。历史章节中的待实施项按该节的当前状态解释。
