@@ -47,6 +47,72 @@ fn sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes(cx: &mut TestA
     );
 }
 
+#[test]
+fn size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry() {
+    let state = ListState::new_with_uniform_height(1025, ListAlignment::Top, px(0.), px(20.));
+    let original = state.geometry();
+    state.set_item_sizes(&[], true);
+    assert_eq!(state.geometry().revision(), original.revision());
+    for measured in [true, false] {
+        let before = state.geometry();
+        state.set_item_sizes(
+            &[
+                (1024, gpui::size(px(300.), px(31.))),
+                (256, gpui::size(px(300.), px(32.))),
+                (0, gpui::size(px(300.), px(33.))),
+                (256, gpui::size(px(320.), px(34.))),
+                (255, gpui::size(px(300.), px(35.))),
+                (1024, gpui::size(px(340.), px(36.))),
+            ],
+            measured,
+        );
+        let next = state.geometry();
+        assert_eq!(next.revision(), before.revision() + 1);
+        assert_eq!(next.measured_count(), if measured { 4 } else { 0 });
+        for (ix, width, height) in [
+            (0, 300., 33.),
+            (255, 300., 35.),
+            (256, 320., 34.),
+            (1024, 340., 36.),
+        ] {
+            let item = next.item(ix).unwrap();
+            assert_eq!(item.extent(), px(height));
+            assert_eq!(item.cross_extent(), px(width));
+            assert_eq!(item.is_measured(), measured);
+            assert_eq!(original.item(ix).unwrap().extent(), px(20.));
+            assert!(!original.item(ix).unwrap().is_measured());
+        }
+        assert_eq!(next.item(257).unwrap().extent(), px(20.));
+        assert_eq!(before.measured_count(), if measured { 0 } else { 4 });
+    }
+}
+
+#[gpui::test]
+fn size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it(cx: &mut TestAppContext) {
+    let state = ListState::new_with_uniform_height(1025, ListAlignment::Top, px(0.), px(20.));
+    let weak = cx.update(|cx| {
+        let focus = cx.focus_handle();
+        let weak = focus.downgrade();
+        state.set_item_focus_handle(256, Some(focus));
+        weak
+    });
+    let updates = [
+        (1024, gpui::size(px(300.), px(31.))),
+        (256, gpui::size(px(300.), px(32.))),
+        (0, gpui::size(px(300.), px(33.))),
+        (256, gpui::size(px(320.), px(34.))),
+    ];
+    state.set_item_sizes(&updates, true);
+    let frozen = state.geometry();
+    state.set_item_sizes(&updates, false);
+    state.set_item_focus_handle(256, None);
+    drop(state);
+    assert!(weak.upgrade().is_some());
+    drop(frozen);
+    cx.run_until_parked();
+    assert!(weak.upgrade().is_none());
+}
+
 #[gpui::test]
 fn width_invalidation_keeps_sparse_hints_and_frozen_geometry(cx: &mut TestAppContext) {
     for dense in [false, true] {

@@ -355,3 +355,96 @@ fn masonry_preparation_keeps_a_focused_remote_view_and_releases_it_after_focus_m
     cx.run_until_parked();
     assert!(rows.borrow()[0].1.upgrade().is_none());
 }
+
+#[gpui_kit::test]
+fn masonry_width_epochs_never_resurrect_old_measurements_through_tail_writes(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = cx.add_window_view(|_, cx| MasonryPreparation {
+        state: cx.new(|_| VirtualMasonryState::new(source(0, 769), sizing(2, 769), 3).unwrap()),
+        rows: Rc::default(),
+        revision: 0,
+        mounted: true,
+        cached: true,
+        width: 300.,
+        focus: None,
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let state = view.read_with(cx, |v, _| v.state.clone());
+    let remote = [381usize, 384, 765, 768];
+    state.update(cx, |s, _| {
+        s.update_sizes(&remote.map(|ix| yue_component::VirtualizerSizeUpdate::new(ix, px(37.))))
+            .unwrap()
+    });
+    let frozen = state.read_with(cx, |s, _| {
+        s.snapshot(0., gpui_kit::size(px(300.), px(100.))).unwrap()
+    });
+    for frame in 0..3 {
+        view.update(cx, |v, cx| {
+            v.width = if frame % 2 == 0 { 360. } else { 300. };
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        state.update(cx, |s, _| {
+            let n = 800 + frame * 11;
+            s.append_source(source(0, n), sizing(2, n)).unwrap();
+            s.update_sizes(&[yue_component::VirtualizerSizeUpdate::new(n - 1, px(41.))])
+                .unwrap();
+            let current = s.snapshot(0., gpui_kit::size(px(360.), px(100.))).unwrap();
+            for ix in remote {
+                let old = frozen.item(ix).unwrap();
+                let new = current.item(ix).unwrap();
+                assert!(old.item().is_measured());
+                assert!(!new.item().is_measured(), "old width resurrected at {ix}");
+                assert_eq!(new.item().extent(), old.item().extent());
+            }
+            assert!(current.item(n - 1).unwrap().item().is_measured());
+        });
+    }
+    state.update(cx, |s, _| {
+        s.replace_source(source(0, 822), sizing(2, 822)).unwrap();
+        let current = s.snapshot(0., gpui_kit::size(px(360.), px(100.))).unwrap();
+        for ix in remote {
+            assert!(!current.item(ix).unwrap().item().is_measured());
+        }
+        s.reflow(4).unwrap();
+        let current = s.snapshot(0., gpui_kit::size(px(360.), px(100.))).unwrap();
+        assert!(!current.item(821).unwrap().item().is_measured());
+    });
+}
+
+#[test]
+fn masonry_cold_pack_preserves_slots_at_block_boundaries_and_with_empty_lanes() {
+    for count in [0, 1, 255, 256, 257, 769] {
+        for lane_count in [1, 3, 300] {
+            let extents: Vec<_> = (0..count).map(|ix| px(10. + (ix % 13) as f32)).collect();
+            let mut state = VirtualMasonryState::new(
+                source(0, count),
+                VirtualizerSizing::known(Rc::<[gpui_kit::Pixels]>::from(extents.clone())),
+                lane_count,
+            )
+            .unwrap();
+            for lanes in [lane_count, lane_count + 1] {
+                if lanes != lane_count {
+                    state.reflow(lanes).unwrap();
+                }
+                let snapshot = state
+                    .snapshot(0., gpui_kit::size(px(300.), px(100.)))
+                    .unwrap();
+                let mut ends = vec![0f64; lanes];
+                for (ix, extent) in extents.iter().copied().enumerate() {
+                    let lane = (0..lanes)
+                        .min_by(|a, b| ends[*a].total_cmp(&ends[*b]).then(a.cmp(b)))
+                        .unwrap();
+                    let item = snapshot.item(ix).unwrap();
+                    assert_eq!(item.lane(), lane);
+                    assert_eq!(item.item().start(), ends[lane]);
+                    assert_eq!(item.item().extent(), extent);
+                    ends[lane] += f64::from(extent);
+                }
+                assert!(snapshot.item(count).is_err());
+                assert_eq!(state.total_extent(), ends.into_iter().fold(0., f64::max));
+            }
+        }
+    }
+}
