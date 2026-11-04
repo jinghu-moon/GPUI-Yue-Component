@@ -264,3 +264,13 @@ not single-item/ordinary-layout/Attached-origin/scrollbar-input Pixels limits.
 See optimization-series A/B, rejected wide-summary variant, old failing test,
 Yue large-coordinate two-axis hit/input regression and native endpoint test.
 Remove only after upstream satisfies these same contracts without a mirror tree.
+
+### Sparse measurement export (2026-11-04)
+
+ListGeometry::measured_items prunes unmeasured subtrees using existing native
+summary counts; dense measurements retain a linear traversal. The output
+reserves the exact measured count. No parallel size cache or new public API
+is introduced. Ordered entries, invalid hints and frozen geometry are covered
+by the adoption tests. Sparse and dense Release ABBA evidence is recorded in
+docs/research/2026-11-04-virtual-list-adoption.md; remove this patch only when
+upstream matches the same semantics and sparse/dense cost.

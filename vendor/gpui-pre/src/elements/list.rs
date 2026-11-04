@@ -97,11 +97,27 @@ impl ListItemGeometry {
 impl ListGeometry {
     /// Cold export of real measurements. Unmeasured hints are intentionally omitted.
     pub fn measured_items(&self) -> Vec<(usize, Size<Pixels>)> {
-        self.items
-            .iter()
-            .enumerate()
-            .filter_map(|(ix, item)| item.is_measured().then(|| (ix, item.size().unwrap())))
-            .collect()
+        let count = self.measured_count();
+        let mut measured = Vec::with_capacity(count);
+        // A linear walk remains cheaper when most leaves contain measurements.
+        // Sparse exports skip whole unmeasured subtrees using the same owner.
+        if count > self.len() / 4 {
+            measured.extend(
+                self.items.iter().enumerate().filter_map(|(ix, item)| {
+                    item.is_measured().then(|| (ix, item.size().unwrap()))
+                }),
+            );
+        } else {
+            let mut cursor = self
+                .items
+                .filter::<_, Count>((), |summary| summary.count > summary.unrendered_count);
+            cursor.next();
+            while let Some(item) = cursor.item() {
+                measured.push((cursor.start().0, item.size().unwrap()));
+                cursor.next();
+            }
+        }
+        measured
     }
     /// Native geometry revision; offset changes do not invalidate sizes.
     pub fn revision(&self) -> u64 {
