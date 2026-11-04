@@ -2,6 +2,8 @@ use super::*;
 use std::{cell::RefCell, collections::HashSet};
 use yue_component::VirtualGrid;
 
+type ObservedCell = (usize, usize, bool, bool);
+
 struct Harness {
     rows: Entity<VirtualizerState>,
     columns: Entity<VirtualizerState>,
@@ -9,7 +11,7 @@ struct Harness {
     focus: gpui_kit::FocusHandle,
     frozen: (usize, usize),
     clicks: Rc<RefCell<Vec<(usize, usize)>>>,
-    seen: Rc<RefCell<Vec<(usize, usize, bool, bool)>>>,
+    seen: Rc<RefCell<Vec<ObservedCell>>>,
 }
 impl Render for Harness {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {

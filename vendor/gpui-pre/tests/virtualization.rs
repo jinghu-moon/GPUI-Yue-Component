@@ -33,8 +33,16 @@ fn native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry(cx: &m
         offset_in_item: px(0.),
     });
     state.set_overdraw_edges(px(40.), px(200.));
-    cx.update(|w, cx| w.draw(cx).clear(cx));
-    assert!(seen.borrow().iter().all(|i| (48..65).contains(i)));
+    seen.borrow_mut().clear();
+    cx.update(|w, cx| {
+        w.refresh();
+        w.draw(cx).clear(cx);
+    });
+    assert!(
+        seen.borrow().iter().all(|i| (48..65).contains(i)),
+        "actual roots: {:?}",
+        seen.borrow()
+    );
     assert!((50..55).all(|ix| seen.borrow().contains(&ix)));
     state.set_overdraw(px(200.));
     seen.borrow_mut().clear();

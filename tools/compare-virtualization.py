@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import subprocess
 import time
+import tomllib
 import zipfile
 from datetime import date
 
@@ -65,6 +66,7 @@ def main():
     logs = CACHE / args.label
     logs.mkdir(parents=True, exist_ok=True)
     executables = {}
+    build_identity = {}
     for version in ["before", "after"]:
         fixture = CACHE / (f"native-{version}" if args.native else version)
         fixture.mkdir(parents=True, exist_ok=True)
@@ -123,6 +125,23 @@ masonry-cache = []
             artifact = json.loads(line)
             if artifact.get("reason") == "compiler-artifact" and artifact.get("executable"):
                 executables[version] = artifact["executable"]
+        lock = fixture / "Cargo.lock"
+        packages = [p for p in tomllib.loads(lock.read_text(encoding="utf-8"))["package"]
+                    if not p["name"].startswith("yue-virtual-series-")]
+        source_hash = hashlib.sha256()
+        for source in [vendor / "gpui-base", vendor / "gpui-pre"]:
+            for file in sorted((source / "src").rglob("*.rs")):
+                source_hash.update(f"{source.name}/{file.relative_to(source).as_posix()}".encode())
+                source_hash.update(b"\0")
+                source_hash.update(file.read_bytes())
+        build_identity[version] = {
+            "manifest_sha256": hashlib.sha256((fixture / "Cargo.toml").read_bytes()).hexdigest(),
+            "lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest(),
+            "dependency_records_sha256": hashlib.sha256(json.dumps(packages, sort_keys=True).encode()).hexdigest(),
+            "vendor_sources_sha256": source_hash.hexdigest(),
+        }
+    if build_identity["before"]["dependency_records_sha256"] != build_identity["after"]["dependency_records_sha256"]:
+        raise ValueError("before/after dependency records differ; do not sample")
     # cargo dev may be a persistent, idle file watcher. It never exits, so do
     # not treat that command alone as compilation. Its cargo/rustc children
     # still block sampling, as do all ordinary Cargo commands.
@@ -190,6 +209,7 @@ masonry-cache = []
         "workload": args.workload,
         "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
         "after_feature": args.after_feature,
+        "build_identity": build_identity,
         "artifact_date": args.date,
         "native": args.native,
         "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
