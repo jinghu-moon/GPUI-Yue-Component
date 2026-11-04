@@ -170,6 +170,58 @@ impl VirtualMasonryState {
                 "incompatible masonry cache",
             ));
         }
+        // Normal remounts have the same key order and stable lanes. Validate
+        // every record first, then patch only changed measurement blocks on
+        // the existing owner. Do not rebuild N directory/map entries here.
+        if cache.items.len() == self.source.len() {
+            let mut same_slots = true;
+            for (ix, item) in cache.items.iter().enumerate() {
+                if item.lane >= cache.lane_count
+                    || !valid_positive(item.extent())
+                    || !valid_positive(item.extent() + cache.gap)
+                {
+                    return Err(VirtualizerError::InvalidGeometry("masonry cache entry"));
+                }
+                same_slots &= item.key() == &self.source.key_at(ix)
+                    && self.source.index_of(item.key()) == Some(ix)
+                    && item.lane == self.slots[ix].0;
+            }
+            if same_slots {
+                let mut count = 0;
+                let mut updates = Vec::with_capacity(self.lanes.len());
+                for lane in &self.lanes {
+                    let mut measured = Vec::new();
+                    let mut hints = Vec::new();
+                    for (local, (_, extent, was_measured)) in
+                        lane.geometry.items(0..lane.indexes.len()).enumerate()
+                    {
+                        let ix = lane.indexes[local];
+                        let record = &cache.items[ix];
+                        let (next, is_measured) =
+                            if record.content_revision() == self.source.revision_at(ix) {
+                                (record.extent(), record.is_measured())
+                            } else {
+                                (Pixels::from(extent), false)
+                            };
+                        count += usize::from(is_measured);
+                        if f64::from(next) != extent || is_measured != was_measured {
+                            if is_measured {
+                                measured.push((local, next));
+                            } else {
+                                hints.push((local, next));
+                            }
+                        }
+                    }
+                    updates.push((measured, hints));
+                }
+                for (lane, (measured, hints)) in self.lanes.iter_mut().zip(updates) {
+                    lane.geometry.update_measurements(&measured, true);
+                    lane.geometry.update_measurements(&hints, false);
+                }
+                self.commit_restored_cache(cache);
+                return Ok(count);
+            }
+        }
         let mut entries = std::collections::HashMap::with_capacity(cache.items.len());
         for item in &cache.items {
             if item.lane >= cache.lane_count
@@ -216,9 +268,13 @@ impl VirtualMasonryState {
                 geometry: geometry::KnownGeometry::with_measurements(sizes, self.layout.gap.into()),
             })
             .collect();
-        self.cancel_scroll();
         self.lanes = lanes;
         self.slots = slots;
+        self.commit_restored_cache(cache);
+        Ok(count)
+    }
+    fn commit_restored_cache(&mut self, cache: &VirtualMasonryCache) {
+        self.cancel_scroll();
         self.cross = Some(cache.cross);
         self.revision += 1;
         self.anchor = cache.anchor.clone().and_then(|(key, p)| {
@@ -229,6 +285,5 @@ impl VirtualMasonryState {
             })
         });
         self.restore_anchor();
-        Ok(count)
     }
 }

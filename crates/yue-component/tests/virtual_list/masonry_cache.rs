@@ -136,6 +136,16 @@ fn masonry_cache_rejects_resolved_width_and_restores_only_compatible_measurement
     assert_eq!(cache.cross_extent(), px(80.));
     state.update(cx, |s, _| {
         let old = s.snapshot(0., gpui_kit::size(px(240.), px(100.))).unwrap();
+        let mut records = cache.items().to_vec();
+        let last = records.len() - 1;
+        records[last] =
+            VirtualMasonryCacheItem::new(last, 0, px(f32::NAN), records[last].lane(), false);
+        let malformed = VirtualMasonryCache::new(0, 3, px(80.), px(0.), px(0.), records);
+        assert!(s.restore_measurement_cache(&malformed).is_err());
+        assert!(
+            s.update_sizes_from_snapshot(&old, &[]).is_ok(),
+            "fast validation precedes all writes"
+        );
         let bad = VirtualMasonryCache::new(0, 3, px(81.), px(0.), px(0.), cache.items().to_vec());
         assert!(s.restore_measurement_cache(&bad).is_err());
         assert!(

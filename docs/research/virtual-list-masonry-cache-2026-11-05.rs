@@ -128,8 +128,19 @@ fn masonry_cache_workload(cx: &mut TestAppContext) {
                 });
                 cx.update(|w, cx| w.draw(cx).clear(cx));
                 #[cfg(feature = "masonry-cache")]
-                let cache =
-                    view.read_with(cx, |v, cx| v.state.read(cx).measurement_cache().unwrap());
+                let cache = {
+                    let (cache, ns, stats) = measured(|| {
+                        view.read_with(cx, |v, cx| v.state.read(cx).measurement_cache().unwrap())
+                    });
+                    println!(
+                        "CACHE_EXPORT,count={n},hint={estimate},sample={sample},ns={ns},allocations={},peak={},slots={},slot_bytes={}",
+                        stats.count,
+                        stats.peak,
+                        cache.items().len(),
+                        std::mem::size_of_val(cache.items())
+                    );
+                    cache
+                };
                 view.update(cx, |v, cx| {
                     v.mounted = false;
                     cx.notify();
