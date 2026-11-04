@@ -92,7 +92,7 @@ linear output and hidden-RGB transparency. Run Debug
 and Release (the latter selects the embedded FXC shader) from the repository:
 
 ```powershell
-cargo test --manifest-path vendor/gpui-pre-windows/Cargo.toml --target-dir target --lib image_sampling_tests --features test-support --offline --config "patch.crates-io.gpui-pre.path='D:/100_Projects/110_Daily/GPUI-Yue-Component/vendor/gpui-pre'" --config profile.dev.debug=0 --config profile.test.debug=0
+cargo test --manifest-path vendor/gpui-pre-windows/Cargo.toml --target-dir target --lib image_sampling_tests --features test-support --offline --config "patch.crates-io.gpui-pre.path='D:/100_Projects/110_Daily/Yue-GPUI-Component/vendor/gpui-pre'" --config profile.dev.debug=0 --config profile.test.debug=0
 # Repeat with --release for the embedded shader path.
 ```
 

@@ -476,7 +476,7 @@ vendored Base Slider 新增 caller-owned `track_focus`，真实 Slider 语义节
 
 取消编辑时还会将字段标记为待同步，下次 prepare 恢复规范色值，避免非法草稿在重新挂载后残留；sync 完成后解除同步标记，确保外部 set_value 后辅助技术的 Slider 更新仍能到达颜色状态。新增私有状态测试覆盖这两条路径及 HSV/HSL 端点坐标记忆。
 
-独立消费项目已用 registry `gpui-kit = 0.8.0` 与本地组件 path dependency 编译验证。调用方 workspace root 必须显式添加 `[patch.crates-io] gpui-base = { path = "…/GPUI-Yue-Component/vendor/gpui-base" }`：依赖仓库里的 patch 不会传递给调用方。接入示例和补丁原因见 README，不能省略此项而假设另一套 GPUI Kit 框架会自动使用本地 Base。
+独立消费项目已用 registry `gpui-kit = 0.8.0` 与本地组件 path dependency 编译验证。调用方 workspace root 必须显式添加 `[patch.crates-io] gpui-base = { path = "…/Yue-GPUI-Component/vendor/gpui-base" }`：依赖仓库里的 patch 不会传递给调用方。接入示例和补丁原因见 README，不能省略此项而假设另一套 GPUI Kit 框架会自动使用本地 Base。
 
 ### 14.3 验证记录
 

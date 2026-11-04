@@ -15,7 +15,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $crate = Join-Path $root 'crates/yue-component-icons'
 $assets = Join-Path $crate 'assets/tabler'
 $lockPath = Join-Path $crate 'tabler-icons-version.json'
-$headers = @{ 'User-Agent' = 'GPUI-Yue-Component icon sync' }
+$headers = @{ 'User-Agent' = 'Yue-GPUI-Component icon sync' }
 
 if ($PSCmdlet.ParameterSetName -eq 'Version') {
     $tag = $Version

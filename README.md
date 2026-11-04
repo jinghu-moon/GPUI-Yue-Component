@@ -8,15 +8,15 @@ The host owns its application, windows and retained state. Use the same resolved
 
 ```toml
 [dependencies]
-yue-component = { path = "../GPUI-Yue-Component/crates/yue-component", default-features = false }
+yue-component = { path = "../Yue-GPUI-Component/crates/yue-component", default-features = false }
 # Optional if using yue_component::gpui_kit, which re-exports the same Kit types:
 gpui-kit = { version = "0.8.0", default-features = false }
 
 # Required in the consuming workspace's root Cargo.toml during development:
 [patch.crates-io]
-gpui-base = { path = "../GPUI-Yue-Component/vendor/gpui-base" }
-gpui-pre = { path = "../GPUI-Yue-Component/vendor/gpui-pre" }
-gpui-pre-windows = { path = "../GPUI-Yue-Component/vendor/gpui-pre-windows" }
+gpui-base = { path = "../Yue-GPUI-Component/vendor/gpui-base" }
+gpui-pre = { path = "../Yue-GPUI-Component/vendor/gpui-pre" }
+gpui-pre-windows = { path = "../Yue-GPUI-Component/vendor/gpui-pre-windows" }
 ```
 
 Cargo patches are not inherited from a path dependency. This workspace maintains Base 0.8.0 extensions for shared Popup positioning, Dialog, Toast lifecycle/stack/live semantics, Slider domain/drag/focus semantics, numeric input and Link caller-owned focus; a consuming framework must resolve the same patched Base. See [the patch record](vendor/gpui-base/YUE-PATCH.md). Remove the patch only after an upstream version provides equivalent APIs and the integration tests pass.
