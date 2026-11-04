@@ -671,3 +671,27 @@ allocate this motion object. Explicit motion pays one additional state allocatio
 until completion/cancellation. These are size_of values, not resident heap/RSS.
 The record retains the initial timing regressions, the isolation A/B and final
 baseline guards; restored value size is not presented as a CPU speedup.
+
+
+### Grid preparation, bounded directional reserves and cold Masonry recovery
+
+Add opt-in `VirtualGrid::new_with_cell_views` using row/column content stamps,
+with workset pruning and owner/unmount release; never retain AnyElement.
+Add bounded directional overscan, preserving symmetric defaults and idle.
+Masonry samples native input/activity/direction with one cancellable idle task,
+allocated only during activity. Its schema-1 value cache exports all lane slots
+and actual column constraints; restore validates atomically, skips stale content,
+rebuilds explicit lane membership and restores the reading key. Export is O(N),
+restore reuses matching slot directories and patches changed measurement blocks.
+Changed source order or historical lanes take the O(N log(lanes)) remapping
+path plus source lookup costs; construction and O(N) cache storage remain real
+costs. Accurate hints on large models can still be cheaper without restore.
+Grid freezes source-order prefixes on the same two axis controllers and one
+ScrollHandle. Disjoint masks apply during hit testing and paint; frame-local
+occlusion adjusts key alignment without rewriting consumer layout. Hidden or
+zero-body targets terminate, huge prefixes only materialize visible slots.
+Unfrozen Grid keeps its ordinary cell storage; mask buffers are opt-in.
+
+See `docs/research/2026-11-05-virtual-list-next-implementation.md` for measured
+adoption costs, default guards, functional/native tests and rollback identities.
+Remove these patches when upstream satisfies the same tested contracts.

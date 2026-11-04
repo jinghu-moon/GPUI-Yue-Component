@@ -1,6 +1,6 @@
 # 28 虚拟滚动基础层与 VirtualList 设计
 
-状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。单项 Pixels 等剩余精度边界见第 13.3 节，实窗仍交由用户验收。更新：2026-11-05。
+状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。本轮追加 Grid 内容准备缓存、有界方向性 overscan、Masonry 活动生命周期／纯值冷恢复及 Grid 冻结前缀，证据见[五项实施记录](research/2026-11-05-virtual-list-next-implementation.md)。单项 Pixels 等剩余精度边界见第 13.3 节；自动原生探针与人工视觉验收分别记录。更新：2026-11-05。
 
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
@@ -26,7 +26,7 @@ Showcase 已增加八个按需挂载的场景：百万记录、分组记录、�
 
 项目尚未正式发布。必要时直接调整 Base 接口、重构 Select 消费路径和补丁源码，更新所有仓库调用方并删除替代实现，不保留仅为兼容旧设计的壳。每个行为变更都须有改动前基线、能证明新合同的测试和改动后回归证据。当前实现迁移了 Select，删除旧的 v/h 构造器与尺寸数组入口；性能结论以实现记录中的原始样本和测量范围为准。
 
-本轮补齐 Masonry Fixed／Known 的短距离 smooth，并统一 Grid 的 reduced motion／非活动窗口收尾。二维布局支持与尚未交付的 auto 轨道、跨格／冻结／任意空间布局见第 2.6 节；回归、实窗与前后成本守卫见[平滑定位与布局边界](research/2026-11-05-virtual-list-smooth-layout-review.md)。
+本轮补齐 Masonry Fixed／Known 的短距离 smooth，并统一 Grid 的 reduced motion／非活动窗口收尾。二维布局支持与已交付的冻结前缀与尚未交付的 auto 轨道、跨格／任意空间布局见第 2.6 节；回归、实窗与前后成本守卫见[平滑定位与布局边界](research/2026-11-05-virtual-list-smooth-layout-review.md)。
 
 ## 1. 从基本事实推导需求
 
@@ -138,7 +138,8 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 纵向／横向列表 | 一维 VirtualList；Fixed、Known、Measured | 主轴有序区间；不通过旋转布局模拟横向 |
 | 二维表格／矩阵 | VirtualGrid；同一宿主内横纵独立虚拟化 | 两根 Attached 轴共享 binding／ScrollHandle；行高、列宽分别 Fixed 或 Known，可不等长 |
 | 多列瀑布流 | VirtualMasonry；稳定分栏、真实测量、显式 reflow 改列数 | 多列内容沿一个纵向滚动轴；不是横纵独立滚动的矩阵 |
-| 跨格、冻结行列、自动轨道 | 尚无现成布局合同 | cell span、冻结区命中／语义、未呈现列如何影响行高均需另外定义 |
+| 冻结前缀行／列 | `VirtualGrid::frozen_rows(n)`／`frozen_columns(n)` | 当前顺序前缀，Fixed/Known 尺寸，一个滚动 owner，四区互斥裁剪；无自动表头 role |
+| 跨格、自动轨道 | 尚无现成布局合同 | cell span、未呈现列如何影响行高均需另外定义 |
 | 任意二维画布／节点坐标、三维空间 | 尚不支持 | 需要独立空间索引／裁剪策略，不能把二维 Grid 等同于通用 N 维布局 |
 
 Grid 构建的是两轴工作集的交点 `W_rows × W_columns`，不是全量行列乘积。两轴程序命令共用同一帧时间，宿主一次提交 x/y，再分别确认结果；可同时播放有界 smooth。小位移动画只有在时钟推进且宿主接受当前采样位置时才视为进展，不因每帧不足 0.01px 而误报停滞，也不因此放过拒绝移动的宿主。用户 wheel 取消两轴程序意图，减少动态效果、非活动窗口或无可见区域时即时完成安全定位。Frozen／span 等布局不因存在双轴基础而自动获得支持。
@@ -597,7 +598,7 @@ Measured 原生 overdraw 有些项只测量而不 paint，诊断必须区分 bui
 
 公共预算使用视口比例／逻辑像素，避免极高/极矮行下固定几条 overscan 意义悬殊。Base 默认零额外缓冲，由 `VirtualizerLayout::overscan(Pixels)` 显式配置；Showcase 使用 72 逻辑像素。两侧约四分之一视口仅是消费者可测的调参起点，不作为基础层隐藏默认或性能结论。Fixed/Known 可直接求范围；Measured 把预算映射至原生 overdraw。
 
-首版不做速度自适应。只有测出快滚空洞且固定缓冲成本不合适，才评估方向偏置或速度预测，并设置最大工作集。不能把速度越快扩窗越大当作无代价优化。
+默认仍不做速度自适应。显式 `VirtualizerLayout::default().overscan(px(200.)).directional_overscan(px(40.))` 保留运动方向前方 200px、后方 40px；换向交换，idle／未知方向双侧恢复 200px。反向余量必须有限、非负且不大于 overscan，非法配置原子拒绝。Fixed/Known/Measured、Grid 双轴与 Masonry 都使用同一策略；Measured 缩小原生 leading/trailing overdraw，保留焦点／retained 项。它不会预测速度或扩大最大前向范围；精确计数和 ABBA 见本轮实施记录。
 
 实现范围统一到 Base 接缝；缺少 explicit overscan 的原生路径只扩展其 range 输入，不在外层再生成一份行树。
 
@@ -623,7 +624,7 @@ vlist pipeline 分开比较内容、位置和尺寸，借鉴的是减少无效�
 
 测试与诊断需区分：滚动几何推进、同 key 的 renderer 调用、昂贵内容预处理、宿主通知。业务内容变化即使 range 不变，也必须正常更新。`new_with_item_views` 的 factory 改为接收 `VirtualizerItemIdentity`，只含 index/key；按 key、index、source revision、显式失效 epoch、外部 content_revision 复用工作集内 AnyView，不再将 start/extent/measured/layout revision 当作内容准备依赖。普通 GPUI Render/layout/paint/事件仍遵守框架自身生命周期与缓存；读外部状态的 view 应正常 observe/notify。若确实预处理依赖宽度等外部条件，显式 bump content_revision。工作集退出即释放缓存 handle，业务编辑状态仍由宿主保留；不跨帧缓存 AnyElement。
 
-上述 opt-in 构造器现同时适用于 `VirtualList`／`YueVirtualList` 和 `VirtualMasonry`。Masonry 的局部内容失效在 Fixed/Known 下只过期内容准备，Measured 还使尺寸降为 hint；纯宽度／分栏／布局几何变化不重建准备好的 View。默认 `new` 保持普通 renderer 生命周期；远距离来回没有缓存命中时，不承诺加速。
+上述 opt-in 构造器适用于 `VirtualList`／`YueVirtualList` 和 `VirtualMasonry`；Grid 提供 `new_with_cell_views` 与 `VirtualGridCellIdentity`，按行／列 key、index、source revision、局部 epoch 和外部 content_revision 复用。Grid 每帧仍布局／绘制，冻结状态由 `VirtualGridCell::is_frozen_row/column` 给出，不参与内容身份；工厂依赖外部冻结设置时需推进 content_revision。Masonry 的局部内容失效在 Fixed/Known 下只过期内容准备，Measured 还使尺寸降为 hint；纯宽度／分栏／布局几何变化不重建准备好的 View。默认 `new` 保持普通 renderer 生命周期；远距离来回没有缓存命中时，不承诺加速。
 
 ## 11. 键盘、焦点与可访问性
 
@@ -924,6 +925,18 @@ Grid 的 auto 轨道、冻结区域、精确 cell 保留和 Masonry 公共生命
 | 合同澄清 | live invalidate epoch 与 portable source/layout revision 分开 | 同 source revision 的旧 cache 可恢复；尺寸相关内容变更推进 revision 后跳过旧测量，源码与设计一致 |
 
 隔离修复前生产源码运行带真实断言的六项主回归，5 failed / 1 passed；当前新增 13 项回归通过，virtual_list 专项 91 passed / 8 ignored，workspace 加 Showcase headless 合计 805 passed / 9 ignored。新增状态只含每控制器的区域锚点、Masonry 上次自写位置，以及原生共享位置对象内的精确值／旧接口写入标记；没有逐项镜像 offset 或第二滚动引擎。相同工作量的稳定帧 Release A/B，中位数变化为 Fixed +0.09%、Known +0.77%、Masonry +1.70%，样本区间重叠，不宣称速度提升或实窗 CPU 下降。逐样本与复现命令见实施记录。
+
+### 16.3 五项追加能力（2026-11-05）
+
+`VirtualMasonryState::is_scrolling()`／`scroll_direction()`、`ScrollStateChanged`／`ScrollEnd` 现在与一维活动语义对齐。原生输入触发活动，程序定位和测量补偿不误报用户输入；120ms idle，稳定观察不续时钟，方向变化通知，卸载取消。纯几何消费者使用 `observe_scroll_activity(now)`／`poll_scroll_idle(now)`，原生适配器使用同一 Entity 的可取消 idle task。默认 idle 不分配活动对象，首次输入有一次 Box 和一个 task 的成本。Masonry 稀疏工作集不冒充连续 `RangeChanged`。
+
+Masonry `measurement_cache()` 返回 `VirtualMasonryCache` schema 1；它与一维 schema 2、活的 `VirtualMasonrySnapshot` 是三种独立合同。缓存包含每项 key、source content revision、extent、已测标记、lane，以及列数、实际列宽、gap、column gap、排版 revision 和 key 阅读锚点；无 source／Entity／ScrollHandle／owner token。导出 O(N) 元数据，保存体积 O(N)；相同 key 顺序与 lane 目录时顺序验证并原位更新变化块，否则包含 O(N log(lanes)) 重映射及 source 查询成本，构造仍有成本。全量校验后提交，重复 key／非法尺寸／不兼容布局原子拒绝；删除项跳过，内容变更保留 lane 但采用当前 hint，新项按当前顺序进入最短列；同 lane 内遵循当前顺序。首次实际列宽不同将已恢复测量降为 hint，不能给旧尺寸重贴新宽度。尺寸相关内容变化必须推进 source revision。缓存 opt-in，不保证每次重建更快；可见卡片仍正常布局／反馈，恢复尺寸不是冻结业务视图或跳过响应式内容测量。
+
+Grid 冻结行／列默认为 0，按当前顺序 clamp；行纵坐标固定而横向随滚动，列相反，corner 两轴固定。body、冻结行、冻结列、corner 使用互斥 ContentMask，prepaint 命中和 paint 共用同一裁剪；不依靠遮盖。条带由原几何计算，包含内容 padding 和边界 gap；超视口前缀只创建实际可见部分和显式 retained／焦点项。每个 cell 身份与准备 View 唯一，切换冻结不更换 key 或焦点实体；Base 不指定颜色、边线、header role 或截获编辑器方向键。
+
+key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 scroll padding；可见冻结目标不滚回 0。完全藏在超大冻结前缀中的目标、或 body 为零时的非冻结目标，以 NoProgress 结束。`scroll_to_offset` 仍是原生内容 offset。帧级遮挡约束不持久改写 axis layout。轴 snapshot 的 visible/rendered 描述 body，working items 额外合入可见冻结前缀和 retained；自然 item.start 不变，冻结位移只在 Grid 呈现中应用。Showcase 有冻结切换与 Masonry 缓存后销毁重建的真实控件。
+
+逐项采用依据、默认路径代价、失败基线、Release ABBA、Windows 原生验证及 Git 回退见[本轮记录](research/2026-11-05-virtual-list-next-implementation.md)。历史章节中的待实施项按该节的当前状态解释。
 
 ## 17. 依据与关联文档
 

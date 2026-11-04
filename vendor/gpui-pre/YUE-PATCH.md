@@ -297,3 +297,13 @@ measured and reverted because its transient peak nearly doubled. Continuation
 evidence records bounded CPU/allocation gains and the remaining small sparse
 batch peak cost. Remove when upstream matches both the semantics and measured
 CPU/peak tradeoff without a parallel measurement cache.
+
+
+### Asymmetric native list overdraw
+
+Keep leading/trailing reserves on the existing ListState owner via
+`set_overdraw_edges(before, after)`. The legacy `set_overdraw` resets both edges
+symmetrically. Leading layout and budget continuation use the leading reserve;
+trailing work remains on the trailing reserve. No second measurement tree,
+offset or workset is introduced. Maintained native contracts cover bounded
+intrinsic roots and restoration of the legacy symmetric behavior.
