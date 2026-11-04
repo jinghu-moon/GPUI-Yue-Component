@@ -267,7 +267,7 @@ impl VirtualMasonryState {
         self.capture_anchor();
         if layout.revision != self.layout.revision && self.dynamic {
             for lane in &mut self.lanes {
-                lane.geometry.set_all_measured(false);
+                lane.geometry.invalidate_measurements();
             }
         }
         self.layout = layout;
@@ -291,7 +291,7 @@ impl VirtualMasonryState {
         self.cross = None;
         if self.dynamic {
             for lane in &mut self.lanes {
-                lane.geometry.set_all_measured(false);
+                lane.geometry.invalidate_measurements();
             }
         }
         self.revision += 1;
@@ -730,7 +730,7 @@ impl VirtualMasonryState {
             / self.lanes.len() as f32;
         if self.dynamic && self.cross.is_some_and(|old| old != width) {
             for lane in &mut self.lanes {
-                lane.geometry.set_all_measured(false);
+                lane.geometry.invalidate_measurements();
             }
             self.revision += 1;
         }

@@ -549,3 +549,14 @@ O(N/256), not a logarithmic persistent tree claim. Adoption report records
 append/retained-memory gains and cold construction/no-op feedback costs. Tests
 cover block crossings and multiple frozen generations. Remove when upstream
 offers equivalent indexing and snapshot preservation with measured tradeoffs.
+
+## Lazy Masonry measurement invalidation (2026-11-04)
+
+Keep a measurement epoch on KnownGeometry and its shared 128-item blocks.
+Width/layout invalidation advances only the geometry epoch; old sizes remain
+hints. A later measurement or partial-tail append normalizes just that block
+before writing, preserving both hint flags and frozen snapshots across repeated
+invalidations. No mirror size cache or public API is added. Continuation ABBA
+evidence records large-list resize gains, per-block metadata/append peak costs,
+and unchanged source queries and row builds. Remove when upstream preserves the
+same invalidation/snapshot contracts with equivalent measured costs.

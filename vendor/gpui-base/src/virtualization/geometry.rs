@@ -126,11 +126,27 @@ pub(super) struct KnownGeometry {
     tree: sum_tree::SumTree<KnownBlock>,
     pub gap: f64,
     valid: bool,
+    measurement_epoch: u64,
 }
 
 const BLOCK_CAPACITY: usize = 128;
 #[derive(Clone)]
-struct KnownBlock(std::sync::Arc<BlockValues>);
+struct KnownBlock {
+    values: std::sync::Arc<BlockValues>,
+    measurement_epoch: u64,
+}
+impl KnownBlock {
+    fn values_for_write(&mut self, epoch: u64) -> &mut BlockValues {
+        let values = std::sync::Arc::make_mut(&mut self.values);
+        if self.measurement_epoch != epoch {
+            for value in &mut values.sizes[..values.len] {
+                *value = -value.abs();
+            }
+            self.measurement_epoch = epoch;
+        }
+        values
+    }
+}
 #[derive(Clone)]
 struct BlockValues {
     // The sign bit records measured/estimated without another per-item array.
@@ -192,8 +208,8 @@ impl sum_tree::Item for KnownBlock {
     type Summary = ExtentSummary;
     fn summary(&self, _: ()) -> ExtentSummary {
         ExtentSummary {
-            count: self.0.len,
-            extent: self.0.ends[self.0.len - 1],
+            count: self.values.len,
+            extent: self.values.ends[self.values.len - 1],
         }
     }
 }
@@ -226,7 +242,10 @@ impl sum_tree::SeekTarget<'_, ExtentSummary, ExtentSummary> for Position {
             .unwrap()
     }
 }
-fn blocks(extents: impl IntoIterator<Item = (Pixels, bool)>) -> impl Iterator<Item = KnownBlock> {
+fn blocks(
+    extents: impl IntoIterator<Item = (Pixels, bool)>,
+    epoch: u64,
+) -> impl Iterator<Item = KnownBlock> {
     let mut extents = extents.into_iter();
     std::iter::from_fn(move || {
         let (extent, measured) = extents.next()?;
@@ -235,7 +254,10 @@ fn blocks(extents: impl IntoIterator<Item = (Pixels, bool)>) -> impl Iterator<It
         for (extent, measured) in extents.by_ref().take(BLOCK_CAPACITY - 1) {
             block.push(extent, measured);
         }
-        Some(KnownBlock(std::sync::Arc::new(block)))
+        Some(KnownBlock {
+            values: std::sync::Arc::new(block),
+            measurement_epoch: epoch,
+        })
     })
 }
 impl KnownGeometry {
@@ -245,14 +267,22 @@ impl KnownGeometry {
     pub fn with_measurements(extents: impl IntoIterator<Item = (Pixels, bool)>, gap: f64) -> Self {
         let mut valid = true;
         let tree = sum_tree::SumTree::from_iter(
-            blocks(extents.into_iter().map(|(extent, measured)| {
-                let positive = super::valid_positive(extent);
-                valid &= positive;
-                (if positive { extent } else { gpui::px(1.) }, measured)
-            })),
+            blocks(
+                extents.into_iter().map(|(extent, measured)| {
+                    let positive = super::valid_positive(extent);
+                    valid &= positive;
+                    (if positive { extent } else { gpui::px(1.) }, measured)
+                }),
+                0,
+            ),
             (),
         );
-        Self { tree, gap, valid }
+        Self {
+            tree,
+            gap,
+            valid,
+            measurement_epoch: 0,
+        }
     }
     pub fn is_valid(&self) -> bool {
         self.valid
@@ -266,26 +296,28 @@ impl KnownGeometry {
     pub fn item(&self, index: usize) -> Option<(f64, f64, bool)> {
         let mut cursor = self.tree.cursor::<ExtentSummary>(());
         cursor.seek(&Count(index), sum_tree::Bias::Right);
-        let (start, extent, measured) = cursor.item()?.0.item(index - cursor.start().count);
+        let block = cursor.item()?;
+        let (start, extent, measured) = block.values.item(index - cursor.start().count);
         Some((
             cursor.start().extent + start + index as f64 * self.gap,
             extent,
-            measured,
+            measured && block.measurement_epoch == self.measurement_epoch,
         ))
     }
     pub fn items(&self, range: Range<usize>) -> impl Iterator<Item = (f64, f64, bool)> + '_ {
         let mut cursor = self.tree.cursor::<ExtentSummary>(());
         cursor.seek(&Count(range.start), sum_tree::Bias::Right);
         range.map_while(move |ix| {
-            let block = &cursor.item()?.0;
+            let block = cursor.item()?;
+            let values = &block.values;
             let local = ix - cursor.start().count;
-            let (start, extent, measured) = block.item(local);
+            let (start, extent, measured) = values.item(local);
             let value = (
                 cursor.start().extent + start + ix as f64 * self.gap,
                 extent,
-                measured,
+                measured && block.measurement_epoch == self.measurement_epoch,
             );
-            if local + 1 == block.len {
+            if local + 1 == values.len {
                 cursor.next();
             }
             Some(value)
@@ -300,8 +332,8 @@ impl KnownGeometry {
             let mut cursor = self.tree.cursor::<ExtentSummary>(());
             cursor.seek(&Count(last_ix), sum_tree::Bias::Right);
             let mut last = cursor.item().unwrap().clone();
-            if last.0.len < BLOCK_CAPACITY {
-                let block = std::sync::Arc::make_mut(&mut last.0);
+            if last.values.len < BLOCK_CAPACITY {
+                let block = last.values_for_write(self.measurement_epoch);
                 for (extent, measured) in extents.by_ref().take(BLOCK_CAPACITY - block.len) {
                     block.push(extent, measured);
                 }
@@ -314,19 +346,13 @@ impl KnownGeometry {
                 self.tree = tree;
             }
         }
-        self.tree.extend(blocks(extents), ());
+        self.tree
+            .extend(blocks(extents, self.measurement_epoch), ());
     }
-    pub fn set_all_measured(&mut self, measured: bool) {
-        self.tree = sum_tree::SumTree::from_iter(
-            self.tree.iter().cloned().map(|mut block| {
-                let values = std::sync::Arc::make_mut(&mut block.0);
-                for value in &mut values.sizes[..values.len] {
-                    *value = if measured { value.abs() } else { -value.abs() };
-                }
-                block
-            }),
-            (),
-        );
+    pub fn invalidate_measurements(&mut self) {
+        // Frozen geometry keeps its own epoch. Old sizes remain hints without
+        // touching any leaf until a later measurement or tail append writes it.
+        self.measurement_epoch += 1;
     }
     pub fn update_measurements(&mut self, updates: &[(usize, Pixels)], measured: bool) {
         if updates.is_empty() {
@@ -344,7 +370,7 @@ impl KnownGeometry {
             );
             let start = cursor.start().count;
             let mut block = cursor.item().unwrap().clone();
-            let values = std::sync::Arc::make_mut(&mut block.0);
+            let values = block.values_for_write(self.measurement_epoch);
             let first = updates[at].0 - start;
             while at < updates.len() && updates[at].0 < start + values.len {
                 let (ix, size) = updates[at];
@@ -383,14 +409,14 @@ impl KnownGeometry {
         let Some(block) = cursor.item() else {
             return (start.count, f64::INFINITY);
         };
-        let local = block.0.bound(
+        let local = block.values.bound(
             offset - start.extent - start.count as f64 * self.gap,
             self.gap,
             right,
         );
         let ix = start.count + local;
-        let end = if local < block.0.len {
-            let (local_start, extent, _) = block.0.item(local);
+        let end = if local < block.values.len {
+            let (local_start, extent, _) = block.values.item(local);
             start.extent + local_start + ix as f64 * self.gap + extent
         } else {
             f64::INFINITY
