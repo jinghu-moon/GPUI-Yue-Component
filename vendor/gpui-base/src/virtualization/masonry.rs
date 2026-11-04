@@ -13,8 +13,14 @@ use index::IndexVector;
 struct MasonryCommand {
     id: u64,
     target: MasonryTarget,
-    options: VirtualizerScrollOptions,
+    align: VirtualizerAlign,
     progress: super::command::CommandProgress,
+    motion: Option<Box<MasonryMotion>>,
+}
+// Optional timed state must not enlarge every controller's inline command slot.
+// Instant and Measured requests need no allocation for this state.
+struct MasonryMotion {
+    options: VirtualizerScrollOptions,
     from: f64,
     elapsed: Duration,
     motion_settled: bool,
@@ -747,12 +753,20 @@ impl VirtualMasonryState {
         self.pending = Some(MasonryCommand {
             id,
             target,
-            options,
+            align: options.align,
             progress: Default::default(),
-            from: (-self.scroll.precise_offset().y).max(0.0),
-            elapsed: Duration::ZERO,
-            motion_settled: false,
-            time_progressed: false,
+            motion: (!self.dynamic
+                && !options.reduced_motion
+                && matches!(options.motion, VirtualizerMotion::Smooth { .. }))
+            .then(|| {
+                Box::new(MasonryMotion {
+                    options,
+                    from: (-self.scroll.precise_offset().y).max(0.0),
+                    elapsed: Duration::ZERO,
+                    motion_settled: false,
+                    time_progressed: false,
+                })
+            }),
         });
         Ok(id)
     }
@@ -777,27 +791,36 @@ impl VirtualMasonryState {
     pub(super) fn begin_command_frame(&mut self, now: std::time::Instant) {
         let exceeded = self.pending.as_mut().is_some_and(|command| {
             let elapsed = command.progress.started().map_or(Duration::ZERO, |started| now.saturating_duration_since(started));
-            let animating = !self.dynamic && !command.options.reduced_motion
-                && matches!(command.options.motion, VirtualizerMotion::Smooth { duration, .. } if elapsed < duration);
-            let exceeded = command.progress.advance_with_motion(now, animating);
-            command.time_progressed = animating && elapsed > command.elapsed;
-            command.elapsed = elapsed;
-            exceeded
+            let animating = command.motion.as_mut().is_some_and(|motion| {
+                let animating = !self.dynamic && !motion.options.reduced_motion
+                    && matches!(motion.options.motion, VirtualizerMotion::Smooth { duration, .. } if elapsed < duration);
+                motion.time_progressed = animating && elapsed > motion.elapsed;
+                motion.elapsed = elapsed;
+                animating
+            });
+            command.progress.advance_with_motion(now, animating)
         });
         if exceeded {
             self.finish_command(VirtualizerCommandOutcome::NoProgress);
         }
     }
     pub(super) fn settle_motion(&mut self) {
-        if let Some(command) = &mut self.pending {
-            command.options.reduced_motion = true;
+        if let Some(motion) = self
+            .pending
+            .as_mut()
+            .and_then(|command| command.motion.as_mut())
+        {
+            motion.options.reduced_motion = true;
         }
     }
     pub(super) fn confirm_command(&mut self, complete: bool) {
         let offset = (-self.scroll.precise_offset().y).max(0.);
         let settled = self.pending.as_ref().is_some_and(|command| {
             complete
-                && command.motion_settled
+                && command
+                    .motion
+                    .as_ref()
+                    .is_none_or(|motion| motion.motion_settled)
                 && match &command.target {
                     MasonryTarget::Key(key) => self.source.index_of(key).is_some_and(|ix| {
                         let (lane, local) = self.slots[ix];
@@ -819,7 +842,11 @@ impl VirtualMasonryState {
             // progress; frozen time and post-animation correction still stall.
             let stalled = command.progress.confirm(
                 offset,
-                settled || command.time_progressed && !command.motion_settled,
+                settled
+                    || command
+                        .motion
+                        .as_ref()
+                        .is_some_and(|motion| motion.time_progressed && !motion.motion_settled),
             );
             if settled {
                 self.finish_command(VirtualizerCommandOutcome::Settled);
@@ -959,9 +986,9 @@ impl VirtualMasonryState {
                         &VirtualizerBinding::new(),
                         0,
                         if !self.dynamic
-                            && matches!(command.options.motion, VirtualizerMotion::Smooth { .. })
+                            && let Some(motion) = &command.motion
                         {
-                            command.from
+                            motion.from
                         } else {
                             old
                         },
@@ -971,7 +998,7 @@ impl VirtualMasonryState {
                     state::alignment_offset(
                         item.item(),
                         &v,
-                        command.options.align,
+                        command.align,
                         self.layout.scroll_padding_start.into(),
                         self.layout.scroll_padding_end.into(),
                     )
@@ -981,20 +1008,28 @@ impl VirtualMasonryState {
                 0.0,
                 (self.total_extent() - f64::from(viewport.height)).max(0.0),
             );
-            let (sample, settled) = if self.dynamic {
-                (destination, true)
-            } else {
+            let (sample, settled) = if !self.dynamic
+                && let Some(motion) = &command.motion
+            {
                 super::command::sample_offset(
-                    command.options,
-                    command.elapsed,
-                    command.from,
+                    motion.options,
+                    motion.elapsed,
+                    motion.from,
                     destination,
                     old,
                     viewport.height.into(),
                 )
+            } else {
+                (destination, true)
             };
             offset = sample;
-            self.pending.as_mut().unwrap().motion_settled = settled;
+            if let Some(motion) = self
+                .pending
+                .as_mut()
+                .and_then(|command| command.motion.as_mut())
+            {
+                motion.motion_settled = settled;
+            }
         }
         offset = offset.clamp(
             0.0,

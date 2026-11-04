@@ -31,9 +31,9 @@ pub(super) fn sample_offset(
 #[derive(Default)]
 pub(super) struct CommandProgress {
     started: Option<Instant>,
-    attempts: usize,
+    attempts: u8,
     last: Option<f64>,
-    stalled: usize,
+    stalled: u8,
 }
 impl CommandProgress {
     pub fn advance(&mut self, now: Instant) -> bool {
@@ -43,7 +43,7 @@ impl CommandProgress {
     /// deadline still bounds them, independently of the display refresh rate.
     pub fn advance_with_motion(&mut self, now: Instant, animating: bool) -> bool {
         let started = *self.started.get_or_insert(now);
-        self.attempts += usize::from(!animating);
+        self.attempts = self.attempts.saturating_add(u8::from(!animating));
         self.attempts > 32 || now.saturating_duration_since(started) > Duration::from_secs(2)
     }
     pub fn started(&self) -> Option<Instant> {
@@ -51,7 +51,7 @@ impl CommandProgress {
     }
     pub fn confirm(&mut self, applied: f64, settled: bool) -> bool {
         if !settled && self.last.is_some_and(|old| (old - applied).abs() < 0.01) {
-            self.stalled += 1;
+            self.stalled = self.stalled.saturating_add(1);
         } else {
             self.stalled = 0;
         }
