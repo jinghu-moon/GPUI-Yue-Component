@@ -37,6 +37,8 @@ mod frozen_grid;
 mod grid_preparation;
 #[path = "virtual_list/grid_retention.rs"]
 mod grid_retention;
+#[path = "virtual_list/grid_spans.rs"]
+mod grid_spans;
 #[path = "virtual_list/masonry_activity.rs"]
 mod masonry_activity;
 #[path = "virtual_list/masonry_cache.rs"]

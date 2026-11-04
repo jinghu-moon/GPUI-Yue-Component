@@ -43,3 +43,13 @@
 | 冻结＋两个远端 cell | -41.97% | -40.74% | 15680→8640 | 109280→65120 |
 
 空间 peak 分别 80048→45920、81504→46944 bytes；reads 19200→11520。保留 [原始](virtual-list-series-cell-retention-2026-11-05.csv)／[复测](virtual-list-series-cell-retention-repeat-2026-11-05.csv)。这是减少不必要工作量的收益，不能当成相同 cell 数的遍历提速。比较器新增 `grid-cells` 仅用于临时 fixture feature；生产 manifests/locks 不变。
+
+## 3. 显式列跨格与行跨格
+
+`VirtualGridSpan::new(stable_origin, rows, columns)` 和 Grid 的 fallible `spans(&descriptors,cx)`，按列跨度、再双轴跨度验证。Fixed/Known 轨道尺寸仍由调用方提供；`cell.extent()` 是合并矩形（含内部 gap），`row()/column()` 保持 origin 原轨道，另有跨度 readers。只有 origin 创建一个 View／命中／语义节点，覆盖 slot 不再生成。离屏 origin 只要跨度与工作轨道相交仍会进入工作集；稀疏 retained 落入跨度时映射到 origin。
+
+非正跨度、溢出／越界、重叠、缺失 key、Measured 轴和跨冻结边界，在 mount/滚动修改前返回类型化 `VirtualizerError`。配置先设置冻结再验证 spans；source 事务后每次 render 按稳定 key 重新解析。生成后的 span 配置若在 render 与 request_layout 之间失效会 fail closed，不能静默画旧索引。descriptor 不保留 source，也不建立 N×M map。
+
+验证采用 row 扫线＋活跃列区间 O(S log S)，包含查询用 row-max interval tree 剪枝；每帧扫描 S 个稀疏矩形与轴工作索引交集，不扫描跨度覆盖面积。极端同一 row 上有很多不相交跨度时单次包含查询仍可能访问 O(S)，这里不承诺完整二维索引的 O(log S)。没有把这项新能力宣传为速度优化。
+
+回归覆盖列 span、行 span、offscreen origin、唯一 click、冻结区域、原子拒绝、稳定 key splice 与 Known 尺寸反馈；百万行列中一个 100000×100000 span 只产生一个 cell，source reads 有界。默认路径两轮 Release ABBA 的 allocations/peak/reads/builds 全部相同，CPU 有不利项：未冻结 prefix +0.24%/+5.36%，冻结 hidden +1.58%/+1.96%，冻结 prefix +0.39%/+3.78%。其余场景及全部原始样本见 [第一轮](virtual-list-series-grid-span-default-2026-11-05.csv)／[复测](virtual-list-series-grid-span-default-repeat-2026-11-05.csv)。按明确功能需求与默认空间成本不增长采用，不能声称零 CPU 代价。

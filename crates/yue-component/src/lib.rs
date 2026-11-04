@@ -39,15 +39,16 @@ pub mod typography;
 mod virtual_list;
 pub use virtual_list::{
     VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot,
-    VirtualMasonry, VirtualMasonryCache, VirtualMasonryCacheItem, VirtualMasonryCapabilities,
-    VirtualMasonryItem, VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign,
-    VirtualizerAnchorPosition, VirtualizerAttachment, VirtualizerBinding, VirtualizerCache,
-    VirtualizerCapabilities, VirtualizerChange, VirtualizerCommandOutcome, VirtualizerError,
-    VirtualizerEvent, VirtualizerItem, VirtualizerItemIdentity, VirtualizerLayout,
-    VirtualizerMeasurement, VirtualizerMotion, VirtualizerRange, VirtualizerRangeExtractor,
-    VirtualizerScrollDirection, VirtualizerScrollOptions, VirtualizerScrollRequest,
-    VirtualizerScrollbarHandle, VirtualizerSizeUpdate, VirtualizerSizing, VirtualizerSizingKind,
-    VirtualizerSnapshot, VirtualizerSource, VirtualizerState, VirtualizerViewport, YueVirtualList,
+    VirtualGridSpan, VirtualMasonry, VirtualMasonryCache, VirtualMasonryCacheItem,
+    VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot, VirtualMasonryState,
+    VirtualizerAlign, VirtualizerAnchorPosition, VirtualizerAttachment, VirtualizerBinding,
+    VirtualizerCache, VirtualizerCapabilities, VirtualizerChange, VirtualizerCommandOutcome,
+    VirtualizerError, VirtualizerEvent, VirtualizerItem, VirtualizerItemIdentity,
+    VirtualizerLayout, VirtualizerMeasurement, VirtualizerMotion, VirtualizerRange,
+    VirtualizerRangeExtractor, VirtualizerScrollDirection, VirtualizerScrollOptions,
+    VirtualizerScrollRequest, VirtualizerScrollbarHandle, VirtualizerSizeUpdate, VirtualizerSizing,
+    VirtualizerSizingKind, VirtualizerSnapshot, VirtualizerSource, VirtualizerState,
+    VirtualizerViewport, YueVirtualList,
 };
 
 pub use application::{current_theme, init, set_theme};

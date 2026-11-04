@@ -38,8 +38,28 @@ pub struct VirtualGridCell {
     column: VirtualizerItem,
     frozen_row: bool,
     frozen_column: bool,
+    span: Option<Rc<CellSpan>>,
+}
+struct CellSpan {
+    rows: usize,
+    columns: usize,
+    extent: gpui::Size<Pixels>,
 }
 impl VirtualGridCell {
+    /// Presentation rectangle, including inter-track gaps for explicit spans.
+    /// row()/column() continue to describe the original origin tracks.
+    pub fn extent(&self) -> gpui::Size<Pixels> {
+        self.span.as_ref().map_or_else(
+            || size(self.column.extent(), self.row.extent()),
+            |s| s.extent,
+        )
+    }
+    pub fn row_span(&self) -> usize {
+        self.span.as_ref().map_or(1, |s| s.rows)
+    }
+    pub fn column_span(&self) -> usize {
+        self.span.as_ref().map_or(1, |s| s.columns)
+    }
     pub fn key(&self) -> VirtualGridCellKey {
         VirtualGridCellKey::new(self.row.key().clone(), self.column.key().clone())
     }
@@ -102,6 +122,7 @@ impl VirtualGridSnapshot {
                     return None;
                 }
                 Some(VirtualGridCell {
+                    span: None,
                     frozen_row: self.rows.is_frozen(row.index()),
                     frozen_column: self.columns.is_frozen(column.index()),
                     row,
@@ -157,6 +178,7 @@ impl VirtualGridSnapshot {
             }
             let row = row.as_ref()?;
             let cell = VirtualGridCell {
+                span: None,
                 frozen_row: self.rows.is_frozen(row.index()),
                 frozen_column: self.columns.is_frozen(columns[column].index()),
                 row: row.clone(),
@@ -211,6 +233,7 @@ impl VirtualGridSnapshot {
                     continue;
                 }
                 let cell = VirtualGridCell {
+                    span: None,
                     row: rows[row].clone(),
                     column: columns[column].clone(),
                     frozen_row: region & 1 != 0,
@@ -236,6 +259,7 @@ struct GridOptions {
     retained: Vec<VirtualGridCellKey>,
     focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
     fallback: Option<gpui::FocusHandle>,
+    spans: Option<super::grid_span::GridSpans>,
 }
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
 type ViewFactory = Rc<dyn Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> gpui::AnyView>;
@@ -379,6 +403,23 @@ impl VirtualGrid {
         self.options.get_or_insert_with(Default::default).fallback = Some(handle);
         self
     }
+    /// Validate sparse Fixed/Known spans before claiming a mount or mutating
+    /// scroll state. Call after frozen_rows/columns, and rebuild each render
+    /// from the current stable-key source transaction. Invalid input is atomic.
+    pub fn spans(mut self, spans: &[VirtualGridSpan], cx: &App) -> Result<Self, VirtualizerError> {
+        if !spans.is_empty() {
+            let resolved = super::grid_span::GridSpans::new(
+                self.rows.read(cx),
+                self.columns.read(cx),
+                spans,
+                (self.frozen_rows, self.frozen_columns),
+            )?;
+            self.options.get_or_insert_with(Default::default).spans = Some(resolved);
+        } else if let Some(options) = &mut self.options {
+            options.spans = None;
+        }
+        Ok(self)
+    }
 }
 impl Styled for VirtualGrid {
     fn style(&mut self) -> &mut StyleRefinement {
@@ -436,6 +477,18 @@ impl Element for VirtualGrid {
         let rows = self.rows.read(cx);
         let columns = self.columns.read(cx);
         Self::validate_axes(rows, columns).expect("invalid virtual grid configuration");
+        if let Some(spans) = self.options.as_ref().and_then(|o| o.spans.as_ref()) {
+            assert_eq!(
+                spans.generations,
+                (rows.generation(), columns.generation()),
+                "rebuild spans after source change"
+            );
+            assert_eq!(
+                spans.frozen,
+                (self.frozen_rows, self.frozen_columns),
+                "configure freezing before spans"
+            );
+        }
         let global = id.expect("grid identity");
         for state in [&self.rows, &self.columns] {
             state
@@ -764,8 +817,65 @@ impl Element for VirtualGrid {
                             .map(|(key, _)| key.clone()),
                     );
                 }
-                let mut ordinary = ordinary.peekable();
-                let mut extras = snapshot.retained_cells(&keys).into_iter().peekable();
+                let spans = self.options.as_ref().and_then(|o| o.spans.as_ref());
+                let mut extras = snapshot.retained_cells(&keys);
+                let mut ordinary = ordinary
+                    .filter(|cell| {
+                        spans.is_none_or(|spans| {
+                            spans
+                                .covering(cell.row.index(), cell.column.index())
+                                .is_none()
+                        })
+                    })
+                    .peekable();
+                if let Some(spans) = spans {
+                    let rows = snapshot.rows.working_indices();
+                    let columns = snapshot.columns.working_indices();
+                    let intersects = |range: &std::ops::Range<usize>, indices: &[usize]| {
+                        indices
+                            .get(indices.partition_point(|index| *index < range.start))
+                            .is_some_and(|index| *index < range.end)
+                    };
+                    let mut needed = std::collections::BTreeSet::new();
+                    extras.retain(|cell| {
+                        if let Some(index) = spans.covering(cell.row.index(), cell.column.index()) {
+                            needed.insert(index);
+                            false
+                        } else {
+                            true
+                        }
+                    });
+                    for (index, span) in spans.entries.iter().enumerate() {
+                        if intersects(&span.rows, &rows) && intersects(&span.columns, &columns) {
+                            needed.insert(index);
+                        }
+                    }
+                    for index in needed {
+                        let span = &spans.entries[index];
+                        let row = snapshot.rows.item(span.rows.start).unwrap();
+                        let column = snapshot.columns.item(span.columns.start).unwrap();
+                        let last_row = snapshot.rows.item(span.rows.end - 1).unwrap();
+                        let last_column = snapshot.columns.item(span.columns.end - 1).unwrap();
+                        extras.push(VirtualGridCell {
+                            frozen_row: snapshot.rows.is_frozen(row.index()),
+                            frozen_column: snapshot.columns.is_frozen(column.index()),
+                            span: Some(Rc::new(CellSpan {
+                                rows: span.rows.len(),
+                                columns: span.columns.len(),
+                                extent: size(
+                                    Pixels::from(last_column.start() - column.start())
+                                        + last_column.extent(),
+                                    Pixels::from(last_row.start() - row.start())
+                                        + last_row.extent(),
+                                ),
+                            })),
+                            row,
+                            column,
+                        });
+                    }
+                    extras.sort_unstable_by_key(cell_order);
+                }
+                let mut extras = extras.into_iter().peekable();
                 let cells = std::iter::from_fn(|| match (ordinary.peek(), extras.peek()) {
                     (Some(a), Some(b)) if cell_order(b) < cell_order(a) => extras.next(),
                     (Some(_), _) => ordinary.next(),
@@ -775,7 +885,7 @@ impl Element for VirtualGrid {
                     for cell in cells {
                         let row_key = cell.row.key().clone();
                         let column_key = cell.column.key().clone();
-                        let extent = size(cell.column.extent(), cell.row.extent());
+                        let extent = cell.extent();
                         let origin = bounds.origin
                             + point(
                                 Pixels::from(
