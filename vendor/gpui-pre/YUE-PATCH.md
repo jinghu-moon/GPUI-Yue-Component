@@ -274,6 +274,7 @@ is introduced. Ordered entries, invalid hints and frozen geometry are covered
 by the adoption tests. Sparse and dense Release ABBA evidence is recorded in
 docs/research/2026-11-04-virtual-list-adoption.md; remove this patch only when
 upstream matches the same semantics and sparse/dense cost.
+
 ## Sparse native width invalidation (2026-11-04)
 
 Keep unchanged hinted SumTree subtrees across a width change. A summary flag
@@ -283,4 +284,3 @@ needed. Dense input retains linear rebuilding. Preserve reset, revision, focus
 handles, anchors and frozen snapshots. The adoption report records sparse and
 dense ABBA costs and native integration coverage. Remove when upstream has an
 equivalent persistent width invalidation path.
-

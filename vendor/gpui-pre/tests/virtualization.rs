@@ -4,6 +4,50 @@ use gpui::{
 };
 
 #[gpui::test]
+fn sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes(cx: &mut TestAppContext) {
+    let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.));
+    let weak = cx.update(|cx| {
+        let focus = cx.focus_handle();
+        let weak = focus.downgrade();
+        state.set_item_focus_handle(900, Some(focus));
+        weak
+    });
+    state.set_item_sizes(&[(900, gpui::size(px(240.), px(40.)))], true);
+    let frozen = state.geometry();
+    state.remeasure_items(899..902);
+    state.splice(0..1, 0);
+    state.set_item_sizes(&[(899, gpui::size(px(480.), px(30.)))], true);
+    assert!(weak.upgrade().is_some());
+    state.set_item_focus_handle(899, None);
+    drop(state);
+    assert!(
+        weak.upgrade().is_some(),
+        "frozen geometry keeps its focus handle alive"
+    );
+    drop(frozen);
+    cx.run_until_parked();
+    assert!(
+        weak.upgrade().is_none(),
+        "no leaked focus allocation after final owner release"
+    );
+
+    let state = ListState::new(0, ListAlignment::Top, px(0.));
+    let weak = cx.update(|cx| {
+        let focus = cx.focus_handle();
+        let weak = focus.downgrade();
+        state.splice_focusable(0..0, [Some(focus)]);
+        weak
+    });
+    assert!(weak.upgrade().is_some());
+    state.splice(0..1, 0);
+    cx.run_until_parked();
+    assert!(
+        weak.upgrade().is_none(),
+        "focusable splice uses the same lifetime contract"
+    );
+}
+
+#[gpui::test]
 fn width_invalidation_keeps_sparse_hints_and_frozen_geometry(cx: &mut TestAppContext) {
     for dense in [false, true] {
         let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.));

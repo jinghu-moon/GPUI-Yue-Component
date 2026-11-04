@@ -286,6 +286,27 @@ fn adopt_metadata_memory() {
     }
 }
 
+#[gpui_kit::test]
+fn adopt_focus_memory(cx: &mut TestAppContext) {
+    // Include Rc allocation overhead when focus metadata is unusually dense.
+    for focused in [64, 10_000] {
+        for sample in 0..5 {
+            let handles =
+                cx.update(|cx| (0..focused).map(|_| cx.focus_handle()).collect::<Vec<_>>());
+            let (state, ns, stats) = measured(|| {
+                let state = gpui_kit::ListState::new(0, gpui_kit::ListAlignment::Top, px(0.));
+                state.splice_focusable(0..0, (0..10_000).map(|ix| handles.get(ix).cloned()));
+                state
+            });
+            assert_eq!(state.geometry().len(), 10_000);
+            println!(
+                "SERIES,case=focus-memory-{focused},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds={}",
+                stats.count, stats.peak, stats.live
+            );
+        }
+    }
+}
+
 struct NativeResizeHarness {
     list: gpui_kit::ListState,
     width: f32,

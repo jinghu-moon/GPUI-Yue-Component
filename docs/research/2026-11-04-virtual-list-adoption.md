@@ -73,3 +73,18 @@
 | 稠密 100,000 项，一次 resize | 3.70245 | 3.25610 | 9,184→9,184 | 9,450,816→9,450,816 |
 
 稠密场景保留完全相同的分配和重建路径，时间波动不作为该路径算法提速的证据。原生新增测试验证稀疏／稠密旧宽度尺寸降为 hint，新的真实测量全部属于新宽度，冻结快照不变；专项 103 passed / 8 ignored，原生集成 10 passed。此优化仅针对原生 Measured 树，不把 Masonry 的 KnownGeometry 失效成本算入收益。
+
+## Measured 焦点元数据压缩：拒绝此版本
+
+基线 `b7fe55f`。试验将 ListItem 中的 `Option<FocusHandle>` 改为私有 `Option<Rc<FocusHandle>>`，共享冻结树中少数焦点资源。完整专项 103 passed / 8 ignored；新增原生资源寿命测试通过，11 项集成全部通过。正确性成立，但不能只看无焦点场景。
+
+[常规测量 CSV](virtual-list-series-adoption-metadata-2026-11-04.csv)中，百万项 retained heap payload 从 93,095,288 B 降到 66,912,344 B（−28.1%），构造 21.75365→15.42845ms，分配数保持 90,952。`memory-*` 和 `focus-memory-*` 行的 `builds` 列特指 retained payload B；不是内容准备次数，且不是 RSS。
+
+[焦点密度 CSV](virtual-list-series-adoption-focus-metadata-2026-11-04.csv)固定 10,000 项、焦点句柄本体预先构建，统计列表持有它们的增量成本：
+
+| 有焦点项 | 构造 ms 前→后 | 常驻 B 前→后 | 分配次数 前→后 |
+| --- | --- | --- | --- |
+| 64 | 0.20440→0.13665 | 933,096→673,800 | 935→999 |
+| 10,000 | 0.43680→0.50000 | 933,096→1,150,728 | 935→10,935 |
+
+每行可聚焦的列表是必须支持的原生用法，出现约 23.3% 常驻增长、14.5% 构造退化和 10,000 次额外分配。[逐帧对照](virtual-list-series-adoption-metadata-frames-2026-11-04.csv)无法消除这一代价。因此拒绝 Rc 方案，单独保存试验实现后 Git revert，仅保留 workload、焦点寿命测试和证据。后续若再试，应使用不为每个 focus 分配堆对象的紧凑布局，并重跑相同密度矩阵。
