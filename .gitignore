@@ -4,3 +4,4 @@
 /.spec-workflow/
 /log.txt
 /.playwright-mcp/
+__pycache__/
