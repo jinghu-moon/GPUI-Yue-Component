@@ -56,6 +56,9 @@ impl VirtualizerState {
         if self.sizing.kind() == VirtualizerSizingKind::Fixed {
             return Err(VirtualizerError::WrongBackend);
         }
+        if let [update] = updates {
+            return self.apply_single_size(update, measured);
+        }
         let mut seen = std::collections::HashSet::new();
         let mut indexed = Vec::with_capacity(updates.len());
         for update in updates {
@@ -69,21 +72,7 @@ impl VirtualizerState {
             if !valid_positive(update.extent) || !valid_positive(update.extent + self.layout.gap) {
                 return Err(VirtualizerError::InvalidGeometry("size update"));
             }
-            let gap = if self.measured.is_some() && ix + 1 < self.source.len() {
-                self.layout.gap
-            } else {
-                px(0.)
-            };
-            if self.geometry.item(ix).is_some_and(|(_, extent, exact)| {
-                // Compare in the backend's stored units. Per-item epsilon
-                // losses accumulate down a long list; subtracting a native
-                // f32 gap first can also make an identical write look changed.
-                extent == f64::from(update.extent + gap) && exact == measured
-            }) && self.measured.as_ref().is_none_or(|list| {
-                list.geometry().item(ix).is_some_and(|item| {
-                    item.cross_extent() == self.viewport.as_ref().map_or(px(0.), |v| v.cross)
-                })
-            }) {
+            if self.matches_size(ix, update.extent, measured) {
                 continue;
             }
             indexed.push((ix, update.extent));
@@ -116,6 +105,59 @@ impl VirtualizerState {
                 })
                 .collect();
             list.set_item_sizes(&updates, measured);
+            self.geometry = Geometry::Measured(list.geometry());
+        }
+        self.changed_geometry();
+        self.restore_anchor();
+        Ok(())
+    }
+    fn matches_size(&self, ix: usize, extent: Pixels, measured: bool) -> bool {
+        let gap = if self.measured.is_some() && ix + 1 < self.source.len() {
+            self.layout.gap
+        } else {
+            px(0.)
+        };
+        self.geometry.item(ix).is_some_and(|(_, old, exact)| {
+            // Equality uses the backend's stored units, including its f32 gap.
+            old == f64::from(extent + gap) && exact == measured
+        }) && self.measured.as_ref().is_none_or(|list| {
+            list.geometry().item(ix).is_some_and(|item| {
+                item.cross_extent() == self.viewport.as_ref().map_or(px(0.), |v| v.cross)
+            })
+        })
+    }
+    // One feedback item cannot contain duplicates and needs no indexed Vec.
+    // Keep this specialization separate from the multi-item transaction body.
+    #[inline(never)]
+    fn apply_single_size(
+        &mut self,
+        update: &VirtualizerSizeUpdate,
+        measured: bool,
+    ) -> Result<(), VirtualizerError> {
+        let ix = self
+            .source
+            .index_of(&update.key)
+            .ok_or(VirtualizerError::MissingKey)?;
+        if !valid_positive(update.extent) || !valid_positive(update.extent + self.layout.gap) {
+            return Err(VirtualizerError::InvalidGeometry("size update"));
+        }
+        if self.matches_size(ix, update.extent, measured) {
+            return Ok(());
+        }
+        if let Sizing::Known(tree) = &mut self.sizing.0 {
+            tree.update_measurements(&[(ix, update.extent)], true);
+            let mut geometry = tree.clone();
+            geometry.gap = self.layout.gap.into();
+            self.geometry = Geometry::Known(geometry);
+        } else if let Some(list) = &self.measured {
+            let cross = self.viewport.as_ref().map_or(px(0.), |v| v.cross);
+            let extent = update.extent
+                + if ix + 1 < self.source.len() {
+                    self.layout.gap
+                } else {
+                    px(0.)
+                };
+            list.set_item_sizes(&[(ix, size(cross, extent))], measured);
             self.geometry = Geometry::Measured(list.geometry());
         }
         self.changed_geometry();
