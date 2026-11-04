@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-05",
+  "timezone": "Asia/Shanghai",
+  "recorded_local": "2026-11-05T02:38:27.273744+08:00",
+  "baseline_commit": "f0f7583b93bd0a9041fda08a1debf7b38d77d9c0",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "production_changed": false,
+  "references_changed": false,
+  "production_source_sha256_lf": {
+    "vendor/gpui-base/src/virtualization/anchor.rs": "12c1c3d868e36288aebd4664825a05341fde9171027181ffed794a2b0bea8966",
+    "vendor/gpui-base/src/virtualization/cache.rs": "081ab5a86eefeb5aef39efd491b9a6a1b5b9c44a846af68abd4c1f1ca03a1481",
+    "vendor/gpui-base/src/virtualization/command.rs": "8e7597c87506fede39103c50001a7cc7219d65c1802ee5b00a53f22620230738",
+    "vendor/gpui-base/src/virtualization/element.rs": "fed75781e449de181c0247049a8eaea7a20253a17eebc25d7d5e7b3b5415efeb",
+    "vendor/gpui-base/src/virtualization/geometry.rs": "8b5e970e3b425d9e5f774db5dacaac2f243f4fc1b9fd0a0084785eb068a9dbb4",
+    "vendor/gpui-base/src/virtualization/grid.rs": "c7fefc1956da94182801d5922eaaeb5115de88ad1d6566557502eacb42b4675c",
+    "vendor/gpui-base/src/virtualization/masonry.rs": "6ffa4ff141fa426a1bbf4ee31bb70303a46228c301fdb7a6809f86b6a14357da",
+    "vendor/gpui-base/src/virtualization/masonry_element.rs": "db3352c973ceab17513806b931a0fcf3dc13d3e64dc075ecf4e18667bc3ab332",
+    "vendor/gpui-base/src/virtualization/masonry_index.rs": "59840e82117afc8faaf44db26412c3ef6dffb6e95ae51364d1efb03dcc60f12a",
+    "vendor/gpui-base/src/virtualization/mod.rs": "036ffdd9c22c021bb2bd05e5b73dbc22789429a6b6b1f0f1f2fe780145348f25",
+    "vendor/gpui-base/src/virtualization/state.rs": "e9b7bdb79ab5c10621dd1079efb5ab29d8f83154200dbc5ac8c4b3916570dc9e",
+    "vendor/gpui-base/src/virtualization/updates.rs": "ea5f8fb31ef063a9114c7d7ffd9a775f203e17b21d8c164a03ee0b51ee7cc44d"
+  },
+  "reference_source_sha256_lf": {
+    "refer/virtual/virtual-main/packages/virtual-core/src/index.ts": "ec73ae69df7f60bc5a29f7650aa3ee9fa27764d01e76b01efca184a6090c5c8d",
+    "refer/virtual/virtua-main/src/core/store.ts": "8256f04615be57b5bcb1b3473c39037b5e9536eef3637f8a637ad9b89e4c912c",
+    "refer/virtual/vlist-main/src/core/pipeline.ts": "5a704dec25b3908eb5273cb310b5de8f006cf69cbcccb0889fc230bca6977e51",
+    "refer/virtual/vlist-main/src/types.ts": "efffef5b76377b900281ae4166e3c7817a9ee6b6e6c8b279c78bb0b8f869c2f0"
+  },
+  "probe_source": "docs/research/virtual-list-next-review-2026-11-05.rs",
+  "probe_sha256_lf": "59471babbdcdaaad870ac48aa131ae8415db02a9ab729c58af2423032ad3dfac",
+  "review": "docs/research/2026-11-05-virtual-list-next-opportunities.md",
+  "review_sha256_lf": "3bfbe591a4ff4e2b87acdbb79a6b9c064aa156a3000bacd584564ceeaa2da570",
+  "environment": {
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "profile": "release",
+    "headless": true
+  },
+  "fixture": {
+    "manifest": "[package]\nname = \"yue-virtual-next-review\"\nversion = \"0.1.0\"\nedition = \"2024\"\n[workspace]\n[[test]]\nname = \"perf\"\npath = \"D:/100_Projects/110_Daily/Yue-GPUI-Component/docs/research/virtual-list-next-review-2026-11-05.rs\"\n[dependencies]\ngpui-kit = { version = \"0.8.0\", default-features = false }\ngpui-base = { version = \"0.8.0\", features = [\"test-support\"] }\n[patch.crates-io]\ngpui-base = { path = \"D:/100_Projects/110_Daily/Yue-GPUI-Component/vendor/gpui-base\" }\ngpui-pre = { path = \"D:/100_Projects/110_Daily/Yue-GPUI-Component/vendor/gpui-pre\" }\ngpui-pre-windows = { path = \"D:/100_Projects/110_Daily/Yue-GPUI-Component/vendor/gpui-pre-windows\" }\n[features]\nmasonry-views = []\n",
+    "lock_sha256_lf": "3af592ff97733528dfd65ec3c5d4fc907cc51948c369125c5880209b628ae00f",
+    "dependency_lock_origin": "preceding after fixture with only root test package renamed",
+    "preceding_before_after_dependency_records_equal": true,
+    "production_lock_sha256_lf": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+    "locked_offline": true
+  },
+  "runs": [
+    {
+      "log": "C:\\Temp\\yue-virtual-next-review-20261105\\run.log",
+      "log_sha256_lf": "d5020440fa9ec54ffbf53b4d813442ed9e73d6661a2b37b3a8270d53ccba4405",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "observations": [
+        "REVIEW,case=grid-stable-redraw,draws=10,renderer_calls=500,unique_cells=25,calls_per_draw=[50, 50, 50, 50, 50, 50, 50, 50, 50, 50]",
+        "REVIEW,case=grid-overscan,overscan=0,rows=5,columns=5,cells=25",
+        "REVIEW,case=grid-overscan,overscan=100,rows=15,columns=9,cells=135",
+        "REVIEW,case=grid-overscan,overscan=200,rows=25,columns=13,cells=325"
+      ]
+    },
+    {
+      "log": "C:\\Temp\\yue-virtual-next-review-20261105\\repeat.log",
+      "log_sha256_lf": "eb021c26933147d016ef3adbc675e7521b35f202f8081cec37756cb42d93ae06",
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0,
+      "observations": [
+        "REVIEW,case=grid-stable-redraw,draws=10,renderer_calls=500,unique_cells=25,calls_per_draw=[50, 50, 50, 50, 50, 50, 50, 50, 50, 50]",
+        "REVIEW,case=grid-overscan,overscan=0,rows=5,columns=5,cells=25",
+        "REVIEW,case=grid-overscan,overscan=100,rows=15,columns=9,cells=135",
+        "REVIEW,case=grid-overscan,overscan=200,rows=25,columns=13,cells=325"
+      ]
+    }
+  ],
+  "initial_probe_attempt": {
+    "adopted_as_final_evidence": false,
+    "expected_renderer_calls": 250,
+    "actual_renderer_calls": 500,
+    "cause": "observation assumed one traversal per explicit draw; corrected to record actual callbacks per draw cycle",
+    "initial_fixture_resolution_replaced_with_frozen_lock": true
+  },
+  "measurement_scope": "deterministic renderer-call and pure workset counts; no CPU timing, allocation benchmark, display frames, GPU timing, hardware input latency or cross-library benchmark",
+  "candidates": [
+    {
+      "priority": 1,
+      "name": "opt-in Grid prepared cell views",
+      "implemented": false
+    },
+    {
+      "priority": 2,
+      "name": "bounded directional overscan for list and Grid first",
+      "implemented": false
+    },
+    {
+      "priority": 3,
+      "name": "Masonry activity direction and idle lifecycle",
+      "implemented": false
+    },
+    {
+      "priority": 4,
+      "name": "portable Masonry measurement and key-anchor cache",
+      "implemented": false
+    }
+  ],
+  "validation_scope": "two observation tests repeated twice; previous 850 workspace results not rerun or counted as current evidence"
+}
