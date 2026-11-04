@@ -9,11 +9,11 @@ use gpui::{
 
 type Renderer = Rc<dyn Fn(VirtualizerItem, &mut Window, &mut App) -> AnyElement>;
 type ViewFactory = Rc<dyn Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> gpui::AnyView>;
-type ViewStamp = (u64, u64, u64, usize);
+pub(super) type ViewStamp = (u64, u64, u64, usize);
 #[derive(Default)]
-struct ItemViews {
-    entries: std::collections::HashMap<ElementId, (ViewStamp, gpui::AnyView)>,
-    touched: std::collections::HashSet<ElementId>,
+pub(super) struct ItemViews {
+    pub(super) entries: std::collections::HashMap<ElementId, (ViewStamp, gpui::AnyView)>,
+    pub(super) touched: std::collections::HashSet<ElementId>,
 }
 
 /// Unstyled one-dimensional presentation of the shared virtualizer state.

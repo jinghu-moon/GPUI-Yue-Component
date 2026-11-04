@@ -164,6 +164,9 @@ pub struct VirtualMasonryState {
     scroll: ScrollHandle,
     token: Rc<()>,
     revision: u64,
+    content_revision: u64,
+    content_base_revision: u64,
+    content_revisions: std::collections::BTreeMap<usize, u64>,
     retained: Rc<[ElementId]>,
     focus: std::collections::HashMap<ElementId, gpui::FocusHandle>,
     mount: Option<(gpui::WindowId, gpui::GlobalElementId)>,
@@ -202,6 +205,9 @@ impl VirtualMasonryState {
             scroll: ScrollHandle::new(),
             token: Rc::new(()),
             revision: 1,
+            content_revision: 0,
+            content_base_revision: 0,
+            content_revisions: Default::default(),
             retained: Rc::from([]),
             focus: std::collections::HashMap::new(),
             mount: None,
@@ -316,6 +322,11 @@ impl VirtualMasonryState {
         self.lanes = lanes;
         self.slots = slots;
         self.dynamic = dynamic;
+        if !self.content_revisions.is_empty() {
+            self.content_revision += 1;
+            self.content_base_revision = self.content_revision;
+            self.content_revisions.clear();
+        }
         self.removed_focus.extend(
             self.focus
                 .iter()
@@ -447,9 +458,6 @@ impl VirtualMasonryState {
     }
     /// Explicit content invalidation keeps old extents as hints.
     pub fn invalidate_items(&mut self, keys: &[ElementId]) -> Result<(), VirtualizerError> {
-        if !self.dynamic {
-            return Err(VirtualizerError::WrongBackend);
-        }
         let indexes: Result<Vec<_>, _> = keys
             .iter()
             .map(|key| {
@@ -458,7 +466,7 @@ impl VirtualMasonryState {
                     .ok_or(VirtualizerError::MissingKey)
             })
             .collect();
-        let indexes = indexes?;
+        let mut indexes = indexes?;
         let mut by_lane = vec![Vec::new(); self.lanes.len()];
         let mut seen = HashSet::new();
         for &ix in &indexes {
@@ -467,7 +475,7 @@ impl VirtualMasonryState {
             }
             let (lane, local) = self.slots[ix];
             let (_, extent, measured) = self.lanes[lane].geometry.item(local).unwrap();
-            if measured {
+            if self.dynamic && measured {
                 by_lane[lane].push((local, Pixels::from(extent)));
             }
         }
@@ -476,9 +484,41 @@ impl VirtualMasonryState {
         }
         // Explicit content identity changes even before its first measurement.
         if !indexes.is_empty() {
+            indexes.sort_unstable();
+            indexes.dedup();
+            self.content_revision += 1;
+            let mut at = 0;
+            while at < indexes.len() {
+                let start = indexes[at];
+                let mut end = start + 1;
+                at += 1;
+                while at < indexes.len() && indexes[at] == end {
+                    end += 1;
+                    at += 1;
+                }
+                let after = self.item_content_revision(end);
+                let boundaries: Vec<_> = self
+                    .content_revisions
+                    .range(start..=end)
+                    .map(|(&ix, _)| ix)
+                    .collect();
+                for ix in boundaries {
+                    self.content_revisions.remove(&ix);
+                }
+                self.content_revisions.insert(start, self.content_revision);
+                if end < self.source.len() {
+                    self.content_revisions.insert(end, after);
+                }
+            }
             self.revision += 1;
         }
         Ok(())
+    }
+    fn item_content_revision(&self, ix: usize) -> u64 {
+        self.content_revisions
+            .range(..=ix)
+            .next_back()
+            .map_or(self.content_base_revision, |(_, &revision)| revision)
     }
     pub fn snapshot(
         &self,

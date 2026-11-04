@@ -528,3 +528,14 @@ events settle, cancel, report a missing key or stop after bounded no-progress;
 regression coverage asserts exactly one result and retains the existing owner.
 The full pre-experiment virtual_list suite passed 99 tests with 8 manual probes
 ignored; the added terminal-results test also passes.
+
+## Bounded Masonry View preparation (2026-11-04)
+
+Add opt-in new_with_item_views/content_revision, sharing the existing 1D
+working-set cache representation. Cache AnyView only, never frame Elements.
+Invalidate by key/source/external/local content stamps; preserve content through
+geometry changes and append, and release evicted/swapped/unmounted Views.
+Fixed/Known explicit content invalidation now refreshes preparation without
+invalidating geometry. Adoption report and ABBA CSVs show stable-range gains,
+rapid-jump overhead and unchanged ordinary-renderer allocations. Remove when
+upstream provides the same bounded preparation and invalidation contracts.

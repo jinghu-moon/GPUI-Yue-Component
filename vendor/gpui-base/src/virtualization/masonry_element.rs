@@ -1,4 +1,5 @@
 use super::*;
+use crate::virtualization::element::ItemViews;
 use crate::{InteractiveElementExt as _, TestSupportExt as _};
 use gpui::{
     AnyElement, App, AvailableSpace, Bounds, ContentMask, Div, Element, Entity, GlobalElementId,
@@ -7,11 +8,14 @@ use gpui::{
 };
 
 type Renderer = Rc<dyn Fn(VirtualMasonryItem, &mut Window, &mut App) -> AnyElement>;
+type ViewFactory = Rc<dyn Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> gpui::AnyView>;
 pub struct VirtualMasonry {
     id: ElementId,
     state: Entity<VirtualMasonryState>,
     base: Stateful<Div>,
     render: Renderer,
+    view_factory: Option<ViewFactory>,
+    content_revision: u64,
 }
 impl VirtualMasonry {
     pub fn new<R: IntoElement>(
@@ -34,7 +38,25 @@ impl VirtualMasonry {
             id,
             state: state.clone(),
             render: Rc::new(move |item, w, cx| render(item, w, cx).into_any_element()),
+            view_factory: None,
+            content_revision: 0,
         }
+    }
+    /// Reuse content preparation for the live workset. Geometry remains frame-local.
+    /// Factory inputs outside source revisions require content_revision or explicit
+    /// content invalidation. Reactive view layout still runs normally each frame.
+    pub fn new_with_item_views<V: Into<gpui::AnyView>>(
+        id: impl Into<ElementId>,
+        state: &Entity<VirtualMasonryState>,
+        factory: impl Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> V + 'static,
+    ) -> Self {
+        let mut list = Self::new(id, state, |_, _, _| div());
+        list.view_factory = Some(Rc::new(move |item, w, cx| factory(item, w, cx).into()));
+        list
+    }
+    pub fn content_revision(mut self, revision: u64) -> Self {
+        self.content_revision = revision;
+        self
     }
 }
 impl Styled for VirtualMasonry {
@@ -61,6 +83,7 @@ struct Mount {
     owner: gpui::WeakEntity<VirtualMasonryState>,
     _observe: gpui::Subscription,
     _release: gpui::Subscription,
+    views: Rc<std::cell::RefCell<ItemViews>>,
 }
 impl Element for VirtualMasonry {
     type RequestLayoutState = MasonryFrame;
@@ -91,6 +114,7 @@ impl Element for VirtualMasonry {
             cx,
             move |_, cx: &mut gpui::Context<Mount>| Mount {
                 owner: state.downgrade(),
+                views: Rc::default(),
                 _observe: cx.observe(&state, |_, _, cx| cx.notify()),
                 _release: cx.on_release(|mount: &mut Mount, cx| {
                     let _ = mount.owner.update(cx, |s, cx| {
@@ -107,9 +131,43 @@ impl Element for VirtualMasonry {
                     s.emit_events(cx);
                 });
                 m.owner = self.state.downgrade();
+                m.views.borrow_mut().entries.clear();
                 m._observe = cx.observe(&self.state, |_, _, cx| cx.notify());
             }
         });
+        if let Some(factory) = self.view_factory.clone() {
+            let views = mount.read(cx).views.clone();
+            let source = self.state.read(cx).source().clone();
+            let owner = self.state.clone();
+            let content_revision = self.content_revision;
+            self.render = Rc::new(move |item, w, cx| {
+                let identity = item.item().identity();
+                let key = identity.key().clone();
+                let stamp = (
+                    source.revision_at(identity.index()),
+                    content_revision,
+                    owner.read(cx).item_content_revision(identity.index()),
+                    identity.index(),
+                );
+                let existing = views
+                    .borrow()
+                    .entries
+                    .get(&key)
+                    .filter(|(old, _)| *old == stamp)
+                    .map(|(_, view)| view.clone());
+                let view = existing.unwrap_or_else(|| {
+                    let view = factory(identity, w, cx);
+                    views
+                        .borrow_mut()
+                        .entries
+                        .insert(key, (stamp, view.clone()));
+                    view
+                });
+                view.into_any_element()
+            });
+        } else {
+            mount.read(cx).views.borrow_mut().entries.clear();
+        }
         let scroll = self.state.read(cx).scroll_handle().clone();
         self.base = std::mem::replace(&mut self.base, div().id(self.id.clone()))
             .overflow_y_scroll()
@@ -289,6 +347,19 @@ impl Element for VirtualMasonry {
                 hitbox
             },
         );
+        if self.view_factory.is_some() {
+            let mount: Entity<Mount> =
+                w.use_keyed_state((self.id.clone(), "masonry-mount"), cx, |_, _| {
+                    unreachable!("mount exists")
+                });
+            let views = mount.read(cx).views.clone();
+            let mut cache = views.borrow_mut();
+            let mut touched = std::mem::take(&mut cache.touched);
+            touched.clear();
+            touched.extend(items.iter().map(|item| item.item().key().clone()));
+            cache.entries.retain(|key, _| touched.contains(key));
+            cache.touched = touched;
+        }
         self.state
             .update(cx, |s, _| s.commit_anchor_items(snapshot.offset(), items));
         self.state.update(cx, |s, cx| {
