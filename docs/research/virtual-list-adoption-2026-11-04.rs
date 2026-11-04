@@ -562,3 +562,83 @@ fn four_masonry_feedback() {
         }
     }
 }
+
+#[test]
+fn next_linear_feedback() {
+    // Known, native actual measurements, and native hints share the public seam.
+    for mode in 0..3 {
+        for count in [0, 1, 32, 256] {
+            for changes in [false, true] {
+                for sample in 0..5 {
+                    let calls = Rc::new(Cell::new(0));
+                    let sizing = if mode == 0 {
+                        VirtualizerSizing::known(vec![px(40.); 100_000])
+                    } else {
+                        VirtualizerSizing::measured(px(40.))
+                    };
+                    let mut state =
+                        VirtualizerState::new(Axis::Vertical, source(100_000, &calls), sizing)
+                            .unwrap();
+                    state
+                        .set_layout(VirtualizerLayout::default().gap(px(0.1)))
+                        .unwrap();
+                    let viewport = VirtualizerViewport::new(
+                        state.binding().unwrap(),
+                        1,
+                        0.,
+                        px(600.),
+                        px(300.),
+                    );
+                    state.commit(&viewport).unwrap();
+                    let mut updates = (0..count)
+                        .rev()
+                        .map(|ix| VirtualizerSizeUpdate::new(ix, px(40.)))
+                        .collect::<Vec<_>>();
+                    if mode == 2 {
+                        state.update_size_hints(&updates).unwrap();
+                    } else {
+                        state.update_sizes(&updates).unwrap();
+                    }
+                    let frozen = state.snapshot(&viewport).unwrap();
+                    calls.set(0);
+                    let (_, ns, stats) = measured(|| {
+                        for pass in 0..2_000 {
+                            if changes {
+                                for (ix, update) in updates.iter_mut().enumerate() {
+                                    *update = VirtualizerSizeUpdate::new(
+                                        count - ix - 1,
+                                        px(40. + (pass % 2) as f32),
+                                    );
+                                }
+                            }
+                            if mode == 2 {
+                                state.update_size_hints(&updates).unwrap();
+                            } else {
+                                state.update_sizes(&updates).unwrap();
+                            }
+                        }
+                    });
+                    let reads = calls.get();
+                    if count > 0 {
+                        let next = state.snapshot(&viewport).unwrap();
+                        let expected = px(if changes { 41. } else { 40. });
+                        // Native slots include a rounded f32 gap; the content
+                        // projection is not more precise than that native slot.
+                        assert!(
+                            (f32::from(next.item(0).unwrap().extent()) - f32::from(expected)).abs()
+                                < 0.00001
+                        );
+                        assert!(
+                            (f32::from(frozen.item(0).unwrap().extent()) - 40.).abs() < 0.00001
+                        );
+                        assert_eq!(next.item(0).unwrap().is_measured(), mode != 2);
+                    }
+                    println!(
+                        "SERIES,case=linear-feedback-{mode}-{count}-{changes},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={reads},builds=0",
+                        stats.count, stats.peak
+                    );
+                }
+            }
+        }
+    }
+}

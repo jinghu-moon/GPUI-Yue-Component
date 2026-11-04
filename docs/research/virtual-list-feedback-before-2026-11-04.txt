@@ -1,0 +1,41 @@
+    Finished `test` profile [unoptimized] target(s) in 0.53s
+     Running tests\virtual_list.rs (C:/Temp/gpui-yue-owner-perf-20261104\debug\deps\virtual_list-309599f03f74c13f.exe)
+
+running 3 tests
+test feedback::fractional_feedback_preserves_cumulative_geometry_and_frozen_snapshots ... FAILED
+test feedback::fractional_hints_and_padded_feedback_are_idempotent_in_native_slot_units ... FAILED
+test feedback::masonry_fractional_feedback_updates_singletons_and_batches_without_lane_drift ... FAILED
+
+failures:
+
+---- feedback::fractional_feedback_preserves_cumulative_geometry_and_frozen_snapshots stdout ----
+
+thread 'feedback::fractional_feedback_preserves_cumulative_geometry_and_frozen_snapshots' (28192) panicked at crates\yue-component\tests\virtual_list\feedback.rs:33:13:
+assertion `left == right` failed
+  left: 163840.0
+ right: 163844.0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- feedback::fractional_hints_and_padded_feedback_are_idempotent_in_native_slot_units stdout ----
+
+thread 'feedback::fractional_hints_and_padded_feedback_are_idempotent_in_native_slot_units' (25740) panicked at crates\yue-component\tests\virtual_list\feedback.rs:77:13:
+assertion `left == right` failed
+  left: Ok(())
+ right: Err(StaleSnapshot)
+
+---- feedback::masonry_fractional_feedback_updates_singletons_and_batches_without_lane_drift stdout ----
+
+thread 'feedback::masonry_fractional_feedback_updates_singletons_and_batches_without_lane_drift' (3952) panicked at crates\yue-component\tests\virtual_list\feedback.rs:112:5:
+assertion `left == right` failed
+  left: 20px
+ right: 20.003906px
+
+
+failures:
+    feedback::fractional_feedback_preserves_cumulative_geometry_and_frozen_snapshots
+    feedback::fractional_hints_and_padded_feedback_are_idempotent_in_native_slot_units
+    feedback::masonry_fractional_feedback_updates_singletons_and_batches_without_lane_drift
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 119 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p yue-component --test virtual_list`
