@@ -1,5 +1,18 @@
 # Yue GPUI paint snapshot extension
 
+## Measured geometry cross-constraint reader (2026-11-04)
+
+`ListItemGeometry::cross_extent()` exposes the constraint already stored with
+the native size or size hint. Width is the normalized cross axis on both native
+axis projections; only `is_measured()` proves actual measurement. No second
+measurement map is introduced. Frozen geometry retains its original constraint
+after an equal-height update at another width or demotion to an estimate.
+Base uses this fact for idempotent size updates and portable-cache validation.
+The explicit native virtualization integration suite now has seven contracts;
+the new constraint test and Base/Yue cache resize/restore tests must pass before
+an upstream API replaces this reader. See
+`docs/research/2026-11-04-virtual-list-followup-fixes.md`.
+
 Source: crates.io `gpui-pre 0.3.9`, snapshot `zed@93d7456`. The original
 Apache-2.0 license is retained in `LICENSE-APACHE`. No Cargo registry source was
 edited. The consuming workspace must patch `gpui-base`, `gpui-pre`, and
@@ -142,3 +155,95 @@ replacements, as well as the existing backdrop and snapshot contracts. Component
 tests check full UV geometry and static integer-zoom device-pixel alignment at
 1 / 1.25 / 1.5 / 2 display scales. Production-shader pixel checks are recorded in
 the Windows patch log; no real-window or performance claim follows from these tests.
+## Native virtualization seams (2026-11-03)
+
+`uniform_list_range` is the shared half-open f64 arithmetic used by native
+UniformList and the Base Fixed virtualizer. It has no per-item metadata or
+renderer dependency. Native uniform rendering keeps its existing input owner.
+
+ListState now exposes immutable persistent ListGeometry and ListViewportLayout.
+The latter runs the same native measurement algorithm without registering input
+or mutating a foreign ScrollHandle; hosts explicitly prepaint with their actual
+applied offset. Ordinary List and Owned virtual batches share one wheel handler.
+Focus handles can be registered without invalidating heights. Retained offscreen
+focus is positioned by its real index rather than after the visible rows.
+
+Hints survive initial layout, width invalidation and splice. Width changes use
+absolute anchors and preserve old heights as estimates. Measured status is
+separate from a cached fallback: nonpositive/nonfinite heights keep a useful
+estimate and remain inexact. Native layout counts, invalid-size counts and budget
+exhaustion are observable without a second size table. Scrollbar bounds include
+padding and preserve their existing drag-height freeze.
+
+`new_with_uniform_height` initializes the same SumTree with estimates directly,
+avoiding an all-unknown tree plus replacement tree. `set_default_item_height`
+and `set_item_height_hint` support future splices and changed boundary spacing
+without rebuilding an unaffected suffix. Full replacement/reorder remains a
+deliberate cold transaction; `remap_items` now transfers measurements and focus
+under stable-key/content-version mapping rather than invalidating every item.
+
+Run the explicit `virtualization` integration target with `test-support` (five
+contracts), and the Yue headless virtual-list suite. The published archive's
+unrelated unit-test asset/macro issues do not affect this production-library
+integration target. The source and maintenance/removal conditions are recorded
+in `docs/research/2026-11-03-virtual-list-implementation.md`. Physical Windows
+presentation and UIA behavior are outside these headless assertions.
+
+### Axis projection, remap and retained worksets
+
+`layout_for_viewport_on_axis` reuses native measurement, budgets and logical
+anchors for horizontal intrinsic widths. Its padding argument uses physical
+Edges; projection is performed at the measurement boundary. Horizontal children
+keep actual desktop layout, hitboxes, focus and paint coordinates. The returned
+ListViewportLayout prepaints along its captured axis; only Owned consumers
+install its projected native wheel handler. Base maps the native scrollbar
+geometry back to physical bounds without copying the measurement tree.
+
+`remap_items` transfers real sizes/focus from old indexes with explicit boundary
+gap adjustments. `set_retained_items` independently measures additional working
+roots under the existing budget, without laying out intervening rows. Exposed
+measurement import/export remains on the single native SumTree; Base owns key,
+content and layout validation. These methods register no global input owner.
+
+Native five-contract integration tests, Base/Yue upgrades and the independent
+Grid/Masonry consumers are recorded in
+`docs/research/2026-11-03-virtual-list-upgrades.md`. Removal requires equivalent
+upstream measurement/identity/axis contracts, not only matching method names.
+
+### Incremental per-item hint splice (2026-11-04)
+
+splice_with_size_hints validates every supplied height before mutation, then
+uses the same persistent splice implementation as splice_focusable. Existing
+measurements, focus handles and frozen geometry survive; inserted rows remain
+unmeasured with explicit hints. Base owns domain invariants and N-1 gap handling.
+The native integration suite now has six contracts, including malformed-batch
+atomicity and ordinary subsequent splices. Detailed evidence is in
+docs/research/2026-11-04-virtual-list-refinements.md.
+
+### Precise native scroll position (2026-11-04)
+
+Div/ScrollHandle now share one ScrollOffset containing an f64 logical position,
+its Pixels projection and a legacy-write marker, in the original shared Rc.
+Wheel accumulation/clamping uses f64 and notifies on exact changes even when
+the f32 projection stays equal. Prepaint preserves subpixel input; bounds do
+not accumulate overscroll residue. max-offset decimal rounding also uses f64
+intermediates so multiplying a large Pixels value by 100 adds no new loss.
+
+ScrollHandle::precise_offset and set_precise_offset(Point<f64>) expose this
+same owner (finite setter input). Existing offset/set_offset keep Pixels;
+explicit jumps and legacy mutable native writes reset prior fractions, even
+when writing the same projection. UniformList adapts to the shared internal
+type without changing its geometry/paint contract. No per-item state is added.
+
+The native virtualization integration target has eight tests, including exact
+read/write, a same-projection legacy jump and normal later input. Yue adds
+Fixed/Known tests at 2^24 for both axes, reverse input, bounds/click hit testing,
+origin clamp and Grid merged axes. Base Fixed/Known/Grid/Masonry consume exact
+positions before deriving local paint coordinates. Ordinary Div/UniformList
+paint and Measured ListState cumulative geometry remain Pixels/f32; this is
+not a claim of arbitrary-scale precision for those paths or scrollbar mapping.
+
+Evidence and Release A/B: docs/research/2026-11-04-virtual-list-owner-fixes.md.
+Remove this patch only after upstream preserves the same exact-input and
+legacy-jump semantics and consumers pass the local-coordinate/hit regressions
+without another scroll owner or a Yue-side per-wheel correction.

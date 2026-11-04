@@ -388,6 +388,13 @@ pub(super) enum ActiveKey {
     Create(SharedString),
 }
 impl Row {
+    pub(super) fn virtual_key(&self) -> gpui_kit::ElementId {
+        match self {
+            Self::Group(key, _) => (gpui_kit::ElementId::from("group"), key.clone()).into(),
+            Self::Option(option) => ActiveKey::Option(option.key.clone()).virtual_key(),
+            Self::Create(query) => ActiveKey::Create(query.clone()).virtual_key(),
+        }
+    }
     pub(super) fn selectable(&self) -> bool {
         match self {
             Self::Option(option) => !option.disabled,
@@ -400,6 +407,15 @@ impl Row {
             Self::Option(option) => Some(ActiveKey::Option(option.key.clone())),
             Self::Create(query) => Some(ActiveKey::Create(query.clone())),
             Self::Group(..) => None,
+        }
+    }
+}
+
+impl ActiveKey {
+    pub(super) fn virtual_key(&self) -> gpui_kit::ElementId {
+        match self {
+            Self::Option(key) => (gpui_kit::ElementId::from("option"), key.clone()).into(),
+            Self::Create(query) => (gpui_kit::ElementId::from("create"), query.clone()).into(),
         }
     }
 }

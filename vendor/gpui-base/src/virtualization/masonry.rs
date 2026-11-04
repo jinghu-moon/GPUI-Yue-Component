@@ -1,0 +1,745 @@
+//! Stable-lane masonry. Each lane reuses the persistent extent tree; resize
+//! changes only the affected lane. Repacking is an explicit cold transaction.
+use super::*;
+use gpui::{Pixels, ScrollHandle, Size, px};
+use std::collections::{BinaryHeap, HashSet};
+#[path = "masonry_element.rs"]
+mod element;
+pub use element::VirtualMasonry;
+
+#[derive(Clone)]
+struct Lane {
+    indexes: Rc<Vec<usize>>,
+    geometry: geometry::KnownGeometry,
+}
+#[derive(Clone, Copy)]
+struct LaneEnd(f64, usize);
+impl PartialEq for LaneEnd {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 && self.1 == other.1
+    }
+}
+impl Eq for LaneEnd {}
+impl Ord for LaneEnd {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other
+            .0
+            .total_cmp(&self.0)
+            .then_with(|| Ord::cmp(&other.1, &self.1))
+    }
+}
+impl PartialOrd for LaneEnd {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(Ord::cmp(self, other))
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct VirtualMasonryItem {
+    item: VirtualizerItem,
+    lane: usize,
+    cross_start: Pixels,
+    cross_extent: Pixels,
+}
+impl VirtualMasonryItem {
+    pub fn item(&self) -> &VirtualizerItem {
+        &self.item
+    }
+    pub fn lane(&self) -> usize {
+        self.lane
+    }
+    pub fn cross_start(&self) -> Pixels {
+        self.cross_start
+    }
+    pub fn cross_extent(&self) -> Pixels {
+        self.cross_extent
+    }
+}
+#[derive(Clone)]
+pub struct VirtualMasonrySnapshot {
+    owner: std::rc::Weak<()>,
+    revision: u64,
+    source: Rc<dyn VirtualizerSource>,
+    lanes: Vec<Lane>,
+    slots: Rc<Vec<(usize, usize)>>,
+    offset: f64,
+    viewport: Size<Pixels>,
+    layout: VirtualizerLayout,
+    column_gap: Pixels,
+    total: f64,
+    retained: Rc<[ElementId]>,
+}
+impl VirtualMasonrySnapshot {
+    pub fn revision(&self) -> u64 {
+        self.revision
+    }
+    pub fn total_extent(&self) -> f64 {
+        self.total
+    }
+    pub fn lane_count(&self) -> usize {
+        self.lanes.len()
+    }
+    pub fn offset(&self) -> f64 {
+        self.offset
+    }
+    pub fn item(&self, ix: usize) -> Result<VirtualMasonryItem, VirtualizerError> {
+        let &(lane, local) = self.slots.get(ix).ok_or(VirtualizerError::MissingKey)?;
+        let (start, extent, measured) = self.lanes[lane]
+            .geometry
+            .item(local)
+            .ok_or(VirtualizerError::MissingKey)?;
+        let width = ((self.viewport.width - self.column_gap * self.lanes.len().saturating_sub(1))
+            .max(px(0.)))
+            / self.lanes.len() as f32;
+        let key = self.source.key_at(ix);
+        if self.source.index_of(&key) != Some(ix) {
+            return Err(VirtualizerError::InvalidSource);
+        }
+        Ok(VirtualMasonryItem {
+            item: VirtualizerItem::from_geometry(
+                ix,
+                key,
+                start + f64::from(self.layout.padding_start),
+                Pixels::from(extent),
+                measured,
+            ),
+            lane,
+            cross_start: (width + self.column_gap) * lane,
+            cross_extent: width,
+        })
+    }
+    pub fn working_indices(&self) -> Vec<usize> {
+        if self.viewport.width <= self.column_gap * self.lanes.len().saturating_sub(1)
+            || self.viewport.height <= px(0.)
+        {
+            return Vec::new();
+        }
+        let start =
+            self.offset - f64::from(self.layout.padding_start) - f64::from(self.layout.overscan);
+        let extent = f64::from(self.viewport.height) + 2.0 * f64::from(self.layout.overscan);
+        let mut indexes = Vec::new();
+        for lane in &self.lanes {
+            indexes.extend(
+                lane.geometry
+                    .range(start, extent)
+                    .map(|ix| lane.indexes[ix]),
+            );
+        }
+        indexes.extend(
+            self.retained
+                .iter()
+                .filter_map(|key| self.source.index_of(key)),
+        );
+        indexes.sort_unstable();
+        indexes.dedup();
+        indexes
+    }
+}
+
+/// One vertical scroll owner. Item measurements have one owner: lane trees.
+/// Source identity/selection/editing remain consumer-owned. Reflow does not
+/// silently redistribute items during scrolling or asynchronous measurement.
+pub struct VirtualMasonryState {
+    source: Rc<dyn VirtualizerSource>,
+    lanes: Vec<Lane>,
+    slots: Rc<Vec<(usize, usize)>>,
+    dynamic: bool,
+    layout: VirtualizerLayout,
+    column_gap: Pixels,
+    cross: Option<Pixels>,
+    viewport: Option<Size<Pixels>>,
+    anchor: Option<(ElementId, f64)>,
+    pending: Option<(ElementId, VirtualizerAlign)>,
+    // Observation of the native owner, never a second writable scroll position.
+    last_offset: Option<f64>,
+    scroll: ScrollHandle,
+    token: Rc<()>,
+    revision: u64,
+    retained: Rc<[ElementId]>,
+    focus: std::collections::HashMap<ElementId, gpui::FocusHandle>,
+    mount: Option<(gpui::WindowId, gpui::GlobalElementId)>,
+    budget_reported: bool,
+    invalid_reported: bool,
+    focus_fallback: Option<gpui::FocusHandle>,
+    removed_focus: Vec<gpui::FocusHandle>,
+}
+impl gpui::EventEmitter<VirtualizerEvent> for VirtualMasonryState {}
+impl VirtualMasonryState {
+    pub fn new(
+        source: Rc<dyn VirtualizerSource>,
+        sizing: VirtualizerSizing,
+        lane_count: usize,
+    ) -> Result<Self, VirtualizerError> {
+        if lane_count == 0 {
+            return Err(VirtualizerError::InvalidGeometry("lane count"));
+        }
+        let extents = sizing_extents(&sizing, source.len(), 0..source.len())?;
+        let dynamic = sizing.kind() == VirtualizerSizingKind::Measured;
+        let (lanes, slots) = pack(&extents, lane_count, 0.0);
+        Ok(Self {
+            source,
+            lanes,
+            slots,
+            dynamic,
+            layout: VirtualizerLayout::default(),
+            column_gap: px(0.),
+            cross: None,
+            viewport: None,
+            anchor: None,
+            pending: None,
+            last_offset: None,
+            scroll: ScrollHandle::new(),
+            token: Rc::new(()),
+            revision: 1,
+            retained: Rc::from([]),
+            focus: std::collections::HashMap::new(),
+            mount: None,
+            budget_reported: false,
+            invalid_reported: false,
+            focus_fallback: None,
+            removed_focus: Vec::new(),
+        })
+    }
+    pub fn scroll_handle(&self) -> &ScrollHandle {
+        &self.scroll
+    }
+    pub fn source(&self) -> &Rc<dyn VirtualizerSource> {
+        &self.source
+    }
+    pub fn is_dynamic(&self) -> bool {
+        self.dynamic
+    }
+    pub fn lane_count(&self) -> usize {
+        self.lanes.len()
+    }
+    pub fn total_extent(&self) -> f64 {
+        self.lanes
+            .iter()
+            .map(|lane| lane.geometry.total())
+            .fold(0.0, f64::max)
+            + f64::from(self.layout.padding_start)
+            + f64::from(self.layout.padding_end)
+    }
+    pub fn set_layout(
+        &mut self,
+        layout: VirtualizerLayout,
+        column_gap: Pixels,
+    ) -> Result<(), VirtualizerError> {
+        if self.layout == layout && self.column_gap == column_gap {
+            return Ok(());
+        }
+        if ![
+            layout.gap,
+            layout.padding_start,
+            layout.padding_end,
+            layout.overscan,
+            layout.scroll_padding_start,
+            layout.scroll_padding_end,
+            column_gap,
+        ]
+        .into_iter()
+        .all(valid_nonnegative)
+            || layout.measurement_budget == 0
+        {
+            return Err(VirtualizerError::InvalidGeometry("masonry layout"));
+        }
+        self.observe_input();
+        self.capture_anchor();
+        if layout.revision != self.layout.revision && self.dynamic {
+            for lane in &mut self.lanes {
+                lane.geometry.set_all_measured(false);
+            }
+        }
+        self.layout = layout;
+        self.column_gap = column_gap;
+        for lane in &mut self.lanes {
+            lane.geometry.gap = layout.gap.into();
+        }
+        self.revision += 1;
+        self.restore_anchor();
+        Ok(())
+    }
+    /// Cold reflow for a responsive column-count change, preserving a key anchor.
+    pub fn reflow(&mut self, lane_count: usize) -> Result<(), VirtualizerError> {
+        if lane_count == 0 {
+            return Err(VirtualizerError::InvalidGeometry("lane count"));
+        }
+        self.observe_input();
+        self.capture_anchor();
+        let extents = self.source_extents();
+        (self.lanes, self.slots) = pack(&extents, lane_count, self.layout.gap.into());
+        self.cross = None;
+        if self.dynamic {
+            for lane in &mut self.lanes {
+                lane.geometry.set_all_measured(false);
+            }
+        }
+        self.revision += 1;
+        self.restore_anchor();
+        Ok(())
+    }
+    /// Structural transaction. Real sizes survive unchanged key/content pairs;
+    /// insertion/removal/reorder repacks once, outside the scrolling path.
+    pub fn replace_source(
+        &mut self,
+        source: Rc<dyn VirtualizerSource>,
+        sizing: VirtualizerSizing,
+    ) -> Result<(), VirtualizerError> {
+        let mut extents = sizing_extents(&sizing, source.len(), 0..source.len())?;
+        let dynamic = sizing.kind() == VirtualizerSizingKind::Measured;
+        let previous = self.source_extents();
+        for (ix, value) in extents.iter_mut().enumerate() {
+            let old = self.source.index_of(&source.key_at(ix)).filter(|old| {
+                dynamic
+                    && self.source.revision_at(*old) == source.revision_at(ix)
+                    && previous[*old].1
+            });
+            if let Some(old) = old {
+                *value = previous[old];
+            }
+        }
+        let (lanes, slots) = pack(&extents, self.lanes.len(), self.layout.gap.into());
+        self.observe_input();
+        self.capture_anchor();
+        self.source = source;
+        self.lanes = lanes;
+        self.slots = slots;
+        self.dynamic = dynamic;
+        self.removed_focus.extend(
+            self.focus
+                .iter()
+                .filter(|(key, _)| self.source.index_of(key).is_none())
+                .map(|(_, focus)| focus.clone()),
+        );
+        self.focus
+            .retain(|key, _| self.source.index_of(key).is_some());
+        self.retained = self
+            .retained
+            .iter()
+            .filter(|key| self.source.index_of(key).is_some())
+            .cloned()
+            .collect();
+        self.anchor = self
+            .anchor
+            .take()
+            .filter(|(key, _)| self.source.index_of(key).is_some());
+        self.pending = self
+            .pending
+            .take()
+            .filter(|(key, _)| self.source.index_of(key).is_some());
+        self.revision += 1;
+        self.restore_anchor();
+        Ok(())
+    }
+    /// Append with an explicitly unchanged prefix (keys, content and hints).
+    /// Stable lanes and real measurements survive. Frozen snapshots trigger COW
+    /// of flat index vectors; without them only appended entries are visited.
+    pub fn append_source(
+        &mut self,
+        source: Rc<dyn VirtualizerSource>,
+        sizing: VirtualizerSizing,
+    ) -> Result<(), VirtualizerError> {
+        let old_count = self.source.len();
+        if source.len() < old_count
+            || (sizing.kind() == VirtualizerSizingKind::Measured) != self.dynamic
+        {
+            return Err(VirtualizerError::InvalidChange);
+        }
+        let extents = sizing_extents(&sizing, source.len(), old_count..source.len())?;
+        self.observe_input();
+        self.capture_anchor();
+        let mut heap: BinaryHeap<_> = self
+            .lanes
+            .iter()
+            .enumerate()
+            .map(|(ix, lane)| {
+                LaneEnd(
+                    lane.geometry.total()
+                        + if lane.indexes.is_empty() {
+                            0.0
+                        } else {
+                            self.layout.gap.into()
+                        },
+                    ix,
+                )
+            })
+            .collect();
+        let mut appended = vec![Vec::new(); self.lanes.len()];
+        for (local, value) in extents.into_iter().enumerate() {
+            let ix = old_count + local;
+            let LaneEnd(end, lane_ix) = heap.pop().unwrap();
+            let lane = &mut self.lanes[lane_ix];
+            Rc::make_mut(&mut self.slots).push((lane_ix, lane.indexes.len()));
+            Rc::make_mut(&mut lane.indexes).push(ix);
+            appended[lane_ix].push(value);
+            heap.push(LaneEnd(
+                end + f64::from(value.0) + f64::from(self.layout.gap),
+                lane_ix,
+            ));
+        }
+        for (lane, values) in self.lanes.iter_mut().zip(appended) {
+            lane.geometry.extend(values);
+        }
+        self.source = source;
+        self.revision += 1;
+        self.restore_anchor();
+        Ok(())
+    }
+    fn source_extents(&self) -> Vec<(Pixels, bool)> {
+        let mut extents = vec![(px(0.), false); self.source.len()];
+        for lane in &self.lanes {
+            for (&ix, (_, extent, measured)) in lane
+                .indexes
+                .iter()
+                .zip(lane.geometry.items(0..lane.indexes.len()))
+            {
+                extents[ix] = (Pixels::from(extent), measured);
+            }
+        }
+        extents
+    }
+    pub fn set_retained_keys(&mut self, keys: Vec<ElementId>) -> Result<(), VirtualizerError> {
+        if keys.iter().any(|key| self.source.index_of(key).is_none()) {
+            return Err(VirtualizerError::MissingKey);
+        }
+        self.retained = keys.into();
+        self.revision += 1;
+        Ok(())
+    }
+    pub fn set_focus_handle(
+        &mut self,
+        key: ElementId,
+        focus: Option<gpui::FocusHandle>,
+    ) -> Result<(), VirtualizerError> {
+        if self.source.index_of(&key).is_none() {
+            return Err(VirtualizerError::MissingKey);
+        }
+        if let Some(focus) = focus {
+            if self
+                .focus
+                .iter()
+                .any(|(other, handle)| *other != key && *handle == focus)
+            {
+                return Err(VirtualizerError::InvalidSource);
+            }
+            self.focus.insert(key, focus);
+        } else {
+            self.focus.remove(&key);
+        }
+        Ok(())
+    }
+    pub fn set_focus_fallback(&mut self, focus: Option<gpui::FocusHandle>) {
+        self.focus_fallback = focus;
+    }
+    /// Explicit content invalidation keeps old extents as hints.
+    pub fn invalidate_items(&mut self, keys: &[ElementId]) -> Result<(), VirtualizerError> {
+        if !self.dynamic {
+            return Err(VirtualizerError::WrongBackend);
+        }
+        let indexes: Result<Vec<_>, _> = keys
+            .iter()
+            .map(|key| {
+                self.source
+                    .index_of(key)
+                    .ok_or(VirtualizerError::MissingKey)
+            })
+            .collect();
+        let indexes = indexes?;
+        let mut by_lane = vec![Vec::new(); self.lanes.len()];
+        let mut seen = HashSet::new();
+        for &ix in &indexes {
+            if !seen.insert(ix) {
+                continue;
+            }
+            let (lane, local) = self.slots[ix];
+            let (_, extent, measured) = self.lanes[lane].geometry.item(local).unwrap();
+            if measured {
+                by_lane[lane].push((local, Pixels::from(extent)));
+            }
+        }
+        for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
+            lane.geometry.update_measurements(&values, false);
+        }
+        // Explicit content identity changes even before its first measurement.
+        if !indexes.is_empty() {
+            self.revision += 1;
+        }
+        Ok(())
+    }
+    pub fn snapshot(
+        &self,
+        offset: f64,
+        viewport: Size<Pixels>,
+    ) -> Result<VirtualMasonrySnapshot, VirtualizerError> {
+        if !offset.is_finite()
+            || offset < 0.0
+            || !valid_nonnegative(viewport.width)
+            || !valid_nonnegative(viewport.height)
+        {
+            return Err(VirtualizerError::InvalidGeometry("masonry viewport"));
+        }
+        Ok(VirtualMasonrySnapshot {
+            owner: Rc::downgrade(&self.token),
+            revision: self.revision,
+            source: self.source.clone(),
+            lanes: self.lanes.clone(),
+            slots: self.slots.clone(),
+            offset,
+            viewport,
+            layout: self.layout,
+            column_gap: self.column_gap,
+            total: self.total_extent(),
+            retained: self.retained.clone(),
+        })
+    }
+    pub fn update_sizes(
+        &mut self,
+        updates: &[VirtualizerSizeUpdate],
+    ) -> Result<(), VirtualizerError> {
+        let mut seen = HashSet::new();
+        let mut indexed = Vec::new();
+        for update in updates {
+            let ix = self
+                .source
+                .index_of(update.key())
+                .ok_or(VirtualizerError::MissingKey)?;
+            if !valid_positive(update.extent()) || !seen.insert(ix) {
+                return Err(VirtualizerError::InvalidGeometry("masonry size update"));
+            }
+            indexed.push((ix, update.extent()));
+        }
+        let mut changed = false;
+        let mut by_lane = vec![Vec::new(); self.lanes.len()];
+        for (ix, extent) in indexed {
+            let (lane, local) = self.slots[ix];
+            let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
+            if (old - f64::from(extent)).abs() > 0.01 || !measured {
+                by_lane[lane].push((local, extent));
+                changed = true;
+            }
+        }
+        // Only geometry changes need compensation. No anchor scan or temporary
+        // working-set allocation for the common identical-measurement batch.
+        if changed {
+            self.capture_anchor();
+        }
+        for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
+            lane.geometry.update_measurements(&values, true);
+        }
+        if changed {
+            self.revision += 1;
+            self.restore_anchor();
+        }
+        Ok(())
+    }
+    pub fn update_sizes_from_snapshot(
+        &mut self,
+        snapshot: &VirtualMasonrySnapshot,
+        updates: &[VirtualizerSizeUpdate],
+    ) -> Result<(), VirtualizerError> {
+        if !snapshot.owner.ptr_eq(&Rc::downgrade(&self.token)) || snapshot.revision != self.revision
+        {
+            return Err(VirtualizerError::StaleSnapshot);
+        }
+        self.update_sizes(updates)
+    }
+    pub fn scroll_to_key(
+        &mut self,
+        key: ElementId,
+        align: VirtualizerAlign,
+    ) -> Result<(), VirtualizerError> {
+        if self.source.index_of(&key).is_none() {
+            return Err(VirtualizerError::MissingKey);
+        }
+        self.observe_input();
+        self.pending = Some((key, align));
+        Ok(())
+    }
+    /// Consumers call before keyboard/drag navigation takes over. Native wheel
+    /// input calls this automatically, including input at a scroll boundary.
+    pub fn cancel_scroll(&mut self) {
+        self.pending = None;
+    }
+    pub fn has_scroll_command(&self) -> bool {
+        self.pending.is_some()
+    }
+    fn capture_anchor(&mut self) {
+        if let Some(viewport) = self.viewport {
+            let offset = (-self.scroll.precise_offset().y).max(0.0);
+            let snapshot = self.snapshot(offset, viewport).unwrap();
+            self.commit_anchor(&snapshot);
+        }
+    }
+    pub(super) fn observe_input(&mut self) {
+        let offset = (-self.scroll.precise_offset().y).max(0.0);
+        if self.last_offset.is_some_and(|old| old != offset) {
+            self.cancel_scroll();
+        }
+        self.last_offset = Some(offset);
+    }
+    fn restore_anchor(&mut self) {
+        if let Some((key, intra)) = &self.anchor
+            && let Some(ix) = self.source.index_of(key)
+            && let Some(viewport) = self.viewport
+        {
+            let snapshot = self.snapshot(0.0, viewport).unwrap();
+            let item = snapshot.item(ix).unwrap();
+            let offset = (item.item.start() + intra).clamp(
+                0.0,
+                (self.total_extent() - f64::from(viewport.height)).max(0.0),
+            );
+            self.scroll.set_precise_offset(gpui::point(0.0, -offset));
+            self.last_offset = Some(offset);
+        }
+    }
+    pub(super) fn observe_viewport(&mut self, viewport: Size<Pixels>) {
+        let width = (viewport.width - self.column_gap * self.lanes.len().saturating_sub(1))
+            .max(px(0.))
+            / self.lanes.len() as f32;
+        if self.dynamic && self.cross.is_some_and(|old| old != width) {
+            for lane in &mut self.lanes {
+                lane.geometry.set_all_measured(false);
+            }
+            self.revision += 1;
+        }
+        self.cross = Some(width);
+        self.viewport = Some(viewport);
+    }
+    pub(super) fn resolve_offset(&mut self) -> f64 {
+        let viewport = self.viewport.unwrap();
+        let old = (-self.scroll.precise_offset().y).max(0.0);
+        let mut offset = old;
+        if let Some((key, align)) = self.pending.take()
+            && let Some(ix) = self.source.index_of(&key)
+        {
+            let snapshot = self.snapshot(old, viewport).unwrap();
+            let item = snapshot.item(ix).unwrap();
+            let v = VirtualizerViewport::new(
+                &VirtualizerBinding::new(),
+                0,
+                old,
+                viewport.height,
+                viewport.width,
+            );
+            offset = state::alignment_offset(
+                item.item(),
+                &v,
+                align,
+                self.layout.scroll_padding_start.into(),
+                self.layout.scroll_padding_end.into(),
+            );
+        }
+        offset = offset.clamp(
+            0.0,
+            (self.total_extent() - f64::from(viewport.height)).max(0.0),
+        );
+        self.scroll.set_precise_offset(gpui::point(0.0, -offset));
+        self.last_offset = Some(offset);
+        offset
+    }
+    pub(super) fn commit_anchor(&mut self, snapshot: &VirtualMasonrySnapshot) {
+        self.anchor = snapshot
+            .working_indices()
+            .into_iter()
+            .filter_map(|ix| snapshot.item(ix).ok())
+            .filter(|item| {
+                item.item.start() <= snapshot.offset
+                    && item.item.start() + f64::from(item.item.extent()) > snapshot.offset
+            })
+            .min_by(|a, b| {
+                a.item
+                    .start()
+                    .total_cmp(&b.item.start())
+                    .then_with(|| a.item.index().cmp(&b.item.index()))
+            })
+            .map(|item| (item.item.key().clone(), snapshot.offset - item.item.start()));
+    }
+    pub(super) fn focus_keys(
+        &mut self,
+        w: &mut gpui::Window,
+        cx: &mut gpui::App,
+    ) -> Vec<ElementId> {
+        if self
+            .removed_focus
+            .iter()
+            .any(|focus| focus.contains_focused(w, cx))
+        {
+            if let Some(fallback) = &self.focus_fallback {
+                fallback.focus(w, cx);
+            } else {
+                w.blur(cx);
+            }
+        }
+        self.removed_focus.clear();
+        self.focus
+            .iter()
+            .filter(|(_, focus)| focus.contains_focused(w, cx))
+            .map(|(key, _)| key.clone())
+            .collect()
+    }
+    pub(super) fn budget(&self) -> usize {
+        self.layout.measurement_budget
+    }
+    pub(super) fn claim_mount(&mut self, w: &gpui::Window, id: &gpui::GlobalElementId) {
+        let current = (w.window_handle().window_id(), id.clone());
+        assert!(
+            self.mount.as_ref().is_none_or(|old| *old == current),
+            "one masonry mount per state"
+        );
+        self.mount = Some(current);
+    }
+    pub(super) fn release_mount(&mut self) {
+        if self.mount.take().is_some() {
+            // A surviving controller must reject resource/measurement feedback
+            // captured by the removed presentation, including after remount.
+            self.revision += 1;
+            self.pending = None;
+            self.last_offset = None;
+        }
+    }
+}
+fn sizing_extents(
+    sizing: &VirtualizerSizing,
+    count: usize,
+    range: std::ops::Range<usize>,
+) -> Result<Vec<(Pixels, bool)>, VirtualizerError> {
+    state::validate_sizing(sizing, count)?;
+    let values: Vec<_> = match &sizing.0 {
+        Sizing::Known(tree) => tree
+            .items(range)
+            .map(|(_, extent, _)| (Pixels::from(extent), true))
+            .collect(),
+        Sizing::Fixed(extent) => range.map(|_| (*extent, true)).collect(),
+        Sizing::Measured(_) => range.map(|ix| (sizing.estimate_at(ix), false)).collect(),
+    };
+    if !values.iter().all(|(extent, _)| valid_positive(*extent)) {
+        return Err(VirtualizerError::InvalidGeometry("masonry extents"));
+    }
+    Ok(values)
+}
+fn pack(
+    extents: &[(Pixels, bool)],
+    lane_count: usize,
+    gap: f64,
+) -> (Vec<Lane>, Rc<Vec<(usize, usize)>>) {
+    let mut heap: BinaryHeap<_> = (0..lane_count).map(|lane| LaneEnd(0.0, lane)).collect();
+    let mut indexes = vec![Vec::new(); lane_count];
+    let mut sizes = vec![Vec::new(); lane_count];
+    let mut slots = Vec::with_capacity(extents.len());
+    for (ix, (extent, measured)) in extents.iter().copied().enumerate() {
+        let LaneEnd(end, lane) = heap.pop().unwrap();
+        slots.push((lane, indexes[lane].len()));
+        indexes[lane].push(ix);
+        sizes[lane].push((extent, measured));
+        heap.push(LaneEnd(end + f64::from(extent) + gap, lane));
+    }
+    let lanes = indexes
+        .into_iter()
+        .zip(sizes)
+        .map(|(indexes, sizes)| Lane {
+            indexes: Rc::new(indexes),
+            geometry: geometry::KnownGeometry::with_measurements(sizes, gap),
+        })
+        .collect();
+    (lanes, Rc::new(slots))
+}

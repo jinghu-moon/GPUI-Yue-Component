@@ -1,0 +1,28 @@
+FOLLOWUP_CONTENT_BATCH,mode=0,order=invalidate_only,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=0,order=append_then_invalidate,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=0,order=invalidate_then_append,requested=1,prepared=0,factories=0
+FOLLOWUP_CONTENT_BATCH,mode=1,order=invalidate_only,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=1,order=append_then_invalidate,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=1,order=invalidate_then_append,requested=1,prepared=0,factories=0
+FOLLOWUP_CONTENT_BATCH,mode=2,order=invalidate_only,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=2,order=append_then_invalidate,requested=1,prepared=1,factories=1
+FOLLOWUP_CONTENT_BATCH,mode=2,order=invalidate_then_append,requested=1,prepared=0,factories=0
+FOLLOWUP_GRID,cells=400,row_source_calls=40,column_source_calls=800
+FOLLOWUP_GRID_ONCE,cells=400,row_source_calls=40,column_source_calls=40
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=2,frame=0,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=2,frame=1,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=2,frame=2,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=1024,frame=0,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=1024,frame=1,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_BUDGET,measured=false,budget=1024,frame=2,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=2,frame=0,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=2,frame=1,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=2,frame=2,working=15,painted=2,built=[0, 1]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=1024,frame=0,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=1024,frame=1,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_BUDGET,measured=true,budget=1024,frame=2,working=15,painted=15,built=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+FOLLOWUP_MASONRY_INVALIDATION,measured=false,old_revision=1,new_revision=1,late_accepted=true
+FOLLOWUP_MASONRY_INVALIDATION,measured=true,old_revision=2,new_revision=3,late_accepted=false
+FOLLOWUP_CACHE,measured_cross=240,exported_cross=480,extent=60,restored=1
+FOLLOWUP_NOOP,smooth=false,confirmations=1,events=[CommandFinished { id: 1, outcome: Settled }]
+FOLLOWUP_NOOP,smooth=true,confirmations=9,events=[CommandFinished { id: 1, outcome: NoProgress }]

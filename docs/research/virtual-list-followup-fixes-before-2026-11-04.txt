@@ -1,0 +1,65 @@
+   Compiling yue-component v0.1.0 (D:\100_Projects\110_Daily\GPUI-Yue-Component\crates\yue-component)
+    Finished `test` profile [unoptimized] target(s) in 4.76s
+     Running tests\virtual_list.rs (target\debug\deps\virtual_list-309599f03f74c13f.exe)
+
+running 6 tests
+test followup::content_invalidation_before_append_regression ... FAILED
+test followup::grid_axis_metadata_reads_regression ... FAILED
+test followup::masonry_budget_rendering_regression ... FAILED
+test followup::masonry_unmeasured_invalidation_regression ... FAILED
+test followup::measurement_cache_cross_identity_regression ... FAILED
+test followup::smooth_noop_terminal_regression ... FAILED
+
+failures:
+
+---- followup::content_invalidation_before_append_regression stdout ----
+
+thread 'followup::content_invalidation_before_append_regression' (11076) panicked at crates\yue-component\tests\virtual_list\followup.rs:129:13:
+assertion `left == right` failed: mode=0, order=invalidate_then_append, factories=0
+  left: 0
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- followup::grid_axis_metadata_reads_regression stdout ----
+
+thread 'followup::grid_axis_metadata_reads_regression' (25304) panicked at crates\yue-component\tests\virtual_list\followup.rs:182:5:
+assertion `left == right` failed
+  left: 800
+ right: 40
+
+---- followup::masonry_budget_rendering_regression stdout ----
+
+thread 'followup::masonry_budget_rendering_regression' (42036) panicked at crates\yue-component\tests\virtual_list\followup.rs:282:17:
+assertion `left == right` failed: mode=false, budget=2, frame=0, built=[0, 1]
+  left: 2
+ right: 15
+
+---- followup::masonry_unmeasured_invalidation_regression stdout ----
+
+thread 'followup::masonry_unmeasured_invalidation_regression' (28380) panicked at crates\yue-component\tests\virtual_list\followup.rs:214:9:
+assertion failed: current.revision() > old.revision()
+
+---- followup::measurement_cache_cross_identity_regression stdout ----
+
+thread 'followup::measurement_cache_cross_identity_regression' (3208) panicked at crates\yue-component\tests\virtual_list\followup.rs:306:5:
+old measurements cannot be relabeled with new cross extent
+
+---- followup::smooth_noop_terminal_regression stdout ----
+
+thread 'followup::smooth_noop_terminal_regression' (42280) panicked at crates\yue-component\tests\virtual_list\followup.rs:355:9:
+assertion `left == right` failed: smooth=true, events=[CommandFinished { id: 1, outcome: NoProgress }]
+  left: 9
+ right: 1
+
+
+failures:
+    followup::content_invalidation_before_append_regression
+    followup::grid_axis_metadata_reads_regression
+    followup::masonry_budget_rendering_regression
+    followup::masonry_unmeasured_invalidation_regression
+    followup::measurement_cache_cross_identity_regression
+    followup::smooth_noop_terminal_regression
+
+test result: FAILED. 0 passed; 6 failed; 0 ignored; 0 measured; 67 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p yue-component --test virtual_list`

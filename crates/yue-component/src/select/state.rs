@@ -1,6 +1,9 @@
 use super::{Presentation, model::*};
 use crate::popup::{PopupAnchor, PopupId};
-use gpui_kit::base::{VirtualListScrollHandle, input::InputState};
+use gpui_kit::base::{
+    input::InputState,
+    virtualization::{VirtualizerSizing, VirtualizerSource, VirtualizerState},
+};
 use gpui_kit::{
     App, AppContext as _, Context, Entity, EntityInputHandler as _, EventEmitter, FocusHandle,
     Focusable as _, Render, SharedString, Subscription, Task, Window,
@@ -14,13 +17,26 @@ use std::{
 type Filter = Rc<dyn Fn(&SelectOption, &str) -> bool>;
 pub(super) struct ListGeometry {
     pub(super) rows: Rc<Vec<Row>>,
-    pub(super) width: gpui_kit::Pixels,
     pub(super) option_height: gpui_kit::Pixels,
     pub(super) group_height: gpui_kit::Pixels,
-    pub(super) sizes: Rc<Vec<gpui_kit::Size<gpui_kit::Pixels>>>,
     pub(super) total: gpui_kit::Pixels,
     pub(super) option_count: usize,
     pub(super) has_icons: bool,
+}
+pub(super) struct SelectVirtualSource {
+    pub(super) rows: Rc<Vec<Row>>,
+    pub(super) positions: Rc<HashMap<gpui_kit::ElementId, usize>>,
+}
+impl VirtualizerSource for SelectVirtualSource {
+    fn len(&self) -> usize {
+        self.rows.len()
+    }
+    fn key_at(&self, index: usize) -> gpui_kit::ElementId {
+        self.rows[index].virtual_key()
+    }
+    fn index_of(&self, key: &gpui_kit::ElementId) -> Option<usize> {
+        self.positions.get(key).copied()
+    }
 }
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum SelectResultState {
@@ -45,7 +61,7 @@ pub struct YueSelectState {
     composition_active: bool,
     pub(super) rows: Rc<Vec<Row>>,
     pub(super) active: Option<ActiveKey>,
-    positions: HashMap<ActiveKey, usize>,
+    pub(super) positions: Rc<HashMap<gpui_kit::ElementId, usize>>,
     pub(super) hovered: Option<ActiveKey>,
     pub(super) open: bool,
     pub(super) collapsed_open: bool,
@@ -75,7 +91,9 @@ pub struct YueSelectState {
     pub(super) anchor: PopupAnchor,
     pub(super) collapse_anchor: PopupAnchor,
     pub(super) parent: Option<PopupId>,
-    pub(super) scroll: VirtualListScrollHandle,
+    pub(super) scroll: gpui_kit::ScrollHandle,
+    pub(super) virtualizer: Entity<VirtualizerState>,
+    pub(super) pending_reveal: Option<gpui_kit::ElementId>,
     pub(super) virtualized: bool,
     session: u64,
     generation: u64,
@@ -93,6 +111,18 @@ pub struct YueSelectState {
 impl EventEmitter<SelectEvent> for YueSelectState {}
 impl YueSelectState {
     pub fn new(mode: SelectMode, _window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let virtualizer = cx.new(|_| {
+            VirtualizerState::new(
+                gpui_kit::Axis::Vertical,
+                Rc::new(SelectVirtualSource {
+                    rows: Rc::new(Vec::new()),
+                    positions: Rc::new(HashMap::new()),
+                }),
+                VirtualizerSizing::known(Rc::<[gpui_kit::Pixels]>::from([])),
+            )
+            .expect("valid empty Select source")
+        });
+        let scroll = virtualizer.read(cx).native_scroll_handle().unwrap().clone();
         Self {
             mode,
             value: SelectValue::empty(mode),
@@ -106,7 +136,7 @@ impl YueSelectState {
             composition_active: false,
             rows: Rc::new(vec![]),
             active: None,
-            positions: HashMap::new(),
+            positions: Rc::new(HashMap::new()),
             hovered: None,
             open: false,
             collapsed_open: false,
@@ -136,7 +166,9 @@ impl YueSelectState {
             anchor: PopupAnchor::default(),
             collapse_anchor: PopupAnchor::default(),
             parent: None,
-            scroll: VirtualListScrollHandle::new(),
+            scroll,
+            virtualizer,
+            pending_reveal: None,
             virtualized: false,
             session: 0,
             generation: 0,
@@ -450,7 +482,7 @@ impl YueSelectState {
         if self.open && self.search == SelectSearch::Remote {
             self.result = SelectResultState::Loading;
             self.rows = Rc::new(vec![]);
-            self.positions.clear();
+            self.positions = Rc::new(HashMap::new());
             self.active = None;
             let generation = self.generation;
             let delay = self.debounce_duration;
@@ -559,7 +591,7 @@ impl YueSelectState {
         let previous_position = self
             .active
             .as_ref()
-            .and_then(|key| self.positions.get(key))
+            .and_then(|key| self.positions.get(&key.virtual_key()))
             .copied();
         let query = self.committed_query.to_lowercase();
         let filter = self.filter.clone();
@@ -615,15 +647,16 @@ impl YueSelectState {
                 rows.push(Row::Create(self.committed_query.clone()));
             }
         }
-        self.positions = rows
-            .iter()
-            .enumerate()
-            .filter_map(|(ix, row)| row.active_key().map(|key| (key, ix)))
-            .collect();
+        self.positions = Rc::new(
+            rows.iter()
+                .enumerate()
+                .map(|(ix, row)| (row.virtual_key(), ix))
+                .collect(),
+        );
         if self.active.as_ref().is_none_or(|key| {
             !self
                 .positions
-                .get(key)
+                .get(&key.virtual_key())
                 .is_some_and(|ix| self.eligible(&rows[*ix]))
         }) {
             self.active = rows
@@ -635,7 +668,7 @@ impl YueSelectState {
         let current_position = self
             .active
             .as_ref()
-            .and_then(|key| self.positions.get(key))
+            .and_then(|key| self.positions.get(&key.virtual_key()))
             .copied();
         if self.open && (self.active != previous_active || current_position != previous_position) {
             self.scroll_active();
@@ -645,13 +678,15 @@ impl YueSelectState {
         self.active=self.rows.iter().find(|row|matches!(row,Row::Option(option) if !option.disabled&&self.value.contains(&option.key))).or_else(||self.rows.iter().find(|row|self.eligible(row))).and_then(Row::active_key);
         self.scroll_active();
     }
-    pub(super) fn scroll_active(&self) {
-        if let Some(ix) = self.active.as_ref().and_then(|key| self.positions.get(key)) {
-            if self.virtualized {
-                self.scroll
-                    .scroll_to_item(*ix, gpui_kit::ScrollStrategy::Top);
-            } else {
-                self.scroll.base_handle().scroll_to_item(*ix);
+    pub(super) fn scroll_active(&mut self) {
+        if let Some(ix) = self
+            .active
+            .as_ref()
+            .and_then(|key| self.positions.get(&key.virtual_key()))
+        {
+            self.pending_reveal = self.active.as_ref().map(ActiveKey::virtual_key);
+            if !self.virtualized {
+                self.scroll.scroll_to_item(*ix);
             }
         }
     }
@@ -666,7 +701,7 @@ impl YueSelectState {
         let current = self
             .active
             .as_ref()
-            .and_then(|key| self.positions.get(key))
+            .and_then(|key| self.positions.get(&key.virtual_key()))
             .and_then(|ix| eligible.iter().position(|row| row == ix));
         if let Some(slot) = super::behavior::move_slot(current, eligible.len(), movement) {
             self.active = self.rows[eligible[slot]].active_key();
@@ -685,7 +720,11 @@ impl YueSelectState {
         if !self.editable() || !self.open || self.composing(window, cx) {
             return;
         }
-        let Some(row) = self.positions.get(&key).map(|ix| self.rows[*ix].clone()) else {
+        let Some(row) = self
+            .positions
+            .get(&key.virtual_key())
+            .map(|ix| self.rows[*ix].clone())
+        else {
             return;
         };
         if !self.eligible(&row) {

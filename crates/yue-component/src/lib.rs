@@ -36,6 +36,18 @@ mod toast;
 mod tokens;
 mod tooltip;
 pub mod typography;
+mod virtual_list;
+pub use virtual_list::{
+    VirtualGrid, VirtualGridCell, VirtualGridSnapshot, VirtualMasonry, VirtualMasonryItem,
+    VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign, VirtualizerAnchorPosition,
+    VirtualizerAttachment, VirtualizerBinding, VirtualizerCache, VirtualizerCapabilities,
+    VirtualizerChange, VirtualizerCommandOutcome, VirtualizerError, VirtualizerEvent,
+    VirtualizerItem, VirtualizerItemIdentity, VirtualizerLayout, VirtualizerMeasurement,
+    VirtualizerMotion, VirtualizerRange, VirtualizerRangeExtractor, VirtualizerScrollDirection,
+    VirtualizerScrollOptions, VirtualizerScrollRequest, VirtualizerScrollbarHandle,
+    VirtualizerSizeUpdate, VirtualizerSizing, VirtualizerSizingKind, VirtualizerSnapshot,
+    VirtualizerSource, VirtualizerState, VirtualizerViewport, YueVirtualList,
+};
 
 pub use application::{current_theme, init, set_theme};
 pub use breadcrumb::{
@@ -133,9 +145,10 @@ pub mod prelude {
         YueTabs, YueTextarea, YueTheme, YueTooltip, YueTooltipGroup, current_theme, outline,
     };
     pub use crate::{
-        ToastSpec, YueCollapse, YueCollapseItem, YueDialog, YueDialogState, YueImagePreview,
-        YueImagePreviewState, YueLoadingRegion, YueProgress, YueSkeleton, YueSpinner, YueTag,
-        YueTagGroup, YueToaster, YueToasterState,
+        ToastSpec, VirtualizerSizing, VirtualizerSource, VirtualizerState, YueCollapse,
+        YueCollapseItem, YueDialog, YueDialogState, YueImagePreview, YueImagePreviewState,
+        YueLoadingRegion, YueProgress, YueSkeleton, YueSpinner, YueTag, YueTagGroup, YueToaster,
+        YueToasterState, YueVirtualList,
     };
     pub use gpui_kit::{
         InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement, Styled,

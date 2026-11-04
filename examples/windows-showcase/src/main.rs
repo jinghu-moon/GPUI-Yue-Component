@@ -67,6 +67,8 @@ enum ShowcasePage {
     Slider,
     Checkbox,
     Collapse,
+    VirtualList,
+    VirtualLayouts,
     ColorPicker,
     Tooltip,
     Toast,
@@ -93,6 +95,8 @@ struct Showcase {
     tag_demo: gpui_kit::Entity<pages::tag::TagPage>,
     tabs_demo: gpui_kit::Entity<pages::tabs::TabsPage>,
     collapse_demo: gpui_kit::Entity<pages::collapse::CollapsePage>,
+    virtual_list_demo: Option<gpui_kit::Entity<pages::virtual_list::VirtualListPage>>,
+    virtual_layouts_demo: Option<gpui_kit::Entity<pages::virtual_layouts::VirtualLayoutsPage>>,
     image_preview_demo: Option<gpui_kit::Entity<pages::image_preview::ImagePreviewPage>>,
     progress_demo: gpui_kit::Entity<pages::loading::FeedbackPage>,
     spinner_demo: gpui_kit::Entity<pages::loading::FeedbackPage>,
@@ -263,6 +267,8 @@ impl Showcase {
             tag_demo: cx.new(|cx| pages::tag::TagPage::new(window, cx)),
             tabs_demo: cx.new(|cx| pages::tabs::TabsPage::new(window, cx)),
             collapse_demo: cx.new(|cx| pages::collapse::CollapsePage::new(window, cx)),
+            virtual_list_demo: None,
+            virtual_layouts_demo: None,
             image_preview_demo: None,
             progress_demo: cx.new(|_| {
                 pages::loading::FeedbackPage::new(pages::loading::FeedbackPageKind::Progress)
@@ -515,6 +521,20 @@ impl Render for Showcase {
                         ShowcasePage::Tag => self.tag_demo.clone().into_any_element(),
                         ShowcasePage::Tabs => self.tabs_demo.clone().into_any_element(),
                         ShowcasePage::Collapse => self.collapse_demo.clone().into_any_element(),
+                        ShowcasePage::VirtualLayouts => self
+                            .virtual_layouts_demo
+                            .get_or_insert_with(|| {
+                                cx.new(pages::virtual_layouts::VirtualLayoutsPage::new)
+                            })
+                            .clone()
+                            .into_any_element(),
+                        ShowcasePage::VirtualList => self
+                            .virtual_list_demo
+                            .get_or_insert_with(|| {
+                                cx.new(|cx| pages::virtual_list::VirtualListPage::new(window, cx))
+                            })
+                            .clone()
+                            .into_any_element(),
                         ShowcasePage::ImagePreview => self
                             .image_preview_demo
                             .get_or_insert_with(|| {

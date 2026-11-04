@@ -13,7 +13,8 @@ use crate::{InputType, YueInput, outline};
 
 use gpui_kit::base::{
     A11ySelectionExt as _, Align, Button, InteractiveElementExt as _, Placement, SelectionA11y,
-    TestSupportExt as _, v_virtual_list,
+    TestSupportExt as _,
+    virtualization::{VirtualList, VirtualizerChange, VirtualizerScrollOptions, VirtualizerSizing},
 };
 
 use gpui_kit::{
@@ -192,32 +193,41 @@ pub(super) fn popup(
     let group_h = metric(theme, "--input-height-sm", window);
     let geometry = if let Some(cached) = state.list_cache.as_ref().filter(|cached| {
         Rc::ptr_eq(&cached.rows, &rows)
-            && cached.width == width
             && cached.option_height == option_h
             && cached.group_height == group_h
     }) {
         cached.clone()
     } else {
-        let sizes = rows
+        let extents = rows
             .iter()
             .map(|row| {
-                gpui_kit::size(
-                    width,
-                    if matches!(row, Row::Group(..)) {
-                        group_h
-                    } else {
-                        option_h
-                    },
-                )
+                if matches!(row, Row::Group(..)) {
+                    group_h
+                } else {
+                    option_h
+                }
             })
             .collect::<Vec<_>>();
-        let total = sizes.iter().fold(px(0.), |sum, size| sum + size.height);
+        let source = Rc::new(super::state::SelectVirtualSource {
+            rows: rows.clone(),
+            positions: state.positions.clone(),
+        });
+        state.virtualizer.update(cx, |virtualizer, _| {
+            virtualizer
+                .replace_source(
+                    source,
+                    VirtualizerSizing::known(Rc::<[Pixels]>::from(extents)),
+                    VirtualizerChange::Replace {
+                        preserve_anchor: true,
+                    },
+                )
+                .expect("valid Select geometry");
+        });
+        let total = Pixels::from(state.virtualizer.read(cx).total_extent());
         let cached = Rc::new(super::state::ListGeometry {
             rows: rows.clone(),
-            width,
             option_height: option_h,
             group_height: group_h,
-            sizes: Rc::new(sizes),
             total,
             option_count: rows
                 .iter()
@@ -230,6 +240,12 @@ pub(super) fn popup(
         state.list_cache = Some(cached.clone());
         cached
     };
+    if use_virtual && let Some(key) = state.pending_reveal.take() {
+        state.virtualizer.update(cx, |virtualizer, _| {
+            let _ = virtualizer.scroll_to_key(key, VirtualizerScrollOptions::default());
+        });
+    }
+    let virtualizer = state.virtualizer.clone();
     let inline_rows = if !use_virtual && !collapsed {
         Some(
             rows.iter()
@@ -411,29 +427,25 @@ pub(super) fn popup(
                     .child(p.empty_text.clone())
                     .into_any_element()
             } else if use_virtual {
-                let sizes = geometry.sizes.clone();
                 let config = p.clone();
-                v_virtual_list(
-                    entity.clone(),
+                let owner = entity.clone();
+                VirtualList::new(
                     (id.clone(), "virtual-list"),
-                    sizes,
-                    move |state, range, window, cx| {
-                        range
-                            .map(|ix| {
-                                render_row(
-                                    &state.rows[ix].clone(),
-                                    state,
-                                    &config,
-                                    theme,
-                                    interactive,
-                                    window,
-                                    cx,
-                                )
-                            })
-                            .collect::<Vec<_>>()
+                    &virtualizer,
+                    move |item, window, cx| {
+                        owner.update(cx, |state, cx| {
+                            render_row(
+                                &state.rows[item.index()].clone(),
+                                state,
+                                &config,
+                                theme,
+                                interactive,
+                                window,
+                                cx,
+                            )
+                        })
                     },
                 )
-                .track_scroll(&scroll)
                 .into_any_element()
             } else {
                 div()
@@ -441,7 +453,7 @@ pub(super) fn popup(
                     .size_full()
                     .overflow_y_scroll()
                     .lock_scroll_axis()
-                    .track_scroll(scroll.base_handle())
+                    .track_scroll(&scroll)
                     .children(inline_rows.unwrap_or_default())
                     .into_any_element()
             };
@@ -463,7 +475,7 @@ pub(super) fn popup(
             if interactive
                 && has_more
                 && matches!(more, SelectResultState::Ready)
-                && -scroll.base_handle().offset().y + list_height >= total - row_h
+                && -scroll.offset().y + list_height >= total - row_h
             {
                 let owner = entity.downgrade();
                 window.on_next_frame(move |_, cx| {
@@ -476,7 +488,7 @@ pub(super) fn popup(
                 let owner = more_owner.clone();
                 let handle = observed_scroll.clone();
                 window.on_next_frame(move |_, cx| {
-                    if f32::from(-handle.base_handle().offset().y) + f32::from(list_height)
+                    if f32::from(-handle.offset().y) + f32::from(list_height)
                         >= f32::from(total - row_h)
                     {
                         owner.update(cx, |state, cx| state.request_more(cx));

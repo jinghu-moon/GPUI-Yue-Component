@@ -1,0 +1,62 @@
+   Compiling gpui-base v0.8.0 (D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\isolated-before\gpui-base)
+   Compiling gpui-kit v0.8.0
+   Compiling yue-owner-perf-before v0.1.0 (D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\perf-before)
+    Finished `release` profile [optimized] target(s) in 24.06s
+     Running D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs (C:/Temp/gpui-yue-owner-perf-20261104\release\deps\regressions-af212e5854e3f2cf.exe)
+
+running 6 tests
+
+thread 'anchor_blank_regions_observation' (38848) panicked at D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs:82:17:
+assertion `left == right` failed
+  left: 10.0
+ right: 5.0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test anchor_blank_regions_observation ... FAILED
+
+thread 'attached_outside_region_observation' (22664) panicked at D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs:120:17:
+offscreen list must not move host: Vertical/0/0
+test attached_outside_region_observation ... FAILED
+test explicit_content_epoch_and_portable_cache_observation ... OWNER_CACHE,bump_source=false,before_measured=false,restored=1,after_measured=true,after_extent=60
+OWNER_CACHE,bump_source=true,before_measured=false,restored=0,after_measured=false,after_extent=20
+ok
+
+thread 'masonry_input_during_correction_observation' (19448) panicked at D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs:326:9:
+assertion `left == right` failed
+  left: 6523.0
+ right: 6543.0
+test masonry_input_during_correction_observation ... FAILED
+test masonry_plain_wheel_observation ... OWNER_MASONRY_WHEEL,mode=0,step=1,before=0,after_dispatch=20,after_input=20,after_draw=20,wheel_events=1
+OWNER_MASONRY_WHEEL,mode=0,step=2,before=20,after_dispatch=40,after_input=40,after_draw=40,wheel_events=2
+OWNER_MASONRY_WHEEL,mode=0,step=3,before=40,after_dispatch=60,after_input=60,after_draw=60,wheel_events=3
+OWNER_MASONRY_WHEEL,mode=0,step=4,before=60,after_dispatch=80,after_input=80,after_draw=80,wheel_events=4
+OWNER_MASONRY_WHEEL,mode=1,step=1,before=0,after_dispatch=20,after_input=20,after_draw=20,wheel_events=1
+OWNER_MASONRY_WHEEL,mode=1,step=2,before=20,after_dispatch=40,after_input=40,after_draw=40,wheel_events=2
+OWNER_MASONRY_WHEEL,mode=1,step=3,before=40,after_dispatch=60,after_input=60,after_draw=60,wheel_events=3
+OWNER_MASONRY_WHEEL,mode=1,step=4,before=60,after_dispatch=80,after_input=80,after_draw=80,wheel_events=4
+OWNER_MASONRY_WHEEL,mode=2,step=1,before=0,after_dispatch=20,after_input=20,after_draw=20,wheel_events=1
+
+thread 'masonry_plain_wheel_observation' (38164) panicked at D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs:375:13:
+assertion `left == right` failed: ordinary native wheel 2/2
+  left: 20.0
+ right: 40.0
+FAILED
+test native_small_delta_precision_observation ... OWNER_PRECISION,axis=Vertical,mode=0,base=1000,requested_delta=0.25,repeats=1,observed_delta=0.25
+
+thread 'native_small_delta_precision_observation' (28368) panicked at D:\100_Projects\110_Daily\GPUI-Yue-Component\target\virtual-owner-fixes-20261104\before-regressions.rs:231:17:
+assertion `left == right` failed
+  left: 0.0
+ right: 0.25
+FAILED
+
+failures:
+
+failures:
+    anchor_blank_regions_observation
+    attached_outside_region_observation
+    masonry_input_during_correction_observation
+    masonry_plain_wheel_observation
+    native_small_delta_precision_observation
+
+test result: FAILED. 1 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test regressions`

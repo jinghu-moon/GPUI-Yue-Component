@@ -1,0 +1,37 @@
+[
+  {
+    "file": "gpui-base/src/virtualization/state.rs",
+    "before_sha256": "d408bb20741ff59adc0a6f5dff24350e6a03c11c891be1259daf36fc497868b9",
+    "after_sha256": "e98d90192628f7ab1c0aaa3d7c5f52db10e8535703877b354973a0b099438ed6"
+  },
+  {
+    "file": "gpui-base/src/virtualization/cache.rs",
+    "before_sha256": "9fdee0561f47fad4a27cefc334d85a352cf3ab74e2d61b677805a999afe9dcf6",
+    "after_sha256": "081ab5a86eefeb5aef39efd491b9a6a1b5b9c44a846af68abd4c1f1ca03a1481"
+  },
+  {
+    "file": "gpui-base/src/virtualization/masonry.rs",
+    "before_sha256": "1e4a1fe13adfd123ec32ef61fb0e0872338355e7f82debe20224cbcc92a09835",
+    "after_sha256": "5991625da3ab56d93869c77bb771afd6c9f2a18706c33fe3de6f6c41997e9682"
+  },
+  {
+    "file": "gpui-base/src/virtualization/masonry_element.rs",
+    "before_sha256": "a1f899902400a570d0e527213c1c159b45032d98168c74702a1936020bbb9d23",
+    "after_sha256": "5078e650be46120ba508c7fced3c65497eced809c40903f040046d464a472119"
+  },
+  {
+    "file": "gpui-base/src/virtualization/element.rs",
+    "before_sha256": "ee5b7345a3f3cf6a1287aefe42ee912380cdd94b03cd05f2b32757ef37287c68",
+    "after_sha256": "ee5b7345a3f3cf6a1287aefe42ee912380cdd94b03cd05f2b32757ef37287c68"
+  },
+  {
+    "file": "gpui-base/src/virtualization/grid.rs",
+    "before_sha256": "6181e2e6561b6d9faa5c5b996942b10997e56ab33510970ea67b7e894b2257c2",
+    "after_sha256": "808ef464632eefc64b75b7491604b9734494753400629d07c1a90704e28ece72"
+  },
+  {
+    "file": "gpui-pre/src/elements/div.rs",
+    "before_sha256": "f320948b8f90e36b7100ac3e0e061235d1e9422aeb323918e313f7d69980cfa9",
+    "after_sha256": "012f4a902280761b6ee43d73fe8ba60d512e8d1b221a9ec9a60baf6c201833bf"
+  }
+]

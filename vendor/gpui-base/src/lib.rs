@@ -90,7 +90,7 @@ mod tooltip;
 mod touch_selection;
 mod tree;
 mod undo_history;
-mod virtual_list;
+pub mod virtualization;
 
 pub use a11y_disabled::{A11yDisabled, A11yDisabledExt, A11ySelectionExt, SelectionA11y};
 pub use accordion::{
@@ -233,9 +233,7 @@ pub use tree::{Tree, TreeEntry, TreeEntryState, TreeEvent, TreeItem, TreeState};
 #[doc(hidden)]
 pub use tree::{init as init_tree, key_context as tree_key_context};
 pub use undo_history::UndoHistory;
-#[doc(hidden)]
-pub use virtual_list::virtual_list;
-pub use virtual_list::{VirtualList, VirtualListScrollHandle, h_virtual_list, v_virtual_list};
+pub use virtualization::*;
 
 use gpui::App;
 

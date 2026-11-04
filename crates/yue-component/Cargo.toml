@@ -91,3 +91,7 @@ required-features = ["headless-tests"]
 [[test]]
 name = "image_preview"
 required-features = ["headless-tests"]
+
+[[test]]
+name = "virtual_list"
+required-features = ["headless-tests"]

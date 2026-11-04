@@ -1,0 +1,65 @@
+{
+  "date": "2026-11-04",
+  "toolchain": "rustc 1.98.1 (48a229cea 2026-09-01), x86_64-pc-windows-msvc",
+  "cpu": "Intel Core i5-13600KF, 14 cores / 20 logical processors",
+  "suites": {
+    "workspace-final": {
+      "passed": 777,
+      "failed": 0,
+      "ignored": 8
+    },
+    "showcase-tests-final": {
+      "passed": 28,
+      "failed": 0,
+      "ignored": 1
+    },
+    "owner-final": {
+      "passed": 18,
+      "failed": 0,
+      "ignored": 0
+    },
+    "native-tests": {
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0
+    },
+    "base-tests-final": {
+      "passed": 2,
+      "failed": 0,
+      "ignored": 0
+    },
+    "combined_workspace_and_showcase": {
+      "passed": 805,
+      "failed": 0,
+      "ignored": 9
+    }
+  },
+  "new_owner_module_tests": 13,
+  "virtual_list": {
+    "passed": 91,
+    "failed": 0,
+    "ignored": 8
+  },
+  "before_regressions": {
+    "passed": 1,
+    "failed": 5
+  },
+  "clippy": "workspace --all-targets --features windows-showcase/headless-tests -- -D warnings: passed",
+  "format": "cargo fmt --all -- --check; scoped vendor rustfmt --check: passed",
+  "showcase": "release build passed; no native UI launched",
+  "performance": {
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "samples_per_version_per_mode": 10,
+    "frames_per_sample": 3000,
+    "warmup_frames": 40,
+    "compiler_processes_at_start": 0,
+    "compiler_processes_at_end": 0,
+    "scope": "headless CPU stable warmed simple elements; no GPU/FPS/allocator/Task Manager measurements"
+  },
+  "log_directory": "target/virtual-owner-fixes-20261104"
+}

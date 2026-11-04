@@ -2145,7 +2145,7 @@ pub struct Interactivity {
     pub(crate) tracked_focus_handle: Option<FocusHandle>,
     pub(crate) tracked_scroll_handle: Option<ScrollHandle>,
     pub(crate) scroll_anchor: Option<ScrollAnchor>,
-    pub(crate) scroll_offset: Option<Rc<RefCell<Point<Pixels>>>>,
+    pub(crate) scroll_offset: Option<Rc<RefCell<ScrollOffset>>>,
     pub(crate) ongoing_scroll: Option<Rc<RefCell<OngoingScroll>>>,
     pub(crate) group: Option<SharedString>,
     /// The base style of the element, before any modifications are applied
@@ -2439,8 +2439,8 @@ impl Interactivity {
         _cx: &mut App,
     ) -> Point<Pixels> {
         fn round_to_two_decimals(pixels: Pixels) -> Pixels {
-            const ROUNDING_FACTOR: f32 = 100.0;
-            (pixels * ROUNDING_FACTOR).round() / ROUNDING_FACTOR
+            const ROUNDING_FACTOR: f64 = 100.0;
+            Pixels::from((f64::from(pixels) * ROUNDING_FACTOR).round() / ROUNDING_FACTOR)
         }
 
         if let Some(scroll_offset) = self.scroll_offset.as_ref() {
@@ -2478,19 +2478,22 @@ impl Interactivity {
             // were removed or the bounds became larger).
             let mut scroll_offset = scroll_offset.borrow_mut();
 
-            scroll_offset.x = scroll_offset.x.clamp(-scroll_max.x, px(0.));
-            if scroll_to_bottom {
-                scroll_offset.y = -scroll_max.y;
-            } else {
-                scroll_offset.y = scroll_offset.y.clamp(-scroll_max.y, px(0.));
-            }
+            let exact = scroll_offset.precise();
+            scroll_offset.set_precise(point(
+                exact.x.clamp(-f64::from(scroll_max.x), 0.0),
+                if scroll_to_bottom {
+                    -f64::from(scroll_max.y)
+                } else {
+                    exact.y.clamp(-f64::from(scroll_max.y), 0.0)
+                },
+            ));
 
             if let Some(mut scroll_handle_state) = tracked_scroll_handle {
                 scroll_handle_state.max_offset = scroll_max;
                 scroll_handle_state.bounds = bounds;
             }
 
-            *scroll_offset
+            **scroll_offset
         } else {
             Point::default()
         }
@@ -3339,7 +3342,7 @@ impl Interactivity {
             window.on_mouse_event(move |event: &ScrollWheelEvent, phase, window, cx| {
                 if phase == DispatchPhase::Bubble && hitbox.should_handle_scroll(window) {
                     let mut scroll_offset = scroll_offset.borrow_mut();
-                    let old_scroll_offset = *scroll_offset;
+                    let old_scroll_offset = scroll_offset.precise();
                     let mut delta = event.delta.pixel_delta(line_height);
 
                     if restrict_scroll_to_axis
@@ -3376,9 +3379,12 @@ impl Interactivity {
                             delta_x = Pixels::ZERO;
                         }
                     }
-                    scroll_offset.y += delta_y;
-                    scroll_offset.x += delta_x;
-                    if *scroll_offset != old_scroll_offset {
+                    let next = point(
+                        old_scroll_offset.x + f64::from(delta_x),
+                        old_scroll_offset.y + f64::from(delta_y),
+                    );
+                    scroll_offset.set_precise(next);
+                    if next != old_scroll_offset {
                         cx.notify(current_view);
                     }
                 }
@@ -3620,7 +3626,7 @@ pub struct InteractiveElementState {
     /// press (mirroring the browser clearing a control's pressed state on
     /// blur). `None` means no activation key is pending.
     pub(crate) pending_keyboard_down: Option<Rc<RefCell<Option<u64>>>>,
-    pub(crate) scroll_offset: Option<Rc<RefCell<Point<Pixels>>>>,
+    pub(crate) scroll_offset: Option<Rc<RefCell<ScrollOffset>>>,
     ongoing_scroll: Option<Rc<RefCell<OngoingScroll>>>,
     pub(crate) active_tooltip: Option<Rc<RefCell<Option<ActiveTooltip>>>>,
     long_press_tooltip_active: Option<Rc<Cell<bool>>>,
@@ -4217,9 +4223,45 @@ impl ScrollAnchor {
     }
 }
 
+// One native position owner. Pixels is its compatibility/layout projection;
+// the f64 value retains subpixel input before projection at large coordinates.
+// Legacy native writes through DerefMut are reconciled before precision reads.
+#[derive(Default, Debug)]
+pub(crate) struct ScrollOffset {
+    projected: Point<Pixels>,
+    precise: Point<f64>,
+    projected_write: bool,
+}
+impl ScrollOffset {
+    fn precise(&mut self) -> Point<f64> {
+        if self.projected_write {
+            self.precise = self.projected.map(f64::from);
+            self.projected_write = false;
+        }
+        self.precise
+    }
+    fn set_precise(&mut self, position: Point<f64>) {
+        self.precise = position;
+        self.projected = position.map(Pixels::from);
+        self.projected_write = false;
+    }
+}
+impl std::ops::Deref for ScrollOffset {
+    type Target = Point<Pixels>;
+    fn deref(&self) -> &Self::Target {
+        &self.projected
+    }
+}
+impl std::ops::DerefMut for ScrollOffset {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.projected_write = true;
+        &mut self.projected
+    }
+}
+
 #[derive(Default, Debug)]
 struct ScrollHandleState {
-    offset: Rc<RefCell<Point<Pixels>>>,
+    offset: Rc<RefCell<ScrollOffset>>,
     ongoing_scroll: Rc<RefCell<OngoingScroll>>,
     bounds: Bounds<Pixels>,
     max_offset: Point<Pixels>,
@@ -4262,7 +4304,13 @@ impl ScrollHandle {
 
     /// Get the current scroll offset.
     pub fn offset(&self) -> Point<Pixels> {
-        *self.0.borrow().offset.borrow()
+        **self.0.borrow().offset.borrow()
+    }
+
+    /// Exact logical offset. Virtualized consumers subtract this before
+    /// converting nearby item coordinates to Pixels for layout and hit testing.
+    pub fn precise_offset(&self) -> Point<f64> {
+        self.0.borrow().offset.borrow_mut().precise()
     }
 
     /// Get the maximum scroll offset.
@@ -4397,9 +4445,15 @@ impl ScrollHandle {
     /// Set the offset explicitly. The offset is the distance from the top left of the
     /// parent container to the top left of the first child.
     /// As you scroll further down the offset becomes more negative.
-    pub fn set_offset(&self, mut position: Point<Pixels>) {
-        let state = self.0.borrow();
-        *state.offset.borrow_mut() = position;
+    pub fn set_offset(&self, position: Point<Pixels>) {
+        self.set_precise_offset(position.map(f64::from));
+    }
+
+    /// Explicit jumps reset the exact position even when their Pixels
+    /// projection matches the previous one; stale fractional input cannot leak.
+    pub fn set_precise_offset(&self, position: Point<f64>) {
+        assert!(position.x.is_finite() && position.y.is_finite());
+        self.0.borrow().offset.borrow_mut().set_precise(position);
     }
 
     /// Get the logical scroll top, based on a child index and a pixel offset.

@@ -1,0 +1,193 @@
+use gpui::{
+    Context, IntoElement, ListAlignment, ListState, Pixels, Render, Styled, TestAppContext, Window,
+    div, list, px, uniform_list_range,
+};
+
+#[test]
+fn scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input() {
+    let scroll = gpui::ScrollHandle::new();
+    scroll.set_precise_offset(gpui::point(-16_777_216.25, -16_777_216.75));
+    assert_eq!(
+        scroll.precise_offset(),
+        gpui::point(-16_777_216.25, -16_777_216.75)
+    );
+    let projection = scroll.offset();
+    scroll.set_offset(projection);
+    assert_eq!(scroll.precise_offset(), projection.map(f64::from));
+    scroll.set_precise_offset(gpui::point(-0.25, -0.5));
+    assert_eq!(scroll.offset(), gpui::point(px(-0.25), px(-0.5)));
+    assert_eq!(scroll.precise_offset(), gpui::point(-0.25, -0.5));
+}
+
+#[test]
+fn frozen_geometry_retains_actual_cross_constraint_when_equal_extents_are_remeasured() {
+    let state = ListState::new_with_uniform_height(2, ListAlignment::Top, px(0.), px(20.));
+    state.set_item_sizes(&[(0, gpui::size(px(240.), px(60.)))], true);
+    let old = state.geometry();
+    state.set_item_sizes(&[(0, gpui::size(px(480.), px(60.)))], true);
+    assert_eq!(old.item(0).unwrap().cross_extent(), px(240.));
+    assert_eq!(state.geometry().item(0).unwrap().cross_extent(), px(480.));
+    state.remeasure_items(0..1);
+    assert!(!state.geometry().item(0).unwrap().is_measured());
+    assert!(old.item(0).unwrap().is_measured());
+}
+
+#[test]
+fn uniform_geometry_is_shared_and_half_open_even_inside_gaps() {
+    assert_eq!(uniform_list_range(100, 20., 0., 0., 60.), 0..3);
+    assert_eq!(uniform_list_range(100, 20., 10., 21., 5.), 1..1);
+    assert_eq!(uniform_list_range(100, 20., 10., 29., 10.), 1..2);
+    assert_eq!(uniform_list_range(0, 20., 0., 0., 100.), 0..0);
+    assert_eq!(
+        uniform_list_range(1_000_000_000, 20., 0., 19_999_999_900., 100.),
+        999_999_995..1_000_000_000
+    );
+}
+
+#[test]
+fn direct_estimated_construction_has_the_same_geometry_without_a_replacement_tree() {
+    let direct = ListState::new_with_uniform_height(100_000, ListAlignment::Top, px(20.), px(20.));
+    let previous =
+        ListState::new(100_000, ListAlignment::Top, px(20.)).with_uniform_item_height(px(20.));
+    let a = direct.geometry();
+    let b = previous.geometry();
+    assert_eq!(a.total_extent(), b.total_extent());
+    assert_eq!(a.measured_count(), b.measured_count());
+    assert!(a.is_estimated());
+    assert_eq!(a.item(99_999).unwrap().start(), px(1_999_980.));
+    direct.splice(100_000..100_000, 1);
+    assert_eq!(direct.geometry().total_extent(), px(2_000_020.));
+}
+
+#[test]
+fn per_item_hint_splice_preserves_existing_measurements_and_frozen_geometry() {
+    let state = ListState::new_with_uniform_height(10, ListAlignment::Top, px(0.), px(20.));
+    state.set_item_sizes(&[(3, gpui::size(px(100.), px(50.)))], true);
+    let frozen = state.geometry();
+    state.splice_with_size_hints(8..9, [px(30.), px(40.)]);
+    let next = state.geometry();
+    assert_eq!(frozen.len(), 10);
+    assert_eq!(frozen.total_extent(), px(230.));
+    assert_eq!(next.len(), 11);
+    assert_eq!(next.total_extent(), px(280.));
+    assert_eq!(next.item(3).unwrap().extent(), px(50.));
+    assert!(next.item(3).unwrap().is_measured());
+    assert_eq!(next.item(8).unwrap().extent(), px(30.));
+    assert_eq!(next.item(9).unwrap().extent(), px(40.));
+    assert!(!next.item(9).unwrap().is_measured());
+    assert_eq!(next.item(10).unwrap().start(), px(260.));
+    let invalid = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        state.splice_with_size_hints(5..5, [px(40.), px(f32::NAN)]);
+    }));
+    assert!(invalid.is_err());
+    assert_eq!(state.geometry().total_extent(), next.total_extent());
+    assert_eq!(state.geometry().len(), next.len());
+    state.splice_focusable(0..0, [None]);
+    assert_eq!(state.geometry().item(4).unwrap().extent(), px(50.));
+}
+
+struct View {
+    list: ListState,
+    width: Pixels,
+}
+impl Render for View {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        list(self.list.clone(), |_, _, _| {
+            div().h(px(20.)).into_any_element()
+        })
+        .w(self.width)
+        .h(px(60.))
+    }
+}
+
+#[gpui::test]
+fn native_hints_survive_first_layout_resize_splice_and_snapshot_reads(cx: &mut TestAppContext) {
+    let list = ListState::new(1_000, ListAlignment::Top, px(20.)).with_uniform_item_height(px(20.));
+    let (view, cx) = cx.add_window_view({
+        let list = list.clone();
+        move |_, _| View {
+            list,
+            width: px(100.),
+        }
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let before = list.geometry();
+    assert_eq!(before.total_extent(), px(20_000.));
+    assert!(before.is_estimated());
+    assert!(before.measured_count() < 10);
+    assert_eq!(before.range(px(0.), px(60.)), 0..3);
+    list.splice(1_000..1_000, 5);
+    assert_eq!(list.geometry().total_extent(), px(20_100.));
+    assert_eq!(before.total_extent(), px(20_000.));
+    view.update(cx, |v, cx| {
+        v.width = px(200.);
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert_eq!(list.geometry().total_extent(), px(20_100.));
+    assert!(list.geometry().measured_count() < 10);
+}
+
+#[gpui::test]
+fn invalid_zero_height_cannot_pull_all_items_into_one_frame(cx: &mut TestAppContext) {
+    struct InvalidView(ListState);
+    impl Render for InvalidView {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            list(self.0.clone(), |_, _, _| div().h(px(0.)).into_any_element())
+                .w(px(100.))
+                .h(px(100_000.))
+        }
+    }
+    let list =
+        ListState::new(100_000, ListAlignment::Top, px(0.)).with_uniform_item_height(px(20.));
+    list.set_layout_budget(64);
+    let (_, cx) = cx.add_window_view({
+        let list = list.clone();
+        move |_, _| InvalidView(list)
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(list.last_layout_count() <= 64);
+    assert!(list.invalid_size_count() > 0);
+    assert!(list.geometry().total_extent() > px(1_000_000.));
+    assert!(list.geometry().is_estimated());
+    assert_eq!(list.geometry().measured_count(), 0);
+    assert!(!list.geometry().item(0).unwrap().is_measured());
+}
+
+#[gpui::test]
+fn horizontal_viewport_uses_physical_left_right_padding(cx: &mut TestAppContext) {
+    struct Probe;
+    impl Render for Probe {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            gpui::canvas(
+                |_, w, cx| {
+                    let list =
+                        ListState::new_with_uniform_height(10, ListAlignment::Top, px(0.), px(20.));
+                    let batch = list.layout_for_viewport_on_axis(
+                        gpui::Axis::Horizontal,
+                        gpui::Bounds::new(
+                            gpui::point(px(0.), px(0.)),
+                            gpui::size(px(100.), px(80.)),
+                        ),
+                        px(135.),
+                        gpui::Edges {
+                            top: px(0.),
+                            bottom: px(0.),
+                            left: px(10.),
+                            right: px(25.),
+                        },
+                        |_, _, _| div().w(px(20.)).h(px(80.)).into_any_element(),
+                        w,
+                        cx,
+                    );
+                    assert_eq!(batch.offset(), px(135.));
+                    assert_eq!(batch.geometry().total_extent(), px(200.));
+                },
+                |_, _, _, _| {},
+            )
+            .size(px(100.))
+        }
+    }
+    let (_, cx) = cx.add_window_view(|_, _| Probe);
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+}

@@ -1,5 +1,39 @@
 # Yue Base patches
 
+## Virtualization composition and presentation fixes (2026-11-04)
+
+`virtualization/state.rs` preserves accepted content invalidations across source
+transactions with a monotonic base epoch. Clearing a nonempty index-epoch map
+creates one conservative working-set preparation barrier; later appends without
+new invalidations keep prepared views. Settled geometric destinations bypass
+unnecessary Smooth timing, while unmeasured targets and refusing hosts retain
+their existing convergence guards.
+
+`masonry.rs` expires writable snapshots on every successful nonempty content
+invalidation, including unmeasured and already invalidated items. Key batches
+validate before mutation and measurement demotion is grouped per lane.
+Releasing an actual mount also advances the writable-snapshot epoch, so a
+surviving controller cannot accept feedback from its removed presentation.
+`masonry_element.rs` separates required presentation from extra correction work:
+all initial roots are laid out; only additionally exposed intrinsic roots use
+measurement_budget. Remaining final roots use clipped estimate slots. A new
+frame is requested only with real geometry progress and deferred roots. Total
+root layouts are bounded by initial W + budget + final W, not budget alone.
+Fixed/Known roots are never truncated by a dynamic measurement budget.
+
+Measurement export checks each native record's actual normalized cross-axis
+constraint. Mixed or unresolved constraints fail rather than relabeling old
+measurements. Validated restore demotes incompatible existing sizes to hints;
+equal main-axis updates at a different cross constraint are not discarded.
+`grid.rs` prepares each axis once with sequential frozen geometry. A single
+O(C) column vector and row cursor replace per-row index copies and per-cell
+column source/geometry lookups. No extra state owner or AnyElement cache is added.
+
+Six pre-fix failure gates, boundary regressions, Grid/Masonry release cycles,
+Release A/B samples and maintenance commands are recorded in
+`docs/research/2026-11-04-virtual-list-followup-fixes.md`. Upstream replacement
+must pass these composition/coverage/identity contracts before patch removal.
+
 ## Read-only Select All snapshot (2026-11-03)
 
 `text/state.rs` exposes the existing `TextViewState::is_all_selected()` getter
@@ -318,3 +352,135 @@ and final landing. Painted-quad checks cover hover without a header background i
 light/dark themes and both trigger modes. Additional checks cover retained paint
 with detached controls, progressive clipping and translated snapshots when
 several panels close together. UI motion perception remains user-tested.
+
+## Virtualizer foundation (2026-11-03)
+
+Current follow-up: the 2026-11-04 implementation below supersedes the
+per-item Known tree and geometry-dependent preparation described in the
+historical 1–8 section. See `docs/research/2026-11-04-virtual-list-refinements.md`.
+
+### Virtualizer refinements (2026-11-04)
+
+Content invalidation now applies to all three sizing backends using sparse
+range epochs; stale content snapshots reject delayed writes. Alignment policy
+changes invalidate outstanding request identity without remeasuring items.
+Prepared item factories receive VirtualizerItemIdentity (index/key), not frame
+geometry. Explicit content versions and normal Entity observation own updates.
+
+Known extents use 128-item compact persistent blocks, f32 actual sizes and f64
+local prefix indexes under the existing SumTree. Frozen snapshots share blocks;
+batched updates copy/recalculate each touched block once. Sequential snapshot
+iteration seeks once per contiguous run and skips remote retained gaps.
+
+Splice promises unchanged key/content/hints outside its range and evaluates
+only inserted estimates through core splice_with_size_hints. Masonry generic
+replacement packs once, while append_source preserves lanes and only estimates
+new rows; live snapshots still impose COW costs on its flat index vectors.
+See the follow-up record for before/after failures, 6400-step oracle traces,
+64-cycle release gates, raw timing/allocation CSVs and remaining boundaries.
+
+These changes remain local until upstream provides equivalent identity,
+snapshot, batch/append and preparation contracts; compare behavior and tests
+before removing them, rather than replacing methods by matching names.
+
+`virtualization/{mod,geometry,state,element}.rs` replaces the former
+`virtual_list.rs` and its v/h constructors. All repository consumers, including
+Select, use the new source/sizing/state seam. There is no compatibility engine.
+Fixed shares core uniform arithmetic, Known retains one persistent extent tree,
+and Measured shares core ListState/SumTree. Base adds no theme or default role.
+
+Owned mounts have one native scroll owner and are guarded by WindowId plus
+GlobalElementId. Attached states allocate no ScrollHandle or wheel listener;
+their versioned absolute requests are merged and confirmed once by a host.
+Bindings have local exclusive axis slots. Snapshots freeze source/geometry,
+while mutation rejects stale source, geometry, viewport/input and binding
+versions. Domain-key anchors, sparse focus retention, deletion repair, bounded
+commands, follow-tail, diagnostics and cancellable user-idle events share this
+state. Smooth motion is explicit, known-only and within one viewport; hidden,
+inactive and reduced-motion Owned views settle without a frame loop.
+
+Measured slots include gaps in the one native tree. Initial estimates and
+splice boundaries account for N-1 gaps; returned item extents exclude spacing.
+The native measurement budget defaults to 1,024 per pass and is explicit in
+VirtualizerLayout. Diagnostics identify invalid extents and exhausted budgets.
+
+Run `tools/test-gpui-base.ps1 -Offline -Filter virtualization`, Yue's headless
+`virtual_list` and `select` targets, and the focused core `virtualization`
+integration target. Release CPU/allocator probes are manual ignored tests in
+`crates/yue-component/tests/virtual_list/performance.rs`. See
+`docs/research/2026-11-03-virtual-list-implementation.md` for raw data, regression
+baselines, measured limits and upstream adoption/removal conditions.
+
+## Virtualizer 1–8 capability follow-up (2026-11-03)
+
+`is_scrolling` now means actual activity, with direction and coalesced 120ms
+idle; `has_scroll_command` separately describes programmatic command lifetime.
+Owned adapters and Attached hosts retain one scroll/input owner. Both axes now
+support Fixed/Known/Measured and follow-tail. Horizontal measured layout uses
+the native ListState algorithm with physical child coordinates, not a second
+measurement engine or rotated paint tree.
+
+Source content revisions allow stable-key measurement transfer on reorder.
+Per-item estimates, atomic keyed size/hint batches and snapshot validation keep
+late measurements from applying to a replacement generation. Known geometry
+uses a persistent f64 SumTree shared by frozen snapshots; point updates copy
+tree paths, while gap-only changes do not rebuild N slots. Tree metadata costs
+more resident payload than the previous compact prefix; the evidence records
+both the allocation cost and local-update benefit.
+
+Extra retained keys/range extraction supplement the contiguous workset.
+Scroll padding, host content origin/extent and absolute/relative requests share
+the same versioned protocol. `new_with_item_views` retains only workset AnyView
+handles under explicit content/layout identity; normal GPUI lifecycle continues
+and no AnyElement is cached across frames. Cache export/restore uses pure
+measurements plus key anchors, without retaining a former entity or source.
+
+`VirtualGrid` merges two known/fixed Attached axes into one host submission.
+`VirtualMasonry` uses stable lanes and the same persistent extent geometry,
+real dynamic layout, bounded measurement, focus retention/deletion repair and
+explicit cold reflow. Neither adds selection, data loading or Table semantics.
+
+See `docs/research/2026-11-03-virtual-list-upgrades.md` for API mapping, baseline,
+headless regression, three-run release CSVs, memory tradeoffs and limitations.
+Adopt upstream replacements only after the same ownership/geometry/input and
+allocation contracts pass; remove covered patches rather than keeping engines
+in parallel. Physical UI/GPU/reader validation remains user-owned.
+
+## Reading anchors and native input ownership (2026-11-04)
+
+VirtualizerState stores key + VirtualizerAnchorPosition (Before/Within/After)
+instead of clamping every position into item content. Leading padding belongs
+to the first item, a gap to the following item, and trailing padding to the last.
+Distances are finite/nonnegative; restoration clamps to current content or
+adjacent spacing before the host applies its final reachable-range clamp.
+Measured slot gaps are excluded from content extent. Attached commits outside
+the list's content region clear reading anchors and stale anchor corrections;
+partially overlapping headers and empty item ranges inside large gaps remain
+distinct. Explicit positioning/follow-tail retain their existing contracts.
+
+Portable measurement cache schema is now 2, including the anchor variant.
+The anchor builder/reader use VirtualizerAnchorPosition; old schema 1 is not
+implicitly migrated. Invalid batches fail before mutation. Live invalidation
+epochs are not persistent identity: size-affecting content advances source
+revision_at, shared typography advances layout revision. Yue re-exports the
+new value type and all repository consumers use the updated interface.
+
+Masonry cancels pending positioning on native wheel (even at a boundary) or
+observed external native offset changes. cancel_scroll/has_scroll_command are
+the explicit consumer seam. Before actual geometry changes, it captures the
+current native position against old geometry and compensates only the change;
+identical measurement batches do not scan anchors again. Last-written offset
+is only an input observation marker, not another scroll owner. Unmount clears
+pending/input markers and retains existing stale-feedback protection.
+
+Fixed/Known Owned, Grid and Masonry read/write native ScrollHandle precision.
+Local coordinates are derived before conversion to Pixels. Measured ListState
+still has f32 cumulative geometry; this patch does not claim arbitrary-scale
+precision for that backend, ordinary Div paint or scrollbar mapping.
+
+See docs/research/2026-11-04-virtual-list-owner-fixes.md for five failing old
+production contracts, 13 added regressions, stable-frame Release A/B and limits.
+Run the Yue virtual_list target, workspace headless regressions, Base geometry
+contracts and native virtualization integration tests. Remove covered pieces
+only when upstream satisfies the same anchor/cache/input/precision contracts
+and the CPU comparison; never retain parallel position or measurement owners.

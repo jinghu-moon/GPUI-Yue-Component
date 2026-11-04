@@ -15,6 +15,29 @@ use std::{cell::RefCell, cmp, ops::Range, rc::Rc};
 
 use super::ListHorizontalSizingBehavior;
 
+/// Arithmetic shared by uniform-list rendering and external viewport adapters.
+/// Offsets are positive logical content coordinates. Callers validate finite,
+/// positive item extents and non-negative gap/viewport values before querying.
+/// This query allocates no per-item metadata, even for very large item counts.
+pub fn uniform_list_range(
+    count: usize,
+    item_extent: f64,
+    gap: f64,
+    offset: f64,
+    viewport_extent: f64,
+) -> Range<usize> {
+    if count == 0 || viewport_extent <= 0.0 {
+        return 0..0;
+    }
+    let stride = item_extent + gap;
+    let mut first = (offset.max(0.0) / stride).floor() as usize;
+    if first < count && first as f64 * stride + item_extent <= offset {
+        first += 1;
+    }
+    let end = ((offset + viewport_extent).max(0.0) / stride).ceil() as usize;
+    first.min(count)..end.min(count).max(first.min(count))
+}
+
 /// uniform_list provides lazy rendering for a set of items that are of uniform height.
 /// When rendered into a container with overflow-y: hidden and a fixed (or max) height,
 /// uniform_list will only render the visible subset of items.
@@ -467,20 +490,18 @@ impl Element for UniformList {
                                 }
                             }
                         }
-                        scroll_offset = *updated_scroll_offset
+                        scroll_offset = **updated_scroll_offset
                     }
 
                     let scroll_top = -scroll_offset.y.to_f64();
                     let item_height_f64 = item_height.to_f64();
-                    let first_visible_element_ix =
-                        ((scroll_top - padding.top.to_f64()) / item_height_f64).floor() as usize;
-                    let last_visible_element_ix = ((scroll_top
-                        + padded_bounds.size.height.to_f64())
-                        / item_height_f64)
-                        .ceil() as usize;
-
-                    let visible_range = first_visible_element_ix
-                        ..cmp::min(last_visible_element_ix, self.item_count);
+                    let visible_range = uniform_list_range(
+                        self.item_count,
+                        item_height_f64,
+                        0.0,
+                        scroll_top - padding.top.to_f64(),
+                        padded_bounds.size.height.to_f64() + padding.top.to_f64(),
+                    );
 
                     let items = if y_flipped {
                         let flipped_range = self.item_count.saturating_sub(visible_range.end)

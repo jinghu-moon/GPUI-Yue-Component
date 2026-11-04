@@ -45,6 +45,16 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("tag-page", "标签 Tag", ShowcasePage::Tag),
     ("toast-page", "消息通知 Toast", ShowcasePage::Toast),
     ("tooltip-page", "文字提示 Tooltip", ShowcasePage::Tooltip),
+    (
+        "virtual-layouts-page",
+        "虚拟布局 Grid / Masonry",
+        ShowcasePage::VirtualLayouts,
+    ),
+    (
+        "virtual-list-page",
+        "虚拟列表 VirtualList",
+        ShowcasePage::VirtualList,
+    ),
 ];
 const DESIGN: &[(&str, &str, ShowcasePage)] = &[
     ("color-page", "色彩 Color", ShowcasePage::Color),

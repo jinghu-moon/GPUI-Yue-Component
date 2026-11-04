@@ -21,3 +21,6 @@ pub(crate) mod tabs;
 pub(crate) mod tag;
 pub(crate) mod toast;
 pub(crate) mod tooltip;
+pub(crate) mod virtual_list;
+
+pub(crate) mod virtual_layouts;
