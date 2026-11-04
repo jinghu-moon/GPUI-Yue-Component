@@ -302,3 +302,68 @@ fn measured_large_coordinates_keep_native_input_local_bounds_and_hits(cx: &mut T
         );
     }
 }
+
+#[gpui_kit::test]
+fn masonry_blank_region_anchors_survive_padding_gap_and_trailing_changes(cx: &mut TestAppContext) {
+    use yue_component::{VirtualMasonry, VirtualMasonryState, VirtualizerSizeUpdate};
+    struct Harness(Entity<VirtualMasonryState>);
+    impl Render for Harness {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            VirtualMasonry::new("blank-anchor", &self.0, |_, _, _| div().h(px(20.)))
+                .w(px(300.))
+                .h(px(100.))
+        }
+    }
+    let mut failures = Vec::new();
+    for (case, offset, expected) in [(0, 5., 15.), (1, 50., 60.), (2, 3095., 3135.)] {
+        let (view, cx) = cx.add_window_view(|_, cx| {
+            Harness(cx.new(|_| {
+                let mut state =
+                    VirtualMasonryState::new(source(0, 12), VirtualizerSizing::fixed(px(20.)), 3)
+                        .unwrap();
+                state
+                    .set_layout(
+                        VirtualizerLayout::default()
+                            .gap(px(1000.))
+                            .padding(px(10.), px(2000.)),
+                        px(0.),
+                    )
+                    .unwrap();
+                state
+            }))
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let state = view.read_with(cx, |v, _| v.0.clone());
+        state.read_with(cx, |s, _| {
+            s.scroll_handle()
+                .set_precise_offset(gpui_kit::point(0., -offset))
+        });
+        cx.update(|w, cx| {
+            w.refresh();
+            w.draw(cx).clear(cx);
+        });
+        state.update(cx, |s, _| {
+            if case == 0 {
+                s.set_layout(
+                    VirtualizerLayout::default()
+                        .gap(px(1000.))
+                        .padding(px(20.), px(2000.)),
+                    px(0.),
+                )
+                .unwrap();
+            } else {
+                s.update_sizes(
+                    &(0usize..if case == 1 { 3 } else { 12 })
+                        .map(|i| VirtualizerSizeUpdate::new(i, px(30.)))
+                        .collect::<Vec<_>>(),
+                )
+                .unwrap();
+            }
+        });
+        let actual = state.read_with(cx, |s, _| -s.scroll_handle().precise_offset().y);
+        if actual != expected {
+            failures.push((case, actual, expected));
+        }
+    }
+    assert!(failures.is_empty(), "blank region anchors: {failures:?}");
+}

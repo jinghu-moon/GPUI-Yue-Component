@@ -369,11 +369,8 @@ struct Command {
     id: u64,
     target: CommandTarget,
     options: VirtualizerScrollOptions,
-    started: Option<Instant>,
-    prepares: usize,
+    progress: super::command::CommandProgress,
     from: f64,
-    last: Option<f64>,
-    stalled: usize,
 }
 enum CommandTarget {
     Key(ElementId),
@@ -1143,11 +1140,8 @@ impl VirtualizerState {
             id: self.serial,
             target,
             options,
-            started: None,
-            prepares: 0,
+            progress: super::command::CommandProgress::default(),
             from: self.viewport.as_ref().map_or(0.0, |v| v.offset),
-            last: None,
-            stalled: 0,
         });
         self.outstanding = None;
         Ok(self.serial)
@@ -1347,12 +1341,8 @@ impl VirtualizerState {
         }
         self.viewport = Some(viewport.clone());
         if let Some(command) = &mut self.command {
-            let started = *command.started.get_or_insert(now);
-            command.prepares += 1;
-            if self.measured.is_some()
-                && (command.prepares > 32
-                    || now.saturating_duration_since(started) > Duration::from_secs(2))
-            {
+            let exceeded = command.progress.advance(now);
+            if self.measured.is_some() && exceeded {
                 self.finish_command(VirtualizerCommandOutcome::NoProgress);
             }
         }
@@ -1392,7 +1382,7 @@ impl VirtualizerState {
                             <= f64::from(max_distance).min(f64::from(viewport.extent))
                     {
                         let t = (now
-                            .saturating_duration_since(command.started.unwrap())
+                            .saturating_duration_since(command.progress.started().unwrap())
                             .as_secs_f64()
                             / duration.as_secs_f64())
                         .clamp(0.0, 1.0);
@@ -1489,19 +1479,11 @@ impl VirtualizerState {
         self.outstanding = None;
         self.pending_anchor = None;
         if let Some(command) = &mut self.command {
-            if command
-                .last
-                .is_some_and(|old| (old - applied_offset).abs() < 0.01)
-                && (!request.settled || (applied_offset - request.offset).abs() > 0.5)
-            {
-                command.stalled += 1;
-            } else {
-                command.stalled = 0;
-            }
-            command.last = Some(applied_offset);
-            if request.settled && (applied_offset - request.offset).abs() <= 0.5 {
+            let settled = request.settled && (applied_offset - request.offset).abs() <= 0.5;
+            let stalled = command.progress.confirm(applied_offset, settled);
+            if settled {
                 self.finish_command(VirtualizerCommandOutcome::Settled);
-            } else if command.stalled >= 8 {
+            } else if stalled {
                 self.finish_command(VirtualizerCommandOutcome::NoProgress);
             }
         }

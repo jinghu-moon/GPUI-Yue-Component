@@ -26,7 +26,10 @@ impl VirtualMasonry {
                 .id(id.clone())
                 .size_full()
                 .on_scroll_wheel(move |_, _, cx| {
-                    let _ = observed.update(cx, |state, _| state.cancel_scroll());
+                    let _ = observed.update(cx, |state, cx| {
+                        state.cancel_scroll();
+                        state.emit_events(cx);
+                    });
                 }),
             id,
             state: state.clone(),
@@ -90,13 +93,19 @@ impl Element for VirtualMasonry {
                 owner: state.downgrade(),
                 _observe: cx.observe(&state, |_, _, cx| cx.notify()),
                 _release: cx.on_release(|mount: &mut Mount, cx| {
-                    let _ = mount.owner.update(cx, |s, _| s.release_mount());
+                    let _ = mount.owner.update(cx, |s, cx| {
+                        s.release_mount();
+                        s.emit_events(cx);
+                    });
                 }),
             },
         );
         mount.update(cx, |m, cx| {
             if m.owner != self.state {
-                let _ = m.owner.update(cx, |s, _| s.release_mount());
+                let _ = m.owner.update(cx, |s, cx| {
+                    s.release_mount();
+                    s.emit_events(cx);
+                });
                 m.owner = self.state.downgrade();
                 m._observe = cx.observe(&self.state, |_, _, cx| cx.notify());
             }
@@ -123,13 +132,14 @@ impl Element for VirtualMasonry {
         w: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        let now = cx.background_executor().now();
         self.state.update(cx, |s, _| {
             s.observe_input();
             s.observe_viewport(bounds.size);
+            s.begin_command_frame(now);
         });
         let dynamic = self.state.read(cx).is_dynamic();
         let budget = self.state.read(cx).budget();
-        let pending = self.state.read(cx).pending.clone();
         let focus = self.state.update(cx, |s, cx| s.focus_keys(w, cx));
         let mut built = std::collections::HashMap::new();
         let mut offset;
@@ -140,12 +150,7 @@ impl Element for VirtualMasonry {
         let mut corrections = 0;
         let mut progressed = false;
         loop {
-            offset = self.state.update(cx, |s, _| {
-                if pending.is_some() {
-                    s.pending = pending.clone();
-                }
-                s.resolve_offset()
-            });
+            offset = self.state.update(cx, |s, _| s.resolve_offset());
             snapshot = self.state.read(cx).snapshot(offset, bounds.size).unwrap();
             let mut retained = snapshot.retained.to_vec();
             retained.extend(focus.clone());
@@ -215,12 +220,7 @@ impl Element for VirtualMasonry {
             initial = false;
             // Re-query after actual heights; additional intrinsic work is bounded.
         }
-        offset = self.state.update(cx, |s, _| {
-            if pending.is_some() {
-                s.pending = pending.clone();
-            }
-            s.resolve_offset()
-        });
+        offset = self.state.update(cx, |s, _| s.resolve_offset());
         snapshot = self.state.read(cx).snapshot(offset, bounds.size).unwrap();
         let mut retained = snapshot.retained.to_vec();
         retained.extend(focus);
@@ -291,12 +291,6 @@ impl Element for VirtualMasonry {
         );
         self.state
             .update(cx, |s, _| s.commit_anchor_items(snapshot.offset(), items));
-        if deferred && progressed {
-            // Schedule only after real geometry progress. No invalid-prefix
-            // redraw loop, and no cross-frame AnyElement cache.
-            self.state.update(cx, |s, _| s.pending = pending);
-            w.request_animation_frame();
-        }
         self.state.update(cx, |s, cx| {
             if !invalid.is_empty() {
                 s.invalidate_items(&invalid).unwrap();
@@ -313,7 +307,14 @@ impl Element for VirtualMasonry {
                 ));
             }
             s.budget_reported = exhausted;
+            s.confirm_command(!deferred && !exhausted);
+            s.emit_events(cx);
         });
+        if deferred && progressed || self.state.read(cx).has_scroll_command() {
+            // Geometry continuation requires progress. Active commands are
+            // separately bounded by shared stall/attempt/time limits.
+            w.request_animation_frame();
+        }
         hitbox
     }
     fn paint(

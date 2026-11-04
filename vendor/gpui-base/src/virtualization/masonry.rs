@@ -7,6 +7,13 @@ use std::collections::{BinaryHeap, HashSet};
 mod element;
 pub use element::VirtualMasonry;
 
+struct MasonryCommand {
+    id: u64,
+    key: ElementId,
+    align: VirtualizerAlign,
+    progress: super::command::CommandProgress,
+}
+
 #[derive(Clone)]
 struct Lane {
     indexes: Rc<Vec<usize>>,
@@ -148,8 +155,10 @@ pub struct VirtualMasonryState {
     column_gap: Pixels,
     cross: Option<Pixels>,
     viewport: Option<Size<Pixels>>,
-    anchor: Option<(ElementId, f64)>,
-    pending: Option<(ElementId, VirtualizerAlign)>,
+    anchor: Option<(ElementId, VirtualizerAnchorPosition, bool)>,
+    pending: Option<MasonryCommand>,
+    next_command_id: u64,
+    events: Vec<VirtualizerEvent>,
     // Observation of the native owner, never a second writable scroll position.
     last_offset: Option<f64>,
     scroll: ScrollHandle,
@@ -187,6 +196,8 @@ impl VirtualMasonryState {
             viewport: None,
             anchor: None,
             pending: None,
+            next_command_id: 0,
+            events: Vec::new(),
             last_offset: None,
             scroll: ScrollHandle::new(),
             token: Rc::new(()),
@@ -322,11 +333,14 @@ impl VirtualMasonryState {
         self.anchor = self
             .anchor
             .take()
-            .filter(|(key, _)| self.source.index_of(key).is_some());
-        self.pending = self
+            .filter(|(key, _, _)| self.source.index_of(key).is_some());
+        if self
             .pending
-            .take()
-            .filter(|(key, _)| self.source.index_of(key).is_some());
+            .as_ref()
+            .is_some_and(|command| self.source.index_of(&command.key).is_none())
+        {
+            self.finish_command(VirtualizerCommandOutcome::Missing);
+        }
         self.revision += 1;
         self.restore_anchor();
         Ok(())
@@ -547,18 +561,75 @@ impl VirtualMasonryState {
         &mut self,
         key: ElementId,
         align: VirtualizerAlign,
-    ) -> Result<(), VirtualizerError> {
+    ) -> Result<u64, VirtualizerError> {
         if self.source.index_of(&key).is_none() {
             return Err(VirtualizerError::MissingKey);
         }
         self.observe_input();
-        self.pending = Some((key, align));
-        Ok(())
+        self.cancel_scroll();
+        self.next_command_id += 1;
+        let id = self.next_command_id;
+        self.pending = Some(MasonryCommand {
+            id,
+            key,
+            align,
+            progress: Default::default(),
+        });
+        Ok(id)
+    }
+    /// Queued terminal results for pure owners. Entity presentation emits these
+    /// once at its input/frame/unmount boundary.
+    pub fn take_events(&mut self) -> Vec<VirtualizerEvent> {
+        std::mem::take(&mut self.events)
+    }
+    fn finish_command(&mut self, outcome: VirtualizerCommandOutcome) {
+        if let Some(command) = self.pending.take() {
+            self.events.push(VirtualizerEvent::CommandFinished {
+                id: command.id,
+                outcome,
+            });
+        }
+    }
+    pub(super) fn emit_events(&mut self, cx: &mut gpui::Context<Self>) {
+        for event in self.take_events() {
+            cx.emit(event);
+        }
+    }
+    pub(super) fn begin_command_frame(&mut self, now: std::time::Instant) {
+        if self
+            .pending
+            .as_mut()
+            .is_some_and(|command| command.progress.advance(now))
+        {
+            self.finish_command(VirtualizerCommandOutcome::NoProgress);
+        }
+    }
+    pub(super) fn confirm_command(&mut self, complete: bool) {
+        let offset = (-self.scroll.precise_offset().y).max(0.);
+        let settled = self.pending.as_ref().is_some_and(|command| {
+            let Some(ix) = self.source.index_of(&command.key) else {
+                return false;
+            };
+            let (lane, local) = self.slots[ix];
+            complete
+                && self.lanes[lane]
+                    .geometry
+                    .item(local)
+                    .is_some_and(|(_, _, measured)| measured)
+        });
+        if let Some(command) = &mut self.pending {
+            let stalled = command.progress.confirm(offset, settled);
+            if settled {
+                self.finish_command(VirtualizerCommandOutcome::Settled);
+            } else if stalled {
+                self.finish_command(VirtualizerCommandOutcome::NoProgress);
+            }
+        }
     }
     /// Consumers call before keyboard/drag navigation takes over. Native wheel
     /// input calls this automatically, including input at a scroll boundary.
     pub fn cancel_scroll(&mut self) {
-        self.pending = None;
+        self.finish_command(VirtualizerCommandOutcome::Cancelled);
     }
     pub fn has_scroll_command(&self) -> bool {
         self.pending.is_some()
@@ -578,13 +649,31 @@ impl VirtualMasonryState {
         self.last_offset = Some(offset);
     }
     fn restore_anchor(&mut self) {
-        if let Some((key, intra)) = &self.anchor
+        if let Some((key, intra, measured)) = &self.anchor
             && let Some(ix) = self.source.index_of(key)
             && let Some(viewport) = self.viewport
         {
             let snapshot = self.snapshot(0.0, viewport).unwrap();
             let item = snapshot.item(ix).unwrap();
-            let offset = (item.item.start() + intra).clamp(
+            let (lane, local) = self.slots[ix];
+            let before = if local == 0 {
+                f64::from(self.layout.padding_start)
+            } else {
+                f64::from(self.layout.gap)
+            };
+            let after = if local + 1 == self.lanes[lane].indexes.len() {
+                self.total_extent() - item.item.start() - f64::from(item.item.extent())
+            } else {
+                f64::from(self.layout.gap)
+            };
+            // An unmeasured slot is not content the reader has actually seen.
+            // Preserve native input within that estimate instead of snapping
+            // back when the first real height is smaller than its hint.
+            let relative = match intra {
+                VirtualizerAnchorPosition::Within(distance) if !measured => *distance,
+                _ => intra.resolve(f64::from(item.item.extent()), before, after),
+            };
+            let offset = (item.item.start() + relative).clamp(
                 0.0,
                 (self.total_extent() - f64::from(viewport.height)).max(0.0),
             );
@@ -609,8 +698,15 @@ impl VirtualMasonryState {
         let viewport = self.viewport.unwrap();
         let old = (-self.scroll.precise_offset().y).max(0.0);
         let mut offset = old;
-        if let Some((key, align)) = self.pending.take()
-            && let Some(ix) = self.source.index_of(&key)
+        if self
+            .pending
+            .as_ref()
+            .is_some_and(|command| self.source.index_of(&command.key).is_none())
+        {
+            self.finish_command(VirtualizerCommandOutcome::Missing);
+        }
+        if let Some(command) = &self.pending
+            && let Some(ix) = self.source.index_of(&command.key)
         {
             let snapshot = self.snapshot(old, viewport).unwrap();
             let item = snapshot.item(ix).unwrap();
@@ -624,7 +720,7 @@ impl VirtualMasonryState {
             offset = state::alignment_offset(
                 item.item(),
                 &v,
-                align,
+                command.align,
                 self.layout.scroll_padding_start.into(),
                 self.layout.scroll_padding_end.into(),
             );
@@ -663,7 +759,55 @@ impl VirtualMasonryState {
                     .total_cmp(&b.item.start())
                     .then_with(|| a.item.index().cmp(&b.item.index()))
             })
-            .map(|item| (item.item.key().clone(), offset - item.item.start()));
+            .map(|item| {
+                (
+                    item.item.key().clone(),
+                    VirtualizerAnchorPosition::Within(offset - item.item.start()),
+                    item.item.is_measured(),
+                )
+            })
+            .or_else(|| self.blank_region_anchor(offset));
+    }
+    fn blank_region_anchor(&self, offset: f64) -> Option<(ElementId, VirtualizerAnchorPosition)> {
+        let mut best: Option<(u8, f64, usize, VirtualizerAnchorPosition)> = None;
+        for lane in &self.lanes {
+            if lane.indexes.is_empty() {
+                continue;
+            }
+            let mut local = lane
+                .geometry
+                .index_at(offset - f64::from(self.layout.padding_start));
+            let (mut start, mut extent, _) = lane.geometry.item(local)?;
+            start += f64::from(self.layout.padding_start);
+            if start + extent <= offset && local + 1 < lane.indexes.len() {
+                local += 1;
+                (start, extent, _) = lane.geometry.item(local)?;
+                start += f64::from(self.layout.padding_start);
+            }
+            let (rank, order, position) = if offset < start {
+                (1, start, VirtualizerAnchorPosition::Before(start - offset))
+            } else if offset < start + extent {
+                (0, start, VirtualizerAnchorPosition::Within(offset - start))
+            } else {
+                (
+                    2,
+                    -(start + extent),
+                    VirtualizerAnchorPosition::After(offset - start - extent),
+                )
+            };
+            let ix = lane.indexes[local];
+            if best
+                .as_ref()
+                .is_none_or(|(r, o, i, _)| (rank, order, ix) < (*r, *o, *i))
+            {
+                best = Some((rank, order, ix, position));
+            }
+        }
+        best.map(|(_, _, ix, position)| {
+            let (lane, local) = self.slots[ix];
+            let measured = self.lanes[lane].geometry.item(local).unwrap().2;
+            (self.source.key_at(ix), position, measured)
+        })
     }
     pub(super) fn focus_keys(
         &mut self,
@@ -704,7 +848,7 @@ impl VirtualMasonryState {
             // A surviving controller must reject resource/measurement feedback
             // captured by the removed presentation, including after remount.
             self.revision += 1;
-            self.pending = None;
+            self.cancel_scroll();
             self.last_offset = None;
         }
     }

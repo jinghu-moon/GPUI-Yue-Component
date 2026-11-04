@@ -1,6 +1,7 @@
 //! One-axis virtualization without a mandatory container, theme or role.
 //! Native uniform arithmetic, known prefixes and ListState remain the engines.
 mod anchor;
+mod command;
 mod element;
 mod geometry;
 mod grid;
