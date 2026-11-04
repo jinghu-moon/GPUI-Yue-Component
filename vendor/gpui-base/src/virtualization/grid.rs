@@ -6,7 +6,7 @@ use gpui::{
     AnyElement, App, AvailableSpace, Bounds, ContentMask, Div, Element, Entity, GlobalElementId,
     Hitbox, InspectorElementId, InteractiveElement, IntoElement, LayoutId, ParentElement,
     ScrollHandle, Stateful, StatefulInteractiveElement, StyleRefinement, Styled, Window, div,
-    point, size,
+    point, px, size,
 };
 
 #[derive(Clone)]
@@ -273,8 +273,18 @@ impl Element for VirtualGrid {
         w: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        let clip = bounds.intersect(&w.content_mask().bounds);
+        let visible = clip.size.width > px(0.)
+            && clip.size.height > px(0.)
+            && w.is_visible()
+            && w.is_window_active();
         for state in [&self.rows, &self.columns] {
-            state.update(cx, |s, cx| s.update_focus(w, cx));
+            state.update(cx, |s, cx| {
+                s.update_focus(w, cx);
+                if !visible || cx.reduce_motion() {
+                    s.settle_motion();
+                }
+            });
         }
         let offset = self.scroll.precise_offset();
         let now = cx.background_executor().now();
@@ -387,7 +397,10 @@ impl Element for VirtualGrid {
                 hitbox
             },
         );
-        if self.rows.read(cx).has_scroll_command() || self.columns.read(cx).has_scroll_command() {
+        if visible
+            && (self.rows.read(cx).has_scroll_command()
+                || self.columns.read(cx).has_scroll_command())
+        {
             w.request_animation_frame();
         }
         hitbox

@@ -172,6 +172,173 @@ fn production_grid_merges_axis_commands_and_native_wheel_in_one_scroll_owner(
     assert!(replacement.read_with(cx, |s, _| s.viewport().is_some()));
 }
 
+#[gpui_kit::test]
+fn grid_smooth_axes_share_frames_and_honor_input_and_motion_preferences(cx: &mut TestAppContext) {
+    for case in 0..5 {
+        let (view, cx) = cx.add_window_view(|_, cx| {
+            let binding = VirtualizerBinding::new();
+            GridView {
+                rows: cx.new(|_| {
+                    VirtualizerState::new_attached(
+                        Axis::Vertical,
+                        source(0, 1_000_000),
+                        VirtualizerSizing::fixed(px(20.)),
+                        &binding,
+                    )
+                    .unwrap()
+                }),
+                columns: cx.new(|_| {
+                    VirtualizerState::new_attached(
+                        Axis::Horizontal,
+                        source(0, 1000),
+                        VirtualizerSizing::known(vec![px(50.); 1000]),
+                        &binding,
+                    )
+                    .unwrap()
+                }),
+                scroll: ScrollHandle::new(),
+                builds: Rc::new(Cell::new(0)),
+            }
+        });
+        cx.update(|w, cx| {
+            cx.set_reduce_motion(false);
+            w.activate_window();
+        });
+        cx.run_until_parked();
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let (rows, columns, scroll, builds) = view.read_with(cx, |v, _| {
+            (
+                v.rows.clone(),
+                v.columns.clone(),
+                v.scroll.clone(),
+                v.builds.clone(),
+            )
+        });
+        let events = Rc::new(std::cell::RefCell::new(Vec::new()));
+        let mut subscriptions = Vec::new();
+        for (axis, state, key) in [
+            (Axis::Vertical, &rows, 4usize),
+            (Axis::Horizontal, &columns, 2usize),
+        ] {
+            assert!(state.read_with(cx, |s, _| s.capabilities().supports_smooth()));
+            let observed = events.clone();
+            subscriptions.push(cx.update(|_, cx| {
+                cx.subscribe(state, move |_, event, _| {
+                    if let VirtualizerEvent::CommandFinished { outcome, .. } = event {
+                        observed.borrow_mut().push((axis, *outcome));
+                    }
+                })
+            }));
+            state.update(cx, |s, cx| {
+                let options = VirtualizerScrollOptions::default()
+                    .align(VirtualizerAlign::Start)
+                    .motion(VirtualizerMotion::Smooth {
+                        duration: Duration::from_millis(200),
+                        max_distance: px(200.),
+                    });
+                if case == 4 {
+                    s.scroll_to_offset(0.1, options).unwrap();
+                } else {
+                    s.scroll_to_key(key.into(), options).unwrap();
+                }
+                cx.notify();
+            });
+        }
+        builds.set(0);
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        assert_eq!(scroll.precise_offset(), gpui_kit::point(0., 0.));
+        assert!(events.borrow().is_empty());
+        if case == 4 {
+            for _ in 0..64 {
+                if !rows.read_with(cx, |s, _| s.has_scroll_command())
+                    && !columns.read_with(cx, |s, _| s.has_scroll_command())
+                {
+                    break;
+                }
+                cx.executor().advance_clock(Duration::from_millis(2));
+                cx.update(|w, cx| {
+                    assert!(w.simulate_next_frame(cx) > 0);
+                    w.draw(cx).clear(cx);
+                });
+            }
+            assert_eq!(
+                *events.borrow(),
+                vec![
+                    (Axis::Vertical, VirtualizerCommandOutcome::Settled),
+                    (Axis::Horizontal, VirtualizerCommandOutcome::Settled)
+                ],
+                "advancing tiny motion must not be classified as a stalled host"
+            );
+            assert_eq!(scroll.precise_offset(), gpui_kit::point(-0.1, -0.1));
+            continue;
+        }
+        cx.executor().advance_clock(Duration::from_millis(50));
+        cx.update(|w, cx| {
+            assert!(w.simulate_next_frame(cx) > 0);
+            w.draw(cx).clear(cx);
+        });
+        let middle = scroll.precise_offset();
+        assert!((middle.x + 100. * (1. - 0.75f64.powi(3))).abs() < 0.001);
+        assert!((middle.y + 80. * (1. - 0.75f64.powi(3))).abs() < 0.001);
+        assert!(events.borrow().is_empty());
+        assert!(
+            builds.get() <= 100,
+            "grid must only build the current cell workset"
+        );
+        match case {
+            0 => {
+                cx.executor().advance_clock(Duration::from_millis(150));
+                cx.update(|w, cx| {
+                    assert!(w.simulate_next_frame(cx) > 0);
+                    w.draw(cx).clear(cx);
+                });
+            }
+            1 => {
+                cx.simulate_event(gpui_kit::ScrollWheelEvent {
+                    position: gpui_kit::point(px(100.), px(50.)),
+                    delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(-5.), px(-10.))),
+                    modifiers: Default::default(),
+                    touch_phase: gpui_kit::TouchPhase::Moved,
+                });
+                cx.update(|w, cx| w.draw(cx).clear(cx));
+            }
+            2 => {
+                cx.deactivate_window();
+                cx.update(|w, cx| w.draw(cx).clear(cx));
+            }
+            _ => {
+                cx.update(|_, cx| cx.set_reduce_motion(true));
+                cx.update(|w, cx| w.draw(cx).clear(cx));
+            }
+        }
+        let outcome = if case == 1 {
+            VirtualizerCommandOutcome::Cancelled
+        } else {
+            VirtualizerCommandOutcome::Settled
+        };
+        assert_eq!(
+            *events.borrow(),
+            vec![(Axis::Vertical, outcome), (Axis::Horizontal, outcome)],
+            "case {case}"
+        );
+        assert_eq!(
+            scroll.precise_offset(),
+            if case == 1 {
+                middle + gpui_kit::point(-5., -10.)
+            } else {
+                gpui_kit::point(-100., -80.)
+            }
+        );
+        assert!(!rows.read_with(cx, |s, _| s.has_scroll_command()));
+        assert!(!columns.read_with(cx, |s, _| s.has_scroll_command()));
+        cx.update(|w, cx| {
+            w.simulate_next_frame(cx);
+            w.draw(cx).clear(cx);
+        });
+        assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
+    }
+}
+
 #[test]
 fn masonry_packs_shortest_lanes_updates_locally_and_keeps_frozen_snapshots() {
     let mut state = VirtualMasonryState::new(
