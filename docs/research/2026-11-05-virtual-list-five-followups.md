@@ -65,3 +65,9 @@
 试验先后暴露“拒绝宿主仍重设起点返回原地”和“等尺寸新增测量重启段落”问题；拒绝／高刷新率用例先失败后修正。[trial 原始采样](virtual-list-series-measured-motion-trial-2026-11-05.csv) 保留，仅是被拒候选。最终源码重跑两轮 ABBA，baseline `7237b55`，最终误差均为 0；[固定 workload](virtual-list-measured-motion-2026-11-05.rs)、[最终第一轮](virtual-list-series-measured-motion-final-2026-11-05.csv)、[复测](virtual-list-series-measured-motion-final-repeat-2026-11-05.csv) 完整保存。
 
 第一轮 CPU：idle +3.53%，reduced +1.30%，short +13.64%，tail +12.78%。short builds 1610→1938、分配约 20230→22414、peak 16440→17488 bytes；tail builds 1610→1941、分配 21381→23538、peak 19864→27400。idle 各空间／工作量计数相同，reduced 两个命令多两个 motion 分配。动画的中间位置不同、工作量更多，这是功能成本，不是等画面提速。按用户要求采用并公开代价。阶段专项全量为 170 passed / 0 failed / 8 ignored。
+
+## 5a. 约束驱动 auto tracks
+
+采用显式 `VirtualGridTrack(minimum,maximum,weight)` 及纯函数 `resolve`。调用方传入实际可用 extent、gap、两端 padding；按权重分配剩余空间，达到 max 后再分配给其余轨道，不足时保留 min 并允许滚动。零权重固定在 min，达到全部 max 后留白，非法／非有限输入整体拒绝。解析采用 breakpoint water filling，O(T log T)，不查询 cell。结果交给 Known sizing 或现有 `update_sizes` 合批；消费者在约束变化时重算，不能每帧重建百万行 Known 数组。
+
+测试覆盖权重、max 饱和、min 溢出滚动、留白、零轨道、非法输入，以及解析后 Known resize 保持原阅读 key、同值更新不使旧 snapshot 过期。默认 Grid 不调用解析器。这是约束驱动布局，不声称能推断未见内容的 intrinsic 最大宽高。

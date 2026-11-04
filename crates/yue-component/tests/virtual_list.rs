@@ -39,6 +39,8 @@ mod grid_preparation;
 mod grid_retention;
 #[path = "virtual_list/grid_spans.rs"]
 mod grid_spans;
+#[path = "virtual_list/grid_tracks.rs"]
+mod grid_tracks;
 #[path = "virtual_list/masonry_activity.rs"]
 mod masonry_activity;
 #[path = "virtual_list/masonry_cache.rs"]

@@ -2,7 +2,7 @@
 
 基线：`7fb2c29fcd2cdc08f50b86271111114cc260327d`。
 用户授权：按下列五项逐项完成；先测试和比较，再决定吸收，独立提交并推送，保持可回退。
-状态：第一至三项完成，第四项测试与复测进行中。证据见 docs/research/2026-11-05-virtual-list-five-followups.md。
+状态：第一至四项完成，第五项进行中（auto 轨道已验证，RTL 与内容测量试验继续）。证据见 docs/research/2026-11-05-virtual-list-five-followups.md。
 
 ## 固定约束
 
@@ -28,12 +28,12 @@
 先 Fixed/Known column span，再 row span。定义稳定 origin、跨度范围、重叠拒绝、离屏 origin 查询、冻结边界裁剪/拒绝规则和唯一命中。
 不改变行高/列宽为自动推断，不扫描所有 cells；更新接口必须原子验证。
 
-## 4. Measured 平滑定位（进行中）
+## 4. Measured 平滑定位（完成）
 
 先短距离可测区域的动态尺寸校正与用户打断；长距离以有界跳转加末段 smooth 做独立试验。
 目标 key/revision 可重求，采样从实际 owner 位置开始；未知/不稳定尺寸安全即时定位，reduced motion 和超时保持确定。
 
-## 5. auto 轨道、内容自适应与 RTL（待执行）
+## 5. auto 轨道、内容自适应与 RTL（进行中）
 
 逐项定义消费者和尺寸失效合同，完成实现/验证或记录实验不采用结论。
 auto 不假装知道离屏内容最大值；RTL 使用逻辑 start/end，保证冻结、定位、wheel 和命中一致。
