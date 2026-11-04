@@ -1,5 +1,22 @@
 # Yue Base patches
 
+## Fractional virtualization feedback and singleton cost (2026-11-04)
+
+`virtualization/updates.rs` compares feedback in the backend's stored units:
+Known uses its f32 content extent; Measured uses the f32 native slot including
+gap. Exact/hint and normalized cross constraints must also match for a no-op.
+An epsilon per item could silently lose several pixels over thousands of items.
+Masonry external and native layout feedback use the same value equality rule.
+Scroll-command convergence tolerances are separate and unchanged.
+
+Single-item linear feedback validates before mutation and bypasses temporary
+duplicate/index buffers. Native submission uses one stack tuple; Known keeps
+its existing persistent-tree update. Multi-item atomicity, source identity,
+frozen geometry, width invalidation and anchors remain in their existing owners.
+Regression coverage, two Release ABBA rounds, measured batch tradeoffs and
+rollback points are recorded in
+`docs/research/2026-11-04-virtual-list-feedback-review.md`.
+
 ## Virtualization composition and presentation fixes (2026-11-04)
 
 `virtualization/state.rs` preserves accepted content invalidations across source

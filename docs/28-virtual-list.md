@@ -4,6 +4,8 @@
 
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
+最新一轮对标修正了逐项尺寸容差造成的累计偏移：尺寸反馈按 backend 实际可表示的值判断 no-op，并采用一维单项反馈的临时分配优化。双轴／估算／Masonry 原生布局回归、两轮 Release ABBA 的收益与批量代价见[细微尺寸反馈与单项成本](research/2026-11-04-virtual-list-feedback-review.md)。这不改变单项 Pixels、含 gap slot 舍入及跨 GPU／DPI 的既有精度边界。
+
 实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；本机 Windows 实窗探针、实际输入验收与能力边界见[四项逐项优化](research/2026-11-04-virtual-list-four-gaps.md)，尚未据此验证跨 GPU／物理 DPI 的帧节奏或 Windows 屏幕阅读器体验。
 
 升级后的 [第二轮跨库对标](research/2026-11-04-virtual-list-cross-library-review.md) 补充 virtua、vlist 的可借鉴机制。随后完成三模式内容失效、定位策略请求校验、内容与几何准备分离、增量 splice／Masonry append、紧凑持久索引、顺序工作集迭代及混合轨迹／多周期释放验证，见 [第二轮实施与测量](research/2026-11-04-virtual-list-refinements.md)。跨库对标中的问题与数值是修复前快照，不代表当前状态。

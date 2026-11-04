@@ -1,0 +1,1665 @@
+{
+  "date": "2026-11-04",
+  "branch": "quality/virtualization-next-review-20261104",
+  "round_baseline": "6022bdf20816bcf4159af70fb198912b1375095e",
+  "precision_fix": "3fc5dd202e1b17f04bd33babcfec238faee4af91",
+  "single_item_optimization": "5b813d58e5ff3f1cd39a1718c99efc0ca0258580",
+  "hash_policy": "UTF-8 file payload normalized from CRLF to LF, except original tool identity workload_sha256 retained as recorded",
+  "references": {
+    "refer/virtual/virtua-main/src/core/layouts/list.ts": "8f632caeeeff2b42757517b4925fc4001fa883d96e9ce8cd04d559e54869e023",
+    "refer/virtual/virtual-main/packages/virtual-core/src/index.ts": "ec73ae69df7f60bc5a29f7650aa3ee9fa27764d01e76b01efca184a6090c5c8d",
+    "refer/virtual/vlist-main/src/plugins/autosize/plugin.ts": "91ec7895c39809456d5c8f534c86d2856182ae6ec3a1a392a37e8e6f431bfdac",
+    "refer/virtual/vlist-main/src/rendering/sizes.ts": "56e2cb1066a5ea49f36e6517e4fbdc1ea19dfffd0a9487167bce986241e1f498"
+  },
+  "benchmarks": [
+    {
+      "label": "next-feedback-exact-linear",
+      "csv": "docs/research/virtual-list-series-next-feedback-exact-linear-2026-11-04.csv",
+      "csv_sha256_lf": "2e2bc74f4bb7592dea04413801992c9b807aedb7d4b9ffe515b85efa911c3e8b",
+      "rows": 480,
+      "cases": 24,
+      "timing_accepted": false,
+      "identity": {
+        "before": "5c808632786b735e3a0f273f16b58daaecd71940",
+        "filter": "next_linear_feedback",
+        "after_head": "3fc5dd202e1b17f04bd33babcfec238faee4af91",
+        "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+        "workload_sha256": "aa89112a3c7193dc6486d98d4ad8c02dbed0ebb79415a21c3b1e32543334070f",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 480
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "ebca3a4c10d8628ba70672ca19193e34c91b9a7577895f2049ce560b403d12e6",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "044c9316c2cd07b53f72da1e3cc6ae5829c8de4768d9232bf81d849d667b7a5d"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "linear-feedback-0-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      },
+      "single_item_medians": {
+        "linear-feedback-0-1-false": {
+          "before": {
+            "ns": 174700.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 177650.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": 1.6886090440755508
+        },
+        "linear-feedback-0-1-true": {
+          "before": {
+            "ns": 4062250.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 4078550.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": 0.4012554618745723
+        },
+        "linear-feedback-1-1-false": {
+          "before": {
+            "ns": 288900.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 287550.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -0.4672897196261627
+        },
+        "linear-feedback-1-1-true": {
+          "before": {
+            "ns": 8226150.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8501000.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": 3.341174182333173
+        },
+        "linear-feedback-2-1-false": {
+          "before": {
+            "ns": 299650.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 291150.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -2.8366427498748514
+        },
+        "linear-feedback-2-1-true": {
+          "before": {
+            "ns": 8279650.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8515250.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": 2.8455309101230064
+        }
+      },
+      "exclusion_reason": "Another project began compiling after initial quiet observation; timing excluded. Replaced by guarded sampling."
+    },
+    {
+      "label": "next-feedback-exact-linear-guarded",
+      "csv": "docs/research/virtual-list-series-next-feedback-exact-linear-guarded-2026-11-04.csv",
+      "csv_sha256_lf": "62269d3aa5c51c1cb412cd654a6229848392be5c099d071bd19d082f4c07ee7c",
+      "rows": 480,
+      "cases": 24,
+      "timing_accepted": true,
+      "identity": {
+        "before": "5c808632786b735e3a0f273f16b58daaecd71940",
+        "filter": "next_linear_feedback",
+        "after_head": "131eba9d5d7718c3c7e5914886bba8daefd637ca",
+        "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+        "workload_sha256": "aa89112a3c7193dc6486d98d4ad8c02dbed0ebb79415a21c3b1e32543334070f",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [
+          "after-1-attempt-1.txt"
+        ],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 480
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "ebca3a4c10d8628ba70672ca19193e34c91b9a7577895f2049ce560b403d12e6",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "044c9316c2cd07b53f72da1e3cc6ae5829c8de4768d9232bf81d849d667b7a5d"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "linear-feedback-0-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      },
+      "single_item_medians": {
+        "linear-feedback-0-1-false": {
+          "before": {
+            "ns": 176800.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 173700.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -1.753393665158376
+        },
+        "linear-feedback-0-1-true": {
+          "before": {
+            "ns": 4034450.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 4017650.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -0.41641363754663097
+        },
+        "linear-feedback-1-1-false": {
+          "before": {
+            "ns": 293600.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 293100.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -0.17029972752043987
+        },
+        "linear-feedback-1-1-true": {
+          "before": {
+            "ns": 8230800.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8185600.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -0.5491568255819645
+        },
+        "linear-feedback-2-1-false": {
+          "before": {
+            "ns": 298700.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 308200.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": 3.180448610646125
+        },
+        "linear-feedback-2-1-true": {
+          "before": {
+            "ns": 8468950.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8279550.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -2.2364047491129413
+        }
+      }
+    },
+    {
+      "label": "next-feedback-exact-guards",
+      "csv": "docs/research/virtual-list-series-next-feedback-exact-guards-2026-11-04.csv",
+      "csv_sha256_lf": "9469ddc6622e0263b3e40346019128abde416bca76ef0c5659689fade4cd312e",
+      "rows": 404,
+      "cases": 27,
+      "timing_accepted": true,
+      "identity": {
+        "before": "5c808632786b735e3a0f273f16b58daaecd71940",
+        "filter": "series_",
+        "after_head": "b016579375156b3b706ad86afaae6abd6cc60e07",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "ebca3a4c10d8628ba70672ca19193e34c91b9a7577895f2049ce560b403d12e6",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "044c9316c2cd07b53f72da1e3cc6ae5829c8de4768d9232bf81d849d667b7a5d"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "append-10000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "append-100000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "append-1000000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "idle-2000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "masonry-noop": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "measured-queries": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-size": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      }
+    },
+    {
+      "label": "next-feedback-single",
+      "csv": "docs/research/virtual-list-series-next-feedback-single-2026-11-04.csv",
+      "csv_sha256_lf": "e4689bc59726e87f1f54e339ee343e14cd67ca06806497cdad16a8d6f21d0311",
+      "rows": 480,
+      "cases": 24,
+      "timing_accepted": true,
+      "identity": {
+        "before": "b016579375156b3b706ad86afaae6abd6cc60e07",
+        "filter": "next_linear_feedback",
+        "after_head": "5b813d58e5ff3f1cd39a1718c99efc0ca0258580",
+        "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+        "workload_sha256": "aa89112a3c7193dc6486d98d4ad8c02dbed0ebb79415a21c3b1e32543334070f",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 480
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "f2cda7dde607c8b2d801b7af86ea512acd4e15fb20d8ae9448c2a71976644e88",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "linear-feedback-0-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      },
+      "single_item_medians": {
+        "linear-feedback-0-1-false": {
+          "before": {
+            "ns": 192350.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 41850.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -78.24278658695087
+        },
+        "linear-feedback-0-1-true": {
+          "before": {
+            "ns": 4074850.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 3894650.0,
+            "allocations": 27986.0,
+            "peak": 9736.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -4.4222486717302445
+        },
+        "linear-feedback-1-1-false": {
+          "before": {
+            "ns": 293650.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 175600.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -40.200919461944494
+        },
+        "linear-feedback-1-1-true": {
+          "before": {
+            "ns": 8349700.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8097900.0,
+            "allocations": 33983.0,
+            "peak": 27648.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -3.015677209959644
+        },
+        "linear-feedback-2-1-false": {
+          "before": {
+            "ns": 301200.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 180200.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -40.17264276228419
+        },
+        "linear-feedback-2-1-true": {
+          "before": {
+            "ns": 8362050.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8111350.0,
+            "allocations": 33983.0,
+            "peak": 27648.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -2.998068655413444
+        }
+      }
+    },
+    {
+      "label": "next-feedback-single-repeat",
+      "csv": "docs/research/virtual-list-series-next-feedback-single-repeat-2026-11-04.csv",
+      "csv_sha256_lf": "0f457167d55eb77a479e8b6e6d9861ccbf7c19fc068a6d8a6dbe74cfa0d21a1b",
+      "rows": 480,
+      "cases": 24,
+      "timing_accepted": true,
+      "identity": {
+        "before": "b016579375156b3b706ad86afaae6abd6cc60e07",
+        "filter": "next_linear_feedback",
+        "after_head": "5b813d58e5ff3f1cd39a1718c99efc0ca0258580",
+        "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+        "workload_sha256": "aa89112a3c7193dc6486d98d4ad8c02dbed0ebb79415a21c3b1e32543334070f",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [
+          "after-1-attempt-1.txt"
+        ],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 480
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "f2cda7dde607c8b2d801b7af86ea512acd4e15fb20d8ae9448c2a71976644e88",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "linear-feedback-0-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-0-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-1-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-false": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-1-true": {
+          "allocations": false,
+          "peak": false,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-32-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "linear-feedback-2-256-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      },
+      "single_item_medians": {
+        "linear-feedback-0-1-false": {
+          "before": {
+            "ns": 172050.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 42300.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -75.41412380122058
+        },
+        "linear-feedback-0-1-true": {
+          "before": {
+            "ns": 4093750.0,
+            "allocations": 31986.0,
+            "peak": 9804.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 3950000.0,
+            "allocations": 27986.0,
+            "peak": 9736.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -3.511450381679393
+        },
+        "linear-feedback-1-1-false": {
+          "before": {
+            "ns": 300350.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 179700.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -40.169801897785916
+        },
+        "linear-feedback-1-1-true": {
+          "before": {
+            "ns": 8258150.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8216850.0,
+            "allocations": 33983.0,
+            "peak": 27648.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -0.5001120105592616
+        },
+        "linear-feedback-2-1-false": {
+          "before": {
+            "ns": 311800.0,
+            "allocations": 4000.0,
+            "peak": 68.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 181550.0,
+            "allocations": 0.0,
+            "peak": 0.0,
+            "reads": 2000.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -41.77357280307889
+        },
+        "linear-feedback-2-1-true": {
+          "before": {
+            "ns": 8268600.0,
+            "allocations": 37983.0,
+            "peak": 27716.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "after": {
+            "ns": 8086550.0,
+            "allocations": 33983.0,
+            "peak": 27648.0,
+            "reads": 3999.0,
+            "builds": 0.0
+          },
+          "elapsed_change_percent": -2.2017028275645223
+        }
+      }
+    },
+    {
+      "label": "next-feedback-single-guards",
+      "csv": "docs/research/virtual-list-series-next-feedback-single-guards-2026-11-04.csv",
+      "csv_sha256_lf": "9c486e679b673820790c89a295785c7787fbfd4ffdec7958c6b050135416f255",
+      "rows": 404,
+      "cases": 27,
+      "timing_accepted": true,
+      "identity": {
+        "before": "b016579375156b3b706ad86afaae6abd6cc60e07",
+        "filter": "series_",
+        "after_head": "5b813d58e5ff3f1cd39a1718c99efc0ca0258580",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "source_sha256_lf": {
+        "before": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "70c7159254eef54adbc6d4a7619aadff8cafaa26154214ff593f5cdfbc29ae13",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        },
+        "after": {
+          "vendor/gpui-base/src/virtualization/updates.rs": "f2cda7dde607c8b2d801b7af86ea512acd4e15fb20d8ae9448c2a71976644e88",
+          "vendor/gpui-base/src/virtualization/masonry.rs": "6e1bf9e1a8b9d98c51f8bc5d93d4dd5f0d86df067f876b1aad934ca819ec240b",
+          "vendor/gpui-base/src/virtualization/masonry_element.rs": "7321301246c004dabb35112406eb53ffb18374bd559ca8a64b4e291a1b02bc75"
+        }
+      },
+      "counter_equality": {
+        "append-10000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "append-100000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "append-1000000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "idle-2000": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "masonry-noop": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "measured-queries": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-0-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-1-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-2-size": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-steady": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-rapid": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-complex": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "frames-3-resize": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-0-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-0-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-1-false": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        },
+        "work-1-true": {
+          "allocations": true,
+          "peak": true,
+          "reads": true,
+          "builds": true
+        }
+      }
+    }
+  ],
+  "validation": {
+    "workspace": {
+      "passed": 830,
+      "failed": 0,
+      "ignored": 10,
+      "suites": 27,
+      "log_sha256_lf": "9e5be0e0450a16c1fc7f21bec6e9da910f91dacede5207e6e3c78b1090105357"
+    },
+    "virtual_list": {
+      "passed": 116,
+      "failed": 0,
+      "ignored": 8
+    },
+    "native_probe": {
+      "passed": 1,
+      "failed": 0,
+      "ignored": 0,
+      "render_calls": {
+        "grid": 264,
+        "masonry": 49,
+        "horizontal": 28
+      },
+      "log_sha256_lf": "ea59c1bdf019b91caeca1fd649f7f70032c91dae36937b796306959cf53e8da4"
+    },
+    "clippy": {
+      "result": "passed",
+      "scope": "workspace all-targets with windows-showcase/headless-tests, -D warnings",
+      "log_sha256_lf": "547977eff309311a8efce649297471650516149f89d5b2f4a2d953a04fec6136"
+    },
+    "release_build": {
+      "result": "passed",
+      "package": "windows-showcase",
+      "log_sha256_lf": "a509bdf41b51708ec6d61edf6282a517ccc47c9a86075b462d9f814739e469d2"
+    },
+    "vendor_contracts": {
+      "sources": {
+        "core": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre",
+          "version": "0.3.9",
+          "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+          "src_sha256": "d2b2a71afe32620c36843e9ede07ea7b19a1da8c29b5da96618107c7a28aaeb5"
+        },
+        "base": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+          "version": "0.8.0",
+          "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+          "src_sha256": "0c29d2adce143ace97db100a1c5b5212e784af26c2ebed78bd491beacabfdcbf"
+        },
+        "windows": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+          "version": "0.3.9",
+          "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+          "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+        }
+      },
+      "layers": {
+        "native": {
+          "passed": [
+            "sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes",
+            "size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry",
+            "invalid_size_batches_leave_geometry_and_revision_unchanged",
+            "mixed_size_batches_match_input_order_and_precise_prefixes_across_tree_nodes",
+            "size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it",
+            "width_invalidation_keeps_sparse_hints_and_frozen_geometry",
+            "scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input",
+            "frozen_geometry_retains_actual_cross_constraint_when_equal_extents_are_remeasured",
+            "uniform_geometry_is_shared_and_half_open_even_inside_gaps",
+            "direct_estimated_construction_has_the_same_geometry_without_a_replacement_tree",
+            "per_item_hint_splice_preserves_existing_measurements_and_frozen_geometry",
+            "native_hints_survive_first_layout_resize_splice_and_snapshot_reads",
+            "invalid_zero_height_cannot_pull_all_items_into_one_frame",
+            "horizontal_viewport_uses_physical_left_right_padding",
+            "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end"
+          ],
+          "lock_sha256": "957ee57c5ba3d29e846d61ecce6859dca08ec8c9b96ac161a95423f96dbc5b41"
+        },
+        "base": {
+          "passed": [
+            "virtualization::geometry::tests::known_prefix_keeps_gap_outside_item_content_and_does_not_append_a_trailing_gap",
+            "virtualization::geometry::tests::fixed_geometry_uses_constant_metadata_and_f64_local_coordinates"
+          ],
+          "lock_sha256": "ea9521187db0a734a4cccbb12cf58fc1c17783d0019c667c668f3c044da2b052"
+        }
+      },
+      "requirements_sha256": "a463c8eae239b78a9fb00a2152ebc06b647400d501bf6c4a591b1ac5f42f98eb",
+      "native_test_source_sha256": "e62d8ad9844bdf331bba2bf809a853317f006bb9d6975d5ef80f9b28d31465f6",
+      "status": "passed"
+    },
+    "reverse_apply_check": {
+      "commit": "5b813d5",
+      "result": "passed",
+      "worktree_changed": false
+    },
+    "production_manifests_and_locks_changed": false
+  }
+}
