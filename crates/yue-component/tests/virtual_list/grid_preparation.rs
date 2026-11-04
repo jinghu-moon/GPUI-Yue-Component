@@ -16,6 +16,7 @@ struct Harness {
     weak: Rc<RefCell<Vec<gpui_kit::WeakEntity<CellView>>>>,
     revision: u64,
     mounted: bool,
+    frozen: (usize, usize),
 }
 impl Render for Harness {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -39,6 +40,8 @@ impl Render for Harness {
             },
         )
         .content_revision(self.revision)
+        .frozen_rows(self.frozen.0)
+        .frozen_columns(self.frozen.1)
         .w(px(240.))
         .h(px(100.))
         .into_any_element()
@@ -70,7 +73,44 @@ fn harness(cx: &mut Context<Harness>) -> Harness {
         weak: Rc::default(),
         revision: 0,
         mounted: true,
+        frozen: (0, 0),
     }
+}
+
+#[gpui_kit::test]
+fn grid_prepared_corner_keeps_identity_across_freezing_and_prunes_after_unfreeze(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx));
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let (weak, prepared) = view.read_with(cx, |v, _| (v.weak.clone(), v.prepared.clone()));
+    let corner = weak.borrow()[0].clone();
+    let initial = prepared.get();
+    view.update(cx, |v, cx| {
+        v.frozen = (1, 1);
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert_eq!(prepared.get(), initial, "freezing is geometry, not content");
+    view.update(cx, |v, cx| {
+        v.scroll
+            .set_precise_offset(gpui_kit::point(-1_000., -2_000.));
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(
+        corner.upgrade().is_some(),
+        "corner keeps the original prepared entity"
+    );
+    view.update(cx, |v, cx| {
+        v.frozen = (0, 0);
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(
+        corner.upgrade().is_none(),
+        "offscreen unfrozen cell leaves the cache"
+    );
 }
 
 #[gpui_kit::test]

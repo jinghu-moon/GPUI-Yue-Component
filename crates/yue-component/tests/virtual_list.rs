@@ -25,6 +25,8 @@ mod adoption;
 mod api_contract;
 #[path = "virtual_list/feedback.rs"]
 mod feedback;
+#[path = "virtual_list/frozen_grid.rs"]
+mod frozen_grid;
 #[path = "virtual_list/grid_preparation.rs"]
 mod grid_preparation;
 #[path = "virtual_list/directional.rs"]

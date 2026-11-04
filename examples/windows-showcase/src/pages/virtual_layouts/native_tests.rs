@@ -4,6 +4,146 @@ use super::*;
 use std::{cell::RefCell, time::Duration};
 
 #[test]
+#[ignore = "requires an unlocked Windows desktop and GPU; opens a temporary frozen-grid/cache window"]
+fn native_frozen_grid_and_masonry_cache_restore() {
+    let result = Rc::new(RefCell::new(None));
+    let observed = result.clone();
+    gpui_kit::application().run(move |cx| {
+        yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+        cx.set_reduce_motion(true);
+        let (window, page) = gpui_kit::open_window(
+            WindowOptions {
+                focus: false,
+                window_bounds: Some(gpui_kit::WindowBounds::Windowed(gpui_kit::Bounds::new(
+                    gpui_kit::point(px(40.), px(40.)),
+                    gpui_kit::size(px(1200.), px(800.)),
+                ))),
+                ..Default::default()
+            },
+            cx,
+            |_, cx| cx.new(VirtualLayoutsPage::new),
+        )
+        .unwrap();
+        cx.spawn(async move |cx| {
+            let checked: Result<(), String> = async {
+                let mut old = None;
+                let mut expected = None;
+                for phase in 0..5 {
+                    let mut ready = false;
+                    for _ in 0..100 {
+                        cx.background_executor()
+                            .timer(Duration::from_millis(20))
+                            .await;
+                        ready = cx.update(|cx| {
+                            let p = page.read(cx);
+                            match phase {
+                                0 => p.rows.read(cx).viewport().is_some(),
+                                1 => {
+                                    !p.rows.read(cx).has_scroll_command()
+                                        && !p.columns.read(cx).has_scroll_command()
+                                        && (-p.scroll.precise_offset().y - 35964.).abs() < 0.1
+                                        && (-p.scroll.precise_offset().x - 14256.).abs() < 0.1
+                                }
+                                2 => p.masonry.read(cx).measurement_cache().is_ok(),
+                                3 => -p.masonry.read(cx).scroll_handle().precise_offset().y >= 499.,
+                                _ => {
+                                    p.masonry.read(cx).measurement_cache().is_ok()
+                                        && old.as_ref().is_some_and(
+                                            |w: &gpui_kit::WeakEntity<VirtualMasonryState>| {
+                                                w.upgrade().is_none()
+                                            },
+                                        )
+                                }
+                            }
+                        });
+                        if ready {
+                            break;
+                        }
+                    }
+                    if !ready {
+                        return Err(format!("frozen/cache native phase {phase} did not settle"));
+                    }
+                    cx.update(|cx| {
+                        page.update(cx, |p, cx| {
+                            match phase {
+                                0 => {
+                                    for (s, key) in [(&p.rows, 1000usize), (&p.columns, 100usize)] {
+                                        s.update(cx, |s, cx| {
+                                            s.scroll_to_key(
+                                                key.into(),
+                                                VirtualizerScrollOptions::default()
+                                                    .align(VirtualizerAlign::Start),
+                                            )
+                                            .unwrap();
+                                            cx.notify();
+                                        });
+                                    }
+                                }
+                                1 => {
+                                    for axis in [&p.rows, &p.columns] {
+                                        let s = axis.read(cx);
+                                        let snapshot = s.snapshot(s.viewport().unwrap()).unwrap();
+                                        assert!(
+                                            snapshot.working_indices().contains(&0),
+                                            "native frozen prefix remains presented"
+                                        );
+                                    }
+                                    assert!(
+                                        p.builds[0].get() < 5000,
+                                        "native grid remains bounded"
+                                    );
+                                    p.active = 1;
+                                }
+                                2 => p.masonry.update(cx, |s, cx| {
+                                    s.scroll_handle()
+                                        .set_precise_offset(gpui_kit::point(0., -500.));
+                                    cx.notify();
+                                }),
+                                3 => {
+                                    let cache = p.masonry.read(cx).measurement_cache().unwrap();
+                                    expected =
+                                        cache.scroll_anchor().map(|(k, pos)| (k.clone(), pos));
+                                    old = Some(p.masonry.downgrade());
+                                    let new =
+                                        VirtualLayoutsPage::new_masonry(cache.lane_count(), cx);
+                                    new.update(cx, |s, _| {
+                                        s.restore_measurement_cache(&cache).unwrap();
+                                    });
+                                    p.masonry = new;
+                                }
+                                _ => {
+                                    let cache = p.masonry.read(cx).measurement_cache().unwrap();
+                                    assert_eq!(
+                                        cache.scroll_anchor().map(|(k, pos)| (k.clone(), pos)),
+                                        expected
+                                    );
+                                    assert!(
+                                        !p.masonry.read(cx).is_scrolling(),
+                                        "cold restore is not native user input"
+                                    );
+                                }
+                            }
+                            cx.notify();
+                        })
+                    });
+                }
+                Ok(())
+            }
+            .await;
+            *observed.borrow_mut() = Some(checked);
+            let _ = window.update(cx, |_, w, _| w.remove_window());
+            cx.update(|cx| cx.quit());
+        })
+        .detach();
+    });
+    result
+        .borrow_mut()
+        .take()
+        .expect("native frozen/cache runner completed")
+        .unwrap();
+}
+
+#[test]
 #[ignore = "requires an unlocked Windows desktop and GPU; opens a temporary showcase window"]
 fn native_layouts_render_and_settle() {
     let result = Rc::new(RefCell::new(None));

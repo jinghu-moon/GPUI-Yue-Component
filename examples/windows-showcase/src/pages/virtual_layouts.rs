@@ -35,6 +35,7 @@ pub(crate) struct VirtualLayoutsPage {
     masonry: Entity<VirtualMasonryState>,
     horizontal: Entity<VirtualizerState>,
     active: usize,
+    frozen: bool,
     builds: [Rc<Cell<usize>>; 3],
 }
 impl VirtualLayoutsPage {
@@ -58,23 +59,7 @@ impl VirtualLayoutsPage {
             )
             .unwrap()
         });
-        let masonry = cx.new(|_| {
-            let mut state = VirtualMasonryState::new(
-                Rc::new(Records(10_000)),
-                VirtualizerSizing::measured_with_estimates(px(140.), |ix| {
-                    px(100. + (ix % 4) as f32 * 30.)
-                }),
-                3,
-            )
-            .unwrap();
-            state
-                .set_layout(
-                    VirtualizerLayout::default().gap(px(12.)).overscan(px(72.)),
-                    px(12.),
-                )
-                .unwrap();
-            state
-        });
+        let masonry = Self::new_masonry(3, cx);
         let horizontal = cx.new(|_| {
             let mut state = VirtualizerState::new(
                 Axis::Horizontal,
@@ -94,30 +79,83 @@ impl VirtualLayoutsPage {
             masonry,
             horizontal,
             active: 0,
+            frozen: true,
             builds: std::array::from_fn(|_| Rc::new(Cell::new(0))),
         }
     }
-    fn panel(&self, ix: usize, theme: YueTheme, cx: &App) -> AnyElement {
+    fn new_masonry(lane_count: usize, cx: &mut App) -> Entity<VirtualMasonryState> {
+        cx.new(|_| {
+            let mut state = VirtualMasonryState::new(
+                Rc::new(Records(10_000)),
+                VirtualizerSizing::measured_with_estimates(px(140.), |ix| {
+                    px(100. + (ix % 4) as f32 * 30.)
+                }),
+                lane_count,
+            )
+            .unwrap();
+            state
+                .set_layout(
+                    VirtualizerLayout::default()
+                        .gap(px(12.))
+                        .overscan(px(72.))
+                        .directional_overscan(px(24.)),
+                    px(12.),
+                )
+                .unwrap();
+            state
+        })
+    }
+    fn panel(
+        &self,
+        ix: usize,
+        theme: YueTheme,
+        owner: gpui_kit::WeakEntity<Self>,
+        cx: &App,
+    ) -> AnyElement {
         let builds = self.builds[ix].clone();
         let (description, controls, content) = match ix {
             0 => {
                 let rows = self.rows.clone();
                 let columns = self.columns.clone();
-                let controls = YueButton::new("grid-last", "定位右下角")
-                    .theme(theme)
-                    .on_click(move |_, _, cx| {
-                        for (state, key) in [(&rows, 999_999usize), (&columns, 999usize)] {
-                            state.update(cx, |s, cx| {
-                                s.scroll_to_key(
-                                    key.into(),
-                                    VirtualizerScrollOptions::default()
-                                        .align(VirtualizerAlign::End),
-                                )
-                                .unwrap();
+                let frozen = self.frozen;
+                let freeze_owner = owner.clone();
+                let controls = div()
+                    .flex()
+                    .gap_2()
+                    .child(
+                        YueButton::new(
+                            "grid-freeze",
+                            if frozen {
+                                "取消冻结首行首列"
+                            } else {
+                                "冻结首行首列"
+                            },
+                        )
+                        .theme(theme)
+                        .on_click(move |_, _, cx| {
+                            let _ = freeze_owner.update(cx, |p, cx| {
+                                p.frozen = !p.frozen;
                                 cx.notify();
                             });
-                        }
-                    })
+                        }),
+                    )
+                    .child(
+                        YueButton::new("grid-last", "定位右下角")
+                            .theme(theme)
+                            .on_click(move |_, _, cx| {
+                                for (state, key) in [(&rows, 999_999usize), (&columns, 999usize)] {
+                                    state.update(cx, |s, cx| {
+                                        s.scroll_to_key(
+                                            key.into(),
+                                            VirtualizerScrollOptions::default()
+                                                .align(VirtualizerAlign::End),
+                                        )
+                                        .unwrap();
+                                        cx.notify();
+                                    });
+                                }
+                            }),
+                    )
                     .into_any_element();
                 let content = div()
                     .relative()
@@ -130,7 +168,13 @@ impl VirtualLayoutsPage {
                             &self.scroll,
                             move |cell, _, _| {
                                 builds.set(builds.get() + 1);
-                                div()
+                                let is_frozen = cell.is_frozen_row() || cell.is_frozen_column();
+                                let cell_element = div().bg(gpui_kit::rgb(if is_frozen {
+                                    theme.surface_component()
+                                } else {
+                                    theme.surface()
+                                }));
+                                cell_element
                                     .id("grid-cell")
                                     .role(Role::Cell)
                                     .size_full()
@@ -147,6 +191,8 @@ impl VirtualLayoutsPage {
                                     ))
                             },
                         )
+                        .frozen_rows(usize::from(frozen))
+                        .frozen_columns(usize::from(frozen))
                         .role(Role::Grid)
                         .test_support(),
                     )
@@ -154,21 +200,43 @@ impl VirtualLayoutsPage {
                     .child(Scrollbar::horizontal(&self.scroll))
                     .into_any_element();
                 (
-                    "Grid · 一百万行 × 一千列，逐单元格双轴虚拟化。两轴共用一个滚动容器，不构建完整行。",
+                    "Grid · 一百万行 × 一千列，可冻结首行首列。四个裁剪区共用一个滚动位置，定位自动避开冻结条带。",
                     controls,
                     content,
                 )
             }
             1 => {
                 let state = self.masonry.clone();
-                let controls = YueButton::new("masonry-reflow", "切换三列／五列")
-                    .theme(theme)
-                    .on_click(move |_, _, cx| {
-                        state.update(cx, |s, cx| {
-                            s.reflow(if s.lane_count() == 3 { 5 } else { 3 }).unwrap();
-                            cx.notify();
-                        });
-                    })
+                let rebuild_owner = owner.clone();
+                let controls = div()
+                    .flex()
+                    .gap_2()
+                    .child(
+                        YueButton::new("masonry-rebuild", "缓存并重建 Masonry")
+                            .theme(theme)
+                            .on_click(move |_, _, cx| {
+                                let _ = rebuild_owner.update(cx, |p, cx| {
+                                    if let Ok(cache) = p.masonry.read(cx).measurement_cache() {
+                                        let state = Self::new_masonry(cache.lane_count(), cx);
+                                        state.update(cx, |s, _| {
+                                            s.restore_measurement_cache(&cache).unwrap();
+                                        });
+                                        p.masonry = state;
+                                        cx.notify();
+                                    }
+                                });
+                            }),
+                    )
+                    .child(
+                        YueButton::new("masonry-reflow", "切换三列／五列")
+                            .theme(theme)
+                            .on_click(move |_, _, cx| {
+                                state.update(cx, |s, cx| {
+                                    s.reflow(if s.lane_count() == 3 { 5 } else { 3 }).unwrap();
+                                    cx.notify();
+                                });
+                            }),
+                    )
                     .into_any_element();
                 let handle = self.masonry.read(cx).scroll_handle().clone();
                 let content = div()
@@ -202,7 +270,7 @@ impl VirtualLayoutsPage {
                     .child(Scrollbar::vertical(&handle))
                     .into_any_element();
                 (
-                    "Masonry · 一万张自然高度卡片。初始分配到最短列；实测更新只影响该列，显式切换列数才重新分配。",
+                    "Masonry · 一万张自然高度卡片，启用方向性缓冲。可缓存后销毁并重建控制器，恢复兼容测量、分栏和阅读位置。",
                     controls,
                     content,
                 )
@@ -292,7 +360,7 @@ impl Render for VirtualLayoutsPage {
                     .content(move |_, cx| {
                         owner
                             .upgrade()
-                            .map(|owner| owner.read(cx).panel(ix, theme, cx))
+                            .map(|owner| owner.read(cx).panel(ix, theme, owner.downgrade(), cx))
                             .unwrap_or_else(|| div().into_any_element())
                     })
             })
@@ -337,6 +405,10 @@ mod tests {
         cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
         cx.update(|w, cx| w.draw(cx).clear(cx));
         assert_eq!(view.read_with(cx, |p, _| p.builds[1].get()), 0);
+        assert!(view.read_with(cx, |p, _| p.frozen));
+        click(cx, "grid-freeze");
+        assert!(!view.read_with(cx, |p, _| p.frozen));
+        click(cx, "grid-freeze");
         click(cx, "grid-last");
         assert!(
             view.read_with(cx, |p, cx| p.scroll.offset().x < px(-100_000.)
@@ -347,6 +419,17 @@ mod tests {
             cx.notify();
         });
         cx.update(|w, cx| w.draw(cx).clear(cx));
+        let (old, before) = view.read_with(cx, |p, cx| {
+            (
+                p.masonry.downgrade(),
+                p.masonry.read(cx).measurement_cache().unwrap(),
+            )
+        });
+        click(cx, "masonry-rebuild");
+        assert!(old.upgrade().is_none());
+        let after = view.read_with(cx, |p, cx| p.masonry.read(cx).measurement_cache().unwrap());
+        assert_eq!(after.lane_count(), before.lane_count());
+        assert_eq!(after.cross_extent(), before.cross_extent());
         click(cx, "masonry-reflow");
         assert_eq!(
             view.read_with(cx, |p, cx| p.masonry.read(cx).lane_count()),

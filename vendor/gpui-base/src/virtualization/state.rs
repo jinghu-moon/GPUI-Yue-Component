@@ -39,6 +39,8 @@ pub struct VirtualizerViewport {
     cross: Pixels,
     origin: f64,
     scroll_extent: Option<f64>,
+    frozen_prefix: usize,
+    leading_occlusion: Pixels,
 }
 impl VirtualizerViewport {
     pub fn new(
@@ -57,7 +59,15 @@ impl VirtualizerViewport {
             cross,
             origin: 0.0,
             scroll_extent: None,
+            frozen_prefix: 0,
+            leading_occlusion: px(0.),
         }
+    }
+    // Frame-only Grid constraints; never rewrite the caller's layout padding.
+    pub(super) fn with_frozen_prefix(mut self, count: usize, extent: Pixels) -> Self {
+        self.frozen_prefix = count;
+        self.leading_occlusion = extent;
+        self
     }
     pub fn with_revision(mut self, revision: u64) -> Self {
         self.revision = revision;
@@ -187,6 +197,9 @@ pub struct VirtualizerSnapshot {
     gap: f64,
 }
 impl VirtualizerSnapshot {
+    pub(super) fn is_frozen(&self, index: usize) -> bool {
+        index < self.viewport.frozen_prefix
+    }
     pub fn axis(&self) -> Axis {
         self.axis
     }
@@ -210,10 +223,16 @@ impl VirtualizerSnapshot {
     }
     /// Sorted, unique union. No intervening rows are materialized for retained items.
     pub fn working_indices(&self) -> Vec<usize> {
-        if self.retained.is_empty() {
+        if self.retained.is_empty() && self.viewport.frozen_prefix == 0 {
             return self.rendered.clone().collect();
         }
         let mut indices: Vec<_> = self.rendered.clone().collect();
+        if self.viewport.frozen_prefix > 0 {
+            let range = self
+                .geometry
+                .range(-self.padding, self.viewport.extent.into());
+            indices.extend(range.start..range.end.min(self.viewport.frozen_prefix));
+        }
         indices.extend(
             self.retained
                 .iter()
@@ -296,7 +315,7 @@ impl VirtualizerSnapshot {
     ) -> impl Iterator<Item = Result<VirtualizerItem, VirtualizerError>> + '_ {
         // The ordinary contiguous window needs neither an index allocation nor
         // sorting. Sparse retained items keep the same sorted-union contract.
-        let contiguous = self.retained.is_empty();
+        let contiguous = self.retained.is_empty() && self.viewport.frozen_prefix == 0;
         let mut indexes = if contiguous {
             Vec::new()
         } else {
@@ -675,6 +694,15 @@ impl VirtualizerState {
         self.binding = Some(binding.clone());
         self.binding_revision += 1;
         Ok(())
+    }
+    pub(super) fn frozen_extent(&self, count: usize) -> f64 {
+        if count == 0 || self.source.is_empty() {
+            return 0.0;
+        }
+        if count >= self.source.len() {
+            return self.total_extent();
+        }
+        self.geometry.item(count).unwrap().0 + f64::from(self.layout.padding_start)
     }
     pub fn set_layout(&mut self, layout: VirtualizerLayout) -> Result<(), VirtualizerError> {
         if ![
@@ -1239,11 +1267,15 @@ impl VirtualizerState {
     ) -> Result<VirtualizerSnapshot, VirtualizerError> {
         self.validate_viewport(viewport)?;
         let padding = viewport.origin + f64::from(self.layout.padding_start);
-        let offset = viewport.offset - padding;
-        let extent = f64::from(viewport.extent);
+        let offset = viewport.offset - padding + f64::from(viewport.leading_occlusion);
+        let extent = f64::from(viewport.extent - viewport.leading_occlusion).max(0.);
         let has_area = extent > 0.0 && viewport.cross > gpui::px(0.);
         let range = |offset: f64, extent: f64| {
             let mut range = self.geometry.range(offset, extent);
+            range.start = range
+                .start
+                .max(viewport.frozen_prefix.min(self.source.len()));
+            range.end = range.end.max(range.start);
             // Native measured slots include the trailing gap; visibility is
             // about content, just as it is on the Fixed and Known paths.
             if matches!(self.geometry, Geometry::Measured(_))
@@ -1360,6 +1392,20 @@ impl VirtualizerState {
             }
         }
         let snapshot = self.snapshot(viewport)?;
+        if let Some(Command {
+            target: CommandTarget::Key(key),
+            ..
+        }) = &self.command
+            && let Ok(item) = snapshot.item_for_key(key)
+            && ((item.index < viewport.frozen_prefix
+                && (item.start >= f64::from(viewport.extent)
+                    || item.start + f64::from(item.extent) <= 0.))
+                || (item.index >= viewport.frozen_prefix
+                    && viewport.frozen_prefix > 0
+                    && viewport.leading_occlusion >= viewport.extent))
+        {
+            self.finish_command(VirtualizerCommandOutcome::NoProgress);
+        }
         let mut target = if self.follow_tail == Some(true) {
             Some(self.scroll_limit(viewport))
         } else {
@@ -1681,6 +1727,8 @@ impl VirtualizerState {
             || viewport
                 .scroll_extent
                 .is_some_and(|extent| !extent.is_finite() || extent < 0.0)
+            || !valid_nonnegative(viewport.leading_occlusion)
+            || viewport.leading_occlusion > viewport.extent
             || !valid_nonnegative(viewport.extent)
             || !valid_nonnegative(viewport.cross)
         {
@@ -2042,6 +2090,10 @@ pub(super) fn alignment_offset(
     inset_start: f64,
     inset_end: f64,
 ) -> f64 {
+    if item.index < viewport.frozen_prefix {
+        return viewport.offset;
+    }
+    let inset_start = inset_start + f64::from(viewport.leading_occlusion);
     let extent = (f64::from(viewport.extent) - inset_start - inset_end).max(0.0);
     let start = viewport.offset + inset_start;
     let end = item.start + f64::from(item.extent);

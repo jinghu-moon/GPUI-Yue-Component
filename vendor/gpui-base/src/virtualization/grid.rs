@@ -14,8 +14,18 @@ use gpui::{
 pub struct VirtualGridCell {
     row: VirtualizerItem,
     column: VirtualizerItem,
+    frozen_row: bool,
+    frozen_column: bool,
 }
 impl VirtualGridCell {
+    /// Frame-local presentation flags; identity and preparation stay unchanged.
+    pub fn is_frozen_row(&self) -> bool {
+        self.frozen_row
+    }
+    pub fn is_frozen_column(&self) -> bool {
+        self.frozen_column
+    }
+
     pub fn row(&self) -> &VirtualizerItem {
         &self.row
     }
@@ -93,6 +103,8 @@ impl VirtualGridSnapshot {
             }
             let row = row.as_ref()?;
             let cell = VirtualGridCell {
+                frozen_row: self.rows.is_frozen(row.index()),
+                frozen_column: self.columns.is_frozen(columns[column].index()),
                 row: row.clone(),
                 column: columns[column].clone(),
             };
@@ -118,6 +130,8 @@ pub struct VirtualGrid {
     render: Renderer,
     view_factory: Option<ViewFactory>,
     content_revision: u64,
+    frozen_rows: usize,
+    frozen_columns: usize,
 }
 impl VirtualGrid {
     /// Preflight configuration without claiming a mount, querying the source,
@@ -178,6 +192,8 @@ impl VirtualGrid {
             render: Rc::new(move |cell, w, cx| render(cell, w, cx).into_any_element()),
             view_factory: None,
             content_revision: 0,
+            frozen_rows: 0,
+            frozen_columns: 0,
         }
     }
     /// Prepare one view per live content identity, independently of frame geometry.
@@ -193,6 +209,17 @@ impl VirtualGrid {
         let mut grid = Self::new(id, rows, columns, scroll, |_, _, _| div());
         grid.view_factory = Some(Rc::new(move |cell, w, cx| factory(cell, w, cx).into()));
         grid
+    }
+    /// Freeze the leading rows in current source order, clamped to source length.
+    /// Oversized prefixes materialize only their visible portion and retained keys.
+    pub fn frozen_rows(mut self, count: usize) -> Self {
+        self.frozen_rows = count;
+        self
+    }
+    /// Freeze leading columns using the same native scroll owner and cell IDs.
+    pub fn frozen_columns(mut self, count: usize) -> Self {
+        self.frozen_columns = count;
+        self
     }
     pub fn content_revision(mut self, revision: u64) -> Self {
         self.content_revision = revision;
@@ -217,7 +244,8 @@ impl IntoElement for VirtualGrid {
     }
 }
 pub struct VirtualGridFrame {
-    cells: Vec<(ElementId, AnyElement)>,
+    cells: Vec<(ElementId, AnyElement, Bounds<Pixels>)>,
+    partitioned: bool,
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
 }
 struct GridMount {
@@ -372,6 +400,7 @@ impl Element for VirtualGrid {
             layout,
             VirtualGridFrame {
                 cells: Vec::new(),
+                partitioned: false,
                 views,
             },
         )
@@ -432,8 +461,36 @@ impl Element for VirtualGrid {
             bounds.size.width,
             bounds.size.height,
         );
-        rv = rv.with_revision(revision);
-        cv = cv.with_revision(revision);
+        let row_count = if self.frozen_rows == 0 {
+            0
+        } else {
+            self.frozen_rows
+                .min(self.rows.read(cx).source_for_render().len())
+        };
+        let column_count = if self.frozen_columns == 0 {
+            0
+        } else {
+            self.frozen_columns
+                .min(self.columns.read(cx).source_for_render().len())
+        };
+        let frozen_height = Pixels::from(
+            self.rows
+                .read(cx)
+                .frozen_extent(row_count)
+                .min(f64::from(bounds.size.height)),
+        );
+        let frozen_width = Pixels::from(
+            self.columns
+                .read(cx)
+                .frozen_extent(column_count)
+                .min(f64::from(bounds.size.width)),
+        );
+        rv = rv
+            .with_revision(revision)
+            .with_frozen_prefix(row_count, frozen_height);
+        cv = cv
+            .with_revision(revision)
+            .with_frozen_prefix(column_count, frozen_width);
         let (rs, rr) = self.rows.update(cx, |s, _| s.prepare(&rv, now)).unwrap();
         let (cs, cr) = self.columns.update(cx, |s, _| s.prepare(&cv, now)).unwrap();
         let y = rr
@@ -474,6 +531,7 @@ impl Element for VirtualGrid {
             Pixels::from(rows.total_extent()),
         );
         let snapshot = VirtualGridSnapshot::new(rows, columns).unwrap();
+        frame.partitioned = row_count > 0 || column_count > 0;
         let hitbox = self.base.interactivity().prepaint(
             id,
             inspector,
@@ -482,28 +540,74 @@ impl Element for VirtualGrid {
             w,
             cx,
             |_, _, hitbox, w, cx| {
-                w.with_content_mask(Some(ContentMask { bounds }), |w| {
-                    for cell in snapshot.cells() {
+                let regions = [
+                    Bounds::new(
+                        bounds.origin + point(frozen_width, frozen_height),
+                        bounds.size - size(frozen_width, frozen_height),
+                    ),
+                    Bounds::new(
+                        bounds.origin + point(frozen_width, px(0.)),
+                        size(bounds.size.width - frozen_width, frozen_height),
+                    ),
+                    Bounds::new(
+                        bounds.origin + point(px(0.), frozen_height),
+                        size(frozen_width, bounds.size.height - frozen_height),
+                    ),
+                    Bounds::new(bounds.origin, size(frozen_width, frozen_height)),
+                ];
+                let mut ordinary = (!frame.partitioned).then(|| snapshot.cells());
+                let mut ordered = if frame.partitioned {
+                    snapshot.cells().collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                ordered.sort_by_key(|cell| {
+                    usize::from(cell.frozen_row) + 2 * usize::from(cell.frozen_column)
+                });
+                let mut ordered = ordered.into_iter();
+                let cells = std::iter::from_fn(|| {
+                    ordinary
+                        .as_mut()
+                        .map_or_else(|| ordered.next(), |it| it.next())
+                });
+                w.with_content_mask(Some(ContentMask { bounds: clip }), |w| {
+                    for cell in cells {
                         let row_key = cell.row.key().clone();
                         let column_key = cell.column.key().clone();
                         let extent = size(cell.column.extent(), cell.row.extent());
                         let origin = bounds.origin
                             + point(
-                                Pixels::from(cell.column.start() - x),
-                                Pixels::from(cell.row.start() - y),
+                                Pixels::from(
+                                    cell.column.start() - if cell.frozen_column { 0. } else { x },
+                                ),
+                                Pixels::from(
+                                    cell.row.start() - if cell.frozen_row { 0. } else { y },
+                                ),
                             );
-                        let mut element = div()
-                            .id(column_key)
-                            .w(extent.width)
-                            .h(extent.height)
-                            .child((self.render)(cell, w, cx))
-                            .test_support()
-                            .into_any_element();
-                        w.with_id(row_key.clone(), |w| {
-                            element.layout_as_root(extent.map(AvailableSpace::Definite), w, cx);
-                            element.prepaint_at(origin, w, cx);
-                        });
-                        frame.cells.push((row_key, element));
+                        let region =
+                            usize::from(cell.frozen_row) + 2 * usize::from(cell.frozen_column);
+                        let mask = regions[region].intersect(&clip);
+                        let build = |w: &mut Window, cx: &mut App| {
+                            let mut element = div()
+                                .id(column_key)
+                                .w(extent.width)
+                                .h(extent.height)
+                                .child((self.render)(cell, w, cx))
+                                .test_support()
+                                .into_any_element();
+                            w.with_id(row_key.clone(), |w| {
+                                element.layout_as_root(extent.map(AvailableSpace::Definite), w, cx);
+                                element.prepaint_at(origin, w, cx);
+                            });
+                            frame.cells.push((row_key, element, mask));
+                        };
+                        if row_count > 0 || column_count > 0 {
+                            w.with_content_mask(Some(ContentMask { bounds: mask }), |w| {
+                                build(w, cx)
+                            });
+                        } else {
+                            build(w, cx);
+                        }
                     }
                 });
                 hitbox
@@ -541,8 +645,14 @@ impl Element for VirtualGrid {
             cx,
             |_, w, cx| {
                 w.with_content_mask(Some(ContentMask { bounds }), |w| {
-                    for (row, element) in &mut frame.cells {
-                        w.with_id(row.clone(), |w| element.paint(w, cx));
+                    for (row, element, mask) in &mut frame.cells {
+                        if frame.partitioned {
+                            w.with_content_mask(Some(ContentMask { bounds: *mask }), |w| {
+                                w.with_id(row.clone(), |w| element.paint(w, cx));
+                            });
+                        } else {
+                            w.with_id(row.clone(), |w| element.paint(w, cx));
+                        }
                     }
                 });
             },
