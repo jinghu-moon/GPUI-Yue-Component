@@ -661,8 +661,13 @@ impl ListState {
         state.geometry_revision += 1;
     }
 
-    /// Caller-validated batch; one revision and persistent path edits only.
+    /// Apply a size batch with one revision and persistent path edits only.
+    /// Repeated indexes use their last input value. Validate the entire batch
+    /// before changing geometry; already ordered input needs no sorting buffer.
     pub fn set_item_sizes(&self, updates: &[(usize, Size<Pixels>)], measured: bool) {
+        if updates.is_empty() {
+            return;
+        }
         let mut state = self.0.borrow_mut();
         for (ix, size) in updates {
             assert!(
@@ -670,8 +675,25 @@ impl ListState {
                     && size.height.0.is_finite()
                     && size.height > px(0.)
             );
-            let mut cursor = state.items.cursor::<Count>(());
-            let mut tree = cursor.slice(&Count(*ix), Bias::Right);
+        }
+        let mut sorted;
+        let updates = if updates.windows(2).all(|pair| pair[0].0 <= pair[1].0) {
+            updates
+        } else {
+            sorted = updates.to_vec();
+            // Stable sorting retains input order for duplicate indexes.
+            sorted.sort_by_key(|(ix, _)| *ix);
+            &sorted
+        };
+        let mut cursor = state.items.cursor::<Count>(());
+        let mut tree = cursor.slice(&Count(updates[0].0), Bias::Right);
+        for (at, (ix, size)) in updates.iter().enumerate() {
+            if updates.get(at + 1).is_some_and(|next| next.0 == *ix) {
+                continue;
+            }
+            if *ix != updates[0].0 {
+                tree.append(cursor.slice(&Count(*ix), Bias::Right), ());
+            }
             let focus_handle = cursor.item().unwrap().focus_handle();
             tree.push(
                 if measured {
@@ -689,13 +711,11 @@ impl ListState {
                 (),
             );
             cursor.seek_forward(&Count(ix + 1), Bias::Right);
-            tree.append(cursor.suffix(), ());
-            drop(cursor);
-            state.items = tree;
         }
-        if !updates.is_empty() {
-            state.geometry_revision += 1;
-        }
+        tree.append(cursor.suffix(), ());
+        drop(cursor);
+        state.items = tree;
+        state.geometry_revision += 1;
     }
 
     /// Import measurements only for the cross extent at which they were obtained.
