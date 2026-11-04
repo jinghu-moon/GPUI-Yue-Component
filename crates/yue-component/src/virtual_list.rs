@@ -12,16 +12,16 @@ type ViewFactory = Rc<dyn Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> 
 
 pub use gpui_kit::base::virtualization::{
     VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot,
-    VirtualGridSpan, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache, VirtualMasonryCacheItem,
-    VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot, VirtualMasonryState,
-    VirtualizerAlign, VirtualizerAnchorPosition, VirtualizerAttachment, VirtualizerBinding,
-    VirtualizerCache, VirtualizerCapabilities, VirtualizerChange, VirtualizerCommandOutcome,
-    VirtualizerError, VirtualizerEvent, VirtualizerItem, VirtualizerItemIdentity,
-    VirtualizerLayout, VirtualizerMeasurement, VirtualizerMotion, VirtualizerRange,
-    VirtualizerRangeExtractor, VirtualizerScrollDirection, VirtualizerScrollOptions,
-    VirtualizerScrollRequest, VirtualizerScrollbarHandle, VirtualizerSizeUpdate, VirtualizerSizing,
-    VirtualizerSizingKind, VirtualizerSnapshot, VirtualizerSource, VirtualizerState,
-    VirtualizerViewport,
+    VirtualGridSpan, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+    VirtualMasonryCacheItem, VirtualMasonryCapabilities, VirtualMasonryItem,
+    VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign, VirtualizerAnchorPosition,
+    VirtualizerAttachment, VirtualizerBinding, VirtualizerCache, VirtualizerCapabilities,
+    VirtualizerChange, VirtualizerCommandOutcome, VirtualizerError, VirtualizerEvent,
+    VirtualizerItem, VirtualizerItemIdentity, VirtualizerLayout, VirtualizerMeasurement,
+    VirtualizerMotion, VirtualizerRange, VirtualizerRangeExtractor, VirtualizerScrollDirection,
+    VirtualizerScrollOptions, VirtualizerScrollRequest, VirtualizerScrollbarHandle,
+    VirtualizerSizeUpdate, VirtualizerSizing, VirtualizerSizingKind, VirtualizerSnapshot,
+    VirtualizerSource, VirtualizerState, VirtualizerViewport,
 };
 
 /// A vertical list, with list/list-item semantics unless explicitly overridden.
