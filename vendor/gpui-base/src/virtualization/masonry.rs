@@ -583,10 +583,17 @@ impl VirtualMasonryState {
         if updates.is_empty() {
             return Ok(());
         }
-        // Reuse the crate's existing inline container: small visible batches
-        // need no heap scratch; larger inputs retain Vec-like ownership.
-        let mut indexed = smallvec::SmallVec::<[(usize, Pixels); 32]>::with_capacity(updates.len());
-        for update in updates {
+        // Typical visible worksets fit in a bounded stack buffer. Keep larger
+        // batches on the heap rather than growing controller-owned scratch.
+        let mut inline = [(0usize, px(0.)); 32];
+        let mut overflow = Vec::new();
+        let indexed = if updates.len() <= inline.len() {
+            &mut inline[..updates.len()]
+        } else {
+            overflow = vec![(0usize, px(0.)); updates.len()];
+            overflow.as_mut_slice()
+        };
+        for (slot, update) in indexed.iter_mut().zip(updates) {
             let ix = self
                 .source
                 .index_of(update.key())
@@ -594,25 +601,33 @@ impl VirtualMasonryState {
             if !valid_positive(update.extent()) {
                 return Err(VirtualizerError::InvalidGeometry("masonry size update"));
             }
-            indexed.push((ix, update.extent()));
+            *slot = (ix, update.extent());
         }
         indexed.sort_unstable_by_key(|(ix, _)| *ix);
         if indexed.windows(2).any(|pair| pair[0].0 == pair[1].0) {
             return Err(VirtualizerError::InvalidGeometry("masonry size update"));
         }
-        indexed.retain(|(ix, extent)| {
-            let (lane, local) = self.slots[*ix];
+        let mut changed = 0;
+        for at in 0..indexed.len() {
+            let (ix, extent) = indexed[at];
+            let (lane, local) = self.slots[ix];
             let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
-            (old - f64::from(*extent)).abs() > 0.01 || !measured
-        });
-        if indexed.is_empty() {
+            if (old - f64::from(extent)).abs() > 0.01 || !measured {
+                indexed[changed] = (ix, extent);
+                changed += 1;
+            }
+        }
+        if changed == 0 {
             return Ok(());
         }
         let mut by_lane = vec![Vec::new(); self.lanes.len()];
-        for (ix, extent) in indexed {
-            let (lane, local) = self.slots[ix];
-            by_lane[lane].push((local, extent));
+        for (ix, extent) in &indexed[..changed] {
+            let (lane, local) = self.slots[*ix];
+            by_lane[lane].push((local, *extent));
         }
+        // Match the old Vec-consuming lifetime: release oversized input
+        // scratch before allocating persistent geometry paths.
+        drop(overflow);
         self.capture_anchor();
         for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
             lane.geometry.update_measurements(&values, true);
