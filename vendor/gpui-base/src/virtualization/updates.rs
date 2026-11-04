@@ -59,24 +59,25 @@ impl VirtualizerState {
         if let [update] = updates {
             return self.apply_single_size(update, measured);
         }
-        let mut seen = std::collections::HashSet::new();
         let mut indexed = Vec::with_capacity(updates.len());
         for update in updates {
             let ix = self
                 .source
                 .index_of(&update.key)
                 .ok_or(VirtualizerError::MissingKey)?;
-            if !seen.insert(ix) {
-                return Err(VirtualizerError::InvalidChange);
-            }
             if !valid_positive(update.extent) || !valid_positive(update.extent + self.layout.gap) {
                 return Err(VirtualizerError::InvalidGeometry("size update"));
             }
-            if self.matches_size(ix, update.extent, measured) {
-                continue;
-            }
             indexed.push((ix, update.extent));
         }
+        // The indexed transaction buffer also proves key uniqueness. Keep
+        // no-op entries until after duplicate validation, then reuse it for
+        // sorted backend submission instead of allocating a HashSet as well.
+        indexed.sort_unstable_by_key(|(ix, _)| *ix);
+        if indexed.windows(2).any(|pair| pair[0].0 == pair[1].0) {
+            return Err(VirtualizerError::InvalidChange);
+        }
+        indexed.retain(|(ix, extent)| !self.matches_size(*ix, *extent, measured));
         if indexed.is_empty() {
             return Ok(());
         }
