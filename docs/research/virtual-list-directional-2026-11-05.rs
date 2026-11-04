@@ -151,7 +151,13 @@ impl Render for GridPreparation {
 #[gpui_kit::test]
 fn directional_workload(cx: &mut TestAppContext) {
     for payload in [0] {
-        for trace in ["forward", "backward", "alternating", "idle"] {
+        for trace in [
+            "forward",
+            "backward",
+            "alternating",
+            "stationary-active",
+            "idle",
+        ] {
             for sample in 0..3 {
                 let calls = Rc::new(Cell::new(0));
                 let prepared = Rc::new(Cell::new(0));
@@ -224,6 +230,13 @@ fn directional_workload(cx: &mut TestAppContext) {
                                 _ => 1_000.,
                             };
                             v.scroll.set_precise_offset(point(-offset, -offset));
+                            if trace == "idle" && step > 0 {
+                                let idle = cx.background_executor().now()
+                                    + std::time::Duration::from_secs(1);
+                                for state in [&v.rows, &v.columns] {
+                                    state.update(cx, |s, _| s.poll_scroll_idle(idle));
+                                }
+                            }
                             cx.notify();
                         });
                         cx.update(|w, cx| w.draw(cx).clear(cx));

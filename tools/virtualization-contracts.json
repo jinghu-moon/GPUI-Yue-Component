@@ -16,7 +16,8 @@
       "native_hints_survive_first_layout_resize_splice_and_snapshot_reads",
       "invalid_zero_height_cannot_pull_all_items_into_one_frame",
       "horizontal_viewport_uses_physical_left_right_padding",
-      "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end"
+      "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end",
+      "native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry"
     ]
   },
   "base": {

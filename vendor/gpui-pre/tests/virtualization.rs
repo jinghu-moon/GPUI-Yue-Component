@@ -4,6 +4,49 @@ use gpui::{
 };
 
 #[gpui::test]
+fn native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry(cx: &mut TestAppContext) {
+    use std::{cell::RefCell, rc::Rc};
+    struct Probe {
+        list: ListState,
+        seen: Rc<RefCell<Vec<usize>>>,
+    }
+    impl Render for Probe {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            let seen = self.seen.clone();
+            list(self.list.clone(), move |ix, _, _| {
+                seen.borrow_mut().push(ix);
+                div().h(px(20.)).into_any_element()
+            })
+            .w(px(240.))
+            .h(px(100.))
+        }
+    }
+    let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(200.), px(20.));
+    let seen = Rc::new(RefCell::new(Vec::new()));
+    let (_, cx) = cx.add_window_view({
+        let state = state.clone();
+        let seen = seen.clone();
+        move |_, _| Probe { list: state, seen }
+    });
+    state.scroll_to(gpui::ListOffset {
+        item_ix: 50,
+        offset_in_item: px(0.),
+    });
+    state.set_overdraw_edges(px(40.), px(200.));
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    assert!(seen.borrow().iter().all(|i| (48..65).contains(i)));
+    assert!((50..55).all(|ix| seen.borrow().contains(&ix)));
+    state.set_overdraw(px(200.));
+    seen.borrow_mut().clear();
+    cx.update(|w, cx| {
+        w.refresh();
+        w.draw(cx).clear(cx);
+    });
+    assert!(seen.borrow().iter().any(|i| *i == 40));
+    assert!((50..55).all(|ix| seen.borrow().contains(&ix)));
+}
+
+#[gpui::test]
 fn sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes(cx: &mut TestAppContext) {
     let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.));
     let weak = cx.update(|cx| {
