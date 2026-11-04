@@ -210,6 +210,9 @@ impl VirtualizerSnapshot {
     }
     /// Sorted, unique union. No intervening rows are materialized for retained items.
     pub fn working_indices(&self) -> Vec<usize> {
+        if self.retained.is_empty() {
+            return self.rendered.clone().collect();
+        }
         let mut indices: Vec<_> = self.rendered.clone().collect();
         indices.extend(
             self.retained
@@ -291,8 +294,23 @@ impl VirtualizerSnapshot {
     pub fn working_items(
         &self,
     ) -> impl Iterator<Item = Result<VirtualizerItem, VirtualizerError>> + '_ {
-        let mut indexes = self.working_indices().into_iter().peekable();
-        let mut run = self.items(0..0).expect("empty range");
+        // The ordinary contiguous window needs neither an index allocation nor
+        // sorting. Sparse retained items keep the same sorted-union contract.
+        let contiguous = self.retained.is_empty();
+        let mut indexes = if contiguous {
+            Vec::new()
+        } else {
+            self.working_indices()
+        }
+        .into_iter()
+        .peekable();
+        let mut run = self
+            .items(if contiguous {
+                self.rendered.clone()
+            } else {
+                0..0
+            })
+            .expect("validated working range");
         std::iter::from_fn(move || {
             loop {
                 if let Some(item) = run.next() {

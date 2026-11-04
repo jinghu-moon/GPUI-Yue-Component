@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import time
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,6 +84,15 @@ gpui-pre-windows = {{ path = "{(ROOT / 'vendor/gpui-pre-windows').as_posix()}" }
             artifact = json.loads(line)
             if artifact.get("reason") == "compiler-artifact" and artifact.get("executable"):
                 executables[version] = artifact["executable"]
+    # Do not sample while this or another workspace is compiling.
+    while True:
+        busy = run(["powershell", "-NoProfile", "-Command",
+                    "(Get-Process cargo,rustc,clippy-driver -ErrorAction SilentlyContinue | Measure-Object).Count"],
+                   capture_output=True, text=True).stdout.strip()
+        if busy == "0":
+            break
+        print("Waiting for compiler processes before sampling", flush=True)
+        time.sleep(2)
     rows = []
     for version, round_ in [("before", 0), ("after", 0), ("after", 1), ("before", 1)]:
         result = run([executables[version], args.filter, "--nocapture", "--test-threads=1"],

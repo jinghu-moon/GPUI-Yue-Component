@@ -484,3 +484,12 @@ Run the Yue virtual_list target, workspace headless regressions, Base geometry
 contracts and native virtualization integration tests. Remove covered pieces
 only when upstream satisfies the same anchor/cache/input/precision contracts
 and the CPU comparison; never retain parallel position or measurement owners.
+
+## Measured optimization series (2026-11-04)
+
+Contiguous working_items iterates native geometry directly without allocating
+or sorting an index vector. Sparse retained items preserve the existing sorted
+union and direct seek contract. Explicit working_indices still returns a Vec.
+The per-change before/after CPU, allocation and regression evidence is recorded
+in docs/research/2026-11-04-virtual-list-optimization-series.md. Adopt upstream
+only after the same ordered identity, sparse-work and measurement contracts pass.
