@@ -168,6 +168,9 @@ pub struct VirtualMasonryState {
     events: Vec<VirtualizerEvent>,
     // Observation of the native owner, never a second writable scroll position.
     last_offset: Option<f64>,
+    // None has no session; Some(false) is paused; Some(true) follows the tail.
+    follow_tail: Option<bool>,
+    follow_tail_input_pending: bool,
     scroll: ScrollHandle,
     token: Rc<()>,
     revision: u64,
@@ -198,7 +201,7 @@ impl VirtualMasonryCapabilities {
         false
     }
     pub fn supports_follow_tail(&self) -> bool {
-        false
+        true
     }
     pub fn supports_smooth(&self) -> bool {
         false
@@ -236,6 +239,8 @@ impl VirtualMasonryState {
             next_command_id: 0,
             events: Vec::new(),
             last_offset: None,
+            follow_tail: None,
+            follow_tail_input_pending: false,
             scroll: ScrollHandle::new(),
             token: Rc::new(()),
             revision: 1,
@@ -351,6 +356,8 @@ impl VirtualMasonryState {
         }
         let (lanes, slots) = pack(&extents, self.lanes.len(), self.layout.gap.into());
         self.observe_input();
+        self.follow_tail_input_pending = false;
+        self.follow_tail = None;
         self.capture_anchor();
         self.source = source;
         self.lanes = lanes;
@@ -442,6 +449,26 @@ impl VirtualMasonryState {
         self.revision += 1;
         self.restore_anchor();
         Ok(())
+    }
+
+    /// Follow the native tail during append and size correction. User scrolling
+    /// pauses the session away from the tail; returning to the tail resumes it.
+    /// Passing `false` ends the session.
+    pub fn set_follow_tail(&mut self, follow: bool) -> Result<(), VirtualizerError> {
+        self.observe_input();
+        self.follow_tail_input_pending = false;
+        if follow {
+            self.cancel_scroll();
+            self.follow_tail = Some(true);
+            self.restore_anchor();
+        } else {
+            self.follow_tail = None;
+        }
+        Ok(())
+    }
+
+    pub fn is_following_tail(&self) -> bool {
+        self.follow_tail == Some(true)
     }
     fn source_extents(&self) -> Vec<(Pixels, bool)> {
         let mut extents = vec![(px(0.), false); self.source.len()];
@@ -710,6 +737,7 @@ impl VirtualMasonryState {
         }
         self.observe_input();
         self.cancel_scroll();
+        self.follow_tail_input_pending = false;
         self.next_command_id += 1;
         let id = self.next_command_id;
         self.pending = Some(MasonryCommand {
@@ -775,10 +803,31 @@ impl VirtualMasonryState {
             }
         }
     }
-    /// Consumers call before keyboard/drag navigation takes over. Native wheel
-    /// input calls this automatically, including input at a scroll boundary.
+    /// Cancel an active command and pause a follow session before explicit
+    /// keyboard/drag navigation. Native wheel activity is observed separately.
     pub fn cancel_scroll(&mut self) {
+        self.follow_tail_input_pending = false;
+        if self.follow_tail.is_some() {
+            self.follow_tail = Some(false);
+        }
         self.finish_command(VirtualizerCommandOutcome::Cancelled);
+    }
+    /// Observe native user activity before the scroll owner applies its delta.
+    /// Final frame geometry then decides whether the reader left or reached tail.
+    pub fn user_scroll_activity(&mut self) {
+        self.follow_tail_input_pending = self.follow_tail.is_some();
+        self.finish_command(VirtualizerCommandOutcome::Cancelled);
+    }
+    pub(super) fn settle_follow_tail_input(&mut self) {
+        if self.follow_tail_input_pending {
+            self.follow_tail_input_pending = false;
+            if self.follow_tail.is_some() {
+                self.follow_tail = Some(self.viewport.is_some_and(|viewport| {
+                    let tail = (self.total_extent() - f64::from(viewport.height)).max(0.);
+                    (-self.scroll.precise_offset().y - tail).abs() <= 1.0
+                }));
+            }
+        }
     }
     pub fn has_scroll_command(&self) -> bool {
         self.pending.is_some()
@@ -794,10 +843,28 @@ impl VirtualMasonryState {
         let offset = (-self.scroll.precise_offset().y).max(0.0);
         if self.last_offset.is_some_and(|old| old != offset) {
             self.cancel_scroll();
+            // Native input supersedes the last layout anchor. Retaining it would
+            // let the next measurement pass snap a user-displaced viewport back.
+            self.anchor = None;
+            if self.follow_tail.is_some() {
+                self.follow_tail_input_pending = true;
+                let tail = self.viewport.map_or(0.0, |viewport| {
+                    (self.total_extent() - f64::from(viewport.height)).max(0.0)
+                });
+                self.follow_tail = Some((offset - tail).abs() <= 1.0);
+            }
         }
         self.last_offset = Some(offset);
     }
     fn restore_anchor(&mut self) {
+        if self.follow_tail == Some(true) {
+            if let Some(viewport) = self.viewport {
+                let offset = (self.total_extent() - f64::from(viewport.height)).max(0.);
+                self.scroll.set_precise_offset(gpui::point(0.0, -offset));
+                self.last_offset = Some(offset);
+            }
+            return;
+        }
         if let Some((key, intra, measured)) = &self.anchor
             && let Some(ix) = self.source.index_of(key)
             && let Some(viewport) = self.viewport
@@ -847,6 +914,9 @@ impl VirtualMasonryState {
         let viewport = self.viewport.unwrap();
         let old = (-self.scroll.precise_offset().y).max(0.0);
         let mut offset = old;
+        if self.follow_tail == Some(true) {
+            offset = (self.total_extent() - f64::from(viewport.height)).max(0.);
+        }
         if self.pending.as_ref().is_some_and(|command| {
             matches!(&command.target,
                 MasonryTarget::Key(key) if self.source.index_of(key).is_none())

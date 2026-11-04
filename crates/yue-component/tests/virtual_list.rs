@@ -29,6 +29,8 @@ mod feedback;
 mod followup;
 #[path = "virtual_list/followup_edges.rs"]
 mod followup_edges;
+#[path = "virtual_list/masonry_follow_tail.rs"]
+mod masonry_follow_tail;
 #[path = "virtual_list/masonry_offset.rs"]
 mod masonry_offset;
 #[path = "virtual_list/optimizations.rs"]

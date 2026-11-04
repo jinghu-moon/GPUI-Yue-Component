@@ -66,7 +66,7 @@ fn masonry_options_validate_before_replacing_the_active_command() {
     let caps = state.capabilities();
     assert_eq!(caps.axis(), Axis::Vertical);
     assert!(!caps.supports_attached());
-    assert!(!caps.supports_follow_tail());
+    assert!(caps.supports_follow_tail());
     assert!(!caps.supports_smooth());
     assert!(caps.supports_scroll_to_offset());
     let old = state

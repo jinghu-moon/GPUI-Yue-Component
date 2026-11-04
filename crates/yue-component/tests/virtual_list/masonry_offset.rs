@@ -55,7 +55,7 @@ fn masonry_offset_validation_preserves_the_pending_command_and_native_owner() {
         }]
     );
     assert!(state.capabilities().supports_scroll_to_offset());
-    assert!(!state.capabilities().supports_follow_tail());
+    assert!(state.capabilities().supports_follow_tail());
     assert!(!state.capabilities().supports_attached());
     assert!(!state.capabilities().supports_smooth());
 }

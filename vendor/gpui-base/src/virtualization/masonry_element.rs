@@ -31,7 +31,7 @@ impl VirtualMasonry {
                 .size_full()
                 .on_scroll_wheel(move |_, _, cx| {
                     let _ = observed.update(cx, |state, cx| {
-                        state.cancel_scroll();
+                        state.user_scroll_activity();
                         state.emit_events(cx);
                     });
                 }),
@@ -376,6 +376,7 @@ impl Element for VirtualMasonry {
                 ));
             }
             s.budget_reported = exhausted;
+            s.settle_follow_tail_input();
             s.confirm_command(!deferred && !exhausted);
             s.emit_events(cx);
         });
