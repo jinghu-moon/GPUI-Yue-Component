@@ -244,8 +244,8 @@ impl IntoElement for VirtualGrid {
     }
 }
 pub struct VirtualGridFrame {
-    cells: Vec<(ElementId, AnyElement, Bounds<Pixels>)>,
-    partitioned: bool,
+    cells: Vec<(ElementId, AnyElement)>,
+    masks: Option<Vec<Bounds<Pixels>>>,
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
 }
 struct GridMount {
@@ -400,7 +400,7 @@ impl Element for VirtualGrid {
             layout,
             VirtualGridFrame {
                 cells: Vec::new(),
-                partitioned: false,
+                masks: None,
                 views,
             },
         )
@@ -531,7 +531,8 @@ impl Element for VirtualGrid {
             Pixels::from(rows.total_extent()),
         );
         let snapshot = VirtualGridSnapshot::new(rows, columns).unwrap();
-        frame.partitioned = row_count > 0 || column_count > 0;
+        let partitioned = row_count > 0 || column_count > 0;
+        frame.masks = partitioned.then(Vec::new);
         let hitbox = self.base.interactivity().prepaint(
             id,
             inspector,
@@ -555,8 +556,8 @@ impl Element for VirtualGrid {
                     ),
                     Bounds::new(bounds.origin, size(frozen_width, frozen_height)),
                 ];
-                let mut ordinary = (!frame.partitioned).then(|| snapshot.cells());
-                let mut ordered = if frame.partitioned {
+                let mut ordinary = (!partitioned).then(|| snapshot.cells());
+                let mut ordered = if partitioned {
                     snapshot.cells().collect::<Vec<_>>()
                 } else {
                     Vec::new()
@@ -599,7 +600,10 @@ impl Element for VirtualGrid {
                                 element.layout_as_root(extent.map(AvailableSpace::Definite), w, cx);
                                 element.prepaint_at(origin, w, cx);
                             });
-                            frame.cells.push((row_key, element, mask));
+                            frame.cells.push((row_key, element));
+                            if let Some(masks) = &mut frame.masks {
+                                masks.push(mask);
+                            }
                         };
                         if row_count > 0 || column_count > 0 {
                             w.with_content_mask(Some(ContentMask { bounds: mask }), |w| {
@@ -645,12 +649,14 @@ impl Element for VirtualGrid {
             cx,
             |_, w, cx| {
                 w.with_content_mask(Some(ContentMask { bounds }), |w| {
-                    for (row, element, mask) in &mut frame.cells {
-                        if frame.partitioned {
+                    if let Some(masks) = &frame.masks {
+                        for ((row, element), mask) in frame.cells.iter_mut().zip(masks) {
                             w.with_content_mask(Some(ContentMask { bounds: *mask }), |w| {
                                 w.with_id(row.clone(), |w| element.paint(w, cx));
                             });
-                        } else {
+                        }
+                    } else {
+                        for (row, element) in &mut frame.cells {
                             w.with_id(row.clone(), |w| element.paint(w, cx));
                         }
                     }
