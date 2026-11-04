@@ -257,4 +257,23 @@ fn masonry_cache_validates_atomically_and_handles_deleted_appended_and_changed_k
             .extent(),
         px(10.)
     );
+    let historical = VirtualMasonryCache::new(
+        0,
+        3,
+        px(80.),
+        px(0.),
+        px(0.),
+        vec![item(0, 2, 40.), item(1, 0, 30.), item(2, 1, 20.)],
+    );
+    assert_eq!(changed.restore_measurement_cache(&historical).unwrap(), 2);
+    let restored = changed
+        .snapshot(0., gpui_kit::size(px(240.), px(100.)))
+        .unwrap();
+    assert_eq!(
+        (0..3)
+            .map(|ix| restored.item(ix).unwrap().lane())
+            .collect::<Vec<_>>(),
+        vec![2, 0, 1],
+        "same keys with historical lanes must take the remapping path"
+    );
 }
