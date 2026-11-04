@@ -6,6 +6,7 @@ rewrites the production worktree. Runs the same source against both versions.
 import argparse
 import csv
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -32,13 +33,15 @@ def main():
     parser.add_argument("--before", required=True)
     parser.add_argument("--label", required=True)
     parser.add_argument("--filter", default="series_")
+    parser.add_argument("--workload", default="docs/research/virtual-list-optimization-series-2026-11-04.rs")
+    parser.add_argument("--after-feature", choices=["masonry-views"], default=None)
     args = parser.parse_args()
     if not args.label.replace("-", "").isalnum():
         parser.error("label must contain only letters, digits or hyphens")
     reference = run(["git", "rev-parse", args.before], capture_output=True, text=True).stdout.strip()
     archive = run(["git", "archive", "--format=zip", reference,
                    "vendor/gpui-base", "vendor/gpui-pre"], capture_output=True).stdout
-    baseline = CACHE / "baseline"
+    baseline = CACHE / "baselines" / reference
     for entry in zipfile.ZipFile(io.BytesIO(archive)).infolist():
         if entry.is_dir():
             continue
@@ -71,13 +74,22 @@ gpui-base = {{ version = "0.8.0", features = ["test-support"] }}
 gpui-base = {{ path = "{(vendor / 'gpui-base').as_posix()}" }}
 gpui-pre = {{ path = "{(vendor / 'gpui-pre').as_posix()}" }}
 gpui-pre-windows = {{ path = "{(ROOT / 'vendor/gpui-pre-windows').as_posix()}" }}
+[features]
+masonry-views = []
 """
+        manifest = manifest.replace(
+            (ROOT / 'docs/research/virtual-list-optimization-series-2026-11-04.rs').as_posix(),
+            (ROOT / args.workload).resolve().as_posix(),
+        )
         (fixture / "Cargo.toml").write_text(manifest, encoding="utf-8")
         if not (fixture / "Cargo.lock").exists():
             (fixture / "Cargo.lock").write_bytes((ROOT / "Cargo.lock").read_bytes())
         command = ["cargo", "test", "--manifest-path", str(fixture / "Cargo.toml"),
                    "--target-dir", str(TARGET), "--offline", "--release", "--test", "perf",
                    "--no-run", "--message-format=json"]
+        if version == "after" and args.after_feature:
+            command += ["--features", args.after_feature]
+        print(f"Building {args.label} {version}", flush=True)
         built = run(command, capture_output=True, text=True, encoding="utf-8")
         (logs / f"{version}-build.txt").write_text(built.stderr, encoding="utf-8")
         for line in built.stdout.splitlines():
@@ -111,6 +123,10 @@ gpui-pre-windows = {{ path = "{(ROOT / 'vendor/gpui-pre-windows').as_posix()}" }
         writer.writeheader()
         writer.writerows(rows)
     (logs / "identity.json").write_text(json.dumps({"before": reference, "filter": args.filter,
+        "after_head": run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip(),
+        "workload": args.workload,
+        "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
+        "after_feature": args.after_feature,
         "order": ["before/0", "after/0", "after/1", "before/1"], "rows": len(rows)}, indent=2) + "\n", encoding="utf-8")
     print(destination)
 
