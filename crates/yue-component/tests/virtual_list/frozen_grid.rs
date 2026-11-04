@@ -4,6 +4,71 @@ use yue_component::VirtualGrid;
 
 type ObservedCell = (usize, usize, bool, bool);
 
+struct OrderedSource(Vec<usize>);
+impl VirtualizerSource for OrderedSource {
+    fn len(&self) -> usize {
+        self.0.len()
+    }
+    fn key_at(&self, index: usize) -> ElementId {
+        self.0[index].into()
+    }
+    fn index_of(&self, key: &ElementId) -> Option<usize> {
+        self.0
+            .iter()
+            .position(|value| ElementId::from(*value) == *key)
+    }
+}
+
+#[gpui_kit::test]
+fn frozen_grid_splice_and_reorder_preserve_the_body_key_on_both_axes(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100, true));
+    view.update(cx, |v, cx| {
+        v.frozen = (3, 3);
+        v.scroll
+            .set_precise_offset(gpui_kit::point(-213.25, -103.5));
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let axes = view.read_with(cx, |v, _| [v.rows.clone(), v.columns.clone()]);
+    let relative = |s: &VirtualizerState| {
+        let v = s.viewport().unwrap();
+        let snap = s.snapshot(v).unwrap();
+        snap.item_for_key(&ElementId::from(7usize)).unwrap().start()
+            - v.offset()
+            - snap.item(3).unwrap().start()
+    };
+    let baseline = axes
+        .clone()
+        .map(|axis| axis.read_with(cx, |s, _| relative(s)));
+    let mut keys: Vec<usize> = (0..100).collect();
+    for step in 0..3 {
+        match step {
+            0 => keys.insert(6, 1000),
+            1 => {
+                keys.remove(4);
+            }
+            _ => keys.swap(4, 5),
+        }
+        for (axis, extent) in axes.iter().zip([20.5, 50.25]) {
+            axis.update(cx, |s, cx| {
+                s.replace_source(
+                    Rc::new(OrderedSource(keys.clone())),
+                    VirtualizerSizing::known(vec![px(extent); keys.len()]),
+                    VirtualizerChange::Replace {
+                        preserve_anchor: true,
+                    },
+                )
+                .unwrap();
+                cx.notify();
+            });
+        }
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        for (axis, expected) in axes.iter().zip(baseline) {
+            assert!((axis.read_with(cx, |s, _| relative(s)) - expected).abs() < 0.001);
+        }
+    }
+}
+
 struct Harness {
     rows: Entity<VirtualizerState>,
     columns: Entity<VirtualizerState>,

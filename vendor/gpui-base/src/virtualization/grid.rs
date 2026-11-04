@@ -10,6 +10,28 @@ use gpui::{
     point, px, size,
 };
 
+/// Stable sparse cell identity. Retaining two cells does not retain their
+/// cross-product. Deleted row/column keys are ignored on the next frame.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct VirtualGridCellKey {
+    row: ElementId,
+    column: ElementId,
+}
+impl VirtualGridCellKey {
+    pub fn new(row: impl Into<ElementId>, column: impl Into<ElementId>) -> Self {
+        Self {
+            row: row.into(),
+            column: column.into(),
+        }
+    }
+    pub fn row(&self) -> &ElementId {
+        &self.row
+    }
+    pub fn column(&self) -> &ElementId {
+        &self.column
+    }
+}
+
 #[derive(Clone)]
 pub struct VirtualGridCell {
     row: VirtualizerItem,
@@ -18,6 +40,9 @@ pub struct VirtualGridCell {
     frozen_column: bool,
 }
 impl VirtualGridCell {
+    pub fn key(&self) -> VirtualGridCellKey {
+        VirtualGridCellKey::new(self.row.key().clone(), self.column.key().clone())
+    }
     /// Frame-local presentation flags; identity and preparation stay unchanged.
     pub fn is_frozen_row(&self) -> bool {
         self.frozen_row
@@ -59,6 +84,35 @@ pub struct VirtualGridSnapshot {
     columns: VirtualizerSnapshot,
 }
 impl VirtualGridSnapshot {
+    // Only sparse extras are buffered. The ordinary cross-product remains lazy.
+    fn retained_cells(&self, keys: &[VirtualGridCellKey]) -> Vec<VirtualGridCell> {
+        if keys.is_empty() {
+            return Vec::new();
+        }
+        let rows = self.rows.working_indices();
+        let columns = self.columns.working_indices();
+        let mut cells: Vec<_> = keys
+            .iter()
+            .filter_map(|key| {
+                let row = self.rows.item_for_key(key.row()).ok()?;
+                let column = self.columns.item_for_key(key.column()).ok()?;
+                if rows.binary_search(&row.index()).is_ok()
+                    && columns.binary_search(&column.index()).is_ok()
+                {
+                    return None;
+                }
+                Some(VirtualGridCell {
+                    frozen_row: self.rows.is_frozen(row.index()),
+                    frozen_column: self.columns.is_frozen(column.index()),
+                    row,
+                    column,
+                })
+            })
+            .collect();
+        cells.sort_unstable_by_key(cell_order);
+        cells.dedup_by_key(|cell| (cell.row.index(), cell.column.index()));
+        cells
+    }
     pub fn new(
         rows: VirtualizerSnapshot,
         columns: VirtualizerSnapshot,
@@ -168,6 +222,21 @@ impl VirtualGridSnapshot {
         })
     }
 }
+
+fn cell_order(cell: &VirtualGridCell) -> (usize, usize, usize) {
+    (
+        usize::from(cell.frozen_row) + 2 * usize::from(cell.frozen_column),
+        cell.row.index(),
+        cell.column.index(),
+    )
+}
+
+#[derive(Default)]
+struct GridOptions {
+    retained: Vec<VirtualGridCellKey>,
+    focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
+    fallback: Option<gpui::FocusHandle>,
+}
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
 type ViewFactory = Rc<dyn Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> gpui::AnyView>;
 type CellKey = (ElementId, ElementId);
@@ -187,6 +256,7 @@ pub struct VirtualGrid {
     content_revision: u64,
     frozen_rows: usize,
     frozen_columns: usize,
+    options: Option<Box<GridOptions>>,
 }
 impl VirtualGrid {
     /// Preflight configuration without claiming a mount, querying the source,
@@ -249,6 +319,7 @@ impl VirtualGrid {
             content_revision: 0,
             frozen_rows: 0,
             frozen_columns: 0,
+            options: None,
         }
     }
     /// Prepare one view per live content identity, independently of frame geometry.
@@ -278,6 +349,34 @@ impl VirtualGrid {
     }
     pub fn content_revision(mut self, revision: u64) -> Self {
         self.content_revision = revision;
+        self
+    }
+    /// Sparse union with visible/axis-retained/frozen cells, deduplicated by
+    /// stable key pair. Does not grow either axis's retained working set.
+    pub fn retained_cells(mut self, keys: Vec<VirtualGridCellKey>) -> Self {
+        if !keys.is_empty() || self.options.is_some() {
+            self.options.get_or_insert_with(Default::default).retained = keys;
+        }
+        self
+    }
+    /// Retain this cell only while its editor contains focus. Supply the same
+    /// domain handle on each render; never register it separately on both axes.
+    /// Removing a focused registration/key repairs focus before pruning views.
+    pub fn cell_focus_handle(mut self, key: VirtualGridCellKey, handle: gpui::FocusHandle) -> Self {
+        let options = self.options.get_or_insert_with(Default::default);
+        assert!(
+            !options
+                .focused
+                .iter()
+                .any(|(k, h)| *k != key && *h == handle),
+            "one focus handle cannot identify two cells"
+        );
+        options.focused.retain(|(k, _)| *k != key);
+        options.focused.push((key, handle));
+        self
+    }
+    pub fn focus_fallback(mut self, handle: gpui::FocusHandle) -> Self {
+        self.options.get_or_insert_with(Default::default).fallback = Some(handle);
         self
     }
 }
@@ -310,6 +409,7 @@ struct GridMount {
     column_revision: u64,
     _subscriptions: Vec<gpui::Subscription>,
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
+    focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
 }
 impl Element for VirtualGrid {
     type RequestLayoutState = VirtualGridFrame;
@@ -371,10 +471,42 @@ impl Element for VirtualGrid {
                     column_revision,
                     _subscriptions: subscriptions,
                     views: None,
+                    focused: Vec::new(),
                 }
             },
         );
         mount.update(cx, |m, cx| {
+            let changed_owner = m.rows != self.rows
+                || m.row_revision != row_revision
+                || m.columns != self.columns
+                || m.column_revision != column_revision;
+            let row_source = self.rows.read(cx).source_for_render();
+            let column_source = self.columns.read(cx).source_for_render();
+            let live = |key: &VirtualGridCellKey| {
+                row_source.index_of(key.row()).is_some()
+                    && column_source.index_of(key.column()).is_some()
+            };
+            let next = self
+                .options
+                .as_ref()
+                .map(|o| o.focused.as_slice())
+                .unwrap_or(&[]);
+            let repair = m.focused.iter().any(|(key, handle)| {
+                (changed_owner
+                    || !live(key)
+                    || !next
+                        .iter()
+                        .any(|entry| entry == &(key.clone(), handle.clone())))
+                    && handle.contains_focused(w, cx)
+            });
+            if repair {
+                if let Some(fallback) = self.options.as_ref().and_then(|o| o.fallback.as_ref()) {
+                    fallback.focus(w, cx);
+                } else {
+                    w.blur(cx);
+                }
+            }
+            m.focused = next.iter().filter(|(key, _)| live(key)).cloned().collect();
             if m.rows != self.rows || m.row_revision != row_revision {
                 m.views = None;
                 let _ = m
@@ -613,10 +745,31 @@ impl Element for VirtualGrid {
                 ];
                 let mut ordinary = (!partitioned).then(|| snapshot.cells());
                 let mut ordered = partitioned.then(|| snapshot.partitioned_cells());
-                let cells = std::iter::from_fn(|| {
+                let ordinary = std::iter::from_fn(|| {
                     ordinary
                         .as_mut()
                         .map_or_else(|| ordered.as_mut().and_then(|it| it.next()), |it| it.next())
+                });
+                let mut keys = self
+                    .options
+                    .as_ref()
+                    .map(|o| o.retained.clone())
+                    .unwrap_or_default();
+                if let Some(options) = &self.options {
+                    keys.extend(
+                        options
+                            .focused
+                            .iter()
+                            .filter(|(_, handle)| handle.contains_focused(w, cx))
+                            .map(|(key, _)| key.clone()),
+                    );
+                }
+                let mut ordinary = ordinary.peekable();
+                let mut extras = snapshot.retained_cells(&keys).into_iter().peekable();
+                let cells = std::iter::from_fn(|| match (ordinary.peek(), extras.peek()) {
+                    (Some(a), Some(b)) if cell_order(b) < cell_order(a) => extras.next(),
+                    (Some(_), _) => ordinary.next(),
+                    _ => extras.next(),
                 });
                 w.with_content_mask(Some(ContentMask { bounds: clip }), |w| {
                     for cell in cells {

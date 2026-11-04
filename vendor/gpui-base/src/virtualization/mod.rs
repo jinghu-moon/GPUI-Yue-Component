@@ -10,7 +10,7 @@ mod state;
 
 pub use anchor::VirtualizerAnchorPosition;
 pub use element::VirtualList;
-pub use grid::{VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridSnapshot};
+pub use grid::{VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot};
 pub use masonry::{
     VirtualMasonry, VirtualMasonryCache, VirtualMasonryCacheItem, VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot,
     VirtualMasonryState,

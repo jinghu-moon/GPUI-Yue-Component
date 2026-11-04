@@ -35,6 +35,8 @@ mod followup_edges;
 mod frozen_grid;
 #[path = "virtual_list/grid_preparation.rs"]
 mod grid_preparation;
+#[path = "virtual_list/grid_retention.rs"]
+mod grid_retention;
 #[path = "virtual_list/masonry_activity.rs"]
 mod masonry_activity;
 #[path = "virtual_list/masonry_cache.rs"]

@@ -24,3 +24,22 @@
 冻结四场景分配均减少 960，窗口内增量 peak 均减少 3328 bytes。所有场景 reads/builds、reading_error 完全一致（误差均 0）；非冻结分配及 peak 完全相同。按有确定证据的空间收益吸收，不声称 CPU 普遍加速或零回归。
 
 完整不利样本见 [第一轮](virtual-list-series-frozen-stream-2026-11-05.csv) 和 [复测](virtual-list-series-frozen-stream-repeat-2026-11-05.csv)。重现：`python tools/compare-virtualization.py --before 7fb2c29 --label frozen-stream --date 2026-11-05 --workload docs/research/virtual-list-frozen-anchor-2026-11-05.rs --filter frozen_anchor_workload`；复测替换 label。隔离构建 identity 和编译静默检查由比较器记录在 `C:/Temp/gpui-yue-series-20261104/` 对应目录。
+
+## 2. 精确单 cell 保留
+
+`VirtualGridCellKey` 以两轴稳定 key 标识；`retained_cells` 为普通／冻结／旧轴保留工作集添加稀疏并集。重复、已可见、已冻结的 cell 去重，删除任一轴 key 后忽略。不把这些 key 写入两轴 retained，因此两个离散 cell 不产生额外交叉。只缓冲 K 个 extras，与原四区有序迭代器合并；默认不分配额外 cell map。
+
+`cell_focus_handle` 只在 handle 包含焦点时保留该 cell，不能把同一 handle 登记给两处。GridMount 记住上一帧注册，在删除、注销或更换 owner 时先聚焦显式 `focus_fallback`（否则 blur），再修剪 View。Prepared stamp 仍遵循原 content revision/index 合同；持久编辑数据／实体由消费者按 domain key 持有，不能依靠任意工作集缓存永久保存业务数据。
+
+新增稀疏并集、重复／缺失、冻结去重、离屏编辑 Entity 与本地状态、删除／注销焦点修复、释放回归。既有 prepared 测试覆盖 content revision、owner 替换、geometry-only 复用和卸载。另补冻结时双轴插入／删除／重排保留正文 key 的组合回归。
+
+固定 [workload](virtual-list-cell-retention-2026-11-05.rs) 对照 `a6c6265`：before 两轴各保留两个远端 key，after 精确保留两对所需 cell。两边都保留需求中的两个编辑位置；旧实现还创建额外行列交点。两轮 Release ABBA：
+
+| 场景 | 第一轮 CPU | 复测 CPU | 160 周期 builds | 分配 |
+| --- | ---: | ---: | --- | --- |
+| 默认未冻结 | +0.30% | -0.01% | 8000→8000 | 55520→55520 |
+| 默认冻结 | +0.71% | +0.51% | 8000→8000 | 58720→58720 |
+| 两个远端 cell | -42.87% | -42.87% | 15680→8640 | 107040→61280 |
+| 冻结＋两个远端 cell | -41.97% | -40.74% | 15680→8640 | 109280→65120 |
+
+空间 peak 分别 80048→45920、81504→46944 bytes；reads 19200→11520。保留 [原始](virtual-list-series-cell-retention-2026-11-05.csv)／[复测](virtual-list-series-cell-retention-repeat-2026-11-05.csv)。这是减少不必要工作量的收益，不能当成相同 cell 数的遍历提速。比较器新增 `grid-cells` 仅用于临时 fixture feature；生产 manifests/locks 不变。
