@@ -1,4 +1,6 @@
 //! Production layout adapters, mounted only on the active tab.
+#[cfg(all(test, feature = "virtual-profile"))]
+mod native_profile;
 use super::super::*;
 use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList};
 use gpui_kit::{AnyElement, App, Axis, ElementId, Entity, Role, ScrollHandle, px};

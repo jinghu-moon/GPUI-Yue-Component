@@ -7,6 +7,7 @@ publish = false
 
 [features]
 headless-tests = ["yue-component/headless-tests"]
+virtual-profile = ["gpui-kit/profiler"]
 
 [dependencies]
 gpui-kit.workspace = true

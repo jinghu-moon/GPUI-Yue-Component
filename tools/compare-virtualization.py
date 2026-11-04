@@ -35,7 +35,11 @@ def main():
     parser.add_argument("--filter", default="series_")
     parser.add_argument("--workload", default="docs/research/virtual-list-optimization-series-2026-11-04.rs")
     parser.add_argument("--after-feature", choices=["masonry-views"], default=None)
+    parser.add_argument("--native", action="store_true", help="Run the opt-in production Showcase frame workload on the real Windows platform")
     args = parser.parse_args()
+    if args.native:
+        args.workload = "examples/windows-showcase/src/pages/virtual_layouts/native_profile.rs"
+        args.filter = "pages::virtual_layouts::native_profile::native_frame_workload"
     if not args.label.replace("-", "").isalnum():
         parser.error("label must contain only letters, digits or hyphens")
     reference = run(["git", "rev-parse", args.before], capture_output=True, text=True).stdout.strip()
@@ -56,7 +60,7 @@ def main():
     logs.mkdir(parents=True, exist_ok=True)
     executables = {}
     for version in ["before", "after"]:
-        fixture = CACHE / version
+        fixture = CACHE / (f"native-{version}" if args.native else version)
         fixture.mkdir(parents=True, exist_ok=True)
         vendor = baseline / "vendor" if version == "before" else ROOT / "vendor"
         manifest = f"""[package]
@@ -81,11 +85,20 @@ masonry-views = []
             (ROOT / 'docs/research/virtual-list-optimization-series-2026-11-04.rs').as_posix(),
             (ROOT / args.workload).resolve().as_posix(),
         )
+        if args.native:
+            manifest = manifest.replace(
+                f'[[test]]\nname = "perf"\npath = "{(ROOT / args.workload).as_posix()}"',
+                f'[[bin]]\nname = "yue-virtual-series-{version}"\npath = "{(ROOT / "examples/windows-showcase/src/main.rs").as_posix()}"',
+            ).replace(
+                '[patch.crates-io]',
+                f'yue-component = {{ path = "{(ROOT / "crates/yue-component").as_posix()}", features = ["bundled-fonts"] }}\n[patch.crates-io]',
+            ).replace('masonry-views = []', 'masonry-views = []\nvirtual-profile = ["gpui-kit/profiler"]\nheadless-tests = ["yue-component/headless-tests"]')
         (fixture / "Cargo.toml").write_text(manifest, encoding="utf-8")
         if not (fixture / "Cargo.lock").exists():
             (fixture / "Cargo.lock").write_bytes((ROOT / "Cargo.lock").read_bytes())
         command = ["cargo", "test", "--manifest-path", str(fixture / "Cargo.toml"),
-                   "--target-dir", str(TARGET), "--offline", "--release", "--test", "perf",
+                   "--target-dir", str(TARGET), "--offline", "--release",
+                   *( ["--bin", f"yue-virtual-series-{version}", "--features", "virtual-profile"] if args.native else ["--test", "perf"] ),
                    "--no-run", "--message-format=json"]
         if version == "after" and args.after_feature:
             command += ["--features", args.after_feature]
@@ -124,7 +137,7 @@ masonry-views = []
             candidate = logs / f"{version}-{round_}-attempt-{attempt}.txt"
             with candidate.open("w", encoding="utf-8") as stream:
                 process = subprocess.Popen(
-                    [executables[version], args.filter, "--nocapture", "--test-threads=1"],
+                    [executables[version], args.filter, "--nocapture", "--test-threads=1", *( ["--ignored", "--exact"] if args.native else [] )],
                     cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT,
                 )
                 busy = False
@@ -146,8 +159,9 @@ masonry-views = []
         else:
             raise RuntimeError("compilation interrupted three sampling attempts; logs retained")
         for line in output.splitlines():
-            if "SERIES," in line:
-                values = dict(part.split("=", 1) for part in line.split("SERIES,", 1)[1].split(","))
+            marker = "FRAME," if args.native else "SERIES,"
+            if marker in line:
+                values = dict(part.split("=", 1) for part in line.split(marker, 1)[1].split(","))
                 rows.append({"version": version, "round": round_, **values})
         print(f"Completed {args.label} {version}/{round_}", flush=True)
     if not rows:
@@ -162,6 +176,7 @@ masonry-views = []
         "workload": args.workload,
         "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
         "after_feature": args.after_feature,
+        "native": args.native,
         "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
         "discarded_samples": discarded,
         "order": ["before/0", "after/0", "after/1", "before/1"], "rows": len(rows)}, indent=2) + "\n", encoding="utf-8")
