@@ -539,3 +539,13 @@ Fixed/Known explicit content invalidation now refreshes preparation without
 invalidating geometry. Adoption report and ABBA CSVs show stable-range gains,
 rapid-jump overhead and unchanged ordinary-renderer allocations. Remove when
 upstream provides the same bounded preparation and invalidation contracts.
+
+## Snapshot-friendly Masonry indexes (2026-11-04)
+
+Replace flat lane indexes and source slots with private 256-item shared array
+blocks. Frozen snapshots share directories/leaves; append copies directories
+and tail blocks rather than all item indexes. Reads stay O(1); copying remains
+O(N/256), not a logarithmic persistent tree claim. Adoption report records
+append/retained-memory gains and cold construction/no-op feedback costs. Tests
+cover block crossings and multiple frozen generations. Remove when upstream
+offers equivalent indexing and snapshot preservation with measured tradeoffs.

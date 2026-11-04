@@ -286,6 +286,27 @@ fn adopt_metadata_memory() {
     }
 }
 
+#[test]
+fn adopt_masonry_index_memory() {
+    for n in [10_000, 100_000, 1_000_000] {
+        for sample in 0..5 {
+            let reads = Rc::new(Cell::new(0));
+            let (state, ns, stats) = measured(|| {
+                VirtualMasonryState::new(source(n, &reads), VirtualizerSizing::fixed(px(20.)), 3)
+                    .unwrap()
+            });
+            assert_eq!(state.total_extent(), n.div_ceil(3) as f64 * 20.);
+            println!(
+                "SERIES,case=masonry-index-memory-{n},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={},builds={}",
+                stats.count,
+                stats.peak,
+                reads.get(),
+                stats.live
+            );
+        }
+    }
+}
+
 #[gpui_kit::test]
 fn adopt_focus_memory(cx: &mut TestAppContext) {
     // Include Rc allocation overhead when focus metadata is unusually dense.

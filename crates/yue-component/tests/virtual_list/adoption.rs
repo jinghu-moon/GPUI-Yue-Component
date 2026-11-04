@@ -250,3 +250,40 @@ fn sparse_measurement_export_preserves_order_constraints_and_frozen_geometry() {
         vec![updates[1], updates[0]]
     );
 }
+
+#[test]
+fn masonry_append_crosses_index_blocks_without_changing_frozen_lane_assignments() {
+    let mut state =
+        VirtualMasonryState::new(source(0, 761), VirtualizerSizing::measured(px(20.)), 3).unwrap();
+    let mut frozen = Vec::new();
+    for batch in 0..20 {
+        let count = 761 + batch * 11;
+        let snapshot = state
+            .snapshot(0., gpui_kit::size(px(300.), px(100.)))
+            .unwrap();
+        frozen.push((count, snapshot));
+        state
+            .append_source(source(0, count + 11), VirtualizerSizing::measured(px(20.)))
+            .unwrap();
+        for (old_count, snapshot) in &frozen {
+            assert!(snapshot.item(*old_count).is_err());
+            for ix in [0, 255, 256, 760, old_count - 1] {
+                let item = snapshot.item(ix).unwrap();
+                assert_eq!(item.lane(), ix % 3);
+                assert_eq!(item.item().start(), (ix / 3) as f64 * 20.);
+                assert!(!item.item().is_measured());
+            }
+        }
+    }
+    state
+        .update_sizes(&[yue_component::VirtualizerSizeUpdate::new(255usize, px(40.))])
+        .unwrap();
+    let current = state
+        .snapshot(0., gpui_kit::size(px(300.), px(100.)))
+        .unwrap();
+    assert_eq!(current.item(255).unwrap().item().extent(), px(40.));
+    for (_, old) in frozen {
+        assert_eq!(old.item(255).unwrap().item().extent(), px(20.));
+        assert!(!old.item(255).unwrap().item().is_measured());
+    }
+}

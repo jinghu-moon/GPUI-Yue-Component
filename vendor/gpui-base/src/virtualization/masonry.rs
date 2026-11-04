@@ -6,6 +6,9 @@ use std::collections::{BinaryHeap, HashSet};
 #[path = "masonry_element.rs"]
 mod element;
 pub use element::VirtualMasonry;
+#[path = "masonry_index.rs"]
+mod index;
+use index::IndexVector;
 
 struct MasonryCommand {
     id: u64,
@@ -16,7 +19,7 @@ struct MasonryCommand {
 
 #[derive(Clone)]
 struct Lane {
-    indexes: Rc<Vec<usize>>,
+    indexes: IndexVector<usize>,
     geometry: geometry::KnownGeometry,
 }
 #[derive(Clone, Copy)]
@@ -68,7 +71,7 @@ pub struct VirtualMasonrySnapshot {
     revision: u64,
     source: Rc<dyn VirtualizerSource>,
     lanes: Vec<Lane>,
-    slots: Rc<Vec<(usize, usize)>>,
+    slots: IndexVector<(usize, usize)>,
     offset: f64,
     viewport: Size<Pixels>,
     layout: VirtualizerLayout,
@@ -149,7 +152,7 @@ impl VirtualMasonrySnapshot {
 pub struct VirtualMasonryState {
     source: Rc<dyn VirtualizerSource>,
     lanes: Vec<Lane>,
-    slots: Rc<Vec<(usize, usize)>>,
+    slots: IndexVector<(usize, usize)>,
     dynamic: bool,
     layout: VirtualizerLayout,
     column_gap: Pixels,
@@ -357,8 +360,8 @@ impl VirtualMasonryState {
         Ok(())
     }
     /// Append with an explicitly unchanged prefix (keys, content and hints).
-    /// Stable lanes and real measurements survive. Frozen snapshots trigger COW
-    /// of flat index vectors; without them only appended entries are visited.
+    /// Stable lanes and real measurements survive. Frozen snapshots share
+    /// complete index blocks; only the block directory and tail leaves copy.
     pub fn append_source(
         &mut self,
         source: Rc<dyn VirtualizerSource>,
@@ -394,8 +397,8 @@ impl VirtualMasonryState {
             let ix = old_count + local;
             let LaneEnd(end, lane_ix) = heap.pop().unwrap();
             let lane = &mut self.lanes[lane_ix];
-            Rc::make_mut(&mut self.slots).push((lane_ix, lane.indexes.len()));
-            Rc::make_mut(&mut lane.indexes).push(ix);
+            self.slots.push((lane_ix, lane.indexes.len()));
+            lane.indexes.push(ix);
             appended[lane_ix].push(value);
             heap.push(LaneEnd(
                 end + f64::from(value.0) + f64::from(self.layout.gap),
@@ -919,11 +922,11 @@ fn pack(
     extents: &[(Pixels, bool)],
     lane_count: usize,
     gap: f64,
-) -> (Vec<Lane>, Rc<Vec<(usize, usize)>>) {
+) -> (Vec<Lane>, IndexVector<(usize, usize)>) {
     let mut heap: BinaryHeap<_> = (0..lane_count).map(|lane| LaneEnd(0.0, lane)).collect();
-    let mut indexes = vec![Vec::new(); lane_count];
+    let mut indexes = vec![IndexVector::default(); lane_count];
     let mut sizes = vec![Vec::new(); lane_count];
-    let mut slots = Vec::with_capacity(extents.len());
+    let mut slots = IndexVector::default();
     for (ix, (extent, measured)) in extents.iter().copied().enumerate() {
         let LaneEnd(end, lane) = heap.pop().unwrap();
         slots.push((lane, indexes[lane].len()));
@@ -935,9 +938,9 @@ fn pack(
         .into_iter()
         .zip(sizes)
         .map(|(indexes, sizes)| Lane {
-            indexes: Rc::new(indexes),
+            indexes,
             geometry: geometry::KnownGeometry::with_measurements(sizes, gap),
         })
         .collect();
-    (lanes, Rc::new(slots))
+    (lanes, slots)
 }
