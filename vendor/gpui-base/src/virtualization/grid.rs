@@ -112,6 +112,61 @@ impl VirtualGridSnapshot {
             Some(cell)
         })
     }
+    // The four disjoint regions need stable stacking, not an R*C cell buffer
+    // and sort. Each sorted axis splits once at its frozen prefix. Materialize
+    // O(R+C) tracks and stream the same region/row/column order as before.
+    fn partitioned_cells(&self) -> impl Iterator<Item = VirtualGridCell> + '_ {
+        let rows: Vec<_> = self
+            .rows
+            .working_items()
+            .map(|r| r.expect("valid grid row"))
+            .collect();
+        let columns: Vec<_> = self
+            .columns
+            .working_items()
+            .map(|c| c.expect("valid grid column"))
+            .collect();
+        let row_split = rows.partition_point(|r| self.rows.is_frozen(r.index()));
+        let column_split = columns.partition_point(|c| self.columns.is_frozen(c.index()));
+        let mut region = 0;
+        let mut row = row_split;
+        let mut column = column_split;
+        std::iter::from_fn(move || {
+            loop {
+                if region == 4 {
+                    return None;
+                }
+                let row_range = if region & 1 == 0 {
+                    row_split..rows.len()
+                } else {
+                    0..row_split
+                };
+                let column_range = if region & 2 == 0 {
+                    column_split..columns.len()
+                } else {
+                    0..column_split
+                };
+                if column >= column_range.end {
+                    column = column_range.start;
+                    row += 1;
+                }
+                if row >= row_range.end || column_range.is_empty() {
+                    region += 1;
+                    row = if region & 1 == 0 { row_split } else { 0 };
+                    column = if region & 2 == 0 { column_split } else { 0 };
+                    continue;
+                }
+                let cell = VirtualGridCell {
+                    row: rows[row].clone(),
+                    column: columns[column].clone(),
+                    frozen_row: region & 1 != 0,
+                    frozen_column: region & 2 != 0,
+                };
+                column += 1;
+                return Some(cell);
+            }
+        })
+    }
 }
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
 type ViewFactory = Rc<dyn Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> gpui::AnyView>;
@@ -557,19 +612,11 @@ impl Element for VirtualGrid {
                     Bounds::new(bounds.origin, size(frozen_width, frozen_height)),
                 ];
                 let mut ordinary = (!partitioned).then(|| snapshot.cells());
-                let mut ordered = if partitioned {
-                    snapshot.cells().collect::<Vec<_>>()
-                } else {
-                    Vec::new()
-                };
-                ordered.sort_by_key(|cell| {
-                    usize::from(cell.frozen_row) + 2 * usize::from(cell.frozen_column)
-                });
-                let mut ordered = ordered.into_iter();
+                let mut ordered = partitioned.then(|| snapshot.partitioned_cells());
                 let cells = std::iter::from_fn(|| {
                     ordinary
                         .as_mut()
-                        .map_or_else(|| ordered.next(), |it| it.next())
+                        .map_or_else(|| ordered.as_mut().and_then(|it| it.next()), |it| it.next())
                 });
                 w.with_content_mask(Some(ContentMask { bounds: clip }), |w| {
                     for cell in cells {
