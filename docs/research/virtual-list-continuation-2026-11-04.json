@@ -1,0 +1,210 @@
+{
+  "date": "2026-11-04",
+  "note": "after_head records sampling-time HEAD; after_source_commit identifies the subsequently committed Rust implementation measured without intervening source edits.",
+  "experiments": [
+    {
+      "label": "next-masonry-width",
+      "after_source_commit": "28da536",
+      "before": "ec104b69356ca5b9897ec6c24a4fcb9db7eaf823",
+      "filter": "next_masonry_width",
+      "after_head": "6bde5972e72801e7575f45056b05fab8186f4883",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "c34942e75d4a1b7ba263281bea67f08e1516f84bfdd1e742ad98b92f06cc4a26",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 48
+    },
+    {
+      "label": "next-masonry-width-guards",
+      "after_source_commit": "28da536",
+      "before": "ec104b69356ca5b9897ec6c24a4fcb9db7eaf823",
+      "filter": "series_",
+      "after_head": "6bde5972e72801e7575f45056b05fab8186f4883",
+      "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+      "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 404
+    },
+    {
+      "label": "next-masonry-width-memory",
+      "after_source_commit": "28da536",
+      "before": "ec104b69356ca5b9897ec6c24a4fcb9db7eaf823",
+      "filter": "adopt_masonry_index_memory",
+      "after_head": "6bde5972e72801e7575f45056b05fab8186f4883",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "c34942e75d4a1b7ba263281bea67f08e1516f84bfdd1e742ad98b92f06cc4a26",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 60
+    },
+    {
+      "label": "next-masonry-pack",
+      "after_source_commit": "f51794b",
+      "before": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "filter": "adopt_masonry_index_memory",
+      "after_head": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "c34942e75d4a1b7ba263281bea67f08e1516f84bfdd1e742ad98b92f06cc4a26",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 60
+    },
+    {
+      "label": "next-masonry-pack-guards",
+      "after_source_commit": "f51794b",
+      "before": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "filter": "series_",
+      "after_head": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+      "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 404
+    },
+    {
+      "label": "next-masonry-pack-repeat",
+      "after_source_commit": "f51794b",
+      "before": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "filter": "adopt_masonry_index_memory",
+      "after_head": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "c34942e75d4a1b7ba263281bea67f08e1516f84bfdd1e742ad98b92f06cc4a26",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 60
+    },
+    {
+      "label": "next-masonry-pack-noop-repeat",
+      "after_source_commit": "f51794b",
+      "before": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "filter": "series_masonry_noop",
+      "after_head": "28da536f1e56b0c9350b61f8ad8bffd4c3ee0f69",
+      "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+      "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 20
+    },
+    {
+      "label": "next-native-batch",
+      "after_source_commit": "b759fd2",
+      "before": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "filter": "next_native_batch",
+      "after_head": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "e37c9aa81a37df69b330be2ce7242a9805a4d664294b17a058321a786540960f",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 160
+    },
+    {
+      "label": "next-native-batch-guards",
+      "after_source_commit": "b759fd2",
+      "before": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "filter": "series_",
+      "after_head": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+      "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 404
+    },
+    {
+      "label": "next-native-bounded",
+      "after_source_commit": "ed7fe17",
+      "before": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "filter": "next_native_batch",
+      "after_head": "26fcdfd3552c1ef7f74ec2d92c9dd654e32e3466",
+      "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+      "workload_sha256": "e37c9aa81a37df69b330be2ce7242a9805a4d664294b17a058321a786540960f",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 160
+    },
+    {
+      "label": "next-native-bounded-guards",
+      "after_source_commit": "ed7fe17",
+      "before": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "filter": "series_",
+      "after_head": "26fcdfd3552c1ef7f74ec2d92c9dd654e32e3466",
+      "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+      "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 404
+    },
+    {
+      "label": "next-native-bounded-churn",
+      "after_source_commit": "ed7fe17",
+      "before": "f1e90610b87a16fbef972e3682cd9559a814181c",
+      "filter": "next_native_churn",
+      "after_head": "26fcdfd3552c1ef7f74ec2d92c9dd654e32e3466",
+      "workload": "docs/research/virtual-list-batch-churn-2026-11-04.rs",
+      "workload_sha256": "05e3c0ab22348c9ffc6b0cb2eea6ad4e11db9a7c29d3697e416f088db7763e7c",
+      "after_feature": null,
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 160
+    }
+  ]
+}

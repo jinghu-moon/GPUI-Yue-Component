@@ -2,6 +2,8 @@
 
 状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。单项 Pixels 等剩余精度边界见第 13.3 节，实窗仍交由用户验收。更新：2026-11-04。
 
+继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
+
 实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；物理 GPU 帧节奏、实际视觉及 Windows 屏幕阅读器体验仍由用户检查。
 
 升级后的 [第二轮跨库对标](research/2026-11-04-virtual-list-cross-library-review.md) 补充 virtua、vlist 的可借鉴机制。随后完成三模式内容失效、定位策略请求校验、内容与几何准备分离、增量 splice／Masonry append、紧凑持久索引、顺序工作集迭代及混合轨迹／多周期释放验证，见 [第二轮实施与测量](research/2026-11-04-virtual-list-refinements.md)。跨库对标中的问题与数值是修复前快照，不代表当前状态。
@@ -671,6 +673,8 @@ Measured 原生 ListState 现已在同一 SumTree 使用 f64 累计与 seek；Ba
 
 稀疏测量导出按原生摘要跳过未测子树；宽度变化只将已测变体转为 hint 并保留未变化子树，稠密输入保留线性路径。二者都保留冻结快照、测量身份和唯一尺寸 owner；实测成本及回退条件见[本轮报告](research/2026-11-04-virtual-list-adoption.md)。Measured 焦点句柄 Rc 压缩因稠密焦点退化已撤销，方向缓冲／自动中位数估算也未改为核心默认。
 
+Masonry 宽度／布局失效通过 KnownGeometry 与尺寸块代次呈现旧值为 hint，首次写回或尾块追加才归一化该块；冻结快照保留原代次。原生 `set_item_sizes` 校验整个批次，保留重复索引的最后输入并每八个唯一索引拼接一次持久树，仍只提交一次 revision；32 项稀疏批次仍有约 97 KiB 临时峰值增长，具体成本见[继续对标实测](research/2026-11-04-virtual-list-continuation.md)。
+
 **仍有边界：**单项尺寸、项内偏移、padding/Attached 内容原点、普通 Div／UniformList 绘制及滚动条输入仍使用 Pixels 投影；f64 本身也有有限精度。旧 geometry/batch 的 Pixels 接口仍投影，大累计坐标宿主须使用 precise 接口。不能扩展成“所有模式无限尺度精确”或滑块可逐一寻址任意亚像素的声明。
 
 浏览器 16M/33M 等元素高度上限不适用于 GPUI，也不能作为阈值。发布说明只写真实验证过的规模与尺寸范围；超出已验证范围须可诊断，不能静默漏行或把尾部当作已到达。百万条是必测压力场景，测试通过前不是能力宣称。
@@ -885,6 +889,7 @@ Grid 的 auto 轨道、冻结区域、精确 cell 保留和 Masonry 公共生命
 
 ## 17. 依据与关联文档
 
+- [继续对标与 Git 回退](research/2026-11-04-virtual-list-continuation.md)：测量代次、有界批次、冷构造拒绝项，含持续尺寸变化和峰值保护证据。
 - [本轮候选优化取舍与 Git 回退](research/2026-11-04-virtual-list-adoption.md)：六类候选的 ABBA、内存与覆盖证据，采用项和拒绝项分别记录。
 - [原生 Measured 精度与前序优化](research/2026-11-04-virtual-list-optimization-series.md)：工作集迭代、反馈、计时器、f64 精度的前后对照与代价。
 - [第四轮修复与测量](research/2026-11-04-virtual-list-owner-fixes.md)：区域锚点、宿主边界、用户接管、schema 2、原生精确偏移与性能 A/B。
