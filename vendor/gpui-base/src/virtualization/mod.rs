@@ -128,6 +128,7 @@ pub struct VirtualizerLayout {
     padding_start: Pixels,
     padding_end: Pixels,
     overscan: Pixels,
+    reverse_overscan: Option<Pixels>,
     revision: u64,
     measurement_budget: usize,
     scroll_padding_start: Pixels,
@@ -140,6 +141,7 @@ impl Default for VirtualizerLayout {
             padding_start: gpui::px(0.),
             padding_end: gpui::px(0.),
             overscan: gpui::px(0.),
+            reverse_overscan: None,
             revision: 0,
             measurement_budget: 1024,
             scroll_padding_start: gpui::px(0.),
@@ -166,6 +168,24 @@ impl VirtualizerLayout {
     pub fn overscan(mut self, overscan: Pixels) -> Self {
         self.overscan = overscan;
         self
+    }
+    /// Opt into bounded directional work: preserve `overscan` ahead and keep
+    /// this reserve behind. Idle/unknown direction remains symmetric. The
+    /// reserve must be finite, nonnegative and no larger than overscan.
+    pub fn directional_overscan(mut self, reverse: Pixels) -> Self {
+        self.reverse_overscan = Some(reverse);
+        self
+    }
+    fn valid_overscan(&self) -> bool {
+        self.reverse_overscan
+            .is_none_or(|reverse| valid_nonnegative(reverse) && reverse <= self.overscan)
+    }
+    fn overscan_edges(&self, direction: Option<VirtualizerScrollDirection>) -> (Pixels, Pixels) {
+        match (self.reverse_overscan, direction) {
+            (Some(reverse), Some(VirtualizerScrollDirection::Forward)) => (reverse, self.overscan),
+            (Some(reverse), Some(VirtualizerScrollDirection::Backward)) => (self.overscan, reverse),
+            _ => (self.overscan, self.overscan),
+        }
     }
     pub fn revision(mut self, revision: u64) -> Self {
         self.revision = revision;

@@ -353,6 +353,7 @@ struct StateInner {
     logical_scroll_top: Option<ListOffset>,
     alignment: ListAlignment,
     overdraw: Pixels,
+    overdraw_start: Pixels,
     reset: bool,
     #[allow(clippy::type_complexity)]
     scroll_handler: Option<Box<dyn FnMut(&ListScrollEvent, &mut Window, &mut App)>>,
@@ -809,7 +810,13 @@ impl ListState {
     }
     /// Set native pixel overdraw without introducing a second buffer owner.
     pub fn set_overdraw(&self, overdraw: Pixels) {
-        self.0.borrow_mut().overdraw = overdraw;
+        self.set_overdraw_edges(overdraw, overdraw);
+    }
+    /// Set leading/trailing pixel reserves on the existing native layout owner.
+    pub fn set_overdraw_edges(&self, before: Pixels, after: Pixels) {
+        let mut state = self.0.borrow_mut();
+        state.overdraw_start = before;
+        state.overdraw = after;
     }
 
     /// Estimate for future splices; does not discard current measurements.
@@ -1031,6 +1038,7 @@ impl ListState {
             logical_scroll_top: None,
             alignment,
             overdraw,
+            overdraw_start: overdraw,
             scroll_handler: None,
             reset: false,
             scrollbar_drag_start_height: None,
@@ -2051,7 +2059,7 @@ impl StateInner {
 
         // Measure items in the leading overdraw
         let mut leading_overdraw = scroll_top.offset_in_item;
-        while leading_overdraw < self.overdraw && self.layout_count < self.layout_budget {
+        while leading_overdraw < self.overdraw_start && self.layout_count < self.layout_budget {
             cursor.prev();
             if let Some(item) = cursor.item() {
                 let (size, valid) = if let ListItem::Measured { size, valid, .. } = item {
@@ -2078,7 +2086,7 @@ impl StateInner {
         self.layout_budget_exhausted = self.layout_count >= self.layout_budget
             && ((measured_range.end < self.items.summary().count
                 && rendered_height - scroll_top.offset_in_item < available_height + self.overdraw)
-                || (measured_range.start > 0 && leading_overdraw < self.overdraw));
+                || (measured_range.start > 0 && leading_overdraw < self.overdraw_start));
         let mut cursor = old_items.cursor::<Count>(());
         let mut new_items = cursor.slice(&Count(measured_range.start), Bias::Right);
         new_items.extend(measured_items, ());

@@ -92,6 +92,7 @@ pub struct VirtualMasonrySnapshot {
     viewport: Size<Pixels>,
     layout: VirtualizerLayout,
     column_gap: Pixels,
+    direction: Option<VirtualizerScrollDirection>,
     total: f64,
     retained: Rc<[ElementId]>,
 }
@@ -140,9 +141,9 @@ impl VirtualMasonrySnapshot {
         {
             return Vec::new();
         }
-        let start =
-            self.offset - f64::from(self.layout.padding_start) - f64::from(self.layout.overscan);
-        let extent = f64::from(self.viewport.height) + 2.0 * f64::from(self.layout.overscan);
+        let (before, after) = self.layout.overscan_edges(self.direction);
+        let start = self.offset - f64::from(self.layout.padding_start) - f64::from(before);
+        let extent = f64::from(self.viewport.height) + f64::from(before + after);
         let mut indexes = Vec::new();
         for lane in &self.lanes {
             indexes.extend(
@@ -312,6 +313,7 @@ impl VirtualMasonryState {
         ]
         .into_iter()
         .all(valid_nonnegative)
+            || !layout.valid_overscan()
             || layout.measurement_budget == 0
         {
             return Err(VirtualizerError::InvalidGeometry("masonry layout"));
@@ -619,6 +621,7 @@ impl VirtualMasonryState {
             viewport,
             layout: self.layout,
             column_gap: self.column_gap,
+            direction: self.scroll_direction(),
             total: self.total_extent(),
             retained: self.retained.clone(),
         })

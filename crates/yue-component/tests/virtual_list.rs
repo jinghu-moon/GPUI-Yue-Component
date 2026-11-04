@@ -27,6 +27,8 @@ mod api_contract;
 mod feedback;
 #[path = "virtual_list/grid_preparation.rs"]
 mod grid_preparation;
+#[path = "virtual_list/directional.rs"]
+mod directional;
 #[path = "virtual_list/followup.rs"]
 mod followup;
 #[path = "virtual_list/followup_edges.rs"]

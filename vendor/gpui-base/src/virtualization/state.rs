@@ -687,6 +687,7 @@ impl VirtualizerState {
         ]
         .into_iter()
         .all(valid_nonnegative)
+            || !layout.valid_overscan()
             || layout.measurement_budget == 0
         {
             return Err(VirtualizerError::InvalidGeometry("layout"));
@@ -1266,9 +1267,12 @@ impl VirtualizerState {
         } else {
             0..0
         };
-        let overscan = f64::from(self.layout.overscan);
+        let (before, after) = self.layout.overscan_edges(self.scroll_direction());
         let rendered = if has_area {
-            range(offset - overscan, extent + 2.0 * overscan)
+            range(
+                offset - f64::from(before),
+                extent + f64::from(before + after),
+            )
         } else {
             0..0
         };
@@ -1329,6 +1333,12 @@ impl VirtualizerState {
         self.clock = Some(now);
         self.observe_offset(viewport.offset, now);
         self.poll_scroll_idle(now);
+        if self.layout.reverse_overscan.is_some()
+            && let Some(list) = &self.measured
+        {
+            let (before, after) = self.layout.overscan_edges(self.scroll_direction());
+            list.set_overdraw_edges(before, after);
+        }
         if self.viewport.as_ref().is_some_and(|old| {
             old.input_revision != viewport.input_revision
                 && (old.offset - viewport.offset).abs() > 0.01
@@ -1572,6 +1582,10 @@ impl VirtualizerState {
             .measured
             .as_ref()
             .ok_or(VirtualizerError::WrongBackend)?;
+        if self.layout.reverse_overscan.is_some() {
+            let (before, after) = self.layout.overscan_edges(self.scroll_direction());
+            list.set_overdraw_edges(before, after);
+        }
         let source = self.source.clone();
         let gap = self.layout.gap;
         let mut padding = self.native_padding();
