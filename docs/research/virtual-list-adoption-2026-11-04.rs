@@ -457,12 +457,16 @@ fn next_masonry_width(cx: &mut TestAppContext) {
 
 #[test]
 fn next_native_batch() {
-    for (count, sparse) in [
-        (1, false),
-        (32, false),
-        (32, true),
-        (4096, false),
-        (4096, true),
+    // order 0 is ascending, 1 descending, 2 ascending then duplicate overrides.
+    for (count, sparse, order) in [
+        (1, false, 0),
+        (32, false, 0),
+        (32, true, 0),
+        (4096, false, 0),
+        (4096, true, 0),
+        (32, true, 1),
+        (4096, true, 1),
+        (4096, true, 2),
     ] {
         for sample in 0..5 {
             let state = gpui_kit::ListState::new_with_uniform_height(
@@ -471,7 +475,7 @@ fn next_native_batch() {
                 px(0.),
                 px(20.),
             );
-            let updates: Vec<_> = (0..count)
+            let mut updates: Vec<_> = (0..count)
                 .map(|i| {
                     (
                         if sparse { i * 1_000_000 / count } else { i },
@@ -479,6 +483,15 @@ fn next_native_batch() {
                     )
                 })
                 .collect();
+            if order == 1 {
+                updates.reverse();
+            } else if order == 2 {
+                updates.extend(
+                    (0..count / 2)
+                        .rev()
+                        .map(|i| (i * 1_000_000 / count, size(px(320.), px(40.)))),
+                );
+            }
             let frozen = state.geometry();
             let (_, ns, stats) = measured(|| {
                 for _ in 0..20 {
@@ -487,8 +500,12 @@ fn next_native_batch() {
             });
             assert_eq!(state.geometry().measured_count(), count);
             assert_eq!(frozen.measured_count(), 0);
+            assert_eq!(
+                state.geometry().item(0).unwrap().extent(),
+                px(if order == 2 { 40. } else { 30. })
+            );
             println!(
-                "SERIES,case=native-batch-{count}-{sparse},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
+                "SERIES,case=native-batch-{count}-{sparse}-{order},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
                 stats.count, stats.peak
             );
         }
