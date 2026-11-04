@@ -613,8 +613,8 @@ lifecycle and native ScrollHandle. Reuse preflight motion validation, bounded
 correction, native input cancellation, unmount cancellation and exactly-once
 terminal events. Clamp against current viewport/geometry; offset targets have
 no key alignment or persistent tail pin. Key APIs remain compatible. Publish
-offset support in that checkpoint; follow-tail is added below, while Attached
-and smooth remain unsupported. Six
+offset support in that checkpoint; follow-tail and bounded smooth are added
+below, while Attached remains unsupported. Six
 public-seam tests cover validation atomicity, pre-mount/empty/large coordinates,
 dynamic correction/source shrink, input/unmount and bounded termination.
 Remove when upstream provides the same command and ownership contracts.
@@ -629,7 +629,45 @@ retire the stale layout anchor. Input return is confirmed after the frame's
 size correction, so changing estimates cannot leave a reader at the new tail
 with a stale paused flag. Explicit key/offset commands pause an existing session
 without creating one; source replacement and disabling follow end the session.
-Publish follow-tail support only; Attached, reverse/RTL and smooth remain out
-of scope. Public-seam tests cover fixed append, measured append/correction,
+At this checkpoint publish follow-tail support only; Attached and reverse/RTL
+remain out of scope, while bounded smooth is added below. Public-seam tests cover fixed append, measured append/correction,
 native wheel leave/return, source replacement and command priority. Remove when
 upstream supplies equivalent single-owner behavior and lifecycle contracts.
+
+## Masonry smooth positioning and Grid motion policy (2026-11-05)
+
+Share the one-dimensional ease-out cubic sampler with Masonry Fixed/Known key
+and offset commands. Sample one frame time across geometry correction passes,
+re-resolve current geometry, bound the distance by the caller cap and one
+viewport, and require both motion and layout convergence before reporting
+Settled. Measured/reduced-motion/long-distance requests use the existing safe
+instant policy; capability queries distinguish actual animation support.
+New commands begin at the native precise position. Input, unmount, target loss
+and the existing stall/attempt/time budgets retain exactly-once terminal events.
+Advancing timed samples do not consume geometry retries or falsely stall on
+sub-tolerance motion; frozen clocks and the two-second deadline remain bounded.
+There is no new scroll owner, animation task or per-item geometry cache.
+
+Grid keeps two Attached Fixed/Known axes and one native x/y submission. Honor
+reduced motion, clipping and inactive/hidden windows before sampling each axis,
+matching VirtualList. Linear/Grid confirmation treats accepted advancing tiny
+samples as progress, while a host refusing proposals still reaches NoProgress.
+Masonry has the same motion policy while preserving its
+progress-driven dynamic measurement continuation. Headless tests cover middle
+frames, final targets, cancellation, precision and bounded termination; opt-in
+Windows tests also require actual intermediate Grid/Masonry native positions.
+See `docs/research/2026-11-05-virtual-list-smooth-layout-review.md` for the
+baseline, Release cost guards, exact supported layout boundaries and rollback.
+Remove these changes when upstream supplies equivalent behavior and tests.
+
+### Optional motion storage
+
+The initial inline motion representation enlarged the linear/Masonry controller
+values from 944/560 to 952/616 bytes on this Windows Release build. Keep timed
+Masonry state in one command-owned Box only for explicit Fixed/Known Smooth
+requests, and use saturating byte counters for the 32-retry/8-stall bounds.
+Controller values return to 944/560 bytes; Instant/Measured requests do not
+allocate this motion object. Explicit motion pays one additional state allocation
+until completion/cancellation. These are size_of values, not resident heap/RSS.
+The record retains the initial timing regressions, the isolation A/B and final
+baseline guards; restored value size is not presented as a CPU speedup.

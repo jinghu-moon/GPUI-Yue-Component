@@ -1,0 +1,598 @@
+{
+  "local_date": "2026-11-05",
+  "recorded_local": "2026-11-05T02:21:21.708130+08:00",
+  "timezone": "Asia/Shanghai",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "before_commit": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+  "implementation_commits": [
+    "173c80bd47a08a969ac96347c0ee620128fe1643",
+    "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a",
+    "b83013b8c0f7293d98df99f0636cebad5a5c0b4f"
+  ],
+  "changed_source_sha256_lf": {
+    "crates/yue-component/tests/virtual_list.rs": "ce674f61a20fb0515f21dcbb00d38ef9349c3a76ed5531e663d9cbc948a5af1f",
+    "crates/yue-component/tests/virtual_list/api_contract.rs": "b9470297b5fa143db95cce92f85785ca10959a410414d0a8a4aa515c30ffdad6",
+    "crates/yue-component/tests/virtual_list/layouts.rs": "fdf75952d896887775f479403db409b624cdaf7ab8600e92a72e9bbc421138cd",
+    "crates/yue-component/tests/virtual_list/masonry_offset.rs": "a8b996a67b80f02131d72b06167c8c49c851b8d0dec500e0601f8e511aeae3c3",
+    "crates/yue-component/tests/virtual_list/masonry_smooth.rs": "731338d571f5a69087948fb5e29fba78722f05098fc8733ae3446c3477a1b95e",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_tests.rs": "343cbd1ff2648ab8ad6f307095a16d3fdbf30bfdf296266e46b7e10c56c05f46",
+    "tools/test-virtualization-native.ps1": "60c95f1011a65a397c27cc8111279a3fab43aee00cd32a5191687b36275993e3",
+    "vendor/gpui-base/src/virtualization/command.rs": "8e7597c87506fede39103c50001a7cc7219d65c1802ee5b00a53f22620230738",
+    "vendor/gpui-base/src/virtualization/grid.rs": "c7fefc1956da94182801d5922eaaeb5115de88ad1d6566557502eacb42b4675c",
+    "vendor/gpui-base/src/virtualization/masonry.rs": "6ffa4ff141fa426a1bbf4ee31bb70303a46228c301fdb7a6809f86b6a14357da",
+    "vendor/gpui-base/src/virtualization/masonry_element.rs": "db3352c973ceab17513806b931a0fcf3dc13d3e64dc075ecf4e18667bc3ab332",
+    "vendor/gpui-base/src/virtualization/state.rs": "e9b7bdb79ab5c10621dd1079efb5ab29d8f83154200dbc5ac8c4b3916570dc9e"
+  },
+  "comparison_tool_sha256_lf": "417a928b97573d7ec1ff3b4b5880d645b4a456744f8aba151669dee1ae9a1d51",
+  "initial_evidence": {
+    "json": "docs/research/virtual-list-smooth-layout-initial-2026-11-05.json",
+    "sha256_lf": "1ba113ce1aa2272165dbf64cae599a4966b1d25191ad3b0ae594cebe585b546c",
+    "comparison_runs": 3,
+    "rows": 1212
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26100-SP0",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.1\nLLVM version: 22.1.8"
+  },
+  "baseline_regressions": {
+    "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+    "results": [
+      {
+        "filter": "masonry_smooth::",
+        "failed": 7,
+        "returncode": 101
+      },
+      {
+        "filter": "layouts::grid_smooth_",
+        "failed": 1,
+        "returncode": 101
+      }
+    ]
+  },
+  "validation": {
+    "workspace_passed": 850,
+    "workspace_failed": 0,
+    "workspace_ignored": 11,
+    "virtual_list_passed": 136,
+    "virtual_list_ignored": 8,
+    "new_public_seam_tests_passed": 8,
+    "clippy_all_targets_warnings_denied": true,
+    "workspace_fmt_and_changed_vendor_rustfmt": true,
+    "vendor_native_contracts": 15,
+    "vendor_base_contracts": 2,
+    "native_windows_tests_passed": 2,
+    "native_motion_intermediate_positions_observed": true,
+    "release_showcase_build": true
+  },
+  "controller_value_sizes": {
+    "scope": "Rust size_of controller values in Release builds; excludes owned allocations, allocator overhead and RSS",
+    "bytes": {
+      "baseline": {
+        "linear": 944,
+        "masonry": 560
+      },
+      "initial": {
+        "linear": 952,
+        "masonry": 616
+      },
+      "isolated": {
+        "linear": 944,
+        "masonry": 560
+      }
+    }
+  },
+  "size_probe_expression": "std::mem::size_of::<gpui_base::virtualization::VirtualizerState>(); std::mem::size_of::<gpui_base::virtualization::VirtualMasonryState>();",
+  "comparison_runs": [
+    {
+      "identity": {
+        "before": "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a",
+        "filter": "series_",
+        "after_head": "b83013b8c0f7293d98df99f0636cebad5a5c0b4f",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-isolation-guards-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "b80d737fe476e3e024c149ee3beb3f23138947aa42e97f3da0b9408f166da26d",
+      "csv_sha256_lf": "4b8c27d0994af80e0a0cf0b7df5167ec6110b4203c75a4356b673781cd6250d5",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5350.0,
+          "after_median_ns": 5350.0,
+          "change_percent": 0.0
+        },
+        "append-100000": {
+          "before_median_ns": 12400.0,
+          "after_median_ns": 12050.0,
+          "change_percent": -2.822580645161288
+        },
+        "append-1000000": {
+          "before_median_ns": 95500.0,
+          "after_median_ns": 101050.0,
+          "change_percent": 5.811518324607334
+        },
+        "frames-0-complex": {
+          "before_median_ns": 31679050.0,
+          "after_median_ns": 31002900.0,
+          "change_percent": -2.1343758730138718
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3502850.0,
+          "after_median_ns": 3593550.0,
+          "change_percent": 2.589320125041028
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3764100.0,
+          "after_median_ns": 3787800.0,
+          "change_percent": 0.6296325814935777
+        },
+        "frames-0-steady": {
+          "before_median_ns": 4016800.0,
+          "after_median_ns": 4028950.0,
+          "change_percent": 0.30247958573990097
+        },
+        "frames-1-complex": {
+          "before_median_ns": 31240400.0,
+          "after_median_ns": 30595100.0,
+          "change_percent": -2.065594550645955
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3672000.0,
+          "after_median_ns": 3673950.0,
+          "change_percent": 0.053104575163409606
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3891950.0,
+          "after_median_ns": 3829100.0,
+          "change_percent": -1.6148717224013676
+        },
+        "frames-1-steady": {
+          "before_median_ns": 4192700.0,
+          "after_median_ns": 3878000.0,
+          "change_percent": -7.505903117322966
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21272950.0,
+          "after_median_ns": 20924550.0,
+          "change_percent": -1.637760630284002
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8893550.0,
+          "after_median_ns": 8753950.0,
+          "change_percent": -1.5696769006752098
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10387200.0,
+          "after_median_ns": 10415100.0,
+          "change_percent": 0.2685998151571223
+        },
+        "frames-2-size": {
+          "before_median_ns": 8404800.0,
+          "after_median_ns": 8348100.0,
+          "change_percent": -0.6746145059965736
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9602050.0,
+          "after_median_ns": 9629400.0,
+          "change_percent": 0.28483500919074256
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9461200.0,
+          "after_median_ns": 9904950.0,
+          "change_percent": 4.690208430220277
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 7004350.0,
+          "after_median_ns": 7530800.0,
+          "change_percent": 7.516043601476219
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6156300.0,
+          "after_median_ns": 6073800.0,
+          "change_percent": -1.3400906388577605
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5443150.0,
+          "after_median_ns": 5501350.0,
+          "change_percent": 1.069233807629777
+        },
+        "idle-2000": {
+          "before_median_ns": 654400.0,
+          "after_median_ns": 672300.0,
+          "change_percent": 2.735330073349629
+        },
+        "masonry-noop": {
+          "before_median_ns": 5304750.0,
+          "after_median_ns": 5321300.0,
+          "change_percent": 0.3119845421556189
+        },
+        "measured-queries": {
+          "before_median_ns": 1414300.0,
+          "after_median_ns": 1418900.0,
+          "change_percent": 0.32524923990666643
+        },
+        "work-0-false": {
+          "before_median_ns": 3764800.0,
+          "after_median_ns": 3689300.0,
+          "change_percent": -2.0054186145346375
+        },
+        "work-0-true": {
+          "before_median_ns": 6115250.0,
+          "after_median_ns": 5927850.0,
+          "change_percent": -3.0644699726094626
+        },
+        "work-1-false": {
+          "before_median_ns": 4062300.0,
+          "after_median_ns": 4036950.0,
+          "change_percent": -0.6240307215124474
+        },
+        "work-1-true": {
+          "before_median_ns": 7253400.0,
+          "after_median_ns": 7164100.0,
+          "change_percent": -1.2311467725480418
+        }
+      }
+    },
+    {
+      "identity": {
+        "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+        "filter": "series_",
+        "after_head": "b83013b8c0f7293d98df99f0636cebad5a5c0b4f",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-final-guards-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "4afb16db803961454ebea2ae7547e940fcb05a1414017a736b47835527b67266",
+      "csv_sha256_lf": "1212d7d7b15643ef350c997f08a3edfffd9bdf16bb5e91e853a09433b49846e3",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5300.0,
+          "after_median_ns": 5300.0,
+          "change_percent": 0.0
+        },
+        "append-100000": {
+          "before_median_ns": 12250.0,
+          "after_median_ns": 12750.0,
+          "change_percent": 4.081632653061229
+        },
+        "append-1000000": {
+          "before_median_ns": 104700.0,
+          "after_median_ns": 92150.0,
+          "change_percent": -11.986628462273163
+        },
+        "frames-0-complex": {
+          "before_median_ns": 31685950.0,
+          "after_median_ns": 30911750.0,
+          "change_percent": -2.4433542311339873
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3626950.0,
+          "after_median_ns": 3568400.0,
+          "change_percent": -1.6143040295565125
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3842600.0,
+          "after_median_ns": 3864800.0,
+          "change_percent": 0.5777338260552822
+        },
+        "frames-0-steady": {
+          "before_median_ns": 4345250.0,
+          "after_median_ns": 4351900.0,
+          "change_percent": 0.1530406766008907
+        },
+        "frames-1-complex": {
+          "before_median_ns": 31655650.0,
+          "after_median_ns": 31777550.0,
+          "change_percent": 0.38508133619117313
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3646550.0,
+          "after_median_ns": 3748150.0,
+          "change_percent": 2.78619517077785
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3977600.0,
+          "after_median_ns": 3909300.0,
+          "change_percent": -1.7171158487530147
+        },
+        "frames-1-steady": {
+          "before_median_ns": 3957100.0,
+          "after_median_ns": 3906950.0,
+          "change_percent": -1.2673422455838912
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21348350.0,
+          "after_median_ns": 21245650.0,
+          "change_percent": -0.4810676234931477
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8826650.0,
+          "after_median_ns": 8862800.0,
+          "change_percent": 0.4095551539938791
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10503700.0,
+          "after_median_ns": 10441050.0,
+          "change_percent": -0.5964564867618094
+        },
+        "frames-2-size": {
+          "before_median_ns": 8413950.0,
+          "after_median_ns": 8733200.0,
+          "change_percent": 3.7942939998454994
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9398850.0,
+          "after_median_ns": 9523700.0,
+          "change_percent": 1.3283540007554162
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9391400.0,
+          "after_median_ns": 9415000.0,
+          "change_percent": 0.2512937368230439
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 7131850.0,
+          "after_median_ns": 7253350.0,
+          "change_percent": 1.7036252865666013
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6160150.0,
+          "after_median_ns": 6102000.0,
+          "change_percent": -0.9439705201983672
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5550300.0,
+          "after_median_ns": 5437400.0,
+          "change_percent": -2.034124281570371
+        },
+        "idle-2000": {
+          "before_median_ns": 619950.0,
+          "after_median_ns": 677300.0,
+          "change_percent": 9.250746027905477
+        },
+        "masonry-noop": {
+          "before_median_ns": 5350550.0,
+          "after_median_ns": 5293400.0,
+          "change_percent": -1.0681144929025943
+        },
+        "measured-queries": {
+          "before_median_ns": 1422500.0,
+          "after_median_ns": 1416550.0,
+          "change_percent": -0.41827768014059963
+        },
+        "work-0-false": {
+          "before_median_ns": 3634550.0,
+          "after_median_ns": 3693900.0,
+          "change_percent": 1.6329394285399923
+        },
+        "work-0-true": {
+          "before_median_ns": 6084850.0,
+          "after_median_ns": 5951050.0,
+          "change_percent": -2.198903834934307
+        },
+        "work-1-false": {
+          "before_median_ns": 4022300.0,
+          "after_median_ns": 4004850.0,
+          "change_percent": -0.43383139000074955
+        },
+        "work-1-true": {
+          "before_median_ns": 7499400.0,
+          "after_median_ns": 7273550.0,
+          "change_percent": -3.0115742592740746
+        }
+      }
+    },
+    {
+      "identity": {
+        "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+        "filter": "series_",
+        "after_head": "b83013b8c0f7293d98df99f0636cebad5a5c0b4f",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-final-guards-repeat-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "0b632744baf9271ff85d46acdc90f9d52efa23e4507f94373270060d38a228a5",
+      "csv_sha256_lf": "6cd49dd6e7b1749572968bb2b414293594f2bb0a12bfa986309c776527976f89",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5350.0,
+          "after_median_ns": 5300.0,
+          "change_percent": -0.9345794392523366
+        },
+        "append-100000": {
+          "before_median_ns": 12250.0,
+          "after_median_ns": 12200.0,
+          "change_percent": -0.40816326530612734
+        },
+        "append-1000000": {
+          "before_median_ns": 92800.0,
+          "after_median_ns": 96250.0,
+          "change_percent": 3.717672413793105
+        },
+        "frames-0-complex": {
+          "before_median_ns": 31200350.0,
+          "after_median_ns": 31258650.0,
+          "change_percent": 0.18685687820809704
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3549650.0,
+          "after_median_ns": 3598250.0,
+          "change_percent": 1.3691490710351806
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3724000.0,
+          "after_median_ns": 3724200.0,
+          "change_percent": 0.005370569280338522
+        },
+        "frames-0-steady": {
+          "before_median_ns": 3996800.0,
+          "after_median_ns": 4037750.0,
+          "change_percent": 1.024569655724572
+        },
+        "frames-1-complex": {
+          "before_median_ns": 30956900.0,
+          "after_median_ns": 30675450.0,
+          "change_percent": -0.909167261579813
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3588800.0,
+          "after_median_ns": 3659800.0,
+          "change_percent": 1.978377173428436
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3920250.0,
+          "after_median_ns": 3914600.0,
+          "change_percent": -0.14412346151393418
+        },
+        "frames-1-steady": {
+          "before_median_ns": 3806800.0,
+          "after_median_ns": 3863900.0,
+          "change_percent": 1.4999474624356468
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21212150.0,
+          "after_median_ns": 20511350.0,
+          "change_percent": -3.3037669448877205
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8762100.0,
+          "after_median_ns": 8770550.0,
+          "change_percent": 0.09643806849957137
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10274400.0,
+          "after_median_ns": 10536300.0,
+          "change_percent": 2.5490539593552963
+        },
+        "frames-2-size": {
+          "before_median_ns": 8405650.0,
+          "after_median_ns": 8292300.0,
+          "change_percent": -1.3484977366414297
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9417250.0,
+          "after_median_ns": 9639950.0,
+          "change_percent": 2.3648092596033843
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9425650.0,
+          "after_median_ns": 9631000.0,
+          "change_percent": 2.1786295905322106
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 6992600.0,
+          "after_median_ns": 6943300.0,
+          "change_percent": -0.7050310328061138
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6181600.0,
+          "after_median_ns": 6330250.0,
+          "change_percent": 2.404717225313835
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5470550.0,
+          "after_median_ns": 5379350.0,
+          "change_percent": -1.6671084260266311
+        },
+        "idle-2000": {
+          "before_median_ns": 693600.0,
+          "after_median_ns": 633950.0,
+          "change_percent": -8.600057670126871
+        },
+        "masonry-noop": {
+          "before_median_ns": 5321850.0,
+          "after_median_ns": 5240700.0,
+          "change_percent": -1.5248456833619861
+        },
+        "measured-queries": {
+          "before_median_ns": 1437650.0,
+          "after_median_ns": 1403150.0,
+          "change_percent": -2.399749591346989
+        },
+        "work-0-false": {
+          "before_median_ns": 3683750.0,
+          "after_median_ns": 3688500.0,
+          "change_percent": 0.128944689514765
+        },
+        "work-0-true": {
+          "before_median_ns": 6029450.0,
+          "after_median_ns": 5932250.0,
+          "change_percent": -1.6120873379827372
+        },
+        "work-1-false": {
+          "before_median_ns": 4011600.0,
+          "after_median_ns": 4062250.0,
+          "change_percent": 1.262588493369221
+        },
+        "work-1-true": {
+          "before_median_ns": 7259100.0,
+          "after_median_ns": 7124300.0,
+          "change_percent": -1.8569795153669189
+        }
+      }
+    }
+  ],
+  "total_retained_comparison_runs": 6,
+  "total_retained_csv_rows": 2424,
+  "rollback_temporary_index_reverse_checks": {
+    "b83013b8c0f7293d98df99f0636cebad5a5c0b4f": true,
+    "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a": true,
+    "173c80bd47a08a969ac96347c0ee620128fe1643": true
+  },
+  "rollback_tree_matches_before": true,
+  "rolled_back_tree_id": "dc42628398a81fd1d67a64aa8f3289b0a40dc9dd",
+  "measurement_scope": {
+    "cpu_cost_guards": "identical default-path headless Release workloads; Smooth is not enabled in these timing matrices",
+    "allocation_scope": "thread-local allocator payload in measurement windows; excludes controller creation and is not RSS",
+    "native_motion": "active real Windows window; position samples and target settlement, not GPU completion timing, FPS or hardware input latency"
+  },
+  "decision": "adopt bounded explicit-dimension Masonry smooth, Grid motion safety and optional-state isolation; retain Measured instant fallback; report residual CPU costs without claiming speedup or universal zero regression",
+  "motion_state_tradeoff": "one Box allocation for a valid explicit Fixed/Known Smooth request not opting out through reduced_motion; at most one active motion object; Instant and Measured requests do not allocate this object"
+}

@@ -13,6 +13,7 @@ from pathlib import Path
 import subprocess
 import time
 import zipfile
+from datetime import date
 
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = Path(os.environ.get("YUE_VIRTUAL_BENCH", "C:/Temp/gpui-yue-series-20261104"))
@@ -32,11 +33,16 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument("--before", required=True)
     parser.add_argument("--label", required=True)
+    parser.add_argument("--date", default="2026-11-04", help="ISO date for output artifacts; defaults to the original workload date")
     parser.add_argument("--filter", default="series_")
     parser.add_argument("--workload", default="docs/research/virtual-list-optimization-series-2026-11-04.rs")
     parser.add_argument("--after-feature", choices=["masonry-views"], default=None)
     parser.add_argument("--native", action="store_true", help="Run the opt-in production Showcase frame workload on the real Windows platform")
     args = parser.parse_args()
+    try:
+        date.fromisoformat(args.date)
+    except ValueError:
+        parser.error("date must be an ISO calendar date (YYYY-MM-DD)")
     if args.native:
         args.workload = "examples/windows-showcase/src/pages/virtual_layouts/native_profile.rs"
         args.filter = "pages::virtual_layouts::native_profile::native_frame_workload"
@@ -171,7 +177,7 @@ masonry-views = []
         print(f"Completed {args.label} {version}/{round_}", flush=True)
     if not rows:
         raise ValueError("no measurement rows")
-    destination = ROOT / f"docs/research/virtual-list-series-{args.label}-2026-11-04.csv"
+    destination = ROOT / f"docs/research/virtual-list-series-{args.label}-{args.date}.csv"
     with destination.open("w", newline="", encoding="utf-8") as stream:
         writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
         writer.writeheader()
@@ -181,6 +187,7 @@ masonry-views = []
         "workload": args.workload,
         "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
         "after_feature": args.after_feature,
+        "artifact_date": args.date,
         "native": args.native,
         "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
         "discarded_samples": discarded,

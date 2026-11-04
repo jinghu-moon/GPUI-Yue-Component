@@ -1,0 +1,568 @@
+{
+  "local_date": "2026-11-05",
+  "recorded_local": "2026-11-05T02:08:15.774087+08:00",
+  "timezone": "Asia/Shanghai",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "before_commit": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+  "implementation_commits": [
+    "173c80bd47a08a969ac96347c0ee620128fe1643",
+    "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a"
+  ],
+  "changed_source_sha256_lf": {
+    "crates/yue-component/tests/virtual_list.rs": "ce674f61a20fb0515f21dcbb00d38ef9349c3a76ed5531e663d9cbc948a5af1f",
+    "crates/yue-component/tests/virtual_list/api_contract.rs": "b9470297b5fa143db95cce92f85785ca10959a410414d0a8a4aa515c30ffdad6",
+    "crates/yue-component/tests/virtual_list/layouts.rs": "fdf75952d896887775f479403db409b624cdaf7ab8600e92a72e9bbc421138cd",
+    "crates/yue-component/tests/virtual_list/masonry_offset.rs": "a8b996a67b80f02131d72b06167c8c49c851b8d0dec500e0601f8e511aeae3c3",
+    "crates/yue-component/tests/virtual_list/masonry_smooth.rs": "731338d571f5a69087948fb5e29fba78722f05098fc8733ae3446c3477a1b95e",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_tests.rs": "343cbd1ff2648ab8ad6f307095a16d3fdbf30bfdf296266e46b7e10c56c05f46",
+    "tools/test-virtualization-native.ps1": "60c95f1011a65a397c27cc8111279a3fab43aee00cd32a5191687b36275993e3",
+    "vendor/gpui-base/src/virtualization/command.rs": "87712d10928d52c9549e65b2ae967c006cc21ea21d1c75bd562b154dddb8e74b",
+    "vendor/gpui-base/src/virtualization/grid.rs": "c7fefc1956da94182801d5922eaaeb5115de88ad1d6566557502eacb42b4675c",
+    "vendor/gpui-base/src/virtualization/masonry.rs": "f5ff6a778b1e99c4370e3b9fa3e961ace4a615ca1cd8b9d75fe157d493e8913f",
+    "vendor/gpui-base/src/virtualization/masonry_element.rs": "db3352c973ceab17513806b931a0fcf3dc13d3e64dc075ecf4e18667bc3ab332",
+    "vendor/gpui-base/src/virtualization/state.rs": "e9b7bdb79ab5c10621dd1079efb5ab29d8f83154200dbc5ac8c4b3916570dc9e"
+  },
+  "comparison_tool_sha256_lf": "417a928b97573d7ec1ff3b4b5880d645b4a456744f8aba151669dee1ae9a1d51",
+  "environment": {
+    "platform": "Windows-11-10.0.26100-SP0",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.1\nLLVM version: 22.1.8"
+  },
+  "baseline_regressions": {
+    "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+    "results": [
+      {
+        "filter": "masonry_smooth::",
+        "failed": 7,
+        "returncode": 101
+      },
+      {
+        "filter": "layouts::grid_smooth_",
+        "failed": 1,
+        "returncode": 101
+      }
+    ]
+  },
+  "validation": {
+    "workspace_passed": 850,
+    "workspace_failed": 0,
+    "workspace_ignored": 11,
+    "virtual_list_passed": 136,
+    "virtual_list_ignored": 8,
+    "new_public_seam_tests_passed": 8,
+    "clippy_all_targets_warnings_denied": true,
+    "workspace_fmt_and_changed_vendor_rustfmt": true,
+    "vendor_native_contracts": 15,
+    "vendor_base_contracts": 2,
+    "native_windows_tests_passed": 2,
+    "native_motion_intermediate_positions_observed": true,
+    "release_showcase_build": true
+  },
+  "comparison_runs": [
+    {
+      "identity": {
+        "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+        "filter": "series_",
+        "after_head": "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-guards-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "c4486277f0ea471990742ec69709a1eea6307c865083e1ae1a957cc8742a2f41",
+      "csv_sha256_lf": "47887db82a006b1952423f411ece33357232a7cd83d49a8bb2282d59a7e56109",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5250.0,
+          "after_median_ns": 5650.0,
+          "change_percent": 7.619047619047614
+        },
+        "append-100000": {
+          "before_median_ns": 12500.0,
+          "after_median_ns": 11600.0,
+          "change_percent": -7.199999999999996
+        },
+        "append-1000000": {
+          "before_median_ns": 92150.0,
+          "after_median_ns": 94850.0,
+          "change_percent": 2.9300054259359776
+        },
+        "frames-0-complex": {
+          "before_median_ns": 31152550.0,
+          "after_median_ns": 31243400.0,
+          "change_percent": 0.2916294171745104
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3533050.0,
+          "after_median_ns": 3631150.0,
+          "change_percent": 2.7766377492534744
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3813950.0,
+          "after_median_ns": 3782650.0,
+          "change_percent": -0.8206714823214778
+        },
+        "frames-0-steady": {
+          "before_median_ns": 4006700.0,
+          "after_median_ns": 4589900.0,
+          "change_percent": 14.555619337609492
+        },
+        "frames-1-complex": {
+          "before_median_ns": 31366900.0,
+          "after_median_ns": 31324000.0,
+          "change_percent": -0.13676837685585586
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3645950.0,
+          "after_median_ns": 3660800.0,
+          "change_percent": 0.4073012520742214
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3865950.0,
+          "after_median_ns": 3908950.0,
+          "change_percent": 1.112275119957573
+        },
+        "frames-1-steady": {
+          "before_median_ns": 3933350.0,
+          "after_median_ns": 3864850.0,
+          "change_percent": -1.741518044415069
+        },
+        "frames-2-complex": {
+          "before_median_ns": 20995850.0,
+          "after_median_ns": 21159250.0,
+          "change_percent": 0.7782490349283355
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8748250.0,
+          "after_median_ns": 8657100.0,
+          "change_percent": -1.0419226702483408
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10820500.0,
+          "after_median_ns": 10203700.0,
+          "change_percent": -5.700291114088996
+        },
+        "frames-2-size": {
+          "before_median_ns": 8400650.0,
+          "after_median_ns": 8234300.0,
+          "change_percent": -1.9802039127924664
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9274200.0,
+          "after_median_ns": 9430900.0,
+          "change_percent": 1.6896336072113938
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9930400.0,
+          "after_median_ns": 9514300.0,
+          "change_percent": -4.190163538226055
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 7019550.0,
+          "after_median_ns": 6849550.0,
+          "change_percent": -2.421807665733555
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6180500.0,
+          "after_median_ns": 6059100.0,
+          "change_percent": -1.964242375212366
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5659350.0,
+          "after_median_ns": 5659200.0,
+          "change_percent": -0.0026504810623162456
+        },
+        "idle-2000": {
+          "before_median_ns": 653850.0,
+          "after_median_ns": 629750.0,
+          "change_percent": -3.6858606714078146
+        },
+        "masonry-noop": {
+          "before_median_ns": 5399150.0,
+          "after_median_ns": 5978850.0,
+          "change_percent": 10.736875248881761
+        },
+        "measured-queries": {
+          "before_median_ns": 1427500.0,
+          "after_median_ns": 1442950.0,
+          "change_percent": 1.0823117338003563
+        },
+        "work-0-false": {
+          "before_median_ns": 3697750.0,
+          "after_median_ns": 3697150.0,
+          "change_percent": -0.016226083429116134
+        },
+        "work-0-true": {
+          "before_median_ns": 6144600.0,
+          "after_median_ns": 6153600.0,
+          "change_percent": 0.146470071282101
+        },
+        "work-1-false": {
+          "before_median_ns": 4035050.0,
+          "after_median_ns": 4097050.0,
+          "change_percent": 1.536536102402697
+        },
+        "work-1-true": {
+          "before_median_ns": 7293050.0,
+          "after_median_ns": 7411550.0,
+          "change_percent": 1.6248346028067795
+        }
+      }
+    },
+    {
+      "identity": {
+        "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+        "filter": "series_",
+        "after_head": "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-guards-repeat-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "e86123c5a639bedb0207205d1e0c2037c601eb96cf0eb0afe0e3a8806caa12e7",
+      "csv_sha256_lf": "37e597890f64ea9e2a058bc027e367fe54907d8b493e84cf89bff5a7fc92f59a",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5400.0,
+          "after_median_ns": 5150.0,
+          "change_percent": -4.629629629629628
+        },
+        "append-100000": {
+          "before_median_ns": 10850.0,
+          "after_median_ns": 14050.0,
+          "change_percent": 29.493087557603694
+        },
+        "append-1000000": {
+          "before_median_ns": 91400.0,
+          "after_median_ns": 94750.0,
+          "change_percent": 3.665207877461696
+        },
+        "frames-0-complex": {
+          "before_median_ns": 30913800.0,
+          "after_median_ns": 30812850.0,
+          "change_percent": -0.3265531898375529
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3517150.0,
+          "after_median_ns": 3611950.0,
+          "change_percent": 2.6953641442645226
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3770800.0,
+          "after_median_ns": 3767300.0,
+          "change_percent": -0.09281850005303793
+        },
+        "frames-0-steady": {
+          "before_median_ns": 3977150.0,
+          "after_median_ns": 4067950.0,
+          "change_percent": 2.2830418767207705
+        },
+        "frames-1-complex": {
+          "before_median_ns": 31793000.0,
+          "after_median_ns": 30603750.0,
+          "change_percent": -3.7406032774510156
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3710000.0,
+          "after_median_ns": 3640450.0,
+          "change_percent": -1.8746630727762836
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3882350.0,
+          "after_median_ns": 3923300.0,
+          "change_percent": 1.0547735263435776
+        },
+        "frames-1-steady": {
+          "before_median_ns": 3792750.0,
+          "after_median_ns": 3771200.0,
+          "change_percent": -0.5681893085492051
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21268850.0,
+          "after_median_ns": 21127600.0,
+          "change_percent": -0.6641167717107432
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8704550.0,
+          "after_median_ns": 8754950.0,
+          "change_percent": 0.579007530544362
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10430600.0,
+          "after_median_ns": 10686750.0,
+          "change_percent": 2.455755181868735
+        },
+        "frames-2-size": {
+          "before_median_ns": 8318350.0,
+          "after_median_ns": 8435400.0,
+          "change_percent": 1.4071300197755487
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9402200.0,
+          "after_median_ns": 9668800.0,
+          "change_percent": 2.83550658356555
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9032750.0,
+          "after_median_ns": 9322350.0,
+          "change_percent": 3.2061110957349648
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 7113350.0,
+          "after_median_ns": 7151000.0,
+          "change_percent": 0.529286482459046
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6167350.0,
+          "after_median_ns": 6283700.0,
+          "change_percent": 1.8865477068757297
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5362300.0,
+          "after_median_ns": 5345200.0,
+          "change_percent": -0.3188930123268041
+        },
+        "idle-2000": {
+          "before_median_ns": 655000.0,
+          "after_median_ns": 625850.0,
+          "change_percent": -4.450381679389315
+        },
+        "masonry-noop": {
+          "before_median_ns": 5403400.0,
+          "after_median_ns": 5862500.0,
+          "change_percent": 8.496502202317057
+        },
+        "measured-queries": {
+          "before_median_ns": 1404900.0,
+          "after_median_ns": 1424200.0,
+          "change_percent": 1.3737632571713343
+        },
+        "work-0-false": {
+          "before_median_ns": 3663450.0,
+          "after_median_ns": 3706700.0,
+          "change_percent": 1.1805811461873317
+        },
+        "work-0-true": {
+          "before_median_ns": 6105250.0,
+          "after_median_ns": 6120550.0,
+          "change_percent": 0.2506039883706679
+        },
+        "work-1-false": {
+          "before_median_ns": 3992800.0,
+          "after_median_ns": 4062100.0,
+          "change_percent": 1.7356241234221637
+        },
+        "work-1-true": {
+          "before_median_ns": 7350050.0,
+          "after_median_ns": 7323750.0,
+          "change_percent": -0.3578206950973106
+        }
+      }
+    },
+    {
+      "identity": {
+        "before": "4230ee50be48cf94c4ad6cceb83dac4e99a41dec",
+        "filter": "series_",
+        "after_head": "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "artifact_date": "2026-11-05",
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-smooth-guards-confirm-2026-11-05.csv",
+      "case_count": 27,
+      "csv_original_bytes_sha256": "fb2cb82f0b937315b31b9aabebe0bd316b65dc5d323eea662d9d15e4f1bb8ef3",
+      "csv_sha256_lf": "9260e9d5d9513b46949baed9fdbc5c142fde94975e30007ec1704127e407657c",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+      "deterministic_counter_sets_match": true,
+      "counter_differences": [],
+      "case_timing": {
+        "append-10000": {
+          "before_median_ns": 5100.0,
+          "after_median_ns": 5750.0,
+          "change_percent": 12.745098039215685
+        },
+        "append-100000": {
+          "before_median_ns": 10800.0,
+          "after_median_ns": 11950.0,
+          "change_percent": 10.64814814814814
+        },
+        "append-1000000": {
+          "before_median_ns": 94500.0,
+          "after_median_ns": 97800.0,
+          "change_percent": 3.492063492063502
+        },
+        "frames-0-complex": {
+          "before_median_ns": 30830800.0,
+          "after_median_ns": 30892900.0,
+          "change_percent": 0.20142195466870128
+        },
+        "frames-0-rapid": {
+          "before_median_ns": 3580300.0,
+          "after_median_ns": 3601400.0,
+          "change_percent": 0.5893360891545463
+        },
+        "frames-0-resize": {
+          "before_median_ns": 3749900.0,
+          "after_median_ns": 3777250.0,
+          "change_percent": 0.7293527827408663
+        },
+        "frames-0-steady": {
+          "before_median_ns": 3969050.0,
+          "after_median_ns": 4171750.0,
+          "change_percent": 5.107015532684134
+        },
+        "frames-1-complex": {
+          "before_median_ns": 30750000.0,
+          "after_median_ns": 31159550.0,
+          "change_percent": 1.33186991869918
+        },
+        "frames-1-rapid": {
+          "before_median_ns": 3688250.0,
+          "after_median_ns": 3487750.0,
+          "change_percent": -5.436182471361761
+        },
+        "frames-1-resize": {
+          "before_median_ns": 3885750.0,
+          "after_median_ns": 3896600.0,
+          "change_percent": 0.27922537476676723
+        },
+        "frames-1-steady": {
+          "before_median_ns": 3875300.0,
+          "after_median_ns": 3919950.0,
+          "change_percent": 1.1521688643459926
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21008200.0,
+          "after_median_ns": 20666700.0,
+          "change_percent": -1.6255557353795136
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8848650.0,
+          "after_median_ns": 8797850.0,
+          "change_percent": -0.5740988738395125
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10507250.0,
+          "after_median_ns": 10494500.0,
+          "change_percent": -0.12134478574318264
+        },
+        "frames-2-size": {
+          "before_median_ns": 8368000.0,
+          "after_median_ns": 8195800.0,
+          "change_percent": -2.0578393881453105
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9418600.0,
+          "after_median_ns": 9385000.0,
+          "change_percent": -0.35674091690909293
+        },
+        "frames-3-complex": {
+          "before_median_ns": 9458950.0,
+          "after_median_ns": 9751550.0,
+          "change_percent": 3.093366599886882
+        },
+        "frames-3-rapid": {
+          "before_median_ns": 6991800.0,
+          "after_median_ns": 6944800.0,
+          "change_percent": -0.6722160244858277
+        },
+        "frames-3-resize": {
+          "before_median_ns": 6134800.0,
+          "after_median_ns": 6495000.0,
+          "change_percent": 5.87142205124862
+        },
+        "frames-3-steady": {
+          "before_median_ns": 5544150.0,
+          "after_median_ns": 5407650.0,
+          "change_percent": -2.46205459808988
+        },
+        "idle-2000": {
+          "before_median_ns": 622450.0,
+          "after_median_ns": 620800.0,
+          "change_percent": -0.2650815326532219
+        },
+        "masonry-noop": {
+          "before_median_ns": 5342850.0,
+          "after_median_ns": 5821650.0,
+          "change_percent": 8.961509306830617
+        },
+        "measured-queries": {
+          "before_median_ns": 1433400.0,
+          "after_median_ns": 1415600.0,
+          "change_percent": -1.2418027068508475
+        },
+        "work-0-false": {
+          "before_median_ns": 3674550.0,
+          "after_median_ns": 3747200.0,
+          "change_percent": 1.9771128437495733
+        },
+        "work-0-true": {
+          "before_median_ns": 6073150.0,
+          "after_median_ns": 6120450.0,
+          "change_percent": 0.7788380000494088
+        },
+        "work-1-false": {
+          "before_median_ns": 3997750.0,
+          "after_median_ns": 4028050.0,
+          "change_percent": 0.7579263335626196
+        },
+        "work-1-true": {
+          "before_median_ns": 7203550.0,
+          "after_median_ns": 7318700.0,
+          "change_percent": 1.5985173976719835
+        }
+      }
+    }
+  ],
+  "rollback_reverse_patch_checks": {
+    "173c80bd47a08a969ac96347c0ee620128fe1643": true,
+    "aa5b7f8bf5af5951b0ea5678d1ce9ea1d130c43a": true
+  },
+  "measurement_scope": {
+    "cpu_cost_guards": "identical default-path headless Release workloads; Smooth is not enabled in the before/after timing matrix",
+    "allocation_scope": "thread-local allocator payload in measurement windows; excludes controller creation and is not RSS",
+    "native_motion": "active real Windows window; position samples and target settlement, not GPU completion timing, FPS or hardware input latency"
+  },
+  "decision": "superseded inline motion representation; retain all initial CPU regressions and raw samples; adopt behavior with optional-state isolation only after final validation",
+  "superseded_by_commit": "b83013b8c0f7293d98df99f0636cebad5a5c0b4f"
+}

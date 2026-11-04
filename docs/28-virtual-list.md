@@ -26,6 +26,8 @@ Showcase 已增加八个按需挂载的场景：百万记录、分组记录、�
 
 项目尚未正式发布。必要时直接调整 Base 接口、重构 Select 消费路径和补丁源码，更新所有仓库调用方并删除替代实现，不保留仅为兼容旧设计的壳。每个行为变更都须有改动前基线、能证明新合同的测试和改动后回归证据。当前实现迁移了 Select，删除旧的 v/h 构造器与尺寸数组入口；性能结论以实现记录中的原始样本和测量范围为准。
 
+本轮补齐 Masonry Fixed／Known 的短距离 smooth，并统一 Grid 的 reduced motion／非活动窗口收尾。二维布局支持与尚未交付的 auto 轨道、跨格／冻结／任意空间布局见第 2.6 节；回归、实窗与前后成本守卫见[平滑定位与布局边界](research/2026-11-05-virtual-list-smooth-layout-review.md)。
+
 ## 1. 从基本事实推导需求
 
 ### 1.1 要解决的成本
@@ -124,10 +126,24 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | smooth | 仅在路径尺寸已知、距离有界时允许；不满足时按第 9 节记录的规则即时定位，不冻结全部沿途项 |
 | 借用同一宿主的双轴组合 | VirtualGrid 使用两根 Fixed/Known 轴；同 host、同 viewport revision、配对的主／跨轴空间；一个 ScrollHandle 一次合并提交 |
 | 动态网格行高 | 不依据当前可见列猜测全局行高；调用方显式提供独立的行／列尺寸 |
-| 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量、instant key／offset 定位和 opt-in 尾部跟随；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
+| 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量、key／offset 定位和 opt-in 尾部跟随；Fixed/Known 支持短距离 smooth，Measured 安全即时定位；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
 | 方向 | 首版索引沿物理主轴正方向增长；反向布局/RTL 镜像定位另行设计，不由语言环境隐式启用 |
 
 构造、绑定或启用能力时校验 `(axis, sizing, attachment, requested_capability)`，一维通过只读 `VirtualizerCapabilities`、Masonry 通过独立 `VirtualMasonryCapabilities` 查询支持情况；不能把一维 factory 的结果用于推断 Masonry。unsupported 返回明确类型化错误。校验先于 N 级分配、挂载和滚动写入，失败保留旧有效状态，不悄悄换 sizing/backend、忽略选项或制造兼容壳。增加支持必须同时更新矩阵、原生补丁、前后基线与组合测试。
+
+### 2.6 布局选择与二维边界
+
+| 内容与布局 | 当前支持 | 约束 |
+| --- | --- | --- |
+| 纵向／横向列表 | 一维 VirtualList；Fixed、Known、Measured | 主轴有序区间；不通过旋转布局模拟横向 |
+| 二维表格／矩阵 | VirtualGrid；同一宿主内横纵独立虚拟化 | 两根 Attached 轴共享 binding／ScrollHandle；行高、列宽分别 Fixed 或 Known，可不等长 |
+| 多列瀑布流 | VirtualMasonry；稳定分栏、真实测量、显式 reflow 改列数 | 多列内容沿一个纵向滚动轴；不是横纵独立滚动的矩阵 |
+| 跨格、冻结行列、自动轨道 | 尚无现成布局合同 | cell span、冻结区命中／语义、未呈现列如何影响行高均需另外定义 |
+| 任意二维画布／节点坐标、三维空间 | 尚不支持 | 需要独立空间索引／裁剪策略，不能把二维 Grid 等同于通用 N 维布局 |
+
+Grid 构建的是两轴工作集的交点 `W_rows × W_columns`，不是全量行列乘积。两轴程序命令共用同一帧时间，宿主一次提交 x/y，再分别确认结果；可同时播放有界 smooth。小位移动画只有在时钟推进且宿主接受当前采样位置时才视为进展，不因每帧不足 0.01px 而误报停滞，也不因此放过拒绝移动的宿主。用户 wheel 取消两轴程序意图，减少动态效果、非活动窗口或无可见区域时即时完成安全定位。Frozen／span 等布局不因存在双轴基础而自动获得支持。
+
+Masonry 的 `supports_smooth()` 在 Fixed/Known 为 true、Measured 为 false。合法 Smooth 选项在 Measured 下按安全即时定位执行，与一维路径一致；这个 capability 声明是否播放动画，而不是是否接受共用选项。动态目标仍按真实测量收敛，不能把估算落点当最终实测对齐。
 
 ## 3. 调研结论如何进入设计
 
@@ -528,7 +544,7 @@ Idle → WaitingForLayout → Seeking → Correcting → Settled
 
 同一时刻只有一个主动命令。新命令替换旧命令；真实 wheel/拖动/导航输入中断程序动效。自身测量校正和 offset 写回不视为新的用户输入。
 
-一维 state 实现上述完整定位接口；Masonry 是独立的 key／offset 定位 owner，共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。`scroll_to_key` 接受统一 `VirtualizerScrollOptions`，兼容旧 align 参数；`scroll_to_offset` 接受有限非负 f64，可在挂载前保留最新命令，布局按当前总高 clamp，校正完成后读回原生位置确认。offset 不使用 key 对齐／scroll padding，离屏尺寸可继续 estimated；它不是持续尾部跟随。显式 `set_follow_tail` 是独立 opt-in 会话：append／Measured 校正继续跟尾，输入离尾暂停，回到当前几何尾部后恢复；key／offset 命令优先且不凭空重启会话，replace 结束会话。Masonry 显式 smooth 返回 Unsupported，合法 reduced-motion 请求按 instant 执行。key／offset／选项失败不取消旧命令、不消耗 ID。`VirtualMasonryCapabilities` 的 supports_scroll_to_offset 与 supports_follow_tail 为 true，Attached／smooth 仍为 false。`VirtualGrid::validate_axes` 提供构造前的类型化配置预检，布局也复用同一校验；动态行高仍不支持。接口形状收敛不代表两种算法能力完全等价。
+一维 state 实现上述完整定位接口；Masonry 是独立的 key／offset 定位 owner，共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。`scroll_to_key` 接受统一 `VirtualizerScrollOptions`，兼容旧 align 参数；`scroll_to_offset` 接受有限非负 f64，可在挂载前保留最新命令，布局按当前总高 clamp，校正完成后读回原生位置确认。offset 不使用 key 对齐／scroll padding，离屏尺寸可继续 estimated；它不是持续尾部跟随。显式 `set_follow_tail` 是独立 opt-in 会话：append／Measured 校正继续跟尾，输入离尾暂停，回到当前几何尾部后恢复；key／offset 命令优先且不凭空重启会话，replace 结束会话。Masonry 合法 smooth 请求在 Fixed/Known 短距离路径播放动画，Measured／reduced motion／超距路径安全即时定位。key／offset／选项失败不取消旧命令、不消耗 ID。`VirtualMasonryCapabilities` 的 supports_scroll_to_offset 与 supports_follow_tail 为 true，Attached 为 false；smooth 仅在非 Measured 时为 true。`VirtualGrid::validate_axes` 提供构造前的类型化配置预检，布局也复用同一校验；动态行高仍不支持。接口形状收敛不代表两种算法能力完全等价。
 
 Measured 定位先用估算与逻辑 item 坐标到达目标附近，实际测量后按同一 key 重求目标。最多 32 次 prepare 或 2 秒活动采样；连续 8 次确认位置无进展也结束为 `NoProgress`。隐藏、非活动、零面积或 reduced motion 的 Owned 视口直接完成安全定位，不忙等动画帧。只保存最新命令和必要校正状态，不复制浏览器完整 scroll classifier。
 
@@ -546,6 +562,23 @@ Measured 定位先用估算与逻辑 item 坐标到达目标附近，实际测�
 | 明确的新业务条目插入 | 上层可请求有界动画，但不能改变核心尺寸真值或把全部历史行当新增 |
 
 smooth 从当前采样位置续接目标，由 `VirtualizerMotion::Smooth { duration, max_distance }` 提供时长与距离上限，基础层再限制在一倍视口内并使用 ease-out cubic。计时在首次有效 prepare 开始，Owned 使用 GPUI executor 时钟；Base 不写死动画时长。消费者可把项目 Interaction duration 解析为 Duration。若目标更新导致不再满足短距离/已知尺寸条件，取消 smooth 并立即完成安全定位。reduced motion 下直接到终点，仍完成正常结果通知。
+
+Masonry Fixed/Known 复用同一插值函数，由首次布局开始计时；同帧重求几何使用同一个 elapsed，不因校正循环重启／叠加动画。key 目标每帧按当前几何重新对齐，Nearest 使用命令起点的参考视口。新命令从唯一原生位置续接；隐藏／失活／零面积／reduced motion 采用即时策略。几何收敛保留最多 32 次尝试，整个命令保留 2 秒期限与 8 次停滞保护；正常推进的动画采样不消耗几何重试次数，小位移随时间推进也不误算为停滞，避免高刷新率提前截断动画。没有新增动画 Task 或逐项缓存。尾部跟随与几何锚点校正仍不播放位移动画。
+
+运动状态按命令 opt-in：只有显式请求可播放 smooth 的 Fixed/Known 命令才携带一个 `Box<MasonryMotion>`，Instant、Measured 和选项 `reduced_motion(true)` 不分配该对象；系统动效偏好仍由首帧处理。代价是该运动状态多一次命令级堆分配，结束／取消时释放，最多保留一份。32／8 的有界计数使用饱和字节存储，避免计数溢出并控制内联大小。本机 Release 的 `size_of` 显示一维／Masonry 控制器本体恢复为加入能力前的 944／560 字节；这不是 ABI 承诺，也不包含 heap、allocator 或 RSS。CPU 成本仍按实测报告，不因恢复本体大小而宣称提速。
+
+```rust
+// Fixed/Known Masonry；调用后由消费方通知所属 Entity。
+state.scroll_to_key(
+    target_key,
+    VirtualizerScrollOptions::default()
+        .align(VirtualizerAlign::Start)
+        .motion(VirtualizerMotion::Smooth {
+            duration: std::time::Duration::from_millis(200),
+            max_distance: gpui_kit::px(240.),
+        }),
+)?;
+```
 
 最终几何目标确定、clamp 后与当前实际 offset 相差不超过 0.01px 时，不创建无意义的平移动效，第一次正常确认即发一次 Settled；Nearest 已可见和边界 clamp 同理。动态未测目标继续等待测量，真正拒绝移动的宿主仍会得到 NoProgress；不能用动画时长替代是否实际到达的判定。
 
