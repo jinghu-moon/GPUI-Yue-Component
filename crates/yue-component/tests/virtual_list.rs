@@ -19,6 +19,8 @@ use yue_component::{
     VirtualizerViewport, YueVirtualList,
 };
 
+#[path = "virtual_list/adoption.rs"]
+mod adoption;
 #[path = "virtual_list/followup.rs"]
 mod followup;
 #[path = "virtual_list/followup_edges.rs"]
