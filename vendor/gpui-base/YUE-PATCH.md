@@ -710,3 +710,31 @@ baseline observations, dual-axis regression and native coverage, Release ABBA
 costs and rollback evidence. In the hidden-track resize workload, the corrected
 workset is larger and costs more CPU; this patch is adopted for correctness,
 not as a speedup. Remove it when upstream satisfies the same tested contract.
+
+### Sparse Grid layout and bounded Measured motion followups
+
+Stream the existing four frozen regions with O(R+C) track scratch rather than
+sorting an R*C cell buffer. Keep region/row-major stacking unchanged. Optional
+stable row/column key pairs retain only required cells; mount-owned focus repair
+precedes view pruning on deletion, unregistration or owner replacement.
+
+Validate explicit Fixed/Known row/column spans before mounting. Sweep sparse
+rectangles for overlap, include offscreen origins, render each origin once, and
+reject cross-frozen-boundary spans. Track dimensions remain caller-owned.
+Resolve explicit min/max/weight auto tracks without measuring cells. Grid RTL
+mirrors masks, paint and hit geometry and converts one physical native scroll
+owner to logical start/end offsets, preserving keys and reading position.
+
+Measured linear lists animate bounded already measured paths with one sample
+per time, remaining-deadline geometry retargeting and existing rejection/timeout
+guards. A separate JumpThenSmooth opt-in jumps near distant targets and animates
+only a measured tail; it is unsupported on Fixed/Known and Masonry. Completed
+animation samples still re-resolve same-time measurement feedback before final
+alignment. Unknown geometry falls back to bounded instant convergence.
+Revalidate the measured path and the viewport/distance bound on every new time
+sample, so later invalidation or resize cannot keep an obsolete animation alive.
+
+Do not absorb the experimental per-frame intrinsic content probe: it added
+about 20% CPU in both measured rounds and cannot infer unobserved content's
+global maximum. See `docs/research/2026-11-05-virtual-list-five-followups.md` for
+contracts, preserved unfavorable samples, native tests, costs and rollback.

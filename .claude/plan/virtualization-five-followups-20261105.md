@@ -2,7 +2,7 @@
 
 基线：`7fb2c29fcd2cdc08f50b86271111114cc260327d`。
 用户授权：按下列五项逐项完成；先测试和比较，再决定吸收，独立提交并推送，保持可回退。
-状态：第一至四项完成，第五项进行中（auto 轨道已验证，RTL 与内容测量试验继续）。证据见 docs/research/2026-11-05-virtual-list-five-followups.md。
+状态：五项均已完成，最终测试、六组 accepted ABBA、证据与逆补丁校验已完成；归档提交正常推送，远端 SHA 与干净工作区在交付时再次确认。证据见 docs/research/2026-11-05-virtual-list-five-followups.md。
 
 ## 固定约束
 
@@ -33,14 +33,20 @@
 先短距离可测区域的动态尺寸校正与用户打断；长距离以有界跳转加末段 smooth 做独立试验。
 目标 key/revision 可重求，采样从实际 owner 位置开始；未知/不稳定尺寸安全即时定位，reduced motion 和超时保持确定。
 
-## 5. auto 轨道、内容自适应与 RTL（进行中）
+## 5. auto 轨道、内容自适应与 RTL（完成）
 
 逐项定义消费者和尺寸失效合同，完成实现/验证或记录实验不采用结论。
 auto 不假装知道离屏内容最大值；RTL 使用逻辑 start/end，保证冻结、定位、wheel 和命中一致。
 通用二维画布/三维空间不在本轮范围。
+
+约束 auto 与 Grid RTL 已实现；逐帧通用 intrinsic 测量候选两轮 CPU 增加约 20%，且不能推断未观察内容的全局最大值，按原计划记录实证不采用结论。内容尺寸继续通过消费者 hints/version/update_sizes 管理。
+
+最终审查额外修正 Measured 动画截止时同 now 的尺寸反馈，以及动画中 resize/失效撤销短路径条件。两项后续边界先失败再修正；Measured smooth 模块 9 项通过。
 
 ## 最终验证
 
 专项和 workspace tests、fmt、严格 Clippy、vendor contracts、Windows 原生用例；新增展示按需挂载，必要时实窗视觉核对。
 保存基准原始 CSV、依赖/源码身份、采用/拒绝理由及日志哈希，更新 docs/28-virtual-list.md 和 vendor 补丁说明。
 逐提交回退 tree 验证，推送并核对远端 SHA、干净工作区。
+
+最终实现 `e7fa10d`：workspace 892 passed / 0 failed / 12 ignored，virtual_list 178 passed / 8 ignored，Measured smooth 9 passed，Windows Release 原生 3/3，底层契约 16+2；严格 Clippy、fmt 与 diff 检查通过。最终 accepted CSV 源码身份与实现一致，所有不利样本及拒绝候选保留。
