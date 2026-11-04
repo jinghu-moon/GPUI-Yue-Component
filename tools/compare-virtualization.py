@@ -86,6 +86,11 @@ masonry-views = []
             (ROOT / args.workload).resolve().as_posix(),
         )
         if args.native:
+            # Match the production app's dependency features: the native
+            # Application does not need the headless snapshot/test helpers.
+            manifest = manifest.replace(
+                'gpui-base = { version = "0.8.0", features = ["test-support"] }\n', '',
+            )
             manifest = manifest.replace(
                 f'[[test]]\nname = "perf"\npath = "{(ROOT / args.workload).as_posix()}"',
                 f'[[bin]]\nname = "yue-virtual-series-{version}"\npath = "{(ROOT / "examples/windows-showcase/src/main.rs").as_posix()}"',
