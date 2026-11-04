@@ -124,3 +124,31 @@ policy CSV 中 allocations/peak = −1 表示未采集分配；extent_error 是�
 **代价与采用依据：**百万项冷构造中位数 17.60545→19.45145ms（+10.5%），构造分配 8,692→16,494；常驻 payload 41,022,528→36,655,320 B（−10.6%），峰值 53,306,680→48,939,568 B。10,000 次、每批 30 项无变化反馈 5.12400→5.57885ms（+8.9%），分配／查询不变，原因包括新增索引间接访问；不声称这条路径提速。120 帧 Masonry 稳定、快速、复杂、resize、尺寸变化中位数分别 −3.9%、−3.8%、+1.4%、−2.1%、+2.4%，分配与根构建完全相同，峰值最多增加 24 B。
 
 选择保留的依据是冻结快照追加降低约 71 倍、显著消除整段复制峰值，同时减少长期索引占用；接受一次性冷构造与专门反馈批次的小幅代价。要求极低冷启动延迟、从不追加的消费者仍需按自己的规模评估；这不是所有操作都更快的结论。新增测试跨越 256 项边界、连续保留 20 代快照、检查 lane/index/size/测量标记不变；专项新增 1 项通过，完整 workspace 回归与静态检查统一记录在下节。
+
+## 最终检查与回退索引
+
+生产采用四项，拒绝一项内存布局试验，不改变方向／自动估算默认：
+
+| 内容 | 决策 | 提交 |
+| --- | --- | --- |
+| 稀疏真实测量导出 | 采用 | `49f0a81` |
+| Masonry 有界 View 准备 | opt-in 采用 | `47f0a2e` |
+| 原生 Measured 稀疏宽度失效 | 采用 | `b7fe55f` |
+| Masonry 冻结快照分块索引 | 采用，保留冷构造／反馈代价说明 | `eb2abed` |
+| 焦点 Rc 元数据压缩 | 试验 `9480d37`，已回退 | `1954ee5`；证据 `993ab3f` |
+| 方向缓冲／有界中位数估算 | 不改核心默认，保留消费者实验 | `988585f` |
+| Prepared View 焦点生命周期 | 追加回归 | `53bb673` |
+
+`53bb673` 验证实际原生焦点行滚出视口后复用同一 View（工厂仅一次），焦点移开并注销后释放；不只测试显式 retained key。已完成：
+
+- `cargo test --workspace --features windows-showcase/headless-tests --offline --locked --target-dir C:/Temp/gpui-yue-owner-perf-20261104 -- --test-threads=1`：全部通过，包括 Showcase、其他组件与 doctests。随后新增的焦点测试单独重跑完整 virtual_list。
+- `cargo test -p yue-component --features headless-tests --test virtual_list --offline --locked --target-dir C:/Temp/gpui-yue-owner-perf-20261104 -- --test-threads=1`：最终 **105 passed / 8 ignored**。ignored 为手工性能探针，不代表失败；本轮 ABBA workload 另行运行。
+- 原生 `target/gpui-virtual-upgrades-contract` virtualization 集成：**11 passed**，包括宽度失效、冻结几何、焦点释放、真实大坐标与尾部滚动。
+- Base 维护源 `target/gpui-base-contract` 的 `--lib virtualization`：**2 passed**。该 fixture 只去除发布包不适用的双后端 dev dependency，不改生产清单。
+- `cargo clippy --workspace --all-targets --features windows-showcase/headless-tests --offline --locked --target-dir C:/Temp/gpui-yue-owner-perf-20261104 -- -D warnings`：通过；焦点测试补充后再次检查该测试 target，通过。
+- `cargo fmt --all -- --check`、变更 vendor／workload 的 `rustfmt --edition 2024 --check`、`git diff --check`：通过。
+- `cargo build --release -p windows-showcase --offline --locked --target-dir C:/Temp/gpui-yue-owner-perf-20261104`：通过。
+
+所有变更保留在 `perf/virtualization-evidence-20261104`，未推送。原始目录同步和未完成工作分别有检查点，未覆盖原有改动。采用项各自提交；单项撤销使用 `git revert <提交>`，若后续测试／API 依赖它，先逆序撤销依赖项。整轮回退宜在当前分支逆序 revert 这些提交，不对原有工作或 main 使用 hard reset。
+
+数据来自隔离 Release 构建后的 ABBA 批次。工具在采样前等待 cargo/rustc 退出；外部系统调度、热缓存和机器负载仍是时间测量的限制，分配／构建／覆盖与语义回归提供独立证据。没有执行真实 Windows GPU／物理帧率或图片异步网络验收；这份报告不将 headless CPU、堆 payload 或预备覆盖扩大为实窗流畅度保证。

@@ -1,6 +1,6 @@
 # 28 虚拟滚动基础层与 VirtualList 设计
 
-状态：第四轮阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Fixed/Known 原生精确偏移链已接通，portable cache 升为 schema 2。Measured 累计树仍有 f32 精度边界，范围见第 13.3、16.2 节。实窗交由用户验收。更新：2026-11-04。
+状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。单项 Pixels 等剩余精度边界见第 13.3 节，实窗仍交由用户验收。更新：2026-11-04。
 
 实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；物理 GPU 帧节奏、实际视觉及 Windows 屏幕阅读器体验仍由用户检查。
 
@@ -364,7 +364,7 @@ Owned 路径由原生 owner 完成等价提交，不能为了接口一致强制�
 - Masonry 初次按最短列分配，后续测量仅更新该 lane 的持久树，不在滚动中重分栏。`reflow(lanes)` 是显式冷事务；跨轴宽度变化使动态测量失效。零视口或列间距占满宽度时不构建卡片。未知动态行高不等同二维 Grid。
 - Grid 的每轴工作集顺序读取一次，列元数据只物化一份 O(C) 临时向量；单元格枚举仍为 O(R×C)，不逐行克隆列索引、不逐 cell 重查列 source／几何。稀疏 retained 项仅直接查询对应位置；没有行时不物化列。
 - Masonry 成功的非空显式内容失效总是推进 snapshot revision；未测／重复失效也拒绝旧反馈。实际卸载同样推进写入身份，保留 state 并重挂不能接受旧挂载的反馈。空输入和失败批次不改变版本，冻结 snapshot 仍可读取旧几何。
-- `VirtualMasonryState::append_source(next,sizing)` 要求既有前缀的 key/content/hint 未变，仅估算追加项，沿当前列末端继续分配，保留原分栏与实际测量。普通 `replace_source` 允许重排，迁移真实尺寸后仅打包一次；二者都在修改前校验尺寸。冻结 snapshot 下索引向量的 COW 复制成本仍须计量。
+- `VirtualMasonryState::append_source(next,sizing)` 要求既有前缀的 key/content/hint 未变，仅估算追加项，沿当前列末端继续分配，保留原分栏与实际测量。普通 `replace_source` 允许重排，迁移真实尺寸后仅打包一次；二者都在修改前校验尺寸。lane/source 索引使用 256 项共享叶块，冻结 snapshot 后追加复制块目录与尾块，读取 O(1)，复制仍含 O(N/256) 目录成本。实测追加峰值显著降低，但冷构造和无变化反馈有代价，见本轮报告。
 - `measurement_cache()` 导出 Measured 的已测项与阅读锚点。`restore_measurement_cache()` 校验 schema 2、axis、layout revision、gap、cross extent、重复 key、非法尺寸及锚点距离后原子恢复；缺失或内容版本变化的 key 跳过。锚点使用 `VirtualizerAnchorPosition` 的三个变体，距离须有限且非负；不将 schema 1 的纯项内偏移猜测成留白语义。缓存不持有 Entity、ScrollHandle、source 或旧绑定；实际跨轴不符仍须失效。
 - 导出时逐条核对原生测量中实际存储的规范化 cross 与已解析视口 cross；尚未在新约束下完成布局、混合约束或 cross 未解析时返回 `InvalidGeometry`，不重新贴标签。恢复前先完整验证输入，再把已有不兼容约束的真实测量降为 hints。相同主轴尺寸在新 cross 下回报仍是新测量；横纵轴遵守同一合同。
 
@@ -521,7 +521,7 @@ Idle → WaitingForLayout → Seeking → Correcting → Settled
 
 同一时刻只有一个主动命令。新命令替换旧命令；真实 wheel/拖动/导航输入中断程序动效。自身测量校正和 offset 写回不视为新的用户输入。
 
-上述完整命令合同当前由一维 state 实现；Masonry 的定位仍是独立 pending 接缝。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。它没有复制一维的完整命令结果事件与止损状态机，不能仅凭输入接管已修复就宣称两种 API 完全等价。
+一维 state 实现上述完整定位接口；Masonry 仍是独立的 key/align pending 接缝，现共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。Masonry 未提供一维的全部 offset／smooth 参数，不能宣称两种公开 API 完全等价。
 
 Measured 定位先用估算与逻辑 item 坐标到达目标附近，实际测量后按同一 key 重求目标。最多 32 次 prepare 或 2 秒活动采样；连续 8 次确认位置无进展也结束为 `NoProgress`。隐藏、非活动、零面积或 reduced motion 的 Owned 视口直接完成安全定位，不忙等动画帧。只保存最新命令和必要校正状态，不复制浏览器完整 scroll classifier。
 
@@ -582,6 +582,8 @@ Measured 原生 overdraw 有些项只测量而不 paint，诊断必须区分 bui
 vlist pipeline 分开比较内容、位置和尺寸，借鉴的是减少无效内容工作。GPUI 路径仍可能为原生布局、测量或焦点多次调用 renderer；不能据此承诺范围不变就零构建，也不能缓存旧 Element 树来模拟 DOM 保留。
 
 测试与诊断需区分：滚动几何推进、同 key 的 renderer 调用、昂贵内容预处理、宿主通知。业务内容变化即使 range 不变，也必须正常更新。`new_with_item_views` 的 factory 改为接收 `VirtualizerItemIdentity`，只含 index/key；按 key、index、source revision、显式失效 epoch、外部 content_revision 复用工作集内 AnyView，不再将 start/extent/measured/layout revision 当作内容准备依赖。普通 GPUI Render/layout/paint/事件仍遵守框架自身生命周期与缓存；读外部状态的 view 应正常 observe/notify。若确实预处理依赖宽度等外部条件，显式 bump content_revision。工作集退出即释放缓存 handle，业务编辑状态仍由宿主保留；不跨帧缓存 AnyElement。
+
+上述 opt-in 构造器现同时适用于 `VirtualList`／`YueVirtualList` 和 `VirtualMasonry`。Masonry 的局部内容失效在 Fixed/Known 下只过期内容准备，Measured 还使尺寸降为 hint；纯宽度／分栏／布局几何变化不重建准备好的 View。默认 `new` 保持普通 renderer 生命周期；远距离来回没有缓存命中时，不承诺加速。
 
 ## 11. 键盘、焦点与可访问性
 
@@ -666,6 +668,8 @@ Fixed/Known 查询与 prefix 使用 f64；原生 ScrollHandle 在同一个共享
 第四轮修复前 Fixed/Known 两轴在 offset=16777216 时，0.25px／1px／8×0.25px 的原生 wheel 净位移均为 0；修复后分别为 0.25／1／2px。回归同时验证方向反转、同投影显式 jump、起点 clamp、局部实际 bounds、点击命中和 Grid 两轴合并。已验证 Fixed 1M × 20px 的实际 Owned 首尾定位及 1B 项 headless 查询；后者不等于 1B 项完整原生绘制验收。
 
 Measured 原生 ListState 现已在同一 SumTree 使用 f64 累计与 seek；Base 直接使用 precise geometry、viewport batch、offset 和 prepaint 接口。原生 wheel/scroll_by、双轴局部 bounds/命中、尾项可达与滚动条端点已增加升级回归。测量计数由总数减未测数推导，使 summary 保持原大小；具体正确性收益和 CPU 代价见[逐项比较](research/2026-11-04-virtual-list-optimization-series.md#5-measured-累计精度采用修正后的紧凑方案)。
+
+稀疏测量导出按原生摘要跳过未测子树；宽度变化只将已测变体转为 hint 并保留未变化子树，稠密输入保留线性路径。二者都保留冻结快照、测量身份和唯一尺寸 owner；实测成本及回退条件见[本轮报告](research/2026-11-04-virtual-list-adoption.md)。Measured 焦点句柄 Rc 压缩因稠密焦点退化已撤销，方向缓冲／自动中位数估算也未改为核心默认。
 
 **仍有边界：**单项尺寸、项内偏移、padding/Attached 内容原点、普通 Div／UniformList 绘制及滚动条输入仍使用 Pixels 投影；f64 本身也有有限精度。旧 geometry/batch 的 Pixels 接口仍投影，大累计坐标宿主须使用 precise 接口。不能扩展成“所有模式无限尺度精确”或滑块可逐一寻址任意亚像素的声明。
 
@@ -874,13 +878,15 @@ Grid 的 auto 轨道、冻结区域、精确 cell 保留和 Masonry 公共生命
 | P1 | 三种区域锚点；schema 2 保留留白语义 | 两轴三模式的 padding 5→5、gap 35→35；内容缩短、留白变化、cache 往返与非法输入原子拒绝 |
 | P1 | Attached 区域外不建立列表阅读锚点 | header／footer 与部分覆盖不产生无关追加校正；列表内部大 gap 仍合法 |
 | P1 | Masonry 在旧几何上读取最新原生位置；用户接管取消 pending | 四次 20px 保留 80px；旧命令不再把 6543 写回 6523；wheel、外部 offset／scrollbar、显式取消覆盖 |
-| P2／精度 | 单一原生位置增加 f64 读写并接入局部绘制 | Fixed/Known 两轴小增量、反向、jump、bounds／命中与 Grid 通过；Measured 累计树仍为 f32，不宣称该边界已全部消除 |
+| P2／精度 | 单一原生位置增加 f64 读写并接入局部绘制 | 第四轮验证 Fixed/Known 两轴小增量、反向、jump、bounds／命中与 Grid；其后 Measured 原生累计也升级为 f64，当前边界见 13.3 |
 | 合同澄清 | live invalidate epoch 与 portable source/layout revision 分开 | 同 source revision 的旧 cache 可恢复；尺寸相关内容变更推进 revision 后跳过旧测量，源码与设计一致 |
 
 隔离修复前生产源码运行带真实断言的六项主回归，5 failed / 1 passed；当前新增 13 项回归通过，virtual_list 专项 91 passed / 8 ignored，workspace 加 Showcase headless 合计 805 passed / 9 ignored。新增状态只含每控制器的区域锚点、Masonry 上次自写位置，以及原生共享位置对象内的精确值／旧接口写入标记；没有逐项镜像 offset 或第二滚动引擎。相同工作量的稳定帧 Release A/B，中位数变化为 Fixed +0.09%、Known +0.77%、Masonry +1.70%，样本区间重叠，不宣称速度提升或实窗 CPU 下降。逐样本与复现命令见实施记录。
 
 ## 17. 依据与关联文档
 
+- [本轮候选优化取舍与 Git 回退](research/2026-11-04-virtual-list-adoption.md)：六类候选的 ABBA、内存与覆盖证据，采用项和拒绝项分别记录。
+- [原生 Measured 精度与前序优化](research/2026-11-04-virtual-list-optimization-series.md)：工作集迭代、反馈、计时器、f64 精度的前后对照与代价。
 - [第四轮修复与测量](research/2026-11-04-virtual-list-owner-fixes.md)：区域锚点、宿主边界、用户接管、schema 2、原生精确偏移与性能 A/B。
 - [第四轮阅读位置与输入所有权对标](research/2026-11-04-virtual-list-owner-review.md)：三类确认问题、已知精度边界的原生输入证据、持久缓存合同、68 条观察与后续验收。
 - [第三轮对标与修复前证据](research/2026-11-04-virtual-list-followup-review.md)：组合内容失效、预算与可见覆盖、测量身份、命令收尾、Grid 热路径，以及进一步借鉴的边界。
