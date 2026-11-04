@@ -28,8 +28,14 @@ fn masonry_offset_validation_preserves_the_pending_command_and_native_owner() {
         max_distance: px(100.),
     });
     assert_eq!(
-        state.scroll_to_offset(20., smooth),
-        Err(VirtualizerError::Unsupported("masonry smooth scrolling"))
+        state.scroll_to_offset(
+            20.,
+            smooth.motion(VirtualizerMotion::Smooth {
+                duration: Duration::from_millis(100),
+                max_distance: px(f32::INFINITY),
+            })
+        ),
+        Err(VirtualizerError::InvalidGeometry("smooth bounds"))
     );
     assert!(state.take_events().is_empty());
     let invalid = VirtualizerScrollOptions::default()

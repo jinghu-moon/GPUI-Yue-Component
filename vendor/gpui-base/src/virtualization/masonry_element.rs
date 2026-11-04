@@ -190,8 +190,16 @@ impl Element for VirtualMasonry {
         w: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        let clip = bounds.intersect(&w.content_mask().bounds);
+        let visible = clip.size.width > px(0.)
+            && clip.size.height > px(0.)
+            && w.is_visible()
+            && w.is_window_active();
         let now = cx.background_executor().now();
-        self.state.update(cx, |s, _| {
+        self.state.update(cx, |s, cx| {
+            if !visible || cx.reduce_motion() {
+                s.settle_motion();
+            }
             s.observe_input();
             s.observe_viewport(bounds.size);
             s.begin_command_frame(now);
@@ -380,7 +388,7 @@ impl Element for VirtualMasonry {
             s.confirm_command(!deferred && !exhausted);
             s.emit_events(cx);
         });
-        if deferred && progressed || self.state.read(cx).has_scroll_command() {
+        if deferred && progressed || visible && self.state.read(cx).has_scroll_command() {
             // Geometry continuation requires progress. Active commands are
             // separately bounded by shared stall/attempt/time limits.
             w.request_animation_frame();

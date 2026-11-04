@@ -371,6 +371,7 @@ struct Command {
     options: VirtualizerScrollOptions,
     progress: super::command::CommandProgress,
     from: f64,
+    time_progressed: bool,
 }
 enum CommandTarget {
     Key(ElementId),
@@ -1142,6 +1143,7 @@ impl VirtualizerState {
             options,
             progress: super::command::CommandProgress::default(),
             from: self.viewport.as_ref().map_or(0.0, |v| v.offset),
+            time_progressed: false,
         });
         self.outstanding = None;
         Ok(self.serial)
@@ -1323,6 +1325,7 @@ impl VirtualizerState {
     ) -> Result<(VirtualizerSnapshot, Option<VirtualizerScrollRequest>), VirtualizerError> {
         self.validate_viewport(viewport)?;
         self.validate_current_viewport(viewport)?;
+        let time_progressed = self.clock.is_some_and(|previous| now > previous);
         self.clock = Some(now);
         self.observe_offset(viewport.offset, now);
         self.poll_scroll_idle(now);
@@ -1353,6 +1356,7 @@ impl VirtualizerState {
             self.pending_anchor
         };
         let mut settled = true;
+        let mut motion_progressed = false;
         if let Some(command) = &self.command {
             let destination = match &command.target {
                 CommandTarget::Key(key) => snapshot.item_for_key(key).map(|item| {
@@ -1371,24 +1375,18 @@ impl VirtualizerState {
                 Ok((destination, measured)) => {
                     let destination = destination.clamp(0.0, self.scroll_limit(viewport));
                     target = Some(destination);
-                    if let VirtualizerMotion::Smooth {
-                        duration,
-                        max_distance,
-                    } = command.options.motion
-                        && self.capabilities().supports_smooth()
-                        && !command.options.reduced_motion
-                        && (destination - viewport.offset).abs() > 0.01
-                        && (destination - command.from).abs()
-                            <= f64::from(max_distance).min(f64::from(viewport.extent))
-                    {
-                        let t = (now
-                            .saturating_duration_since(command.progress.started().unwrap())
-                            .as_secs_f64()
-                            / duration.as_secs_f64())
-                        .clamp(0.0, 1.0);
-                        let eased = 1.0 - (1.0 - t).powi(3);
-                        target = Some(command.from + (destination - command.from) * eased);
-                        settled = t >= 1.0;
+                    if self.capabilities().supports_smooth() {
+                        let (offset, complete) = super::command::sample_offset(
+                            command.options,
+                            now.saturating_duration_since(command.progress.started().unwrap()),
+                            command.from,
+                            destination,
+                            viewport.offset,
+                            viewport.extent.into(),
+                        );
+                        target = Some(offset);
+                        settled = complete;
+                        motion_progressed = !complete && time_progressed;
                     }
                     settled &= measured;
                 }
@@ -1397,6 +1395,9 @@ impl VirtualizerState {
                     target = None;
                 }
             }
+        }
+        if let Some(command) = &mut self.command {
+            command.time_progressed = motion_progressed;
         }
         let target = target.map(|target| target.clamp(0.0, self.scroll_limit(viewport)));
         let request = if let Some(target) = target {
@@ -1480,7 +1481,15 @@ impl VirtualizerState {
         self.pending_anchor = None;
         if let Some(command) = &mut self.command {
             let settled = request.settled && (applied_offset - request.offset).abs() <= 0.5;
-            let stalled = command.progress.confirm(applied_offset, settled);
+            // A small legitimate timed sample is not an unresponsive host.
+            // After motion completes, actual target acceptance still governs.
+            let stalled = command.progress.confirm(
+                applied_offset,
+                settled
+                    || command.time_progressed
+                        && !request.settled
+                        && (applied_offset - request.offset).abs() <= 0.01,
+            );
             if settled {
                 self.finish_command(VirtualizerCommandOutcome::Settled);
             } else if stalled {

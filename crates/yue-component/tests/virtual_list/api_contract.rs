@@ -77,8 +77,14 @@ fn masonry_options_validate_before_replacing_the_active_command() {
         max_distance: px(100.),
     });
     assert_eq!(
-        state.scroll_to_key(2usize.into(), smooth),
-        Err(VirtualizerError::Unsupported("masonry smooth scrolling"))
+        state.scroll_to_key(
+            2usize.into(),
+            smooth.motion(VirtualizerMotion::Smooth {
+                duration: Duration::from_millis(100),
+                max_distance: px(f32::NAN),
+            })
+        ),
+        Err(VirtualizerError::InvalidGeometry("smooth bounds"))
     );
     assert!(state.has_scroll_command());
     assert!(
