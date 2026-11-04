@@ -584,7 +584,25 @@ impl VirtualMasonryState {
         // nor a per-lane batch directory. Keep the same validation, no-op,
         // anchor and revision contracts as the multi-item transaction below.
         if let [update] = updates {
-            return self.update_single_size(update);
+            let ix = self
+                .source
+                .index_of(update.key())
+                .ok_or(VirtualizerError::MissingKey)?;
+            if !valid_positive(update.extent()) {
+                return Err(VirtualizerError::InvalidGeometry("masonry size update"));
+            }
+            let (lane, local) = self.slots[ix];
+            let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
+            if measured && (old - f64::from(update.extent())).abs() <= 0.01 {
+                return Ok(());
+            }
+            self.capture_anchor();
+            self.lanes[lane]
+                .geometry
+                .update_measurements(&[(local, update.extent())], true);
+            self.revision += 1;
+            self.restore_anchor();
+            return Ok(());
         }
         let mut indexed = Vec::with_capacity(updates.len());
         for update in updates {
@@ -618,33 +636,6 @@ impl VirtualMasonryState {
         for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
             lane.geometry.update_measurements(&values, true);
         }
-        self.revision += 1;
-        self.restore_anchor();
-        Ok(())
-    }
-    // Keep the specialized branch out of the multi-item feedback body; larger
-    // batches should retain the original hot-path code and allocation profile.
-    #[inline(never)]
-    fn update_single_size(
-        &mut self,
-        update: &VirtualizerSizeUpdate,
-    ) -> Result<(), VirtualizerError> {
-        let ix = self
-            .source
-            .index_of(update.key())
-            .ok_or(VirtualizerError::MissingKey)?;
-        if !valid_positive(update.extent()) {
-            return Err(VirtualizerError::InvalidGeometry("masonry size update"));
-        }
-        let (lane, local) = self.slots[ix];
-        let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
-        if measured && (old - f64::from(update.extent())).abs() <= 0.01 {
-            return Ok(());
-        }
-        self.capture_anchor();
-        self.lanes[lane]
-            .geometry
-            .update_measurements(&[(local, update.extent())], true);
         self.revision += 1;
         self.restore_anchor();
         Ok(())
