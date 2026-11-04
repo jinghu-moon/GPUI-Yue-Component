@@ -171,6 +171,7 @@ impl Element for VirtualMasonry {
                 let key = item.item().key().clone();
                 let width = item.cross_extent();
                 let height = item.item().extent();
+                let was_measured = item.item().is_measured();
                 let row = div()
                     .id(key.clone())
                     .w(width)
@@ -191,7 +192,11 @@ impl Element for VirtualMasonry {
                     cx,
                 );
                 if dynamic && valid_positive(measured.height) {
-                    updates.push(VirtualizerSizeUpdate::new(key, measured.height));
+                    if !was_measured
+                        || (f64::from(measured.height) - f64::from(height)).abs() > 0.01
+                    {
+                        updates.push(VirtualizerSizeUpdate::new(key, measured.height));
+                    }
                 } else if dynamic {
                     invalid.push(key);
                 }

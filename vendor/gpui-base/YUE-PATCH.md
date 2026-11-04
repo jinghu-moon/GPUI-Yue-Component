@@ -499,3 +499,10 @@ prepaint and reading-anchor commit. Geometry-changing passes still recompute;
 no elements or writable snapshots are cached across frames. Production source
 query counts and all original coverage/budget/input regressions are verified
 in the optimization series before/after evidence.
+
+Masonry submits frame measurements only for changed extents or first real
+measurement. Public batches still validate every size and duplicate index
+before filtering no-ops; no-op batches do not allocate lane groups or advance
+revision. Cross/content invalidation marks items unmeasured, so equal sizes
+under a new identity still become real measurements. Atomicity and actual
+frame query counts are covered by the optimization-series regressions.

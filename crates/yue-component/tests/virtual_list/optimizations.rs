@@ -84,5 +84,38 @@ fn masonry_final_frame_metadata_is_prepared_once(cx: &mut TestAppContext) {
         w.draw(cx).clear(cx)
     });
     assert_eq!(builds.get(), 9);
-    assert_eq!(source.calls.get(), builds.get() * 5);
+    assert_eq!(source.calls.get(), builds.get() * 4);
+}
+
+#[test]
+fn masonry_noop_batches_validate_duplicates_and_fail_atomically() {
+    use yue_component::{VirtualMasonryState, VirtualizerSizeUpdate};
+    let mut state =
+        VirtualMasonryState::new(source(0, 100), VirtualizerSizing::measured(px(40.)), 3).unwrap();
+    state
+        .update_sizes(&[VirtualizerSizeUpdate::new(0usize, px(40.))])
+        .unwrap();
+    let before = state
+        .snapshot(0., gpui_kit::size(px(300.), px(100.)))
+        .unwrap();
+    state
+        .update_sizes(&[VirtualizerSizeUpdate::new(0usize, px(40.))])
+        .unwrap();
+    for batch in [
+        vec![
+            VirtualizerSizeUpdate::new(0usize, px(40.)),
+            VirtualizerSizeUpdate::new(0usize, px(40.)),
+        ],
+        vec![
+            VirtualizerSizeUpdate::new(0usize, px(80.)),
+            VirtualizerSizeUpdate::new(1usize, px(0.)),
+        ],
+    ] {
+        assert!(state.update_sizes(&batch).is_err());
+    }
+    let after = state
+        .snapshot(0., gpui_kit::size(px(300.), px(100.)))
+        .unwrap();
+    assert_eq!(before.revision(), after.revision());
+    assert_eq!(after.item(0).unwrap().item().extent(), px(40.));
 }

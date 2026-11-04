@@ -496,40 +496,40 @@ impl VirtualMasonryState {
         &mut self,
         updates: &[VirtualizerSizeUpdate],
     ) -> Result<(), VirtualizerError> {
-        let mut seen = HashSet::new();
-        let mut indexed = Vec::new();
+        let mut indexed = Vec::with_capacity(updates.len());
         for update in updates {
             let ix = self
                 .source
                 .index_of(update.key())
                 .ok_or(VirtualizerError::MissingKey)?;
-            if !valid_positive(update.extent()) || !seen.insert(ix) {
+            if !valid_positive(update.extent()) {
                 return Err(VirtualizerError::InvalidGeometry("masonry size update"));
             }
             indexed.push((ix, update.extent()));
         }
-        let mut changed = false;
+        indexed.sort_unstable_by_key(|(ix, _)| *ix);
+        if indexed.windows(2).any(|pair| pair[0].0 == pair[1].0) {
+            return Err(VirtualizerError::InvalidGeometry("masonry size update"));
+        }
+        indexed.retain(|(ix, extent)| {
+            let (lane, local) = self.slots[*ix];
+            let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
+            (old - f64::from(*extent)).abs() > 0.01 || !measured
+        });
+        if indexed.is_empty() {
+            return Ok(());
+        }
         let mut by_lane = vec![Vec::new(); self.lanes.len()];
         for (ix, extent) in indexed {
             let (lane, local) = self.slots[ix];
-            let (_, old, measured) = self.lanes[lane].geometry.item(local).unwrap();
-            if (old - f64::from(extent)).abs() > 0.01 || !measured {
-                by_lane[lane].push((local, extent));
-                changed = true;
-            }
+            by_lane[lane].push((local, extent));
         }
-        // Only geometry changes need compensation. No anchor scan or temporary
-        // working-set allocation for the common identical-measurement batch.
-        if changed {
-            self.capture_anchor();
-        }
+        self.capture_anchor();
         for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
             lane.geometry.update_measurements(&values, true);
         }
-        if changed {
-            self.revision += 1;
-            self.restore_anchor();
-        }
+        self.revision += 1;
+        self.restore_anchor();
         Ok(())
     }
     pub fn update_sizes_from_snapshot(
