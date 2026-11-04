@@ -580,10 +580,13 @@ impl VirtualMasonryState {
         &mut self,
         updates: &[VirtualizerSizeUpdate],
     ) -> Result<(), VirtualizerError> {
+        if updates.is_empty() {
+            return Ok(());
+        }
         // Typical visible worksets fit in a bounded stack buffer. Keep larger
         // batches on the heap rather than growing controller-owned scratch.
         let mut inline = [(0usize, px(0.)); 32];
-        let mut overflow;
+        let mut overflow = Vec::new();
         let indexed = if updates.len() <= inline.len() {
             &mut inline[..updates.len()]
         } else {
@@ -622,6 +625,9 @@ impl VirtualMasonryState {
             let (lane, local) = self.slots[*ix];
             by_lane[lane].push((local, *extent));
         }
+        // Match the old Vec-consuming lifetime: release oversized input
+        // scratch before allocating persistent geometry paths.
+        drop(overflow);
         self.capture_anchor();
         for (lane, values) in self.lanes.iter_mut().zip(by_lane) {
             lane.geometry.update_measurements(&values, true);
