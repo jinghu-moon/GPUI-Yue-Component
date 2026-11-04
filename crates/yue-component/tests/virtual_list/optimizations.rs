@@ -119,3 +119,34 @@ fn masonry_noop_batches_validate_duplicates_and_fail_atomically() {
     assert_eq!(before.revision(), after.revision());
     assert_eq!(after.item(0).unwrap().item().extent(), px(40.));
 }
+
+#[gpui_kit::test]
+fn active_scroll_deadline_moves_without_early_end_and_can_restart(cx: &mut TestAppContext) {
+    let state = cx.new(|_| fixed(100));
+    let ends = Rc::new(Cell::new(0));
+    let observed = ends.clone();
+    let _subscription = cx.update(|cx| {
+        cx.subscribe(&state, move |_, event, _| {
+            if matches!(event, VirtualizerEvent::ScrollEnd) {
+                observed.set(observed.get() + 1);
+            }
+        })
+    });
+    for _ in 0..300 {
+        state.update(cx, |s, cx| s.user_scroll_activity(cx));
+        cx.run_until_parked();
+        cx.executor().advance_clock(Duration::from_millis(1));
+    }
+    assert_eq!(ends.get(), 0);
+    cx.executor().advance_clock(Duration::from_millis(118));
+    cx.run_until_parked();
+    assert_eq!(ends.get(), 0);
+    cx.executor().advance_clock(Duration::from_millis(1));
+    cx.run_until_parked();
+    assert_eq!(ends.get(), 1);
+    state.update(cx, |s, cx| s.user_scroll_activity(cx));
+    cx.run_until_parked();
+    cx.executor().advance_clock(Duration::from_millis(120));
+    cx.run_until_parked();
+    assert_eq!(ends.get(), 2);
+}

@@ -375,3 +375,51 @@ fn series_append_snapshot() {
         }
     }
 }
+
+#[gpui_kit::test]
+fn series_idle_timer(cx: &mut TestAppContext) {
+    use std::time::Duration;
+    for sample in 0..5 {
+        let calls = Rc::new(Cell::new(0));
+        let state = cx.new(|_| {
+            VirtualizerState::new(
+                Axis::Vertical,
+                source(100, &calls),
+                VirtualizerSizing::fixed(px(20.)),
+            )
+            .unwrap()
+        });
+        let ends = Rc::new(Cell::new(0));
+        let observed = ends.clone();
+        let _subscribe = cx.update(|cx| {
+            cx.subscribe(&state, move |_, event, _| {
+                if matches!(event, VirtualizerEvent::ScrollEnd) {
+                    observed.set(observed.get() + 1);
+                }
+            })
+        });
+        let (_, ns, stats) = measured(|| {
+            for _ in 0..2000 {
+                state.update(cx, |s, cx| s.user_scroll_activity(cx));
+                cx.run_until_parked();
+                cx.executor().advance_clock(Duration::from_micros(100));
+            }
+        });
+        assert!(state.read_with(cx, |s, _| s.is_scrolling()));
+        cx.executor().advance_clock(Duration::from_millis(119));
+        cx.run_until_parked();
+        assert_eq!(ends.get(), 0);
+        cx.executor().advance_clock(Duration::from_millis(1));
+        cx.run_until_parked();
+        assert_eq!(ends.get(), 1);
+        state.update(cx, |s, cx| s.user_scroll_activity(cx));
+        cx.run_until_parked();
+        cx.executor().advance_clock(Duration::from_millis(120));
+        cx.run_until_parked();
+        assert_eq!(ends.get(), 2);
+        println!(
+            "SERIES,case=idle-2000,sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
+            stats.count, stats.peak
+        );
+    }
+}

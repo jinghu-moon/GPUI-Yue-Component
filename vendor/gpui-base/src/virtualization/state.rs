@@ -419,7 +419,6 @@ pub struct VirtualizerState {
     removed_focus: Vec<FocusHandle>,
     scroll_end_task: Option<Task<()>>,
     scroll_session: u64,
-    idle_scheduled_at: Option<Instant>,
     observed_invalid_sizes: usize,
     reported_invalid_size: bool,
     reported_budget_exhaustion: bool,
@@ -555,7 +554,6 @@ impl VirtualizerState {
             removed_focus: Vec::new(),
             scroll_end_task: None,
             scroll_session: 0,
-            idle_scheduled_at: None,
             observed_invalid_sizes: 0,
             reported_invalid_size: false,
             reported_budget_exhaustion: false,
@@ -1183,31 +1181,50 @@ impl VirtualizerState {
     /// Entity-backed Attached owners call after submitting the observed viewport;
     /// pure owners may instead poll_scroll_idle using their own clock.
     pub fn arm_scroll_idle(&mut self, cx: &mut Context<Self>) {
-        if !self.scrolling
-            || self.idle_scheduled_at == self.last_scroll_at && self.scroll_end_task.is_some()
-        {
+        if !self.scrolling || self.scroll_end_task.is_some() {
             return;
         }
-        self.idle_scheduled_at = self.last_scroll_at;
         self.scroll_session += 1;
         let session = self.scroll_session;
         let binding_revision = self.binding_revision;
         self.scroll_end_task = Some(cx.spawn(async move |state, cx| {
-            cx.background_executor()
-                .timer(Duration::from_millis(120))
-                .await;
-            let _ = state.update(cx, |state, cx| {
-                if state.binding.is_some()
-                    && state.binding_revision == binding_revision
-                    && state.scroll_session == session
-                {
-                    state.end_scrolling();
-                    for event in state.take_events() {
-                        cx.emit(event);
-                    }
-                    cx.notify();
-                }
-            });
+            let mut delay = Duration::from_millis(120);
+            loop {
+                cx.background_executor().timer(delay).await;
+                let next = state
+                    .update(cx, |state, cx| {
+                        if state.binding.is_none()
+                            || state.binding_revision != binding_revision
+                            || state.scroll_session != session
+                        {
+                            return None;
+                        }
+                        let elapsed = state.last_scroll_at.map(|last| {
+                            cx.background_executor()
+                                .now()
+                                .saturating_duration_since(last)
+                        });
+                        if state.scrolling
+                            && let Some(elapsed) = elapsed
+                            && elapsed < Duration::from_millis(120)
+                        {
+                            return Some(Duration::from_millis(120) - elapsed);
+                        }
+                        state.end_scrolling();
+                        state.scroll_end_task = None;
+                        for event in state.take_events() {
+                            cx.emit(event);
+                        }
+                        cx.notify();
+                        None
+                    })
+                    .ok()
+                    .flatten();
+                let Some(next) = next else {
+                    break;
+                };
+                delay = next;
+            }
         }));
     }
     pub(super) fn observe_scrollbar_activity(&mut self, cx: &mut Context<Self>) {

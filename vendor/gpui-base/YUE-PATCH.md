@@ -506,3 +506,9 @@ before filtering no-ops; no-op batches do not allocate lane groups or advance
 revision. Cross/content invalidation marks items unmeasured, so equal sizes
 under a new identity still become real measurements. Atomicity and actual
 frame query counts are covered by the optimization-series regressions.
+
+Scroll idle detection retains one task per active session. Activity updates
+the deadline; the task waits again only for its remaining duration. Unmount
+and detach cancel the task; binding/session guards reject stale work. The
+optimization-series ABBA fixture verifies no premature end, exactly one
+ScrollEnd after 120ms idle, restart, CPU scheduling and allocation costs.
