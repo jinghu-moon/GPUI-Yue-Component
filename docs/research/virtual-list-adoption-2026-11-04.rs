@@ -642,3 +642,131 @@ fn next_linear_feedback() {
         }
     }
 }
+
+#[test]
+fn priority_linear_batches() {
+    for mode in 0..3 {
+        for count in [2, 32, 256, 4_096] {
+            for order in 0..3 {
+                for changes in [false, true] {
+                    for sample in 0..5 {
+                        let calls = Rc::new(Cell::new(0));
+                        let sizing = if mode == 0 {
+                            VirtualizerSizing::known(vec![px(40.); 100_000])
+                        } else {
+                            VirtualizerSizing::measured(px(40.))
+                        };
+                        let mut state =
+                            VirtualizerState::new(Axis::Vertical, source(100_000, &calls), sizing)
+                                .unwrap();
+                        let viewport = VirtualizerViewport::new(
+                            state.binding().unwrap(),
+                            1,
+                            0.,
+                            px(600.),
+                            px(300.),
+                        );
+                        state.commit(&viewport).unwrap();
+                        let mut keys: Vec<_> = (0..count).map(|ix| ix * 7 + 5).collect();
+                        if order == 1 {
+                            keys.reverse();
+                        }
+                        if order == 2 {
+                            for ix in (1..count).rev() {
+                                keys.swap(ix, (ix * 177 + 31) % (ix + 1));
+                            }
+                        }
+                        let mut updates: Vec<_> = keys
+                            .iter()
+                            .map(|&ix| VirtualizerSizeUpdate::new(ix, px(40.)))
+                            .collect();
+                        if mode == 2 {
+                            state.update_size_hints(&updates).unwrap();
+                        } else {
+                            state.update_sizes(&updates).unwrap();
+                        }
+                        let frozen = state.snapshot(&viewport).unwrap();
+                        let passes = if count == 4_096 { 64 } else { 2_000 };
+                        calls.set(0);
+                        let (_, ns, stats) = measured(|| {
+                            for pass in 0..passes {
+                                if changes {
+                                    for (update, &ix) in updates.iter_mut().zip(&keys) {
+                                        *update = VirtualizerSizeUpdate::new(
+                                            ix,
+                                            px(40. + (pass % 2) as f32),
+                                        );
+                                    }
+                                }
+                                if mode == 2 {
+                                    state.update_size_hints(&updates).unwrap();
+                                } else {
+                                    state.update_sizes(&updates).unwrap();
+                                }
+                            }
+                        });
+                        let reads = calls.get();
+                        assert_eq!(frozen.item(5).unwrap().extent(), px(40.));
+                        assert_eq!(
+                            state.snapshot(&viewport).unwrap().item(5).unwrap().extent(),
+                            px(if changes { 41. } else { 40. })
+                        );
+                        println!(
+                            "SERIES,case=priority-batch-{mode}-{count}-{order}-{changes}-{passes},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={reads},builds=0",
+                            stats.count, stats.peak
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn priority_masonry_scale() {
+    for count in [10_000, 100_000, 1_000_000] {
+        for append in [false, true] {
+            for sample in 0..5 {
+                let calls = Rc::new(Cell::new(0));
+                let mut state = VirtualMasonryState::new(
+                    source(count, &calls),
+                    VirtualizerSizing::fixed(px(20.)),
+                    3,
+                )
+                .unwrap();
+                let mut frozen = Vec::with_capacity(20);
+                calls.set(0);
+                let (_, ns, stats) = measured(|| {
+                    if append {
+                        for pass in 0..20 {
+                            frozen.push(state.snapshot(0., size(px(300.), px(100.))).unwrap());
+                            state
+                                .append_source(
+                                    source(count + (pass + 1) * 10, &calls),
+                                    VirtualizerSizing::fixed(px(20.)),
+                                )
+                                .unwrap();
+                        }
+                    } else {
+                        let next = VirtualMasonryState::new(
+                            source(count, &calls),
+                            VirtualizerSizing::fixed(px(20.)),
+                            3,
+                        )
+                        .unwrap();
+                        black_box(next);
+                    }
+                });
+                for (pass, old) in frozen.iter().enumerate() {
+                    assert!(old.item(count + pass * 10).is_err());
+                }
+                println!(
+                    "SERIES,case=priority-masonry-scale-{count}-{append},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={},builds=0",
+                    stats.count,
+                    stats.peak,
+                    calls.get()
+                );
+            }
+        }
+    }
+}

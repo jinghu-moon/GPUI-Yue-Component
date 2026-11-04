@@ -33,6 +33,8 @@ mod followup_edges;
 mod optimizations;
 #[path = "virtual_list/owner.rs"]
 mod owner;
+#[path = "virtual_list/priorities.rs"]
+mod priorities;
 
 #[path = "virtual_list/focus.rs"]
 mod focus;
