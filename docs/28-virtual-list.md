@@ -1,12 +1,12 @@
 # 28 虚拟滚动基础层与 VirtualList 设计
 
-状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。单项 Pixels 等剩余精度边界见第 13.3 节，实窗仍交由用户验收。更新：2026-11-04。
+状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。单项 Pixels 等剩余精度边界见第 13.3 节，实窗仍交由用户验收。更新：2026-11-05。
 
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
 最新一轮对标修正了逐项尺寸容差造成的累计偏移：尺寸反馈按 backend 实际可表示的值判断 no-op，并采用一维单项反馈的临时分配优化。双轴／估算／Masonry 原生布局回归、两轮 Release ABBA 的收益与批量代价见[细微尺寸反馈与单项成本](research/2026-11-04-virtual-list-feedback-review.md)。这不改变单项 Pixels、含 gap slot 舍入及跨 GPU／DPI 的既有精度边界。
 
-随后四项验证补齐可选的实窗 draw 分段探针，采用批量反馈复用索引缓冲，撤销冷构造代价偏高的 Masonry 分层目录试验，并增加 Masonry instant `scroll_to_offset`。逐项数据、限制、回归与 Git 回退见[四项验证报告](research/2026-11-04-virtual-list-four-priorities.md)，原始计时行、Git 源码哈希与环境身份见[数据清单](research/virtual-list-four-priorities-2026-11-04.json)。
+随后四项验证补齐可选的实窗 draw 分段探针，采用批量反馈复用索引缓冲，撤销冷构造代价偏高的 Masonry 分层目录试验，并增加 Masonry instant `scroll_to_offset`。最新对标为 Masonry 补入同一原生 owner 上的 opt-in 尾部跟随，并用真实 GPUI wheel 验证离尾暂停、Measured 校正与返回恢复；与参考库的行为对应、边界和当前性能结论见[尾部跟随对标与验证](research/2026-11-04-virtual-list-follow-tail-review.md)。前四项数据、限制、回归与 Git 回退见[四项验证报告](research/2026-11-04-virtual-list-four-priorities.md)，原始计时行、Git 源码哈希与环境身份见[数据清单](research/virtual-list-four-priorities-2026-11-04.json)。
 
 实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；本机 Windows 实窗探针、实际输入验收与能力边界见[四项逐项优化](research/2026-11-04-virtual-list-four-gaps.md)，尚未据此验证跨 GPU／物理 DPI 的帧节奏或 Windows 屏幕阅读器体验。
 
@@ -120,11 +120,11 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 精确已知的主轴范围、总尺寸和单项位置 | Fixed/Known 可无 renderer、无主题、无可访问节点查询；不调用代表项测量来取得已知事实 |
 | 动态尺寸 | Measured 在实际测量前明确标为 estimated；读取快照本身不构建内容或测量全量 |
 | stable key、splice/reorder/replace、局部失效、显式对齐、焦点安全 | 上表所有必须支持的组合均须通过对应测试；不以 backend 差异静默降级 |
-| 尾部跟随 | 三种模式、两轴均支持；Measured 复用原生 FollowMode，已知尺寸由同一 state 产生尾部请求；用户离开尾部暂停，实际返回后恢复 |
+| 尾部跟随 | 一维 state 三种模式、两轴均支持；Masonry 纵向 Fixed/Known/Measured 也支持 opt-in。都复用唯一原生滚动 owner；用户离尾暂停，返回当前几何尾部后恢复 |
 | smooth | 仅在路径尺寸已知、距离有界时允许；不满足时按第 9 节记录的规则即时定位，不冻结全部沿途项 |
 | 借用同一宿主的双轴组合 | VirtualGrid 使用两根 Fixed/Known 轴；同 host、同 viewport revision、配对的主／跨轴空间；一个 ScrollHandle 一次合并提交 |
 | 动态网格行高 | 不依据当前可见列猜测全局行高；调用方显式提供独立的行／列尺寸 |
-| 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量、instant key／offset 定位；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
+| 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量、instant key／offset 定位和 opt-in 尾部跟随；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
 | 方向 | 首版索引沿物理主轴正方向增长；反向布局/RTL 镜像定位另行设计，不由语言环境隐式启用 |
 
 构造、绑定或启用能力时校验 `(axis, sizing, attachment, requested_capability)`，一维通过只读 `VirtualizerCapabilities`、Masonry 通过独立 `VirtualMasonryCapabilities` 查询支持情况；不能把一维 factory 的结果用于推断 Masonry。unsupported 返回明确类型化错误。校验先于 N 级分配、挂载和滚动写入，失败保留旧有效状态，不悄悄换 sizing/backend、忽略选项或制造兼容壳。增加支持必须同时更新矩阵、原生补丁、前后基线与组合测试。
@@ -371,6 +371,7 @@ Owned 路径由原生 owner 完成等价提交，不能为了接口一致强制�
 - Grid 的每轴工作集顺序读取一次，列元数据只物化一份 O(C) 临时向量；单元格枚举仍为 O(R×C)，不逐行克隆列索引、不逐 cell 重查列 source／几何。稀疏 retained 项仅直接查询对应位置；没有行时不物化列。
 - Masonry 成功的非空显式内容失效总是推进 snapshot revision；未测／重复失效也拒绝旧反馈。实际卸载同样推进写入身份，保留 state 并重挂不能接受旧挂载的反馈。空输入和失败批次不改变版本，冻结 snapshot 仍可读取旧几何。
 - `VirtualMasonryState::append_source(next,sizing)` 要求既有前缀的 key/content/hint 未变，仅估算追加项，沿当前列末端继续分配，保留原分栏与实际测量。普通 `replace_source` 允许重排，迁移真实尺寸后仅打包一次；二者都在修改前校验尺寸。lane/source 索引使用 256 项共享叶块，冻结 snapshot 后追加复制块目录与尾块，读取 O(1)，复制仍含 O(N/256) 目录成本。实测追加峰值显著降低，但冷构造和无变化反馈有代价，见本轮报告。
+- Masonry `set_follow_tail(true)` 在唯一 `ScrollHandle` 上跟随当前 Fixed/Known/Measured 几何尾部；append 与真实尺寸校正后继续贴底。真实 wheel／外部 offset 输入离尾后暂停，并清除会把用户拉回旧位置的阅读锚点；返回尾部的判定在本帧测量校正结束后进行。显式 key／offset 命令暂停已有会话，命令落在尾部也不自行重启；source replace 结束会话。未测的远端项仍按 hint 估算，因此尾部含义是当前几何尾部，不是全量实际尺寸完成的承诺。
 - `measurement_cache()` 导出 Measured 的已测项与阅读锚点。`restore_measurement_cache()` 校验 schema 2、axis、layout revision、gap、cross extent、重复 key、非法尺寸及锚点距离后原子恢复；缺失或内容版本变化的 key 跳过。锚点使用 `VirtualizerAnchorPosition` 的三个变体，距离须有限且非负；不将 schema 1 的纯项内偏移猜测成留白语义。缓存不持有 Entity、ScrollHandle、source 或旧绑定；实际跨轴不符仍须失效。
 - 导出时逐条核对原生测量中实际存储的规范化 cross 与已解析视口 cross；尚未在新约束下完成布局、混合约束或 cross 未解析时返回 `InvalidGeometry`，不重新贴标签。恢复前先完整验证输入，再把已有不兼容约束的真实测量降为 hints。相同主轴尺寸在新 cross 下回报仍是新测量；横纵轴遵守同一合同。
 
@@ -498,13 +499,13 @@ Owned 路径由原生 owner 完成等价提交，不能为了接口一致强制�
 
 ### 8.3 尾部跟随
 
-默认关闭，三种模式和两轴均可显式开启。Measured 复用原生 FollowMode；Fixed/Known 由 state 依据总长和尾部距离产生版本化请求。Attached 目标经唯一宿主应用；Yue 不每帧调用 scroll_to_end。
+默认关闭。一维 state 的三种模式和两轴均可显式开启。Measured 复用原生 FollowMode；Fixed/Known 由 state 依据总长和尾部距离产生版本化请求。Attached 目标经唯一宿主应用；Yue 不每帧调用 scroll_to_end。Masonry 纵向模式通过 `set_follow_tail` 在现有原生 `ScrollHandle` 上实现同类会话，按当前已知／估算总高重求尾部。
 
 - 开启时定义为请求进入尾部；正常模式下 append 不抢走正在阅读旧数据的视口。
 - 已跟随且发生 append/尾行增长，继续贴合尾部；跟随校正不播放位移动画。
 - 用户向上滚动或拖离尾部立即暂停，实际返回尾部后恢复；是否“已到底”必须考虑未测项和当前 hint，不能把未知高度的零总和当作到底。
 - 新查询 Replace 清除旧跟随会话，消费方决定是否重新开启。
-- 明确的目标定位与尾部跟随不能同时争抢 offset；非尾部目标暂停跟随，返回尾部命令可重新开启。
+- 明确的目标定位与尾部跟随不能同时争抢 offset；一维非尾部目标暂停跟随，返回尾部命令可重新开启。Masonry key／offset 命令暂停已有会话，即使落在尾部也不自行恢复；之后由真实输入返回尾部或显式 `set_follow_tail(true)` 恢复。
 
 ## 9. 滚动定位与动效
 
@@ -527,7 +528,7 @@ Idle → WaitingForLayout → Seeking → Correcting → Settled
 
 同一时刻只有一个主动命令。新命令替换旧命令；真实 wheel/拖动/导航输入中断程序动效。自身测量校正和 offset 写回不视为新的用户输入。
 
-一维 state 实现上述完整定位接口；Masonry 是独立的 key／offset 定位 owner，共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。`scroll_to_key` 接受统一 `VirtualizerScrollOptions`，兼容旧 align 参数；`scroll_to_offset` 接受有限非负 f64，可在挂载前保留最新命令，布局按当前总高 clamp，校正完成后读回原生位置确认。offset 不使用 key 对齐／scroll padding，离屏尺寸可继续 estimated；它不是持续尾部跟随。Masonry 显式 smooth 返回 Unsupported，合法 reduced-motion 请求按 instant 执行。key／offset／选项失败不取消旧命令、不消耗 ID。`VirtualMasonryCapabilities` 的 supports_scroll_to_offset 为 true，Attached／follow-tail／smooth 仍为 false。`VirtualGrid::validate_axes` 提供构造前的类型化配置预检，布局也复用同一校验；动态行高仍不支持。接口形状收敛不代表两种算法能力完全等价。
+一维 state 实现上述完整定位接口；Masonry 是独立的 key／offset 定位 owner，共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。`scroll_to_key` 接受统一 `VirtualizerScrollOptions`，兼容旧 align 参数；`scroll_to_offset` 接受有限非负 f64，可在挂载前保留最新命令，布局按当前总高 clamp，校正完成后读回原生位置确认。offset 不使用 key 对齐／scroll padding，离屏尺寸可继续 estimated；它不是持续尾部跟随。显式 `set_follow_tail` 是独立 opt-in 会话：append／Measured 校正继续跟尾，输入离尾暂停，回到当前几何尾部后恢复；key／offset 命令优先且不凭空重启会话，replace 结束会话。Masonry 显式 smooth 返回 Unsupported，合法 reduced-motion 请求按 instant 执行。key／offset／选项失败不取消旧命令、不消耗 ID。`VirtualMasonryCapabilities` 的 supports_scroll_to_offset 与 supports_follow_tail 为 true，Attached／smooth 仍为 false。`VirtualGrid::validate_axes` 提供构造前的类型化配置预检，布局也复用同一校验；动态行高仍不支持。接口形状收敛不代表两种算法能力完全等价。
 
 Measured 定位先用估算与逻辑 item 坐标到达目标附近，实际测量后按同一 key 重求目标。最多 32 次 prepare 或 2 秒活动采样；连续 8 次确认位置无进展也结束为 `NoProgress`。隐藏、非活动、零面积或 reduced motion 的 Owned 视口直接完成安全定位，不忙等动画帧。只保存最新命令和必要校正状态，不复制浏览器完整 scroll classifier。
 

@@ -1,0 +1,220 @@
+{
+  "experiment_started_local_date": "2026-11-04",
+  "final_verification_local": "2026-11-05T00:05:16+08:00",
+  "timezone": "Asia/Shanghai",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "before_commit": "dc4fc691fc7c2b17d8e19d7b91ed0925ae011b79",
+  "implementation_commit": "486b8b51da489b826e211d90e7e831876af36dd2",
+  "working_source_matches_implementation_commit": true,
+  "changed_source_sha256_lf": {
+    "vendor/gpui-base/src/virtualization/masonry.rs": "527faa172b580e34b64adc0b072127e0a81eef6bcde2e4e52cfa8b18ded358a9",
+    "vendor/gpui-base/src/virtualization/masonry_element.rs": "1d0546f57023938aa7aca92755756aff83da28e5fc59aea668b583128df6d92e",
+    "crates/yue-component/tests/virtual_list.rs": "535634e888e2658ebafa3ffb7bb7ecb43bd3be9109f067cb1f2b1a5cc7a48d40",
+    "crates/yue-component/tests/virtual_list/api_contract.rs": "fa66483d651e537f9c9a853196c6d82529c2d4af0f948a1c708f89c06e47891c",
+    "crates/yue-component/tests/virtual_list/masonry_offset.rs": "4232c1cc06a9fd0d3a8249b45aa773ed7b605ce170d1247bd1ae9aaa2dc5907f",
+    "crates/yue-component/tests/virtual_list/masonry_follow_tail.rs": "9e3a25fe7ba12d790d230b61d32cc17f8826139957d7c812246f82329d97be54"
+  },
+  "environment": {
+    "platform": "Windows-11-10.0.26100-SP0",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-pc-windows-msvc\nrelease: 1.98.1\nLLVM version: 22.1.8"
+  },
+  "decision": "adopt opt-in Masonry follow-tail behavior; no CPU or GPU speedup claim",
+  "comparison_runs": [
+    {
+      "identity": {
+        "before": "dc4fc691fc7c2b17d8e19d7b91ed0925ae011b79",
+        "filter": "series_",
+        "after_head": "486b8b51da489b826e211d90e7e831876af36dd2",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-follow-tail-guards-2026-11-04.csv",
+      "case_count": 27,
+      "deterministic_counter_sets_match": true,
+      "selected_timing": {
+        "append-10000": {
+          "before_median_ns": 5150.0,
+          "after_median_ns": 5300.0,
+          "change_percent": 2.9126213592232997
+        },
+        "append-100000": {
+          "before_median_ns": 11200.0,
+          "after_median_ns": 14450.0,
+          "change_percent": 29.01785714285714
+        },
+        "append-1000000": {
+          "before_median_ns": 102950.0,
+          "after_median_ns": 93750.0,
+          "change_percent": -8.936376881981545
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9142400.0,
+          "after_median_ns": 9281300.0,
+          "change_percent": 1.5192947147357305
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8883750.0,
+          "after_median_ns": 8893100.0,
+          "change_percent": 0.10524834670042615
+        },
+        "frames-2-complex": {
+          "before_median_ns": 21227300.0,
+          "after_median_ns": 21119900.0,
+          "change_percent": -0.5059522407465877
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10323350.0,
+          "after_median_ns": 10308350.0,
+          "change_percent": -0.1453016704848764
+        },
+        "frames-2-size": {
+          "before_median_ns": 8223550.0,
+          "after_median_ns": 8565750.0,
+          "change_percent": 4.16121991110896
+        }
+      },
+      "csv_original_bytes_sha256": "07c05d53e1372f92d0d86060a4472a6357d1613f53b600f256610ad6900a3f18",
+      "csv_sha256_lf": "f7506cc7a75344037ba41b0c1ab0b3c02519bb6a6dda4f4b53d6982a1649d71f",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0"
+    },
+    {
+      "identity": {
+        "before": "dc4fc691fc7c2b17d8e19d7b91ed0925ae011b79",
+        "filter": "series_",
+        "after_head": "486b8b51da489b826e211d90e7e831876af36dd2",
+        "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+        "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+        "after_feature": null,
+        "native": false,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+        "discarded_samples": [],
+        "order": [
+          "before/0",
+          "after/0",
+          "after/1",
+          "before/1"
+        ],
+        "rows": 404
+      },
+      "csv": "docs/research/virtual-list-series-follow-tail-guards-repeat-2026-11-04.csv",
+      "case_count": 27,
+      "deterministic_counter_sets_match": true,
+      "selected_timing": {
+        "append-10000": {
+          "before_median_ns": 5300.0,
+          "after_median_ns": 5350.0,
+          "change_percent": 0.9433962264151052
+        },
+        "append-100000": {
+          "before_median_ns": 13750.0,
+          "after_median_ns": 11950.0,
+          "change_percent": -13.090909090909086
+        },
+        "append-1000000": {
+          "before_median_ns": 90050.0,
+          "after_median_ns": 92250.0,
+          "change_percent": 2.4430871737923354
+        },
+        "frames-2-steady": {
+          "before_median_ns": 9616000.0,
+          "after_median_ns": 9343050.0,
+          "change_percent": -2.8384983361064875
+        },
+        "frames-2-rapid": {
+          "before_median_ns": 8677550.0,
+          "after_median_ns": 8713050.0,
+          "change_percent": 0.4091016473543707
+        },
+        "frames-2-complex": {
+          "before_median_ns": 20393800.0,
+          "after_median_ns": 20772900.0,
+          "change_percent": 1.8588982926183384
+        },
+        "frames-2-resize": {
+          "before_median_ns": 10339100.0,
+          "after_median_ns": 10252950.0,
+          "change_percent": -0.833244673134026
+        },
+        "frames-2-size": {
+          "before_median_ns": 8349950.0,
+          "after_median_ns": 8180450.0,
+          "change_percent": -2.029952275163327
+        }
+      },
+      "csv_original_bytes_sha256": "639d9a4509bb0a94fc43f02e6acbb01da63404a44e500346749aeccdef4b5f2d",
+      "csv_sha256_lf": "95a33fc82c579d2b92476631cde79da1fd76a47489095926001d2083571a6b9b",
+      "workload_sha256_lf": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0"
+    }
+  ],
+  "checks": {
+    "workspace": {
+      "passed": 842,
+      "failed": 0,
+      "ignored": 10,
+      "command": "cargo test --workspace --features headless-tests --offline --locked --target-dir C:/Temp/gpui-yue-owner-perf-20261104 -- --test-threads=1"
+    },
+    "virtual_list": {
+      "passed": 128,
+      "failed": 0,
+      "ignored": 8,
+      "new_follow_tail_tests": 4
+    },
+    "clippy": {
+      "status": "passed",
+      "features": [
+        "headless-tests",
+        "virtual-profile"
+      ],
+      "deny_warnings": true
+    },
+    "format": {
+      "workspace": "passed",
+      "changed_vendor_rustfmt": "passed"
+    },
+    "vendor_contracts": {
+      "status": "passed",
+      "native": 15,
+      "base": 2,
+      "production_manifests_and_locks_unchanged": true,
+      "report_sha256": "dc383c6d38255a880f9e26073995ca29f030400b14fec5ea0395c224c6b3f179"
+    },
+    "showcase_release_build": "passed",
+    "native_window": {
+      "status": "passed",
+      "test": "pages::virtual_layouts::native_tests::native_layouts_render_and_settle",
+      "renderer_calls": {
+        "grid": 264,
+        "masonry": 49,
+        "horizontal": 28
+      },
+      "scope": "existing native layouts and positioning; does not exercise the new append follower"
+    },
+    "implementation_reverse_apply_check": "passed; check only, no revert performed"
+  },
+  "validation_log_sha256": {
+    "follow-tail-workspace.log": "c11439280d511fde328425d5b31dd1371f6f99aed221a58376ec9bae5fbbedbc",
+    "follow-tail-clippy.log": "ed3d087352565d41f5724c6e9c068ebef77527844a2dae1754c9995512228db1",
+    "follow-tail-native-contracts.log": "0c70e0abe5bf3cc9489c4579ca9f16cbf8d6eed8739a0b0e2ce398275b3a8ccd",
+    "follow-tail-release.log": "a45a6d53d3b46eaaf3127b25f57c45caa4eb22e5e8d8a0e48f177f673370e384",
+    "follow-tail-native-window.log": "ea4c898eab732bc9f7b17105502b97fb81f81c2c27a290bd9bbc229775c5ad07"
+  },
+  "limits": [
+    "ABBA workload uses default follow disabled, measuring regression cost of new state and branches; baseline had no equivalent follow API.",
+    "Enabled follow correctness uses GPUI headless layout and native wheel event dispatch, not physical device replay.",
+    "Allocator payload is measured on the test thread; it is not RSS.",
+    "Wall clock work segments, native renderer calls and submitted draw work are not GPU completion, input-to-display latency or FPS.",
+    "One Windows machine; no cross-GPU, physical DPI or hardware touchpad conclusion."
+  ],
+  "hash_policy": "Changed source and csv_sha256_lf normalize CRLF to LF; csv_original_bytes_sha256 and tool workload_sha256 retain the original measured byte identity; validation log hashes are raw bytes."
+}

@@ -89,7 +89,7 @@
 
 六项新增生产接缝测试通过：非法/非有限输入与旧命令原子性；挂载前、空源、最大有限值、`16777217.125` 精确位置；Known/Measured 校正与 source shrink；用户接管及卸载/重挂；边界无位移 wheel 恰好一次取消；有限预算下的 NoProgress 恰好一次收尾。实体事件通过订阅验证，纯 owner 事件通过 `take_events` 验证；不为测试保留第二份生产事件队列。最终完整组件目标为 124 passed / 8 ignored。
 
-参考项目的启发是向唯一平台 owner 提交 offset 意图：virtua `src/core/driver.ts` 的归一化 scrollTo、TanStack `packages/virtual-core/src/index.ts` 的 offset/target 解析、vlist 的公共位置与滚动模块。这里没有复制 DOM 驱动、scroll classifier 或浏览器坐标归一化。Masonry 的 Attached/follow-tail/smooth、RTL/反向布局和未知全局 Grid 行高仍未实现，capabilities 只把 offset 改为 true。
+参考项目的启发是向唯一平台 owner 提交 offset 意图：virtua `src/core/driver.ts` 的归一化 scrollTo、TanStack `packages/virtual-core/src/index.ts` 的 offset/target 解析、vlist 的公共位置与滚动模块。这里没有复制 DOM 驱动、scroll classifier 或浏览器坐标归一化。本轮结束时 Masonry 的 Attached/follow-tail/smooth、RTL/反向布局和未知全局 Grid 行高仍未实现，capabilities 只把 offset 改为 true。后续 follow-tail 的采用与验证见[尾部跟随对标](2026-11-04-virtual-list-follow-tail-review.md)，本报告的数据仍对应本轮提交。
 
 ## 最终验证与回退
 
