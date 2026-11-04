@@ -4,7 +4,7 @@
 
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
-实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；物理 GPU 帧节奏、实际视觉及 Windows 屏幕阅读器体验仍由用户检查。
+实现入口与初次验证见 [实现、回归与性能记录](research/2026-11-03-virtual-list-implementation.md)，1–8 项能力补齐与性能取舍见 [升级记录](research/2026-11-03-virtual-list-upgrades.md)。本文的 API、默认值和支持矩阵已同步到当前源码；本机 Windows 实窗探针、实际输入验收与能力边界见[四项逐项优化](research/2026-11-04-virtual-list-four-gaps.md)，尚未据此验证跨 GPU／物理 DPI 的帧节奏或 Windows 屏幕阅读器体验。
 
 升级后的 [第二轮跨库对标](research/2026-11-04-virtual-list-cross-library-review.md) 补充 virtua、vlist 的可借鉴机制。随后完成三模式内容失效、定位策略请求校验、内容与几何准备分离、增量 splice／Masonry append、紧凑持久索引、顺序工作集迭代及混合轨迹／多周期释放验证，见 [第二轮实施与测量](research/2026-11-04-virtual-list-refinements.md)。跨库对标中的问题与数值是修复前快照，不代表当前状态。
 
@@ -123,7 +123,7 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
 | 方向 | 首版索引沿物理主轴正方向增长；反向布局/RTL 镜像定位另行设计，不由语言环境隐式启用 |
 
-构造、绑定或启用能力时校验 `(axis, sizing, attachment, requested_capability)`，通过只读 `VirtualizerCapabilities` 查询支持情况；unsupported 返回明确类型化错误。校验先于 N 级分配、挂载和滚动写入，失败保留旧有效状态，不悄悄换 sizing/backend、忽略选项或制造兼容壳。增加支持必须同时更新矩阵、原生补丁、前后基线与组合测试。
+构造、绑定或启用能力时校验 `(axis, sizing, attachment, requested_capability)`，一维通过只读 `VirtualizerCapabilities`、Masonry 通过独立 `VirtualMasonryCapabilities` 查询支持情况；不能把一维 factory 的结果用于推断 Masonry。unsupported 返回明确类型化错误。校验先于 N 级分配、挂载和滚动写入，失败保留旧有效状态，不悄悄换 sizing/backend、忽略选项或制造兼容壳。增加支持必须同时更新矩阵、原生补丁、前后基线与组合测试。
 
 ## 3. 调研结论如何进入设计
 

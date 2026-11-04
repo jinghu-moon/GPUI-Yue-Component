@@ -96,13 +96,25 @@ masonry-views = []
             artifact = json.loads(line)
             if artifact.get("reason") == "compiler-artifact" and artifact.get("executable"):
                 executables[version] = artifact["executable"]
-    # Do not sample while this or another workspace is compiling.
+    # cargo dev may be a persistent, idle file watcher. It never exits, so do
+    # not treat that command alone as compilation. Its cargo/rustc children
+    # still block sampling, as do all ordinary Cargo commands.
+    compiler_query = """@(Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -in @('rustc.exe', 'clippy-driver.exe') -or
+        ($_.Name -eq 'cargo.exe' -and $_.CommandLine -notmatch '(?i)\\bcargo(?:\\.exe)?["\\x27]?\\s+dev(?:\\s|$)')
+    }).Count"""
+    # Require two quiet observations before sampling.
+    quiet = 0
     while True:
         busy = run(["powershell", "-NoProfile", "-Command",
-                    "(Get-Process cargo,rustc,clippy-driver -ErrorAction SilentlyContinue | Measure-Object).Count"],
+                    compiler_query],
                    capture_output=True, text=True).stdout.strip()
         if busy == "0":
-            break
+            quiet += 1
+            if quiet >= 2:
+                break
+        else:
+            quiet = 0
         print("Waiting for compiler processes before sampling", flush=True)
         time.sleep(2)
     rows = []
@@ -127,6 +139,7 @@ masonry-views = []
         "workload": args.workload,
         "workload_sha256": hashlib.sha256((ROOT / args.workload).read_bytes()).hexdigest(),
         "after_feature": args.after_feature,
+        "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
         "order": ["before/0", "after/0", "after/1", "before/1"], "rows": len(rows)}, indent=2) + "\n", encoding="utf-8")
     print(destination)
 

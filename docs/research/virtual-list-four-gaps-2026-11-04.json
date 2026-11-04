@@ -1,0 +1,200 @@
+[
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "73961a894085596681a77ba82d60a582e8a681ed",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-stack",
+    "after_source_commit": "df672d0d6475e855728e74a8619e7cba5de6f221",
+    "after_masonry_sha256": "14f1200bffb1faa9d9ac00123d71d8eeb15ae815f2510edc4d2f7e94639c6578",
+    "csv": "virtual-list-series-four-masonry-stack-2026-11-04.csv",
+    "csv_sha256": "804ff772c218a8404912be3a9930e55dad24a252c161412ff3232b12f5a1e895",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "series_",
+    "after_head": "73961a894085596681a77ba82d60a582e8a681ed",
+    "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+    "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 404,
+    "label": "four-masonry-stack-guards",
+    "after_source_commit": "df672d0d6475e855728e74a8619e7cba5de6f221",
+    "after_masonry_sha256": "14f1200bffb1faa9d9ac00123d71d8eeb15ae815f2510edc4d2f7e94639c6578",
+    "csv": "virtual-list-series-four-masonry-stack-guards-2026-11-04.csv",
+    "csv_sha256": "90226af71562957d15286d965cd659b445a4ea651b7d3cb55620c499eced8b39",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "df672d0d6475e855728e74a8619e7cba5de6f221",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-stack-final",
+    "after_source_commit": "699736e6dba18e37b460696c30676fc7ef4a867c",
+    "after_masonry_sha256": "aea1545133a781af8988b8f293132a5c9fe96c9010811a987b81eed06ba2f65b",
+    "csv": "virtual-list-series-four-masonry-stack-final-2026-11-04.csv",
+    "csv_sha256": "d3a52ad2078b8060860146940b27903711a267c231dd39a7a3645d4a62658628",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "series_",
+    "after_head": "df672d0d6475e855728e74a8619e7cba5de6f221",
+    "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+    "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 404,
+    "label": "four-masonry-stack-final-guards",
+    "after_source_commit": "699736e6dba18e37b460696c30676fc7ef4a867c",
+    "after_masonry_sha256": "aea1545133a781af8988b8f293132a5c9fe96c9010811a987b81eed06ba2f65b",
+    "csv": "virtual-list-series-four-masonry-stack-final-guards-2026-11-04.csv",
+    "csv_sha256": "15410504ce6feae4ef077806328232e6c25710b8c35b906c247cdb714c7144e0",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "699736e6dba18e37b460696c30676fc7ef4a867c",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-smallvec",
+    "after_source_commit": "221a4534d7c10329977fa50668569968287c950b",
+    "after_masonry_sha256": "2314a662ef9a8f0b21fe7d056873d1442a4d07ab0c42f5586416a2d007b1f3db",
+    "csv": "virtual-list-series-four-masonry-smallvec-2026-11-04.csv",
+    "csv_sha256": "4e476a49b92b947715cfd17d1be0be4a86322f92ec06b5cc7dfe8f64e51f1e6f",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "40478b5c7df6f730acb5cb4743dd137b507cfede",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-single",
+    "after_source_commit": "7b7e437aac3e22d47ca744cdfe54016a72111e45",
+    "after_masonry_sha256": "ed1dce3678892d815b74e5015fd54c892f208eaa450d14e7b5bc3ffdaa204a32",
+    "csv": "virtual-list-series-four-masonry-single-2026-11-04.csv",
+    "csv_sha256": "80f50c1651a59d8d6cece20c0c321ab949d167564acbba8eb4465e15dd22a385",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "7b7e437aac3e22d47ca744cdfe54016a72111e45",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-single-outlined",
+    "after_source_commit": "7b9148d9f0a7d48e17ab3202d3c4003ca6fbcbf1",
+    "after_masonry_sha256": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+    "csv": "virtual-list-series-four-masonry-single-outlined-2026-11-04.csv",
+    "csv_sha256": "7c48a5bca0b6ec6ae0b6e59c258ec6cd018190e3af4ed31fcb927bb323857ebf",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "four_masonry_feedback",
+    "after_head": "7b7e437aac3e22d47ca744cdfe54016a72111e45",
+    "workload": "docs/research/virtual-list-adoption-2026-11-04.rs",
+    "workload_sha256": "72c7251cceaa360a0f47c47422801c6f7d274a35e86e501849b36dbed6df3f14",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 240,
+    "label": "four-masonry-single-outlined-repeat",
+    "after_source_commit": "7b9148d9f0a7d48e17ab3202d3c4003ca6fbcbf1",
+    "after_masonry_sha256": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+    "csv": "virtual-list-series-four-masonry-single-outlined-repeat-2026-11-04.csv",
+    "csv_sha256": "eaba2ee8c0ae6202c45c43c5f21698c0f513e360360d330b88fc25f9a902b9e3",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  },
+  {
+    "before": "73961a894085596681a77ba82d60a582e8a681ed",
+    "filter": "series_",
+    "after_head": "7b7e437aac3e22d47ca744cdfe54016a72111e45",
+    "workload": "docs/research/virtual-list-optimization-series-2026-11-04.rs",
+    "workload_sha256": "6d87d2892f997ced2c238fb53be0c6ec28ebcde21d926e8cf67ea08f70e5f9e0",
+    "after_feature": null,
+    "compiler_wait_policy": "exclude idle cargo dev watcher; require two quiet compiler observations",
+    "order": [
+      "before/0",
+      "after/0",
+      "after/1",
+      "before/1"
+    ],
+    "rows": 404,
+    "label": "four-masonry-single-outlined-guards",
+    "after_source_commit": "7b9148d9f0a7d48e17ab3202d3c4003ca6fbcbf1",
+    "after_masonry_sha256": "6287ee0c08ad10a343ecd56bf2633ff6d5f2680d51e43ed17134a10b8adc1dbc",
+    "csv": "virtual-list-series-four-masonry-single-outlined-guards-2026-11-04.csv",
+    "csv_sha256": "49c33f82f8c266159458dbce4275d3010cbd8ec0212695a0be69e4789f73287e",
+    "csv_hash_normalization": "UTF-8 text with CRLF normalized to LF"
+  }
+]
