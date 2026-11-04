@@ -1,0 +1,112 @@
+{
+  "production": {
+    "sources": {
+      "core": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre",
+        "version": "0.3.9",
+        "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+        "src_sha256": "d2b2a71afe32620c36843e9ede07ea7b19a1da8c29b5da96618107c7a28aaeb5"
+      },
+      "base": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+        "version": "0.8.0",
+        "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+        "src_sha256": "c8797388e9df5675d3d0e85a8146a4208dce5ca594d01789aaa623d3a2478801"
+      },
+      "windows": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+        "version": "0.3.9",
+        "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+        "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+      }
+    },
+    "layers": {
+      "native": {
+        "passed": [
+          "sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes",
+          "size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry",
+          "invalid_size_batches_leave_geometry_and_revision_unchanged",
+          "mixed_size_batches_match_input_order_and_precise_prefixes_across_tree_nodes",
+          "size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it",
+          "width_invalidation_keeps_sparse_hints_and_frozen_geometry",
+          "scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input",
+          "frozen_geometry_retains_actual_cross_constraint_when_equal_extents_are_remeasured",
+          "uniform_geometry_is_shared_and_half_open_even_inside_gaps",
+          "direct_estimated_construction_has_the_same_geometry_without_a_replacement_tree",
+          "per_item_hint_splice_preserves_existing_measurements_and_frozen_geometry",
+          "native_hints_survive_first_layout_resize_splice_and_snapshot_reads",
+          "invalid_zero_height_cannot_pull_all_items_into_one_frame",
+          "horizontal_viewport_uses_physical_left_right_padding",
+          "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end"
+        ],
+        "lock_sha256": "957ee57c5ba3d29e846d61ecce6859dca08ec8c9b96ac161a95423f96dbc5b41"
+      },
+      "base": {
+        "passed": [
+          "virtualization::geometry::tests::known_prefix_keeps_gap_outside_item_content_and_does_not_append_a_trailing_gap",
+          "virtualization::geometry::tests::fixed_geometry_uses_constant_metadata_and_f64_local_coordinates"
+        ],
+        "lock_sha256": "ea9521187db0a734a4cccbb12cf58fc1c17783d0019c667c668f3c044da2b052"
+      }
+    },
+    "requirements_sha256": "a463c8eae239b78a9fb00a2152ebc06b647400d501bf6c4a591b1ac5f42f98eb",
+    "native_test_source_sha256": "e62d8ad9844bdf331bba2bf809a853317f006bb9d6975d5ef80f9b28d31465f6",
+    "status": "passed"
+  },
+  "expected_rejections": {
+    "missing-contract": {
+      "sources": {
+        "core": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre",
+          "version": "0.3.9",
+          "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+          "src_sha256": "d2b2a71afe32620c36843e9ede07ea7b19a1da8c29b5da96618107c7a28aaeb5"
+        },
+        "base": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+          "version": "0.8.0",
+          "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+          "src_sha256": "c8797388e9df5675d3d0e85a8146a4208dce5ca594d01789aaa623d3a2478801"
+        },
+        "windows": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+          "version": "0.3.9",
+          "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+          "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+        }
+      },
+      "layers": {},
+      "requirements_sha256": "63458dfd974b3cd3ab40ce6afdcd1ba57294e448d1035169017c4c896408b395",
+      "native_test_source_sha256": "e62d8ad9844bdf331bba2bf809a853317f006bb9d6975d5ef80f9b28d31465f6",
+      "status": "failed",
+      "error": "native: required contracts missing: ['intentionally_missing_virtualization_contract']"
+    },
+    "precision-regression": {
+      "sources": {
+        "core": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\target\\virtual-contract-negative-3h3g6tfw\\core",
+          "version": "0.3.9",
+          "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+          "src_sha256": "90d33a5430ef202d2f8dcf2b56f5e3c5027413f0fce4ff61ef03fa85b0b3203a"
+        },
+        "base": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+          "version": "0.8.0",
+          "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+          "src_sha256": "c8797388e9df5675d3d0e85a8146a4208dce5ca594d01789aaa623d3a2478801"
+        },
+        "windows": {
+          "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+          "version": "0.3.9",
+          "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+          "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+        }
+      },
+      "layers": {},
+      "requirements_sha256": "a463c8eae239b78a9fb00a2152ebc06b647400d501bf6c4a591b1ac5f42f98eb",
+      "native_test_source_sha256": "e62d8ad9844bdf331bba2bf809a853317f006bb9d6975d5ef80f9b28d31465f6",
+      "status": "failed",
+      "error": "native: scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input failed, skipped, or ran zero tests; see logs in D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\target\\virtualization-contracts\\native"
+    }
+  }
+}
