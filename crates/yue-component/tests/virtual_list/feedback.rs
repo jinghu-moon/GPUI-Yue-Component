@@ -1,7 +1,7 @@
 //! Exact external feedback must not turn per-item tolerances into scroll drift.
 use super::*;
 use gpui_kit::size;
-use yue_component::{VirtualMasonryState, VirtualizerSizeUpdate};
+use yue_component::{VirtualMasonry, VirtualMasonryState, VirtualizerSizeUpdate};
 
 #[test]
 fn fractional_feedback_preserves_cumulative_geometry_and_frozen_snapshots() {
@@ -144,4 +144,58 @@ fn masonry_fractional_feedback_updates_singletons_and_batches_without_lane_drift
         state.snapshot(0., bounds).unwrap().revision(),
         next.revision()
     );
+}
+
+struct MeasuredMasonry {
+    state: Entity<VirtualMasonryState>,
+    builds: Rc<Cell<usize>>,
+}
+impl Render for MeasuredMasonry {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let builds = self.builds.clone();
+        VirtualMasonry::new("fractional-feedback", &self.state, move |_, _, _| {
+            builds.set(builds.get() + 1);
+            div().h(px(20.))
+        })
+        .w(px(300.))
+        .h(px(100.))
+    }
+}
+
+#[gpui_kit::test]
+fn native_masonry_layout_corrects_fractional_feedback_then_stops_changing(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| {
+        let mut state =
+            VirtualMasonryState::new(source(0, 300), VirtualizerSizing::measured(px(20.)), 3)
+                .unwrap();
+        let updates = (0..300)
+            .map(|ix| VirtualizerSizeUpdate::new(ix, px(20. - 1. / 256.)))
+            .collect::<Vec<_>>();
+        state.update_sizes(&updates).unwrap();
+        MeasuredMasonry {
+            state: cx.new(|_| state),
+            builds: Rc::new(Cell::new(0)),
+        }
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let (state, builds) = view.read_with(cx, |v, _| (v.state.clone(), v.builds.clone()));
+    let snapshot = state.read_with(cx, |s, _| s.snapshot(0., size(px(300.), px(100.))).unwrap());
+    for ix in snapshot.working_indices() {
+        assert_eq!(snapshot.item(ix).unwrap().item().extent(), px(20.));
+    }
+    assert_eq!(
+        snapshot.item(299).unwrap().item().extent(),
+        px(20. - 1. / 256.)
+    );
+    builds.set(0);
+    cx.update(|w, cx| {
+        w.refresh();
+        w.draw(cx).clear(cx);
+    });
+    let next = state.read_with(cx, |s, _| s.snapshot(0., size(px(300.), px(100.))).unwrap());
+    assert_eq!(next.revision(), snapshot.revision());
+    assert_eq!(builds.get(), next.working_indices().len());
+    // Consume the one continuation from the correction frame, then verify idle.
+    cx.update(|w, cx| w.simulate_next_frame(cx));
+    assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
 }
