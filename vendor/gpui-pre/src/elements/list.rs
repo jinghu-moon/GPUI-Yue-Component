@@ -539,14 +539,12 @@ pub struct ListPrepaintState {
 enum ListItem {
     Unmeasured {
         size_hint: Option<Size<Pixels>>,
-        // Focus is sparse; keep ordinary rows compact and share focused handles
-        // through persistent tree edits and frozen geometry snapshots.
-        focus_handle: Option<Rc<FocusHandle>>,
+        focus_handle: Option<FocusHandle>,
     },
     Measured {
         size: Size<Pixels>,
         valid: bool,
-        focus_handle: Option<Rc<FocusHandle>>,
+        focus_handle: Option<FocusHandle>,
     },
 }
 
@@ -570,7 +568,7 @@ impl ListItem {
         }
     }
 
-    fn focus_handle(&self) -> Option<Rc<FocusHandle>> {
+    fn focus_handle(&self) -> Option<FocusHandle> {
         match self {
             ListItem::Unmeasured { focus_handle, .. } | ListItem::Measured { focus_handle, .. } => {
                 focus_handle.clone()
@@ -823,7 +821,6 @@ impl ListState {
         if index >= state.items.summary().count {
             return;
         }
-        let focus_handle = focus_handle.map(Rc::new);
         let mut cursor = state.items.cursor::<Count>(());
         let mut next = cursor.slice(&Count(index), Bias::Right);
         let item = cursor.item().unwrap();
@@ -1260,7 +1257,7 @@ impl ListState {
                 spliced_count += 1;
                 ListItem::Unmeasured {
                     size_hint,
-                    focus_handle: focus_handle.map(Rc::new),
+                    focus_handle,
                 }
             }),
             (),
