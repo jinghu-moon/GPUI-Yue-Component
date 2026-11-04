@@ -39,28 +39,6 @@ impl<T> IndexVector<T> {
     }
 }
 impl<T: Copy + Default> IndexVector<T> {
-    /// Build unshared blocks before exposing a persistent index. Live appends
-    /// still use `push`, including its snapshot-preserving copy-on-write path.
-    pub fn from_iter(values: impl IntoIterator<Item = T>) -> Self {
-        let mut values = values.into_iter();
-        let mut blocks = Vec::with_capacity(values.size_hint().0.div_ceil(BLOCK_CAPACITY));
-        let mut len = 0;
-        while let Some(first) = values.next() {
-            let mut block = [T::default(); BLOCK_CAPACITY];
-            block[0] = first;
-            len += 1;
-            for (target, value) in block[1..].iter_mut().zip(values.by_ref()) {
-                *target = value;
-                len += 1;
-            }
-            blocks.push(Rc::new(block));
-        }
-        Self {
-            blocks: Rc::new(blocks),
-            len,
-        }
-    }
-
     pub fn push(&mut self, value: T) {
         let blocks = Rc::make_mut(&mut self.blocks);
         if self.len.is_multiple_of(BLOCK_CAPACITY) {

@@ -926,16 +926,14 @@ fn pack(
     let mut heap: BinaryHeap<_> = (0..lane_count).map(|lane| LaneEnd(0.0, lane)).collect();
     let mut indexes = vec![IndexVector::default(); lane_count];
     let mut sizes = vec![Vec::new(); lane_count];
-    let slots = IndexVector::from_iter(extents.iter().copied().enumerate().map(
-        |(ix, (extent, measured))| {
-            let LaneEnd(end, lane) = heap.pop().unwrap();
-            let slot = (lane, indexes[lane].len());
-            indexes[lane].push(ix);
-            sizes[lane].push((extent, measured));
-            heap.push(LaneEnd(end + f64::from(extent) + gap, lane));
-            slot
-        },
-    ));
+    let mut slots = IndexVector::default();
+    for (ix, (extent, measured)) in extents.iter().copied().enumerate() {
+        let LaneEnd(end, lane) = heap.pop().unwrap();
+        slots.push((lane, indexes[lane].len()));
+        indexes[lane].push(ix);
+        sizes[lane].push((extent, measured));
+        heap.push(LaneEnd(end + f64::from(extent) + gap, lane));
+    }
     let lanes = indexes
         .into_iter()
         .zip(sizes)
