@@ -1,5 +1,6 @@
 //! Cell-level two-axis presentation. Both axes reuse VirtualizerState; the host
 //! owns exactly one ScrollHandle and applies both proposals in one transaction.
+use super::element::ViewStamp;
 use super::*;
 use crate::TestSupportExt as _;
 use gpui::{
@@ -19,6 +20,26 @@ impl VirtualGridCell {
         &self.row
     }
     pub fn column(&self) -> &VirtualizerItem {
+        &self.column
+    }
+    pub fn identity(&self) -> VirtualGridCellIdentity {
+        VirtualGridCellIdentity {
+            row: self.row.identity(),
+            column: self.column.identity(),
+        }
+    }
+}
+/// Content identity for preparation; geometry remains on the frame's cell.
+#[derive(Clone)]
+pub struct VirtualGridCellIdentity {
+    row: VirtualizerItemIdentity,
+    column: VirtualizerItemIdentity,
+}
+impl VirtualGridCellIdentity {
+    pub fn row(&self) -> &VirtualizerItemIdentity {
+        &self.row
+    }
+    pub fn column(&self) -> &VirtualizerItemIdentity {
         &self.column
     }
 }
@@ -81,6 +102,13 @@ impl VirtualGridSnapshot {
     }
 }
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
+type ViewFactory = Rc<dyn Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> gpui::AnyView>;
+type CellKey = (ElementId, ElementId);
+#[derive(Default)]
+struct CellViews {
+    entries: std::collections::HashMap<CellKey, ([ViewStamp; 2], gpui::AnyView)>,
+    touched: std::collections::HashSet<CellKey>,
+}
 pub struct VirtualGrid {
     id: ElementId,
     rows: Entity<VirtualizerState>,
@@ -88,6 +116,8 @@ pub struct VirtualGrid {
     scroll: ScrollHandle,
     base: Stateful<Div>,
     render: Renderer,
+    view_factory: Option<ViewFactory>,
+    content_revision: u64,
 }
 impl VirtualGrid {
     /// Preflight configuration without claiming a mount, querying the source,
@@ -146,7 +176,27 @@ impl VirtualGrid {
             scroll: scroll.clone(),
             base,
             render: Rc::new(move |cell, w, cx| render(cell, w, cx).into_any_element()),
+            view_factory: None,
+            content_revision: 0,
         }
+    }
+    /// Prepare one view per live content identity, independently of frame geometry.
+    /// External factory inputs require content_revision or axis content invalidation.
+    /// Child entity Render/layout/paint and its own notify contract remain unchanged.
+    pub fn new_with_cell_views<V: Into<gpui::AnyView>>(
+        id: impl Into<ElementId>,
+        rows: &Entity<VirtualizerState>,
+        columns: &Entity<VirtualizerState>,
+        scroll: &ScrollHandle,
+        factory: impl Fn(VirtualGridCellIdentity, &mut Window, &mut App) -> V + 'static,
+    ) -> Self {
+        let mut grid = Self::new(id, rows, columns, scroll, |_, _, _| div());
+        grid.view_factory = Some(Rc::new(move |cell, w, cx| factory(cell, w, cx).into()));
+        grid
+    }
+    pub fn content_revision(mut self, revision: u64) -> Self {
+        self.content_revision = revision;
+        self
     }
 }
 impl Styled for VirtualGrid {
@@ -168,6 +218,7 @@ impl IntoElement for VirtualGrid {
 }
 pub struct VirtualGridFrame {
     cells: Vec<(ElementId, AnyElement)>,
+    views: Option<Rc<std::cell::RefCell<CellViews>>>,
 }
 struct GridMount {
     rows: gpui::WeakEntity<VirtualizerState>,
@@ -175,6 +226,7 @@ struct GridMount {
     row_revision: u64,
     column_revision: u64,
     _subscriptions: Vec<gpui::Subscription>,
+    views: Option<Rc<std::cell::RefCell<CellViews>>>,
 }
 impl Element for VirtualGrid {
     type RequestLayoutState = VirtualGridFrame;
@@ -235,11 +287,13 @@ impl Element for VirtualGrid {
                     row_revision,
                     column_revision,
                     _subscriptions: subscriptions,
+                    views: None,
                 }
             },
         );
         mount.update(cx, |m, cx| {
             if m.rows != self.rows || m.row_revision != row_revision {
+                m.views = None;
                 let _ = m
                     .rows
                     .update(cx, |s, cx| s.release_mount(m.row_revision, cx));
@@ -248,6 +302,7 @@ impl Element for VirtualGrid {
                 m._subscriptions[0] = cx.observe(&self.rows, |_, _, cx| cx.notify());
             }
             if m.columns != self.columns || m.column_revision != column_revision {
+                m.views = None;
                 let _ = m
                     .columns
                     .update(cx, |s, cx| s.release_mount(m.column_revision, cx));
@@ -256,13 +311,70 @@ impl Element for VirtualGrid {
                 m._subscriptions[1] = cx.observe(&self.columns, |_, _, cx| cx.notify());
             }
         });
+        let views = mount.update(cx, |m, _| {
+            if self.view_factory.is_some() {
+                Some(m.views.get_or_insert_with(|| Rc::default()).clone())
+            } else {
+                m.views = None;
+                None
+            }
+        });
+        if let (Some(factory), Some(views)) = (self.view_factory.clone(), views.clone()) {
+            views.borrow_mut().touched.clear();
+            let rows = self.rows.clone();
+            let columns = self.columns.clone();
+            let row_source = rows.read(cx).source_for_render();
+            let column_source = columns.read(cx).source_for_render();
+            let revision = self.content_revision;
+            self.render = Rc::new(move |cell, w, cx| {
+                let key = (cell.row.key().clone(), cell.column.key().clone());
+                let stamp = [
+                    (
+                        row_source.revision_at(cell.row.index()),
+                        revision,
+                        rows.read(cx).item_content_revision(cell.row.index()),
+                        cell.row.index(),
+                    ),
+                    (
+                        column_source.revision_at(cell.column.index()),
+                        revision,
+                        columns.read(cx).item_content_revision(cell.column.index()),
+                        cell.column.index(),
+                    ),
+                ];
+                let existing = {
+                    let mut cache = views.borrow_mut();
+                    cache.touched.insert(key.clone());
+                    cache
+                        .entries
+                        .get(&key)
+                        .filter(|(old, _)| *old == stamp)
+                        .map(|(_, view)| view.clone())
+                };
+                let view = existing.unwrap_or_else(|| {
+                    let view = factory(cell.identity(), w, cx);
+                    views
+                        .borrow_mut()
+                        .entries
+                        .insert(key, (stamp, view.clone()));
+                    view
+                });
+                view.into_any_element()
+            });
+        }
         let layout =
             self.base
                 .interactivity()
                 .request_layout(id, inspector, w, cx, |style, w, cx| {
                     w.request_layout(style, None, cx)
                 });
-        (layout, VirtualGridFrame { cells: Vec::new() })
+        (
+            layout,
+            VirtualGridFrame {
+                cells: Vec::new(),
+                views,
+            },
+        )
     }
     fn prepaint(
         &mut self,
@@ -397,6 +509,11 @@ impl Element for VirtualGrid {
                 hitbox
             },
         );
+        if let Some(views) = &frame.views {
+            let mut cache = views.borrow_mut();
+            let CellViews { entries, touched } = &mut *cache;
+            entries.retain(|key, _| touched.contains(key));
+        }
         if visible
             && (self.rows.read(cx).has_scroll_command()
                 || self.columns.read(cx).has_scroll_command())

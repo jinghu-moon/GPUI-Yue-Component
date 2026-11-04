@@ -25,6 +25,8 @@ mod adoption;
 mod api_contract;
 #[path = "virtual_list/feedback.rs"]
 mod feedback;
+#[path = "virtual_list/grid_preparation.rs"]
+mod grid_preparation;
 #[path = "virtual_list/followup.rs"]
 mod followup;
 #[path = "virtual_list/followup_edges.rs"]

@@ -36,7 +36,7 @@ def main():
     parser.add_argument("--date", default="2026-11-04", help="ISO date for output artifacts; defaults to the original workload date")
     parser.add_argument("--filter", default="series_")
     parser.add_argument("--workload", default="docs/research/virtual-list-optimization-series-2026-11-04.rs")
-    parser.add_argument("--after-feature", choices=["masonry-views"], default=None)
+    parser.add_argument("--after-feature", choices=["masonry-views", "grid-views"], default=None)
     parser.add_argument("--native", action="store_true", help="Run the opt-in production Showcase frame workload on the real Windows platform")
     args = parser.parse_args()
     try:
@@ -86,6 +86,7 @@ gpui-pre = {{ path = "{(vendor / 'gpui-pre').as_posix()}" }}
 gpui-pre-windows = {{ path = "{(ROOT / 'vendor/gpui-pre-windows').as_posix()}" }}
 [features]
 masonry-views = []
+grid-views = []
 """
         manifest = manifest.replace(
             (ROOT / 'docs/research/virtual-list-optimization-series-2026-11-04.rs').as_posix(),
