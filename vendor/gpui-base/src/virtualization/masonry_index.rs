@@ -1,17 +1,20 @@
-//! O(1) index reads with bounded leaf copying while snapshots retain a prefix.
+//! O(1) index reads with two bounded directory levels for retained snapshots.
 use std::{ops::Index, rc::Rc};
 
 const BLOCK_CAPACITY: usize = 256;
+const GROUP_CAPACITY: usize = 32;
+type Block<T> = Rc<[T; BLOCK_CAPACITY]>;
+type Group<T> = Rc<Vec<Block<T>>>;
 
 #[derive(Clone)]
 pub(super) struct IndexVector<T> {
-    blocks: Rc<Vec<Rc<[T; BLOCK_CAPACITY]>>>,
+    groups: Rc<Vec<Group<T>>>,
     len: usize,
 }
 impl<T> Default for IndexVector<T> {
     fn default() -> Self {
         Self {
-            blocks: Rc::default(),
+            groups: Rc::default(),
             len: 0,
         }
     }
@@ -27,20 +30,27 @@ impl<T> IndexVector<T> {
         if ix >= self.len {
             return None;
         }
-        self.blocks
-            .get(ix / BLOCK_CAPACITY)?
+        let block = ix / BLOCK_CAPACITY;
+        self.groups
+            .get(block / GROUP_CAPACITY)?
+            .get(block % GROUP_CAPACITY)?
             .get(ix % BLOCK_CAPACITY)
     }
     pub fn iter(&self) -> impl Iterator<Item = &T> {
-        self.blocks
+        self.groups
             .iter()
+            .flat_map(|group| group.iter())
             .flat_map(|block| block.iter())
             .take(self.len)
     }
 }
 impl<T: Copy + Default> IndexVector<T> {
     pub fn push(&mut self, value: T) {
-        let blocks = Rc::make_mut(&mut self.blocks);
+        let groups = Rc::make_mut(&mut self.groups);
+        if self.len.is_multiple_of(BLOCK_CAPACITY * GROUP_CAPACITY) {
+            groups.push(Rc::new(Vec::new()));
+        }
+        let blocks = Rc::make_mut(groups.last_mut().unwrap());
         if self.len.is_multiple_of(BLOCK_CAPACITY) {
             blocks.push(Rc::new([T::default(); BLOCK_CAPACITY]));
         }
