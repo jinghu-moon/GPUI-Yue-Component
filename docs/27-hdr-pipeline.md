@@ -317,7 +317,7 @@ WARP能证明shader数值与生命周期，不能证明显示器实际峰值、D
 
 完成定义：高精度从源到HDR屏、从源到HDR文件均不断；SDR回退明确且不覆盖母版；SDR UI不过亮；F3／F6／保存面板／覆盖层与滚动母版均有证据；新增数值／GPU测试和既有工作流回归通过；资源预算及实机测量有记录。一个环节只通过代码检查，不足以宣布“完整支持HDR”。
 
-接续状态：P3 的源能力／输出白快照、固定滚动分析与原始 FP16 行带、倒计时 composition、明确的 SDR 取色及 HDR PNG16 已有内部实现和分层验证；P4 的保存面板、F3/F6 共用宿主、复制与历史保真源／有界导出也已接入。P2／P5 的真实 HDR／跨屏／DPI／设备恢复、实际剪贴板接收方、端到端与 GPU 预算验收见 SnapClip `docs/53-hdr-capture.md` §22。AVIF 的 CPU 数值矩阵及受限 grid 的资源／取消验证已通过，见 §26～§28；生产行带接线、移除压缩 Vec 上限、许可交付与原子保存仍是软件工作，不能归为缺少 HDR 屏才无法完成的实机任务。生产 HDR 捕获与 AVIF 门禁保持关闭；离屏数值不替代真实 WGC 捕获和显示验收。禁止仅切换 WGC 枚举或增加 `is_hdr` 就宣称产品已完整支持。
+接续状态：P3 的源能力／输出白快照、固定滚动分析与原始 FP16 行带、倒计时 composition、明确的 SDR 取色及 HDR PNG16 已有内部实现和分层验证；P4 的保存面板、F3/F6 共用宿主、复制与历史保真源／有界导出也已接入。P2／P5 的真实 HDR／跨屏／DPI／设备恢复、实际剪贴板接收方、端到端与 GPU 预算验收见 SnapClip `docs/53-hdr-capture.md` §22。消费者后续已完成 AVIF 共享 CPU codec、生产行带／原子保存接线及磁盘后备，许可原文和热点剖析也已继续推进，当前结果以本文 §16～§17 及消费者方案 §29～§30 为准。AVIF feature 默认关闭，生产 HDR 捕获门禁保持关闭；当前 Base 与旧 Kit styled 虚拟列表 API 的集成断裂必须独立解决。离屏数值不替代真实 WGC 捕获和显示验收，禁止仅切换 WGC 枚举或增加 `is_hdr` 就宣称产品已完整支持。
 
 手动查看现有输出代码：`cargo run -p yue-component --example hdr_preview --release --offline`；传入 PNG 路径可检查该文件。此诊断显式允许 256 MiB encoded 文件，组件与应用默认上限保持不变。默认原创测试色带、输出说明和真实显示器测试是不同层的证据；程序不会切换系统 HDR。大文件代理仅显示 Source，不从代理重新估计峰值来生成 SDR 对比。当前不修改系统 HDR 设置、不安装新渲染运行时。当前检查点：本仓库 `03f338a` 已交付 F6 物理几何／DPI 前置；SnapClip `627548b` 已删除旧 F6 GDI 宿主并统一 GPUI/Yue，`7081c22` 已交付历史保真引用／缩略图／回放，`1ea5855` 已交付有界历史导出、格式门禁和 Release 资源／原生生命周期证据。接续的 `dfe5a1a`／`54ea344` 清理核心与开发工具后，消费者 workspace 的普通／headless 两种 all-targets strict Clippy 均通过（`--no-deps -- -D warnings`）。以消费者 `docs/53-hdr-capture.md` §16～§22 为准；这些检查使用冻结 Yue 依赖，不代表并行虚拟列表工作树已验收。AVIF 未启用，真实 HDR／跨屏／完整 DPI／设备恢复、VRAM 和端到端性能仍未验收，不能把底座与离屏测试等同于完整产品支持。
 
@@ -384,4 +384,16 @@ SnapClip 新增 Windows CPU crate `snapclip-avif`，只依赖 Model 像素合同
 
 实际共享解码器通过原 48 组 8/10/12 位矩阵和 4 项有界异常拒绝。真实 HDR／SDR 45MP 原图在像素展开前拒绝；另以两份 160×96、明确标色的 12 位真实内容裁片独立回读通过。包装层曾重复解除预乘，导致半透明 R 从应有约 0.214 变成约 0.998，已用实际失败回归修复。详见消费者 `docs/53-hdr-capture.md` §29 及 `tools/codec-bench/HDR-AVIF.md`；这些 CPU 证据不能替代实屏色彩或实机性能验收。
 
-固定源码／许可清单覆盖 122 个 normal/build 包，记录原 archive、许可原文、features 和本地源码。上游 `simd_helpers 0.1.0` 缺原始 MIT 正文，审计包会明确标记 `NOT-RELEASE-READY` 并退出 1；没有宣称完整发行义务已经满足。共享功能保持显式开发入口，许可缺口、较高 CPU 编码时间与显示层实机验收仍需分别处理。本次仅同步消费者结果，不混入本仓并行虚拟列表／Select／图片资源改造。
+此批曾有 122 个 normal/build 包和 `simd_helpers 0.1.0` 缺原始 MIT 正文的阻塞；后续原文补齐与编码汇编后的 126 包清单见 §17。共享功能保持显式开发入口，完整应用发行义务、较高 CPU 编码时间与显示层实机验收分别处理。本次仅同步消费者结果，不混入本仓并行虚拟列表／Select／图片资源改造。
+
+## 17. 消费者编码热点、许可补齐与当前集成阻塞（2026-11-04）
+
+SnapClip 的显式阶段计时证实无汇编噪声编码的 AV1 encode 占总时间 99.02–99.09%，读取／颜色转换另有真实 BandSource／SCPX 路径计时。启用既有 `zenavif/encode-asm` 后，匹配输入的 Release A/B：4K 各 3 次中位数 **16.10→11.11 秒**，45MP 各 1 次 **91.42→61.55 秒**，耗时减少约 **31%／33%**，完整文件 SHA-256 一致。额外堆峰值最多 9,330,212 B，最大单分配 1,572,864 B，原 32 MiB／16 MiB 门槛不变。45MP 仍慢，不视为交互延迟达标。
+
+共享 CPU crate 默认开启编码 `asm`（构建需要 NASM），支持直接消费者 `default-features = false`；解码 `unsafe-asm` 关闭，App／Pin 的 AVIF feature 仍默认关闭。MIT Yue 不添加 AVIF 依赖，仍由现有 YueImagePreview 消费解码 FP16。
+
+官方 `simd_helpers` 后续 commit `82040194cd05affb060bf94d6f19f82a771d07fb` 仅补 LICENSE，其源文件与发布包一致。消费者固定原文、来源与源码 hash，并补篡改拒绝自测。编码汇编的 **126 包**清单及源码／原文／patch／SPDX 审计包实际退出 0，原缺正文阻塞已解除；这不是完整应用发行义务的总体验收。
+
+当前消费者复测不再指定冻结 Yue config，但 `gpui-component 0.8.0` 仍引用 Base 已删除的 `virtual_list`、`VirtualListScrollHandle`、`h_virtual_list`、`v_virtual_list`；SnapClip 历史列表也依赖旧入口。完整 workspace／App／Pin／无头 UI／strict Clippy 与完整 AVIF PowerShell 入口在编译阶段失败，不能沿用历史冻结快照的绿色结果。需协调 Kit 内部 List／Command／Table 及应用的虚拟化迁移，当前集成尚未完成。独立可编译能力的 894 项、History 66 项、工具和 AVIF probe、strict Clippy 结果分别记录在[消费者方案 §30](../../SnapClip/docs/53-hdr-capture.md#30-avif-热点优化原文许可补齐与当前依赖复测2026-11-04)。
+
+用户本轮明确先完成不需要真机的工作；真实窗口／工作流、系统剪贴板接收方、HDR／跨屏／DPI／VRAM 与设备恢复按此暂缓。没有降低颜色／内存断言、恢复旧 API 兼容层或宣称完整 HDR 产品已经验收。
