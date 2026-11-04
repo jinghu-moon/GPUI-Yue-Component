@@ -379,3 +379,118 @@ fn adopt_width_dense(cx: &mut TestAppContext) {
         }
     }
 }
+
+struct MasonryResizeHarness {
+    state: Entity<VirtualMasonryState>,
+    width: f32,
+    builds: Rc<Cell<usize>>,
+}
+impl Render for MasonryResizeHarness {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let builds = self.builds.clone();
+        VirtualMasonry::new("next-resize", &self.state, move |_, _, _| {
+            builds.set(builds.get() + 1);
+            div().h(px(20.))
+        })
+        .w(px(self.width))
+        .h(px(100.))
+    }
+}
+#[gpui_kit::test]
+fn next_masonry_width(cx: &mut TestAppContext) {
+    for (n, measured_count) in [
+        (1000, 1),
+        (100_000, 64),
+        (1_000_000, 64),
+        (100_000, 100_000),
+    ] {
+        for sample in 0..3 {
+            let reads = Rc::new(Cell::new(0));
+            let builds = Rc::new(Cell::new(0));
+            let (view, cx) = cx.add_window_view(|_, cx| MasonryResizeHarness {
+                state: cx.new(|_| {
+                    VirtualMasonryState::new(
+                        source(n, &reads),
+                        VirtualizerSizing::measured(px(20.)),
+                        3,
+                    )
+                    .unwrap()
+                }),
+                width: 300.,
+                builds: builds.clone(),
+            });
+            cx.update(|w, cx| w.draw(cx).clear(cx));
+            let state = view.read_with(cx, |v, _| v.state.clone());
+            state.update(cx, |s, _| {
+                s.update_sizes(
+                    &(0..measured_count)
+                        .map(|i| VirtualizerSizeUpdate::new(i * n / measured_count, px(37.)))
+                        .collect::<Vec<_>>(),
+                )
+                .unwrap()
+            });
+            let frozen =
+                state.read_with(cx, |s, _| s.snapshot(0., size(px(300.), px(100.))).unwrap());
+            reads.set(0);
+            builds.set(0);
+            let (_, ns, stats) = measured(|| {
+                for frame in 0..40 {
+                    view.update(cx, |v, cx| {
+                        v.width = if frame % 2 == 0 { 360. } else { 300. };
+                        cx.notify();
+                    });
+                    cx.update(|w, cx| w.draw(cx).clear(cx));
+                }
+            });
+            assert!(frozen.item(0).unwrap().item().is_measured());
+            assert_eq!(frozen.item(0).unwrap().item().extent(), px(37.));
+            println!(
+                "SERIES,case=masonry-width-{n}-{measured_count},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={},builds={}",
+                stats.count,
+                stats.peak,
+                reads.get(),
+                builds.get()
+            );
+        }
+    }
+}
+
+#[test]
+fn next_native_batch() {
+    for (count, sparse) in [
+        (1, false),
+        (32, false),
+        (32, true),
+        (4096, false),
+        (4096, true),
+    ] {
+        for sample in 0..5 {
+            let state = gpui_kit::ListState::new_with_uniform_height(
+                1_000_000,
+                gpui_kit::ListAlignment::Top,
+                px(0.),
+                px(20.),
+            );
+            let updates: Vec<_> = (0..count)
+                .map(|i| {
+                    (
+                        if sparse { i * 1_000_000 / count } else { i },
+                        size(px(300.), px(30.)),
+                    )
+                })
+                .collect();
+            let frozen = state.geometry();
+            let (_, ns, stats) = measured(|| {
+                for _ in 0..20 {
+                    state.set_item_sizes(&updates, true);
+                }
+            });
+            assert_eq!(state.geometry().measured_count(), count);
+            assert_eq!(frozen.measured_count(), 0);
+            println!(
+                "SERIES,case=native-batch-{count}-{sparse},sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
+                stats.count, stats.peak
+            );
+        }
+    }
+}
