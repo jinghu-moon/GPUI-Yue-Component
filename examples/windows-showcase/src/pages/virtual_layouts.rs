@@ -6,9 +6,9 @@ use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList
 use gpui_kit::{AnyElement, App, Axis, ElementId, Entity, Role, ScrollHandle, px};
 use std::{cell::Cell, rc::Rc};
 use yue_component::{
-    VirtualGrid, VirtualMasonry, VirtualMasonryState, VirtualizerAlign, VirtualizerBinding,
-    VirtualizerLayout, VirtualizerScrollOptions, VirtualizerSizing, VirtualizerSource,
-    VirtualizerState, YueTabItem, YueTabs,
+    VirtualGrid, VirtualGridCellKey, VirtualGridSpan, VirtualMasonry, VirtualMasonryState,
+    VirtualizerAlign, VirtualizerBinding, VirtualizerLayout, VirtualizerScrollOptions,
+    VirtualizerSizing, VirtualizerSource, VirtualizerState, YueTabItem, YueTabs,
 };
 
 struct Records(usize);
@@ -36,6 +36,8 @@ pub(crate) struct VirtualLayoutsPage {
     horizontal: Entity<VirtualizerState>,
     active: usize,
     frozen: bool,
+    rtl: bool,
+    spanning: bool,
     builds: [Rc<Cell<usize>>; 3],
 }
 impl VirtualLayoutsPage {
@@ -80,6 +82,8 @@ impl VirtualLayoutsPage {
             horizontal,
             active: 0,
             frozen: true,
+            rtl: false,
+            spanning: false,
             builds: std::array::from_fn(|_| Rc::new(Cell::new(0))),
         }
     }
@@ -119,8 +123,11 @@ impl VirtualLayoutsPage {
                 let columns = self.columns.clone();
                 let frozen = self.frozen;
                 let freeze_owner = owner.clone();
+                let rtl_owner = owner.clone();
+                let span_owner = owner.clone();
                 let controls = div()
                     .flex()
+                    .flex_wrap()
                     .gap_2()
                     .child(
                         YueButton::new(
@@ -135,6 +142,40 @@ impl VirtualLayoutsPage {
                         .on_click(move |_, _, cx| {
                             let _ = freeze_owner.update(cx, |p, cx| {
                                 p.frozen = !p.frozen;
+                                cx.notify();
+                            });
+                        }),
+                    )
+                    .child(
+                        YueButton::new(
+                            "grid-direction",
+                            if self.rtl {
+                                "切换为 LTR"
+                            } else {
+                                "切换为 RTL"
+                            },
+                        )
+                        .theme(theme)
+                        .on_click(move |_, _, cx| {
+                            let _ = rtl_owner.update(cx, |p, cx| {
+                                p.rtl = !p.rtl;
+                                cx.notify();
+                            });
+                        }),
+                    )
+                    .child(
+                        YueButton::new(
+                            "grid-span",
+                            if self.spanning {
+                                "取消单元格合并"
+                            } else {
+                                "合并正文 2×3 单元格"
+                            },
+                        )
+                        .theme(theme)
+                        .on_click(move |_, _, cx| {
+                            let _ = span_owner.update(cx, |p, cx| {
+                                p.spanning = !p.spanning;
                                 cx.notify();
                             });
                         }),
@@ -169,6 +210,16 @@ impl VirtualLayoutsPage {
                             move |cell, _, _| {
                                 builds.set(builds.get() + 1);
                                 let is_frozen = cell.is_frozen_row() || cell.is_frozen_column();
+                                let label = format!(
+                                    "{} × {}{}",
+                                    cell.row().index() + 1,
+                                    cell.column().index() + 1,
+                                    if cell.row_span() > 1 || cell.column_span() > 1 {
+                                        " · 合并 2×3"
+                                    } else {
+                                        ""
+                                    }
+                                );
                                 let cell_element = div().bg(gpui_kit::rgb(if is_frozen {
                                     theme.surface_component()
                                 } else {
@@ -177,6 +228,7 @@ impl VirtualLayoutsPage {
                                 cell_element
                                     .id("grid-cell")
                                     .role(Role::Cell)
+                                    .aria_label(label.clone())
                                     .size_full()
                                     .px_3()
                                     .flex()
@@ -184,15 +236,28 @@ impl VirtualLayoutsPage {
                                     .border_b_1()
                                     .border_r_1()
                                     .border_color(gpui_kit::rgb(theme.border_default()))
-                                    .child(format!(
-                                        "{} × {}",
-                                        cell.row().index() + 1,
-                                        cell.column().index() + 1
-                                    ))
+                                    .child(label)
+                                    .test_support()
                             },
                         )
                         .frozen_rows(usize::from(frozen))
                         .frozen_columns(usize::from(frozen))
+                        .right_to_left(self.rtl)
+                        .spans(
+                            &if self.spanning {
+                                vec![VirtualGridSpan::new(
+                                    VirtualGridCellKey::new(1usize, 1usize),
+                                    2,
+                                    3,
+                                )]
+                            } else {
+                                Vec::new()
+                            },
+                            cx,
+                        )
+                        .expect(
+                            "showcase body span is inside Fixed source and does not cross freezing",
+                        )
                         .role(Role::Grid)
                         .test_support(),
                     )
@@ -200,7 +265,7 @@ impl VirtualLayoutsPage {
                     .child(Scrollbar::horizontal(&self.scroll))
                     .into_any_element();
                 (
-                    "Grid · 一百万行 × 一千列，可冻结首行首列。四个裁剪区共用一个滚动位置，定位自动避开冻结条带。",
+                    "Grid · 一百万行 × 一千列，支持首行首列冻结、正文合并与 RTL。共用一个原生滚动位置，定位按逻辑起点避开冻结条带。",
                     controls,
                     content,
                 )
@@ -409,6 +474,19 @@ mod tests {
         click(cx, "grid-freeze");
         assert!(!view.read_with(cx, |p, _| p.frozen));
         click(cx, "grid-freeze");
+        click(cx, "grid-direction");
+        assert!(view.read_with(cx, |p, _| p.rtl));
+        click(cx, "grid-span");
+        assert!(view.read_with(cx, |p, _| p.spanning));
+        let merged = cx.update(|w, _| {
+            gpui_kit::base::test_support::snapshots(w)
+                .into_iter()
+                .filter(|node| node.label() == Some("2 × 2 · 合并 2×3"))
+                .collect::<Vec<_>>()
+        });
+        assert_eq!(merged.len(), 1);
+        assert_eq!(merged[0].bounds().size, gpui_kit::size(px(432.), px(72.)));
+        click(cx, "grid-direction");
         click(cx, "grid-last");
         assert!(
             view.read_with(cx, |p, cx| p.scroll.offset().x < px(-100_000.)

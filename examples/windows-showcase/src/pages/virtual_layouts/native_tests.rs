@@ -321,6 +321,7 @@ struct MotionProbe {
     columns: Entity<VirtualizerState>,
     scroll: ScrollHandle,
     masonry: Entity<VirtualMasonryState>,
+    measured: Entity<VirtualizerState>,
 }
 impl MotionProbe {
     fn new(cx: &mut Context<Self>) -> Self {
@@ -353,11 +354,23 @@ impl MotionProbe {
                 )
                 .unwrap()
             }),
+            measured: cx.new(|_| {
+                let mut state = VirtualizerState::new(
+                    Axis::Vertical,
+                    Rc::new(Records(1000)),
+                    VirtualizerSizing::measured(px(20.)),
+                )
+                .unwrap();
+                state
+                    .set_layout(VirtualizerLayout::default().overscan(px(100.)))
+                    .unwrap();
+                state
+            }),
         }
     }
 }
 impl Render for MotionProbe {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         div()
             .flex()
             .flex_col()
@@ -371,6 +384,25 @@ impl Render for MotionProbe {
                         div().child(format!("{}:{}", cell.row().index(), cell.column().index()))
                     },
                 )
+                .right_to_left(true)
+                .frozen_rows(1)
+                .frozen_columns(1)
+                .spans(
+                    &[VirtualGridSpan::new(
+                        VirtualGridCellKey::new(1usize, 1usize),
+                        2,
+                        3,
+                    )],
+                    cx,
+                )
+                .unwrap()
+                .w(px(300.))
+                .h(px(100.)),
+            )
+            .child(
+                VirtualList::new("native-measured-motion", &self.measured, |_, _, _| {
+                    div().h(px(20.))
+                })
                 .w(px(300.))
                 .h(px(100.)),
             )
@@ -416,30 +448,48 @@ fn native_smooth_layouts_sample_and_settle() {
                         state.update(cx, |s, cx| { s.scroll_to_key(key.into(), options).unwrap(); cx.notify(); });
                     }
                     p.masonry.update(cx, |s, cx| { s.scroll_to_offset(80., options).unwrap(); cx.notify(); });
+                    p.measured.update(cx, |s,cx| {s.scroll_to_key(2usize.into(),options).unwrap();cx.notify();});
                 }));
                 let mut grid_middle = false;
                 let mut masonry_middle = false;
                 let mut settled = false;
+                let mut measured_middle=false;
                 for _ in 0..100 {
                     cx.background_executor().timer(Duration::from_millis(20)).await;
-                    let (position, offset, pending) = cx.update(|cx| {
+                    let (position, offset, measured, pending) = cx.update(|cx| {
                         let p = page.read(cx);
-                        (p.scroll.precise_offset(), -p.masonry.read(cx).scroll_handle().precise_offset().y,
-                         p.rows.read(cx).has_scroll_command() || p.columns.read(cx).has_scroll_command() || p.masonry.read(cx).has_scroll_command())
+                        let column=p.columns.read(cx);let q=column.viewport().unwrap().offset();
+                        assert!((-p.scroll.precise_offset().x-(column.total_extent()-300.-q)).abs()<0.01);
+                        (gpui_kit::point(-q,p.scroll.precise_offset().y), -p.masonry.read(cx).scroll_handle().precise_offset().y,
+                         p.measured.read(cx).viewport().unwrap().offset(),
+                         p.rows.read(cx).has_scroll_command() || column.has_scroll_command() || p.masonry.read(cx).has_scroll_command()||p.measured.read(cx).has_scroll_command())
                     });
-                    grid_middle |= position.x < -0.01 && position.x > -99.99 && position.y < -0.01 && position.y > -79.99;
+                    grid_middle |= position.x < -0.01 && position.x > -49.99 && position.y < -0.01 && position.y > -59.99;
                     masonry_middle |= offset > 0.01 && offset < 79.99;
+                    measured_middle |= measured>0.01&&measured<39.99;
                     if !pending {
-                        if position != gpui_kit::point(-100., -80.) || (offset - 80.).abs() > 0.01 {
+                        if position != gpui_kit::point(-50., -60.) || (offset - 80.).abs() > 0.01 || (measured-40.).abs()>0.01 {
                             return Err(format!("incorrect native targets: grid={position:?}, masonry={offset}"));
                         }
                         settled = true; break;
                     }
                 }
-                if !settled || !grid_middle || !masonry_middle {
-                    return Err(format!("native smooth contract: settled={settled}, grid middle={grid_middle}, masonry middle={masonry_middle}"));
+                if !settled || !grid_middle || !masonry_middle ||!measured_middle {
+                    return Err(format!("native smooth contract: settled={settled}, grid middle={grid_middle}, masonry middle={masonry_middle}, measured middle={measured_middle}"));
                 }
-                println!("native smooth: Grid x/y and Masonry sampled intermediate positions and settled; no GPU timing claim");
+                cx.update(|cx|page.update(cx,|p,cx|p.measured.update(cx,|s,cx|{
+                    s.scroll_to_key(900usize.into(),VirtualizerScrollOptions::default().align(VirtualizerAlign::Start)
+                        .motion(VirtualizerMotion::JumpThenSmooth{duration:Duration::from_millis(360),max_distance:px(100.)})).unwrap();cx.notify();
+                })));
+                let mut tail_middle=false;let mut tail_settled=false;
+                for _ in 0..100 {
+                    cx.background_executor().timer(Duration::from_millis(20)).await;
+                    let (q,pending)=cx.update(|cx|{let s=page.read(cx).measured.read(cx);(s.viewport().unwrap().offset(),s.has_scroll_command())});
+                    tail_middle|=q>17950.01&&q<17999.99;
+                    if !pending {tail_settled=(q-18000.).abs()<0.01;break;}
+                }
+                if !tail_middle||!tail_settled{return Err(format!("native measured tail: middle={tail_middle}, settled={tail_settled}"));}
+                println!("native smooth: RTL frozen/spanned Grid x/y, Masonry and Measured sampled intermediate positions; measured jump tail settled; no GPU timing claim");
                 Ok(())
             }.await;
             *observed.borrow_mut() = Some(checked);
