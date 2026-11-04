@@ -90,6 +90,33 @@ pub struct VirtualGrid {
     render: Renderer,
 }
 impl VirtualGrid {
+    /// Preflight configuration without claiming a mount, querying the source,
+    /// or writing a scroll position. Dynamic cell-derived row heights are not
+    /// supported: both dimensions must be provided by the caller.
+    pub fn validate_axes(
+        rows: &VirtualizerState,
+        columns: &VirtualizerState,
+    ) -> Result<(), VirtualizerError> {
+        if rows.axis() != Axis::Vertical || columns.axis() != Axis::Horizontal {
+            return Err(VirtualizerError::InvalidGeometry("grid axes"));
+        }
+        if rows.attachment() != VirtualizerAttachment::Attached
+            || columns.attachment() != VirtualizerAttachment::Attached
+        {
+            return Err(VirtualizerError::Unsupported("grid requires attached axes"));
+        }
+        if rows.sizing_kind() == VirtualizerSizingKind::Measured
+            || columns.sizing_kind() == VirtualizerSizingKind::Measured
+        {
+            return Err(VirtualizerError::Unsupported(
+                "grid requires explicit row/column dimensions",
+            ));
+        }
+        if !rows.shares_binding(columns) {
+            return Err(VirtualizerError::BindingConflict);
+        }
+        Ok(())
+    }
     /// States must be Attached, share a binding, and use Fixed/Known sizes.
     /// Cells do not determine row/column sizes; callers supply explicit geometry.
     pub fn new<R: IntoElement>(
@@ -173,20 +200,7 @@ impl Element for VirtualGrid {
     ) -> (LayoutId, VirtualGridFrame) {
         let rows = self.rows.read(cx);
         let columns = self.columns.read(cx);
-        assert!(rows.axis() == Axis::Vertical && columns.axis() == Axis::Horizontal);
-        assert!(
-            rows.attachment() == VirtualizerAttachment::Attached
-                && columns.attachment() == VirtualizerAttachment::Attached
-        );
-        assert!(
-            rows.sizing_kind() != VirtualizerSizingKind::Measured
-                && columns.sizing_kind() != VirtualizerSizingKind::Measured,
-            "grid cells require explicit row/column dimensions"
-        );
-        assert!(
-            rows.shares_binding(columns),
-            "grid axes must share one host binding"
-        );
+        Self::validate_axes(rows, columns).expect("invalid virtual grid configuration");
         let global = id.expect("grid identity");
         for state in [&self.rows, &self.columns] {
             state

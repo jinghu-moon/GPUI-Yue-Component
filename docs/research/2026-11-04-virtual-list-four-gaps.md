@@ -24,12 +24,19 @@
 | Grid 定位右下角 | 最后单元格 1000000 × 1000 可见 |
 | Grid 在尾部两轴反向滚轮 | 行列均向前移动，无整片空白 |
 | Masonry 切换三列／五列 | 重新换行，卡片按五列显示 |
+| 横向 Measured 定位最后节点 | 节点 2000 完整进入视口，前面的异宽节点正常呈现 |
 
 覆盖边界：当前一台 Windows 机器与 GPU；没有物理多屏 DPI 切换、不同显卡／刷新率、触控板惯性或图片网络时序证据。不据此宣称 GPU 帧率提升。自动探针可在这些环境重跑，手动输入与 headless 测试各自提供独立证据。
 
 ## 2. API 一致性与边界
 
-待完成。
+起点存在两个公开接缝缺口：Masonry 只接受 align，缺少能力查询；Grid 的配置错误要到布局时 assert。新增合同测试在实现前因缺失 API 编译失败；实现后 3 项全部通过，并继续保留原有 align 调用测试。
+
+- Masonry 的 `scroll_to_key` 接受 `impl Into<VirtualizerScrollOptions>`，原 align 经 `From` 转为默认 instant 选项。新旧入口在真实布局中的 Center 落点一致。`capabilities()` 返回独立 `VirtualMasonryCapabilities`，沿用 axis／supports_attached／supports_follow_tail／supports_smooth／supports_scroll_to_offset 查询名；明确后四项尚不支持。一维能力查询补充 offset reader。
+- 新请求的 key、motion 边界和 unsupported 在观察输入、取消旧命令和分配 command ID 之前校验。非法／不支持请求保留旧命令与事件队列，测试检查 ID 未消耗。Masonry 显式 smooth 返回 Unsupported；合法的 reduced-motion 请求即时定位，仍验证 duration／distance。原有一维动态／长距离安全即时定位规则不改变。
+- `VirtualGrid::validate_axes` 可在构造前返回轴错误、Owned／Measured 不支持、宿主绑定冲突；布局入口复用该校验。错误测试验证 source 未增加查询，原有效绑定仍可用。旧 `new` 保留其编程错误断言合同，未改成静默降级；预检不声称检查随后的挂载竞争。
+
+没有加入 RTL／反向布局、Masonry Attached／offset／follow-tail／smooth，或从可见单元格推测全局 Grid 动态行高。它们仍是明确能力边界，不能用接口形状一致冒充算法支持。
 
 ## 3. 性能与内存
 

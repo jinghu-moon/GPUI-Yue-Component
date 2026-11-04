@@ -179,7 +179,34 @@ pub struct VirtualMasonryState {
     removed_focus: Vec<gpui::FocusHandle>,
 }
 impl gpui::EventEmitter<VirtualizerEvent> for VirtualMasonryState {}
+
+/// Masonry has a separate scroll owner and no attached/offset/motion adapter.
+/// Query these boundaries before exposing controls shared with a linear list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct VirtualMasonryCapabilities {
+    _private: (),
+}
+impl VirtualMasonryCapabilities {
+    pub fn axis(&self) -> Axis {
+        Axis::Vertical
+    }
+    pub fn supports_attached(&self) -> bool {
+        false
+    }
+    pub fn supports_follow_tail(&self) -> bool {
+        false
+    }
+    pub fn supports_smooth(&self) -> bool {
+        false
+    }
+    pub fn supports_scroll_to_offset(&self) -> bool {
+        false
+    }
+}
 impl VirtualMasonryState {
+    pub fn capabilities(&self) -> VirtualMasonryCapabilities {
+        VirtualMasonryCapabilities { _private: () }
+    }
     pub fn new(
         source: Rc<dyn VirtualizerSource>,
         sizing: VirtualizerSizing,
@@ -600,13 +627,29 @@ impl VirtualMasonryState {
         }
         self.update_sizes(updates)
     }
+    /// Accept common scroll options or a legacy alignment. Masonry currently
+    /// supports instant key alignment only; an explicit smooth request fails
+    /// before replacing the active command. Reduced motion requests are instant.
     pub fn scroll_to_key(
         &mut self,
         key: ElementId,
-        align: VirtualizerAlign,
+        options: impl Into<VirtualizerScrollOptions>,
     ) -> Result<u64, VirtualizerError> {
         if self.source.index_of(&key).is_none() {
             return Err(VirtualizerError::MissingKey);
+        }
+        let options = options.into();
+        if let VirtualizerMotion::Smooth {
+            duration,
+            max_distance,
+        } = options.motion
+        {
+            if duration.is_zero() || !valid_positive(max_distance) {
+                return Err(VirtualizerError::InvalidGeometry("smooth bounds"));
+            }
+            if !options.reduced_motion {
+                return Err(VirtualizerError::Unsupported("masonry smooth scrolling"));
+            }
         }
         self.observe_input();
         self.cancel_scroll();
@@ -615,7 +658,7 @@ impl VirtualMasonryState {
         self.pending = Some(MasonryCommand {
             id,
             key,
-            align,
+            align: options.align,
             progress: Default::default(),
         });
         Ok(id)

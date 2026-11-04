@@ -523,7 +523,7 @@ Idle → WaitingForLayout → Seeking → Correcting → Settled
 
 同一时刻只有一个主动命令。新命令替换旧命令；真实 wheel/拖动/导航输入中断程序动效。自身测量校正和 offset 写回不视为新的用户输入。
 
-一维 state 实现上述完整定位接口；Masonry 仍是独立的 key/align pending 接缝，现共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。Masonry 未提供一维的全部 offset／smooth 参数，不能宣称两种公开 API 完全等价。
+一维 state 实现上述完整定位接口；Masonry 仍是独立的 key 定位 owner，共用有界 `CommandProgress` 并发布恰好一次 `CommandFinished`，结果包括 Settled、Cancelled、Missing 与 NoProgress。其 wheel 自动取消旧 pending（包括边界无位移输入），native scrollbar／外部 offset 变化也使旧意图失效；`cancel_scroll()` 允许消费者显式取消，`has_scroll_command()` 只读查询。测量确实改变几何前，从唯一原生位置与旧几何捕获最新阅读锚点，只补偿几何差；相同尺寸的稳定批次不额外扫描工作集。`scroll_to_key` 现接受统一 `VirtualizerScrollOptions`，兼容旧 align 参数；Masonry 显式 smooth 返回 Unsupported，合法 reduced-motion 请求按 instant 执行。key／选项失败不取消旧命令、不消耗 ID。`VirtualMasonryCapabilities` 明确 Attached／follow-tail／smooth／offset 尚不支持，一维能力查询增加 supports_scroll_to_offset。`VirtualGrid::validate_axes` 提供构造前的类型化配置预检，布局也复用同一校验；动态行高仍不支持。接口形状收敛不代表两种算法能力完全等价。
 
 Measured 定位先用估算与逻辑 item 坐标到达目标附近，实际测量后按同一 key 重求目标。最多 32 次 prepare 或 2 秒活动采样；连续 8 次确认位置无进展也结束为 `NoProgress`。隐藏、非活动、零面积或 reduced motion 的 Owned 视口直接完成安全定位，不忙等动画帧。只保存最新命令和必要校正状态，不复制浏览器完整 scroll classifier。
 

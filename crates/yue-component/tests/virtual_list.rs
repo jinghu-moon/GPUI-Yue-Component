@@ -21,6 +21,8 @@ use yue_component::{
 
 #[path = "virtual_list/adoption.rs"]
 mod adoption;
+#[path = "virtual_list/api_contract.rs"]
+mod api_contract;
 #[path = "virtual_list/followup.rs"]
 mod followup;
 #[path = "virtual_list/followup_edges.rs"]

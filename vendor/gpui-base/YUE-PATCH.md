@@ -560,3 +560,11 @@ invalidations. No mirror size cache or public API is added. Continuation ABBA
 evidence records large-list resize gains, per-block metadata/append peak costs,
 and unchanged source queries and row builds. Remove when upstream preserves the
 same invalidation/snapshot contracts with equivalent measured costs.
+
+## Virtual layout API preflight (2026-11-04)
+
+Masonry accepts common scroll options while preserving align calls, publishes
+read-only capabilities, and rejects unsupported motion before cancelling an
+active command. Reduced motion remains instant. Grid exposes and reuses a
+typed, side-effect-free axes preflight. Keep layout-specific unsupported
+boundaries explicit; remove when upstream supplies these same contracts.

@@ -12,7 +12,8 @@ pub use anchor::VirtualizerAnchorPosition;
 pub use element::VirtualList;
 pub use grid::{VirtualGrid, VirtualGridCell, VirtualGridSnapshot};
 pub use masonry::{
-    VirtualMasonry, VirtualMasonryItem, VirtualMasonrySnapshot, VirtualMasonryState,
+    VirtualMasonry, VirtualMasonryCapabilities, VirtualMasonryItem, VirtualMasonrySnapshot,
+    VirtualMasonryState,
 };
 pub use state::*;
 
@@ -208,6 +209,9 @@ impl VirtualizerCapabilities {
     pub fn supports_smooth(&self) -> bool {
         self.sizing != VirtualizerSizingKind::Measured
     }
+    pub fn supports_scroll_to_offset(&self) -> bool {
+        true
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -282,6 +286,11 @@ impl VirtualizerScrollOptions {
     pub fn reduced_motion(mut self, reduced: bool) -> Self {
         self.reduced_motion = reduced;
         self
+    }
+}
+impl From<VirtualizerAlign> for VirtualizerScrollOptions {
+    fn from(align: VirtualizerAlign) -> Self {
+        Self::default().align(align)
     }
 }
 

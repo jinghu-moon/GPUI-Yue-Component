@@ -11,15 +11,15 @@ type ItemRenderer = Rc<dyn Fn(VirtualizerItem, &mut Window, &mut App) -> AnyElem
 type ViewFactory = Rc<dyn Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> gpui_kit::AnyView>;
 
 pub use gpui_kit::base::virtualization::{
-    VirtualGrid, VirtualGridCell, VirtualGridSnapshot, VirtualMasonry, VirtualMasonryItem,
-    VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign, VirtualizerAnchorPosition,
-    VirtualizerAttachment, VirtualizerBinding, VirtualizerCache, VirtualizerCapabilities,
-    VirtualizerChange, VirtualizerCommandOutcome, VirtualizerError, VirtualizerEvent,
-    VirtualizerItem, VirtualizerItemIdentity, VirtualizerLayout, VirtualizerMeasurement,
-    VirtualizerMotion, VirtualizerRange, VirtualizerRangeExtractor, VirtualizerScrollDirection,
-    VirtualizerScrollOptions, VirtualizerScrollRequest, VirtualizerScrollbarHandle,
-    VirtualizerSizeUpdate, VirtualizerSizing, VirtualizerSizingKind, VirtualizerSnapshot,
-    VirtualizerSource, VirtualizerState, VirtualizerViewport,
+    VirtualGrid, VirtualGridCell, VirtualGridSnapshot, VirtualMasonry, VirtualMasonryCapabilities,
+    VirtualMasonryItem, VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign,
+    VirtualizerAnchorPosition, VirtualizerAttachment, VirtualizerBinding, VirtualizerCache,
+    VirtualizerCapabilities, VirtualizerChange, VirtualizerCommandOutcome, VirtualizerError,
+    VirtualizerEvent, VirtualizerItem, VirtualizerItemIdentity, VirtualizerLayout,
+    VirtualizerMeasurement, VirtualizerMotion, VirtualizerRange, VirtualizerRangeExtractor,
+    VirtualizerScrollDirection, VirtualizerScrollOptions, VirtualizerScrollRequest,
+    VirtualizerScrollbarHandle, VirtualizerSizeUpdate, VirtualizerSizing, VirtualizerSizingKind,
+    VirtualizerSnapshot, VirtualizerSource, VirtualizerState, VirtualizerViewport,
 };
 
 /// A vertical list, with list/list-item semantics unless explicitly overridden.
