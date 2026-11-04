@@ -87,6 +87,77 @@ fn size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry() {
     }
 }
 
+#[test]
+fn invalid_size_batches_leave_geometry_and_revision_unchanged() {
+    let state = ListState::new_with_uniform_height(1025, ListAlignment::Top, px(0.), px(20.));
+    let frozen = state.geometry();
+    for (index, height) in [(1025, 30.), (1, 0.), (1, f32::NAN), (1, f32::INFINITY)] {
+        let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            state.set_item_sizes(
+                &[
+                    (0, gpui::size(px(300.), px(31.))),
+                    (index, gpui::size(px(300.), px(height))),
+                ],
+                true,
+            );
+        }));
+        assert!(result.is_err());
+        let current = state.geometry();
+        assert_eq!(current.revision(), frozen.revision());
+        assert_eq!(current.measured_count(), 0);
+        assert_eq!(current.item(0).unwrap().extent(), px(20.));
+    }
+}
+
+#[test]
+fn mixed_size_batches_match_input_order_and_precise_prefixes_across_tree_nodes() {
+    let state = ListState::new_with_uniform_height(5000, ListAlignment::Top, px(0.), px(20.));
+    let original = state.geometry();
+    let mut expected = vec![(px(0.), px(20.), false); 5000];
+    let mut seed = 7u64;
+    for batch in 0..6 {
+        let measured = batch % 2 == 0;
+        let mut updates = Vec::new();
+        for at in 0..512 {
+            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+            let index = (seed >> 32) as usize % expected.len();
+            updates.push((
+                index,
+                gpui::size(px(200. + batch as f32), px(10. + (at % 29) as f32)),
+            ));
+        }
+        if batch % 3 == 0 {
+            updates.sort_by_key(|(index, _)| *index);
+        } else if batch % 3 == 1 {
+            updates.sort_by_key(|(index, _)| std::cmp::Reverse(*index));
+        }
+        for (index, size) in &updates {
+            expected[*index] = (size.width, size.height, measured);
+        }
+        state.set_item_sizes(&updates, measured);
+        let current = state.geometry();
+        let mut start = 0.;
+        for (index, (width, height, valid)) in expected.iter().copied().enumerate() {
+            let item = current.item(index).unwrap();
+            assert_eq!(item.precise_start(), start);
+            assert_eq!(item.extent(), height);
+            assert_eq!(item.cross_extent(), width);
+            assert_eq!(item.is_measured(), valid);
+            start += f64::from(height);
+            assert_eq!(
+                original.item(index).unwrap().precise_start(),
+                index as f64 * 20.
+            );
+            assert_eq!(original.item(index).unwrap().extent(), px(20.));
+        }
+        assert_eq!(current.revision(), original.revision() + batch + 1);
+        assert_eq!(
+            current.measured_count(),
+            expected.iter().filter(|(_, _, valid)| *valid).count()
+        );
+    }
+}
+
 #[gpui::test]
 fn size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it(cx: &mut TestAppContext) {
     let state = ListState::new_with_uniform_height(1025, ListAlignment::Top, px(0.), px(20.));

@@ -284,3 +284,16 @@ needed. Dense input retains linear rebuilding. Preserve reset, revision, focus
 handles, anchors and frozen snapshots. The adoption report records sparse and
 dense ABBA costs and native integration coverage. Remove when upstream has an
 equivalent persistent width invalidation path.
+
+## Bounded native size feedback batches (2026-11-04)
+
+Validate all indexes/heights before mutation, borrow ascending input directly,
+and stably sort only unordered input. Keep the final duplicate value, focus
+handles, measured/hint flags and one geometry revision per nonempty call.
+Apply eight unique writes per forward-cursor tree splice so old/new sparse
+paths do not coexist for an entire large batch. Singletons add no sorting
+buffer; frozen snapshots keep their original tree. A whole-batch variant was
+measured and reverted because its transient peak nearly doubled. Continuation
+evidence records bounded CPU/allocation gains and the remaining small sparse
+batch peak cost. Remove when upstream matches both the semantics and measured
+CPU/peak tradeoff without a parallel measurement cache.

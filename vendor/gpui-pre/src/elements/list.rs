@@ -661,8 +661,13 @@ impl ListState {
         state.geometry_revision += 1;
     }
 
-    /// Caller-validated batch; one revision and persistent path edits only.
+    /// Apply a size batch with one revision and bounded persistent path edits.
+    /// Repeated indexes use their last input value. Validate the entire batch
+    /// before changing geometry; already ordered input needs no sorting buffer.
     pub fn set_item_sizes(&self, updates: &[(usize, Size<Pixels>)], measured: bool) {
+        if updates.is_empty() {
+            return;
+        }
         let mut state = self.0.borrow_mut();
         for (ix, size) in updates {
             assert!(
@@ -670,32 +675,55 @@ impl ListState {
                     && size.height.0.is_finite()
                     && size.height > px(0.)
             );
+        }
+        let mut sorted;
+        let updates = if updates.windows(2).all(|pair| pair[0].0 <= pair[1].0) {
+            updates
+        } else {
+            sorted = updates.to_vec();
+            // Stable sorting retains input order for duplicate indexes.
+            sorted.sort_by_key(|(ix, _)| *ix);
+            &sorted
+        };
+        let mut unique = updates
+            .iter()
+            .enumerate()
+            .filter(|(at, (ix, _))| updates.get(at + 1).is_none_or(|next| next.0 != *ix))
+            .map(|(_, update)| update)
+            .peekable();
+        while let Some((first, _)) = unique.peek().copied() {
             let mut cursor = state.items.cursor::<Count>(());
-            let mut tree = cursor.slice(&Count(*ix), Bias::Right);
-            let focus_handle = cursor.item().unwrap().focus_handle();
-            tree.push(
-                if measured {
-                    ListItem::Measured {
-                        size: *size,
-                        valid: true,
-                        focus_handle,
-                    }
-                } else {
-                    ListItem::Unmeasured {
-                        size_hint: Some(*size),
-                        focus_handle,
-                    }
-                },
-                (),
-            );
-            cursor.seek_forward(&Count(ix + 1), Bias::Right);
+            let mut tree = cursor.slice(&Count(*first), Bias::Right);
+            // Releasing the previous tree every eight unique writes bounds the
+            // temporary coexistence of old/new sparse paths. The RefCell borrow
+            // spans the whole call; callers observe one final revision only.
+            for (ix, size) in unique.by_ref().take(8) {
+                if ix != first {
+                    tree.append(cursor.slice(&Count(*ix), Bias::Right), ());
+                }
+                let focus_handle = cursor.item().unwrap().focus_handle();
+                tree.push(
+                    if measured {
+                        ListItem::Measured {
+                            size: *size,
+                            valid: true,
+                            focus_handle,
+                        }
+                    } else {
+                        ListItem::Unmeasured {
+                            size_hint: Some(*size),
+                            focus_handle,
+                        }
+                    },
+                    (),
+                );
+                cursor.seek_forward(&Count(ix + 1), Bias::Right);
+            }
             tree.append(cursor.suffix(), ());
             drop(cursor);
             state.items = tree;
         }
-        if !updates.is_empty() {
-            state.geometry_revision += 1;
-        }
+        state.geometry_revision += 1;
     }
 
     /// Import measurements only for the cross extent at which they were obtained.
