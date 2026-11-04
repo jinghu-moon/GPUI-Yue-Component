@@ -665,7 +665,9 @@ Fixed/Known 查询与 prefix 使用 f64；原生 ScrollHandle 在同一个共享
 
 第四轮修复前 Fixed/Known 两轴在 offset=16777216 时，0.25px／1px／8×0.25px 的原生 wheel 净位移均为 0；修复后分别为 0.25／1／2px。回归同时验证方向反转、同投影显式 jump、起点 clamp、局部实际 bounds、点击命中和 Grid 两轴合并。已验证 Fixed 1M × 20px 的实际 Owned 首尾定位及 1B 项 headless 查询；后者不等于 1B 项完整原生绘制验收。
 
-**仍有边界：**Measured 原生 ListState 的 SumTree／绝对累计以及 Pixels 仍为 f32；普通 Div／UniformList 的绘制仍使用 Pixels 投影。本轮未证明 Measured 在任意大坐标下保持亚像素累计精度，也未证明 scrollbar 的 f32 映射能逐一寻址所有亚像素位置。精确 offset 与局部坐标修复不能扩展成“所有模式无限尺度精确”的声明；更大范围须继续在原生所有者验证与改造。
+Measured 原生 ListState 现已在同一 SumTree 使用 f64 累计与 seek；Base 直接使用 precise geometry、viewport batch、offset 和 prepaint 接口。原生 wheel/scroll_by、双轴局部 bounds/命中、尾项可达与滚动条端点已增加升级回归。测量计数由总数减未测数推导，使 summary 保持原大小；具体正确性收益和 CPU 代价见[逐项比较](research/2026-11-04-virtual-list-optimization-series.md#5-measured-累计精度采用修正后的紧凑方案)。
+
+**仍有边界：**单项尺寸、项内偏移、padding/Attached 内容原点、普通 Div／UniformList 绘制及滚动条输入仍使用 Pixels 投影；f64 本身也有有限精度。旧 geometry/batch 的 Pixels 接口仍投影，大累计坐标宿主须使用 precise 接口。不能扩展成“所有模式无限尺度精确”或滑块可逐一寻址任意亚像素的声明。
 
 浏览器 16M/33M 等元素高度上限不适用于 GPUI，也不能作为阈值。发布说明只写真实验证过的规模与尺寸范围；超出已验证范围须可诊断，不能静默漏行或把尾部当作已到达。百万条是必测压力场景，测试通过前不是能力宣称。
 

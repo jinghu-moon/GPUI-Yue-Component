@@ -191,3 +191,66 @@ fn horizontal_viewport_uses_physical_left_right_padding(cx: &mut TestAppContext)
     let (_, cx) = cx.add_window_view(|_, _| Probe);
     cx.update(|w, cx| w.draw(cx).clear(cx));
 }
+
+#[gpui::test]
+fn measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end(cx: &mut TestAppContext) {
+    struct PreciseView(ListState);
+    impl Render for PreciseView {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            list(self.0.clone(), |_, _, _| {
+                div().h(px(20.)).into_any_element()
+            })
+            .w(px(100.))
+            .h(px(59.))
+        }
+    }
+    let state = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.));
+    state.splice_with_size_hints(0..1, [px(16_777_216.)]);
+    let frozen = state.geometry();
+    assert_eq!(
+        frozen.item(600).unwrap().precise_start(),
+        16_777_216. + 599. * 20.
+    );
+    assert_eq!(frozen.precise_range(16_777_216.25, 19.75), 1..2);
+    state.scroll_to(gpui::ListOffset {
+        item_ix: 600,
+        offset_in_item: px(0.),
+    });
+    let (_, cx) = cx.add_window_view({
+        let state = state.clone();
+        move |_, _| PreciseView(state)
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let start = -state.precise_scroll_offset().y;
+    for step in 1..=4 {
+        state.scroll_by(px(0.25));
+        cx.update(|w, cx| {
+            w.refresh();
+            w.draw(cx).clear(cx);
+        });
+        assert_eq!(
+            -state.precise_scroll_offset().y,
+            start + f64::from(step) * 0.25
+        );
+        assert_eq!(
+            state.bounds_for_item(601).unwrap().top(),
+            px(20. - step as f32 * 0.25)
+        );
+    }
+    state.scrollbar_drag_started();
+    let projected_max = state.max_offset_for_scrollbar().y;
+    state.set_offset_from_scrollbar(gpui::point(px(0.), -projected_max));
+    cx.update(|w, cx| {
+        w.refresh();
+        w.draw(cx).clear(cx);
+    });
+    assert_eq!(
+        -state.precise_scroll_offset().y,
+        state.geometry().precise_total_extent() - 59.
+    );
+    assert_eq!(state.is_scrolled_to_end(), Some(true));
+    state.scrollbar_drag_ended();
+    state.set_offset_from_scrollbar(gpui::point(px(0.), px(0.)));
+    assert_eq!(state.precise_scroll_offset().y, 0.);
+    assert_eq!(frozen.precise_total_extent(), 16_777_216. + 999. * 20.);
+}

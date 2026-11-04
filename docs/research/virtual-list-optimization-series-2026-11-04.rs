@@ -217,24 +217,26 @@ impl Render for Harness {
 }
 #[gpui_kit::test]
 fn series_trajectories(cx: &mut TestAppContext) {
-    for mode in 0..3 {
+    for mode in 0..4 {
         for trace in ["steady", "rapid", "complex", "resize", "size"] {
-            if trace == "size" && mode < 2 {
+            if trace == "size" && mode != 2 {
                 continue;
             }
             for sample in 0..3 {
                 let calls = Rc::new(Cell::new(0));
                 let builds = Rc::new(Cell::new(0));
                 let (view, cx) = cx.add_window_view(|_, cx| Harness {
-                    state: if mode < 2 {
+                    state: if mode != 2 {
                         State::List(cx.new(|_| {
                             VirtualizerState::new(
                                 Axis::Vertical,
                                 source(100_000, &calls),
                                 if mode == 0 {
                                     VirtualizerSizing::fixed(px(40.))
-                                } else {
+                                } else if mode == 1 {
                                     VirtualizerSizing::known(vec![px(40.); 100_000])
+                                } else {
+                                    VirtualizerSizing::measured(px(40.))
                                 },
                             )
                             .unwrap()
@@ -283,6 +285,14 @@ fn series_trajectories(cx: &mut TestAppContext) {
                             if trace == "rapid" {
                                 let offset = if step % 2 == 0 { 120_000. } else { 10_000. };
                                 match &h.state {
+                                    State::List(s) if mode == 3 => s.update(cx, |s, _| {
+                                        s.scroll_to_key(
+                                            (offset as usize / 40).into(),
+                                            VirtualizerScrollOptions::default()
+                                                .align(VirtualizerAlign::Start),
+                                        )
+                                        .unwrap();
+                                    }),
                                     State::List(s) => s
                                         .read(cx)
                                         .native_scroll_handle()
@@ -420,6 +430,55 @@ fn series_idle_timer(cx: &mut TestAppContext) {
         println!(
             "SERIES,case=idle-2000,sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads=0,builds=0",
             stats.count, stats.peak
+        );
+    }
+}
+
+#[test]
+fn series_measured_precision() {
+    use gpui_kit::{ListAlignment, ListOffset, ListState};
+    let calls = Rc::new(Cell::new(0));
+    let mut state = VirtualizerState::new(
+        Axis::Vertical,
+        source(100_000, &calls),
+        VirtualizerSizing::measured(px(20.25)),
+    )
+    .unwrap();
+    state
+        .update_size_hints(&[VirtualizerSizeUpdate::new(0usize, px(16_777_216.))])
+        .unwrap();
+    let viewport =
+        VirtualizerViewport::new(state.binding().unwrap(), 1, 16_789_346., px(100.), px(300.));
+    let snapshot = state.snapshot(&viewport).unwrap();
+    let errors = [1, 2, 31, 600, 999]
+        .into_iter()
+        .filter(|ix| snapshot.item(*ix).unwrap().start() != 16_777_216. + (*ix - 1) as f64 * 20.25)
+        .count();
+    let native = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.25));
+    native.splice_with_size_hints(0..1, [px(16_777_216.)]);
+    native.scroll_to(ListOffset {
+        item_ix: 600,
+        offset_in_item: px(0.),
+    });
+    for _ in 0..4 {
+        native.scroll_by(px(0.25));
+    }
+    println!(
+        "PRECISION,prefix_errors={errors},input_offset={}",
+        f64::from(native.logical_scroll_top().offset_in_item)
+    );
+    for sample in 0..5 {
+        calls.set(0);
+        let (_, ns, stats) = measured(|| {
+            for step in 0..10_000 {
+                black_box(snapshot.item(1 + step % 999).unwrap());
+            }
+        });
+        println!(
+            "SERIES,case=measured-queries,sample={sample},ns={ns},p50=0,p95=0,p99=0,allocations={},peak={},reads={},builds=0",
+            stats.count,
+            stats.peak,
+            calls.get()
         );
     }
 }

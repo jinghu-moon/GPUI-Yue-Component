@@ -291,10 +291,10 @@ impl Element for VirtualList {
             let role = self.item_role;
             let source = snapshot.clone();
             let axis = source.axis();
-            let batch = native.layout_for_viewport_on_axis(
+            let batch = native.layout_for_precise_viewport_on_axis(
                 snapshot.axis(),
                 bounds,
-                Pixels::from(applied),
+                applied,
                 padding,
                 move |index, w, cx| {
                     let item = source
@@ -314,7 +314,7 @@ impl Element for VirtualList {
                 window,
                 cx,
             );
-            applied = f64::from(batch.offset());
+            applied = batch.precise_offset();
             frame.measured = Some(batch);
             self.state
                 .update(cx, |state, _| state.sync_measured_geometry());
@@ -332,10 +332,10 @@ impl Element for VirtualList {
                     let role = self.item_role;
                     let source = self.state.read(cx).snapshot(&current).unwrap();
                     let axis = source.axis();
-                    let batch = native.layout_for_viewport_on_axis(
+                    let batch = native.layout_for_precise_viewport_on_axis(
                         snapshot.axis(),
                         bounds,
-                        Pixels::from(target),
+                        target,
                         padding,
                         move |index, w, cx| {
                             let item = source.item(index).unwrap();
@@ -354,7 +354,7 @@ impl Element for VirtualList {
                         window,
                         cx,
                     );
-                    applied = f64::from(batch.offset());
+                    applied = batch.precise_offset();
                     frame.measured = Some(batch);
                     self.state
                         .update(cx, |state, _| state.sync_measured_geometry());
@@ -410,7 +410,7 @@ impl Element for VirtualList {
             cx,
             |_, _, hitbox, window, cx| {
                 if let Some(batch) = &mut frame.measured {
-                    batch.prepaint(bounds, Pixels::from(applied), window, cx);
+                    batch.prepaint_precise(bounds, applied, window, cx);
                 } else {
                     window.with_content_mask(Some(ContentMask { bounds }), |window| {
                         for item in snapshot.working_items() {

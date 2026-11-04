@@ -1,0 +1,24 @@
+   Compiling yue-component v0.1.0 (D:\100_Projects\110_Daily\GPUI-Yue-Component\crates\yue-component)
+    Finished `test` profile [unoptimized] target(s) in 3.39s
+     Running tests\virtual_list.rs (target\debug\deps\virtual_list-309599f03f74c13f.exe)
+
+running 1 test
+test optimizations::measured_native_small_steps_survive_large_cumulative_coordinates ... FAILED
+
+failures:
+
+---- optimizations::measured_native_small_steps_survive_large_cumulative_coordinates stdout ----
+
+thread 'optimizations::measured_native_small_steps_survive_large_cumulative_coordinates' (40532) panicked at crates\yue-component\tests\virtual_list\optimizations.rs:164:9:
+assertion `left == right` failed
+  left: 0px
+ right: 0.25px
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    optimizations::measured_native_small_steps_survive_large_cumulative_coordinates
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 103 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p yue-component --test virtual_list`

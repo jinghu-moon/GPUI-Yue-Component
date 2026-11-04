@@ -24,7 +24,7 @@
 | 2 | Masonry 帧内重复工作与临时分配 | 采用：最终帧元数据只准备一次 |
 | 3 | 无变化测量反馈 | 采用：帧内过滤 + 公共批次快速返回 |
 | 4 | 滚动结束计时任务 | 采用：会话内复用单一截止时间任务 |
-| 5 | Measured 原生累计精度 | 待比较 |
+| 5 | Measured 原生累计精度 | 采用：同一原生树使用 f64 累计与局部差值 |
 | 6 | Masonry 留白锚点与定位收敛 | 待比较 |
 | 7 | 保留快照追加时的 COW 写放大 | 待比较 |
 
@@ -61,3 +61,15 @@
 耗时中位数 6.1705→0.68465ms（约 −88.9%），主线程分配 40,419→4,025（约 −90.0%），临时峰值 116,432→876 字节。此为测试执行器中的调度工作量，不是实窗 CPU/GPU 或物理帧率。两个版本都验证持续输入不提前结束、停止 120ms 恰好一次 ScrollEnd、后续会话可重新启动。
 
 新增长于初始截止时间的连续活动回归；virtual_list 95 passed / 8 ignored。保留纯 owner 的 poll_scroll_idle 接口，不添加帧轮询、额外输入处理或逐项状态。
+
+## 5. Measured 累计精度：采用修正后的紧凑方案
+
+基线 6042f0e。[升级前失败](virtual-list-series-measured-before-failure.txt)复现一次 0.25px 原生滚动变成 0px。改造同一原生 SumTree 的累计 height 和 seek 为 f64，保留单项 extent 与项内偏移为 Pixels；原生 wheel、scroll_by、定位、可见范围、bounds、滚动条内部 clamp 都在原生所有者完成精确累计/局部差值。新增 precise geometry、viewport batch 与 offset 接口，Base 查询和 Owned 呈现直接使用它们。旧 Pixels 接口是显式投影，不新增第二棵树或 Yue 输入余量。
+
+同一 workload 在 before 的五个分数 prefix 查询中错误 4 个，四次 0.25px 输入累计为 0px；after 错误 0 个、累计 1px。生产双轴百万项回归验证原生小步输入与反向、局部 bounds、点击命中、尾项可达；原生集成回归还验证 Pixels 滚动条端点向下舍入时仍到达精确末端、拖动冻结与回到起点。
+
+第一版直接扩大 summary，[试验 CSV](virtual-list-series-measured-wide-2026-11-04.csv)显示 resize 临时峰值 9,451,776→10,397,448 字节、耗时中位数约 +6.4%，不采用此布局。删除可由 count−unrendered_count 推导的冗余 rendered_count，使 f64 summary 保持原大小，保留真实测量计数合同。
+
+[最终 CSV](virtual-list-series-measured-2026-11-04.csv)：120 个 Measured 稳定/快滚/复杂/resize 帧的 source、构建、分配次数和临时峰值均与原版相同。稳定总时间 5.455→5.743ms、P50 44.45→44.90µs；快滚 7.204→7.368ms，复杂 9.462→9.651ms；每帧跨轴 resize 总计 354.428→355.698ms（约 +0.36%），峰值保持 9,451,776 字节。10,000 次查询 1.435→1.500ms、零分配。本项采用依据是明确精度修复及有界开销，**不宣称 CPU 提速**。扩大 summary 的内存代价已撤销。
+
+边界：单项尺寸、项内偏移、外部 padding/Attached 内容原点、普通布局与滚动条输入接口仍有 Pixels 投影；f64 也有有限精度。这不是所有尺度无限精确或滑块能逐像素寻址任意长度的声明。旧 batch.prepaint/offset 与旧 geometry 接口仍明确投影，需要大累计坐标的宿主应使用 precise 接口。virtual_list 98 passed / 8 ignored；原生 virtualization 集成 9 passed。

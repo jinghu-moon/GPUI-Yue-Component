@@ -512,3 +512,10 @@ the deadline; the task waits again only for its remaining duration. Unmount
 and detach cancel the task; binding/session guards reject stale work. The
 optimization-series ABBA fixture verifies no premature end, exactly one
 ScrollEnd after 120ms idle, restart, CPU scheduling and allocation costs.
+
+Measured now queries the same native f64 cumulative geometry and uses precise
+viewport batch/offset/prepaint APIs. Owned wheel and local paint no longer lose
+small increments to an absolute Pixels projection. Single-item Pixels and
+external-origin/scrollbar projection limits remain explicit. Upgrade tests and
+CPU/allocation tradeoffs, including the rejected wide summary, are recorded
+in the optimization series; this is a correctness change, not a speed claim.

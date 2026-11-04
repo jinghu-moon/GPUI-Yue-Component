@@ -247,3 +247,20 @@ Evidence and Release A/B: docs/research/2026-11-04-virtual-list-owner-fixes.md.
 Remove this patch only after upstream preserves the same exact-input and
 legacy-jump semantics and consumers pass the local-coordinate/hit regressions
 without another scroll owner or a Yue-side per-wheel correction.
+
+### Native measured cumulative precision (2026-11-04)
+
+The same ListState SumTree now accumulates and seeks main-axis extents in f64.
+Item sizes and local offsets remain Pixels. Derive measured_count from total
+minus unmeasured instead of enlarging every summary. Native wheel, scroll_by,
+alignment, bounds and scrollbar clamp retain precise sums; legacy geometry,
+viewport and scrollbar getters project explicitly. A scrollbar's projected
+endpoint maps to the exact end even when it rounded down. New precise geometry,
+viewport layout/prepaint and offset APIs share the existing owner and tree.
+
+Base consumes precise geometry and subtracts global offsets before converting
+local coordinates. This supersedes the earlier Measured f32 cumulative limit,
+not single-item/ordinary-layout/Attached-origin/scrollbar-input Pixels limits.
+See optimization-series A/B, rejected wide-summary variant, old failing test,
+Yue large-coordinate two-axis hit/input regression and native endpoint test.
+Remove only after upstream satisfies these same contracts without a mirror tree.

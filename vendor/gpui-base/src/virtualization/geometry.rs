@@ -58,7 +58,7 @@ impl Geometry {
                 *count as f64 * extent + count.saturating_sub(1) as f64 * gap
             }
             Self::Known(tree) => tree.total(),
-            Self::Measured(tree) => tree.total_extent().into(),
+            Self::Measured(tree) => tree.precise_total_extent(),
         }
     }
     pub fn estimated(&self) -> bool {
@@ -74,7 +74,7 @@ impl Geometry {
             Self::Measured(tree) => {
                 let item = tree.item(index)?;
                 (
-                    item.start().into(),
+                    item.precise_start(),
                     item.extent().into(),
                     item.is_measured(),
                 )
@@ -92,7 +92,7 @@ impl Geometry {
                 gap,
             } => uniform_list_range(*count, *item_extent, *gap, start, extent),
             Self::Known(tree) => tree.range(start, extent),
-            Self::Measured(tree) => tree.range(Pixels::from(start), Pixels::from(extent)),
+            Self::Measured(tree) => tree.precise_range(start, extent),
         }
     }
     pub fn items(&self, range: Range<usize>) -> impl Iterator<Item = (f64, f64, bool)> + '_ {
@@ -112,7 +112,7 @@ impl Geometry {
             }
             Self::Known(tree) => tree.index_at(offset),
             Self::Measured(tree) => tree
-                .range(Pixels::from(offset), Pixels::from(0.01))
+                .precise_range(offset, 0.01)
                 .start
                 .min(tree.len().saturating_sub(1)),
         }

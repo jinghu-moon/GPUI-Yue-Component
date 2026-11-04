@@ -150,3 +150,155 @@ fn active_scroll_deadline_moves_without_early_end_and_can_restart(cx: &mut TestA
     cx.run_until_parked();
     assert_eq!(ends.get(), 2);
 }
+
+#[test]
+fn measured_native_small_steps_survive_large_cumulative_coordinates() {
+    use gpui_kit::{ListAlignment, ListOffset, ListState};
+    let list = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.25));
+    list.splice_with_size_hints(0..1, [px(16_777_216.)]);
+    list.scroll_to(ListOffset {
+        item_ix: 600,
+        offset_in_item: px(0.),
+    });
+    for step in 1..=4 {
+        list.scroll_by(px(0.25));
+        let position = list.logical_scroll_top();
+        assert_eq!(position.item_ix, 600);
+        assert_eq!(position.offset_in_item, px(step as f32 * 0.25));
+    }
+    list.scroll_by(px(-1.));
+    assert_eq!(list.logical_scroll_top().offset_in_item, px(0.));
+}
+
+#[test]
+fn measured_precise_tree_queries_and_frozen_geometry_keep_fractional_prefixes() {
+    let list = ListState::new_with_uniform_height(1000, ListAlignment::Top, px(0.), px(20.25));
+    list.splice_with_size_hints(0..1, [px(16_777_216.)]);
+    let frozen = list.geometry();
+    for ix in [1, 2, 31, 600, 999] {
+        let start = 16_777_216. + (ix - 1) as f64 * 20.25;
+        assert_eq!(frozen.item(ix).unwrap().precise_start(), start);
+        assert_eq!(frozen.precise_range(start + 0.25, 20.), ix..ix + 1);
+    }
+    assert_eq!(frozen.precise_total_extent(), 16_777_216. + 999. * 20.25);
+    list.set_item_sizes(&[(1, gpui_kit::size(px(100.), px(20.5)))], true);
+    assert_eq!(
+        frozen.item(600).unwrap().precise_start(),
+        16_777_216. + 599. * 20.25
+    );
+    assert_eq!(
+        list.geometry().item(600).unwrap().precise_start(),
+        16_777_216. + 599. * 20.25 + 0.25
+    );
+}
+
+#[gpui_kit::test]
+fn measured_large_coordinates_keep_native_input_local_bounds_and_hits(cx: &mut TestAppContext) {
+    use gpui_kit::{MouseButton, MouseDownEvent, ScrollDelta, ScrollWheelEvent, TouchPhase, point};
+    struct Harness {
+        state: Entity<VirtualizerState>,
+        clicked: Rc<Cell<usize>>,
+    }
+    impl Render for Harness {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            let clicked = self.clicked.clone();
+            VirtualList::new("measured-precise", &self.state, move |item, _, _| {
+                let clicked = clicked.clone();
+                let ix = item.index();
+                div()
+                    .id("click")
+                    .w(px(20.))
+                    .h(px(20.))
+                    .on_mouse_down(MouseButton::Left, move |_, _, _| clicked.set(ix))
+            })
+            .w(px(240.))
+            .h(px(100.))
+        }
+    }
+    for axis in [Axis::Vertical, Axis::Horizontal] {
+        let clicked = Rc::new(Cell::new(0));
+        let (view, cx) = cx.add_window_view(|_, cx| Harness {
+            state: cx.new(|_| {
+                VirtualizerState::new(
+                    axis,
+                    source(0, 1_000_000),
+                    VirtualizerSizing::measured(px(20.)),
+                )
+                .unwrap()
+            }),
+            clicked: clicked.clone(),
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let state = view.read_with(cx, |v, _| v.state.clone());
+        state.update(cx, |s, cx| {
+            s.scroll_to_key(
+                838_861usize.into(),
+                VirtualizerScrollOptions::default().align(VirtualizerAlign::Start),
+            )
+            .unwrap();
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        for step in [1., 2., 3., 4., 3., 2., 1., 0.] {
+            let old = state.read_with(cx, |s, _| s.viewport().unwrap().offset());
+            let goal = 16_777_220. + step * 0.25;
+            let delta = Pixels::from(old - goal);
+            cx.simulate_event(ScrollWheelEvent {
+                position: point(px(50.), px(50.)),
+                delta: ScrollDelta::Pixels(if axis == Axis::Vertical {
+                    point(px(0.), delta)
+                } else {
+                    point(delta, px(0.))
+                }),
+                modifiers: Default::default(),
+                touch_phase: TouchPhase::Moved,
+            });
+            cx.update(|w, cx| w.draw(cx).clear(cx));
+            assert_eq!(
+                state.read_with(cx, |s, _| s.viewport().unwrap().offset()),
+                goal
+            );
+            let bounds = cx.update(|w, _| {
+                snapshots(w)
+                    .into_iter()
+                    .find(|n| n.path().last() == Some(&838_862usize.into()))
+                    .unwrap()
+                    .bounds()
+            });
+            let start = if axis == Axis::Vertical {
+                bounds.top()
+            } else {
+                bounds.left()
+            };
+            assert_eq!(
+                start,
+                cx.update(|w, _| w.pixel_snap(Pixels::from(20. - step * 0.25)))
+            );
+        }
+        cx.simulate_event(MouseDownEvent {
+            position: if axis == Axis::Vertical {
+                point(px(5.), px(21.))
+            } else {
+                point(px(21.), px(5.))
+            },
+            button: MouseButton::Left,
+            ..Default::default()
+        });
+        assert_eq!(clicked.get(), 838_862);
+        state.update(cx, |s, cx| {
+            s.scroll_to_key(
+                999_999usize.into(),
+                VirtualizerScrollOptions::default().align(VirtualizerAlign::End),
+            )
+            .unwrap();
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let v = state.read_with(cx, |s, _| s.viewport().unwrap().clone());
+        assert_eq!(v.offset(), 20_000_000. - f64::from(v.extent()));
+        assert_eq!(
+            state.read_with(cx, |s, _| s.snapshot(&v).unwrap().visible_range().end),
+            1_000_000
+        );
+    }
+}

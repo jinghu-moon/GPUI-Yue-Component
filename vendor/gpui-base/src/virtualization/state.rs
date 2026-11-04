@@ -1607,10 +1607,10 @@ impl VirtualizerState {
                 .collect(),
         );
         let axis = self.axis;
-        let batch = list.layout_for_viewport_on_axis(
+        let batch = list.layout_for_precise_viewport_on_axis(
             axis,
             bounds,
-            Pixels::from(snapshot.viewport.offset),
+            snapshot.viewport.offset,
             padding,
             move |index, w, cx| {
                 let row = div().id(source.key_at(index));
@@ -1633,8 +1633,8 @@ impl VirtualizerState {
             cx,
         );
         self.sync_measured_geometry();
-        if (f64::from(batch.offset()) - snapshot.viewport.offset).abs() > 0.01 {
-            self.pending_anchor = Some(f64::from(batch.offset()));
+        if (batch.precise_offset() - snapshot.viewport.offset).abs() > 0.01 {
+            self.pending_anchor = Some(batch.precise_offset());
         }
         Ok(batch)
     }
@@ -1858,7 +1858,7 @@ impl VirtualizerState {
         bounds: Bounds<Pixels>,
     ) -> Result<VirtualizerViewport, VirtualizerError> {
         let offset = if let Some(list) = &self.measured {
-            -f64::from(list.scroll_px_offset_for_scrollbar().y)
+            -list.precise_scroll_offset().y
         } else if self.axis == Axis::Vertical {
             -self.scroll.as_ref().unwrap().precise_offset().y
         } else {

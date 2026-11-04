@@ -64,7 +64,7 @@ pub struct ListGeometry {
 /// Geometry of one native list item, in logical content coordinates.
 #[derive(Clone, Copy, Debug)]
 pub struct ListItemGeometry {
-    start: Pixels,
+    start: f64,
     extent: Pixels,
     cross_extent: Pixels,
     measured: bool,
@@ -73,6 +73,10 @@ pub struct ListItemGeometry {
 impl ListItemGeometry {
     /// Content start on the main axis.
     pub fn start(&self) -> Pixels {
+        Pixels::from(self.start)
+    }
+    /// Precise content start, before projection to layout pixels.
+    pub fn precise_start(&self) -> f64 {
         self.start
     }
     /// Actual extent or the current estimate.
@@ -113,6 +117,10 @@ impl ListGeometry {
     }
     /// Sum of actual sizes and hints.
     pub fn total_extent(&self) -> Pixels {
+        Pixels::from(self.precise_total_extent())
+    }
+    /// Sum of sizes in the native tree without f32 cumulative projection.
+    pub fn precise_total_extent(&self) -> f64 {
         self.items.summary().height
     }
     /// Whether any item still uses an estimate.
@@ -121,7 +129,7 @@ impl ListGeometry {
     }
     /// Number of items actually measured.
     pub fn measured_count(&self) -> usize {
-        self.items.summary().rendered_count
+        self.items.summary().count - self.items.summary().unrendered_count
     }
     /// Query one item without rendering.
     pub fn item(&self, index: usize) -> Option<ListItemGeometry> {
@@ -139,14 +147,18 @@ impl ListGeometry {
     /// Half-open intersection with a positive logical viewport. Gap-free,
     /// matching native List geometry. Both seeks use the existing SumTree.
     pub fn range(&self, offset: Pixels, extent: Pixels) -> Range<usize> {
-        if extent <= px(0.) || offset + extent <= px(0.) || self.is_empty() {
+        self.precise_range(f64::from(offset), f64::from(extent))
+    }
+    /// Half-open intersection in precise cumulative coordinates.
+    pub fn precise_range(&self, offset: f64, extent: f64) -> Range<usize> {
+        if extent <= 0. || offset + extent <= 0. || self.is_empty() {
             return 0..0;
         }
         let mut first = self.items.cursor::<ListItemSummary>(());
-        first.seek(&Height(offset.max(px(0.))), Bias::Right);
+        first.seek(&Height(offset.max(0.)), Bias::Right);
         let start = first.start().count.min(self.len());
         let mut end = self.items.cursor::<ListItemSummary>(());
-        end.seek(&Height((offset + extent).max(px(0.))), Bias::Left);
+        end.seek(&Height((offset + extent).max(0.)), Bias::Left);
         let end = if end.item().is_some() {
             end.start().count + 1
         } else {
@@ -162,7 +174,7 @@ impl ListGeometry {
 pub struct ListViewportLayout {
     layout: LayoutItemsResponse,
     geometry: ListGeometry,
-    offset: Pixels,
+    offset: f64,
     padding_top: Pixels,
     axis: crate::Axis,
 }
@@ -174,6 +186,10 @@ impl ListViewportLayout {
     }
     /// Offset proposed by native anchor and boundary correction.
     pub fn offset(&self) -> Pixels {
+        Pixels::from(self.offset)
+    }
+    /// Precise native offset before layout projection.
+    pub fn precise_offset(&self) -> f64 {
         self.offset
     }
     /// Actual frame elements, including independently retained focus.
@@ -188,11 +204,20 @@ impl ListViewportLayout {
         window: &mut Window,
         cx: &mut App,
     ) {
+        self.prepaint_precise(bounds, f64::from(applied_offset), window, cx);
+    }
+    /// Subtract cumulative coordinates before projecting the local position.
+    pub fn prepaint_precise(
+        &mut self,
+        bounds: Bounds<Pixels>,
+        applied_offset: f64,
+        window: &mut Window,
+        cx: &mut App,
+    ) {
         window.with_content_mask(Some(ContentMask { bounds }), |window| {
             for item in &mut self.layout.item_layouts {
                 if let Some(geometry) = self.geometry.item(item.index) {
-                    let y = geometry.start.to_f64() + self.padding_top.to_f64()
-                        - applied_offset.to_f64();
+                    let y = geometry.start + self.padding_top.to_f64() - applied_offset;
                     item.element.prepaint_at(
                         bounds.origin
                             + if self.axis == crate::Axis::Vertical {
@@ -315,7 +340,7 @@ struct StateInner {
     reset: bool,
     #[allow(clippy::type_complexity)]
     scroll_handler: Option<Box<dyn FnMut(&ListScrollEvent, &mut Window, &mut App)>>,
-    scrollbar_drag_start_height: Option<Pixels>,
+    scrollbar_drag_start_height: Option<f64>,
     measuring_behavior: ListMeasuringBehavior,
     pending_scroll: Option<PendingScroll>,
     follow_state: FollowState,
@@ -549,9 +574,8 @@ impl ListItem {
 #[derive(Clone, Debug, Default, PartialEq)]
 struct ListItemSummary {
     count: usize,
-    rendered_count: usize,
     unrendered_count: usize,
-    height: Pixels,
+    height: f64,
     has_focus_handles: bool,
     has_unknown_height: bool,
 }
@@ -560,7 +584,7 @@ struct ListItemSummary {
 struct Count(usize);
 
 #[derive(Clone, Debug, Default)]
-struct Height(Pixels);
+struct Height(f64);
 
 impl ListState {
     /// Additional work items, independent of focus. The caller owns their policy.
@@ -832,6 +856,27 @@ impl ListState {
         bounds: Bounds<Pixels>,
         offset: Pixels,
         padding: Edges<Pixels>,
+        render_item: impl FnMut(usize, &mut Window, &mut App) -> AnyElement + 'static,
+        window: &mut Window,
+        cx: &mut App,
+    ) -> ListViewportLayout {
+        self.layout_for_precise_viewport_on_axis(
+            axis,
+            bounds,
+            f64::from(offset),
+            padding,
+            render_item,
+            window,
+            cx,
+        )
+    }
+    /// Same native measurement owner with an unprojected cumulative offset.
+    pub fn layout_for_precise_viewport_on_axis(
+        &self,
+        axis: crate::Axis,
+        bounds: Bounds<Pixels>,
+        offset: f64,
+        padding: Edges<Pixels>,
         mut render_item: impl FnMut(usize, &mut Window, &mut App) -> AnyElement + 'static,
         window: &mut Window,
         cx: &mut App,
@@ -870,10 +915,13 @@ impl ListState {
             revision: state.geometry_revision,
         };
         let mut cursor = geometry.items.cursor::<ListItemSummary>(());
-        cursor.seek(&Height((offset - padding.top).max(px(0.))), Bias::Right);
+        cursor.seek(
+            &Height((offset - f64::from(padding.top)).max(0.)),
+            Bias::Right,
+        );
         state.logical_scroll_top = Some(ListOffset {
             item_ix: cursor.start().count.min(geometry.len()),
-            offset_in_item: (offset - cursor.start().height).max(px(0.)),
+            offset_in_item: Pixels::from((offset - cursor.start().height).max(0.)),
         });
         let layout = if bounds.size.height > px(0.) && bounds.size.width > px(0.) {
             state.layout_items(
@@ -1118,9 +1166,9 @@ impl ListState {
             return None;
         }
         let padding = state.last_padding.unwrap_or_default();
-        let content_height = summary.height + padding.top + padding.bottom;
-        let scroll_max = (content_height - bounds.size.height).max(px(0.));
-        if scroll_max <= px(0.) {
+        let content_height = summary.height + f64::from(padding.top) + f64::from(padding.bottom);
+        let scroll_max = (content_height - f64::from(bounds.size.height)).max(0.);
+        if scroll_max <= 0. {
             return None;
         }
         let scroll_top = state.scroll_top(&state.logical_scroll_top());
@@ -1246,8 +1294,8 @@ impl ListState {
         let mut cursor = state.items.cursor::<ListItemSummary>(());
         cursor.seek(&Count(current_offset.item_ix), Bias::Right);
 
-        let start_pixel_offset = cursor.start().height + current_offset.offset_in_item;
-        let new_pixel_offset = (start_pixel_offset + distance).max(px(0.));
+        let start_pixel_offset = cursor.start().height + f64::from(current_offset.offset_in_item);
+        let new_pixel_offset = (start_pixel_offset + f64::from(distance)).max(0.);
         if new_pixel_offset > start_pixel_offset {
             cursor.seek_forward(&Height(new_pixel_offset), Bias::Right);
         } else {
@@ -1256,7 +1304,7 @@ impl ListState {
 
         let scroll_top = ListOffset {
             item_ix: cursor.start().count,
-            offset_in_item: new_pixel_offset - cursor.start().height,
+            offset_in_item: Pixels::from(new_pixel_offset - cursor.start().height),
         };
         drop(cursor);
         state.rebase_pending_scroll(scroll_top);
@@ -1358,8 +1406,8 @@ impl ListState {
         } else {
             let mut cursor = state.items.cursor::<ListItemSummary>(());
             cursor.seek(&Count(ix + 1), Bias::Right);
-            let bottom = cursor.start().height + padding.top;
-            let goal_top = px(0.).max(bottom - height + padding.bottom);
+            let bottom = cursor.start().height + f64::from(padding.top);
+            let goal_top = 0_f64.max(bottom - f64::from(height) + f64::from(padding.bottom));
 
             cursor.seek(&Height(goal_top), Bias::Left);
             let start_ix = cursor.start().count;
@@ -1367,7 +1415,7 @@ impl ListState {
 
             if start_ix >= scroll_top.item_ix {
                 scroll_top.item_ix = start_ix;
-                scroll_top.offset_in_item = goal_top - start_item_top;
+                scroll_top.offset_in_item = Pixels::from(goal_top - start_item_top);
             }
         }
 
@@ -1389,14 +1437,14 @@ impl ListState {
         let mut cursor = state.items.cursor::<Dimensions<Count, Height>>(());
         cursor.seek(&Count(scroll_top.item_ix), Bias::Right);
 
-        let scroll_top = cursor.start().1.0 + scroll_top.offset_in_item;
+        let scroll_top = cursor.start().1.0 + f64::from(scroll_top.offset_in_item);
 
         cursor.seek_forward(&Count(ix), Bias::Right);
         if let Some(&ListItem::Measured { size, .. }) = cursor.item() {
             let &Dimensions(Count(count), Height(top), _) = cursor.start();
             if count == ix {
                 let padding = state.last_padding.unwrap_or_default();
-                let top = bounds.top() + padding.top + top - scroll_top;
+                let top = bounds.top() + padding.top + Pixels::from(top - scroll_top);
                 return Some(Bounds::from_corners(
                     point(bounds.left(), top),
                     point(bounds.right(), top + size.height),
@@ -1441,7 +1489,7 @@ impl ListState {
     /// This value remains constant while dragging to prevent the scrollbar from moving away unexpectedly.
     pub fn max_offset_for_scrollbar(&self) -> Point<Pixels> {
         let state = self.0.borrow();
-        point(Pixels::ZERO, state.max_scroll_offset())
+        point(Pixels::ZERO, Pixels::from(state.max_scroll_offset()))
     }
 
     /// Returns the current scroll offset adjusted for the scrollbar.
@@ -1449,10 +1497,14 @@ impl ListState {
     /// The returned offset has a negative `y` component representing
     /// how far the content has scrolled.
     pub fn scroll_px_offset_for_scrollbar(&self) -> Point<Pixels> {
-        let state = &self.0.borrow();
+        self.precise_scroll_offset().map(Pixels::from)
+    }
 
+    /// Current native offset without discarding cumulative fractional input.
+    pub fn precise_scroll_offset(&self) -> Point<f64> {
+        let state = &self.0.borrow();
         if state.logical_scroll_top.is_none() && state.alignment == ListAlignment::Bottom {
-            return Point::new(px(0.), -state.max_scroll_offset());
+            return Point::new(0., -state.max_scroll_offset());
         }
 
         let logical_scroll_top = state.logical_scroll_top();
@@ -1460,9 +1512,9 @@ impl ListState {
         let mut cursor = state.items.cursor::<ListItemSummary>(());
         let summary: ListItemSummary =
             cursor.summary(&Count(logical_scroll_top.item_ix), Bias::Right);
-        let offset = summary.height + logical_scroll_top.offset_in_item;
+        let offset = summary.height + f64::from(logical_scroll_top.offset_in_item);
 
-        Point::new(px(0.), -offset)
+        Point::new(0., -offset)
     }
 
     /// Return the bounds of the viewport in pixels.
@@ -1589,13 +1641,15 @@ impl StateInner {
         };
     }
 
-    fn max_scroll_offset(&self) -> Pixels {
+    fn max_scroll_offset(&self) -> f64 {
         let bounds = self.last_layout_bounds.unwrap_or_default();
         let height = self
             .scrollbar_drag_start_height
             .unwrap_or_else(|| self.items.summary().height);
         let padding = self.last_padding.unwrap_or_default();
-        (height + padding.top + padding.bottom - bounds.size.height).max(px(0.))
+        (height + f64::from(padding.top) + f64::from(padding.bottom)
+            - f64::from(bounds.size.height))
+        .max(0.)
     }
 
     fn visible_range(
@@ -1605,8 +1659,8 @@ impl StateInner {
     ) -> Range<usize> {
         let mut cursor = items.cursor::<ListItemSummary>(());
         cursor.seek(&Count(scroll_top.item_ix), Bias::Right);
-        let start_y = cursor.start().height + scroll_top.offset_in_item;
-        cursor.seek_forward(&Height(start_y + height), Bias::Left);
+        let start_y = cursor.start().height + f64::from(scroll_top.offset_in_item);
+        cursor.seek_forward(&Height(start_y + f64::from(height)), Bias::Left);
         scroll_top.item_ix..cursor.start().count + 1
     }
 
@@ -1627,9 +1681,11 @@ impl StateInner {
 
         let padding = self.last_padding.unwrap_or_default();
         let scroll_max =
-            (self.items.summary().height + padding.top + padding.bottom - height).max(px(0.));
-        let new_scroll_top = (self.scroll_top(scroll_top) - delta.y)
-            .max(px(0.))
+            (self.items.summary().height + f64::from(padding.top) + f64::from(padding.bottom)
+                - f64::from(height))
+            .max(0.);
+        let new_scroll_top = (self.scroll_top(scroll_top) - f64::from(delta.y))
+            .max(0.)
             .min(scroll_max);
 
         if self.alignment == ListAlignment::Bottom && new_scroll_top == scroll_max {
@@ -1641,7 +1697,7 @@ impl StateInner {
                     .find::<ListItemSummary, _>((), &Height(new_scroll_top), Bias::Right);
             let scroll_top = ListOffset {
                 item_ix: start.count,
-                offset_in_item: new_scroll_top - start.height,
+                offset_in_item: Pixels::from(new_scroll_top - start.height),
             };
             // The user's scroll supersedes the position stashed by a
             // remeasure; re-anchor the pending adjustment so it doesn't revert
@@ -1688,13 +1744,13 @@ impl StateInner {
             })
     }
 
-    fn scroll_top(&self, logical_scroll_top: &ListOffset) -> Pixels {
+    fn scroll_top(&self, logical_scroll_top: &ListOffset) -> f64 {
         let (start, ..) = self.items.find::<ListItemSummary, _>(
             (),
             &Count(logical_scroll_top.item_ix),
             Bias::Right,
         );
-        start.height + logical_scroll_top.offset_in_item
+        start.height + f64::from(logical_scroll_top.offset_in_item)
     }
 
     fn layout_all_items(
@@ -1961,9 +2017,10 @@ impl StateInner {
         // position has returned to the bottom.
         if self.follow_state.has_stopped_following() {
             let padding = self.last_padding.unwrap_or_default();
-            let total_height = self.items.summary().height + padding.top + padding.bottom;
+            let total_height =
+                self.items.summary().height + f64::from(padding.top) + f64::from(padding.bottom);
             let scroll_offset = self.scroll_top(&scroll_top);
-            if scroll_offset + available_height >= total_height - px(1.0) {
+            if scroll_offset + f64::from(available_height) >= total_height - 1. {
                 self.follow_state.start_following();
             }
         }
@@ -2078,8 +2135,12 @@ impl StateInner {
                     if item.index != expected_index {
                         let mut cursor = self.items.cursor::<ListItemSummary>(());
                         cursor.seek(&Count(item.index), Bias::Right);
-                        item_origin.y = bounds.top() + padding.top + cursor.start().height
-                            - self.scroll_top(&layout_response.scroll_top);
+                        item_origin.y = bounds.top()
+                            + padding.top
+                            + Pixels::from(
+                                cursor.start().height
+                                    - self.scroll_top(&layout_response.scroll_top),
+                            );
                     }
                     window.with_content_mask(Some(ContentMask { bounds }), |window| {
                         item.element.prepaint_at(item_origin, window, cx);
@@ -2180,13 +2241,21 @@ impl StateInner {
         let content_height = self
             .scrollbar_drag_start_height
             .unwrap_or_else(|| self.items.summary().height);
-        let scroll_max = (content_height + padding.top + padding.bottom - height).max(px(0.));
-        let new_scroll_top = (-point.y).max(px(0.)).min(scroll_max);
+        let scroll_max = (content_height + f64::from(padding.top) + f64::from(padding.bottom)
+            - f64::from(height))
+        .max(0.);
+        // The scrollbar is a Pixels projection. Its endpoint must still reach
+        // the exact native end when that projection rounded down.
+        let requested = -f64::from(point.y);
+        let new_scroll_top = if requested >= f64::from(Pixels::from(scroll_max)) {
+            scroll_max
+        } else {
+            requested.max(0.).min(scroll_max)
+        };
 
         // If content grew during the drag, the frozen bottom is below the
         // live bottom. Treat dragging to the frozen end as resuming tail follow.
-        let dragged_to_end =
-            scroll_max > px(0.) && new_scroll_top >= (scroll_max - px(1.0)).max(px(0.));
+        let dragged_to_end = scroll_max > 0. && new_scroll_top >= (scroll_max - 1.).max(0.);
         if dragged_to_end && matches!(self.follow_state, FollowState::Tail { .. }) {
             self.follow_state = FollowState::Tail { is_following: true };
             let item_count = self.items.summary().count;
@@ -2210,7 +2279,7 @@ impl StateInner {
 
             let scroll_top = ListOffset {
                 item_ix: start.count,
-                offset_in_item: new_scroll_top - start.height,
+                offset_in_item: Pixels::from(new_scroll_top - start.height),
             };
             self.rebase_pending_scroll(scroll_top);
             self.logical_scroll_top = Some(scroll_top);
@@ -2287,7 +2356,7 @@ impl Element for List {
                     let max_element_width = layout_response.max_item_width;
 
                     let summary = state.items.summary();
-                    let total_height = summary.height;
+                    let total_height = Pixels::from(summary.height);
 
                     window.request_measured_layout(
                         style,
@@ -2415,13 +2484,8 @@ impl sum_tree::Item for ListItem {
                 focus_handle,
             } => ListItemSummary {
                 count: 1,
-                rendered_count: 0,
                 unrendered_count: 1,
-                height: if let Some(size) = size_hint {
-                    size.height
-                } else {
-                    px(0.)
-                },
+                height: size_hint.map_or(0., |size| f64::from(size.height)),
                 has_focus_handles: focus_handle.is_some(),
                 has_unknown_height: size_hint.is_none(),
             },
@@ -2431,9 +2495,8 @@ impl sum_tree::Item for ListItem {
                 focus_handle,
             } => ListItemSummary {
                 count: 1,
-                rendered_count: usize::from(*valid),
                 unrendered_count: usize::from(!*valid),
-                height: size.height,
+                height: f64::from(size.height),
                 has_focus_handles: focus_handle.is_some(),
                 has_unknown_height: false,
             },
@@ -2448,7 +2511,6 @@ impl sum_tree::ContextLessSummary for ListItemSummary {
 
     fn add_summary(&mut self, summary: &Self) {
         self.count += summary.count;
-        self.rendered_count += summary.rendered_count;
         self.unrendered_count += summary.unrendered_count;
         self.height += summary.height;
         self.has_focus_handles |= summary.has_focus_handles;
@@ -2526,15 +2588,15 @@ mod test {
             }
         });
         cx.update(|window, cx| window.draw(cx).clear(cx));
-        assert_eq!(state.0.borrow().items.summary().height, px(20_000.));
+        assert_eq!(state.0.borrow().items.summary().height, 20_000.);
         state.splice(1_000..1_000, 5);
-        assert_eq!(state.0.borrow().items.summary().height, px(20_100.));
+        assert_eq!(state.0.borrow().items.summary().height, 20_100.);
         view.update(cx, |view, cx| {
             view.width = px(200.);
             cx.notify();
         });
         cx.update(|window, cx| window.draw(cx).clear(cx));
-        assert_eq!(state.0.borrow().items.summary().height, px(20_100.));
+        assert_eq!(state.0.borrow().items.summary().height, 20_100.);
         assert!(state.0.borrow().items.summary().unrendered_count > 990);
     }
 
