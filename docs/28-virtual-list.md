@@ -6,6 +6,8 @@
 
 最新四项验收已补齐等价的 Grid 观察尺寸私有消费者、32 轮混合能力与释放回归、0／100／1,000／10,000 span 成本及树剪枝优化，并完成当前 Windows 环境的实窗检查。实窗发现并修复 Showcase 的 Masonry／横向 Measured 条目语义缺口；原始不利样本、跨 DPI 与 Narrator 声音的未覆盖范围见[四项验收报告](research/2026-11-05-virtual-list-four-acceptance.md)。观察尺寸案例不新增 Base 公共 API，span 优化不承诺所有分布提速，实窗 draw 时长不等于呈现 FPS。
 
+Windows UIA Grid/GridItem／离屏 Realize 的 provider 调查确认，锁定版 `accesskit_windows 0.34.0` 与当时最新 `0.35.2` 都没有对应 patterns；升级本身不能关闭缺口。实现须先完成独立 COM fork spike 和有类型的多 Grid owner 路由，决策门槛见[UIA provider 调查](research/2026-11-05-virtual-grid-uia-provider-investigation.md)。本调查没有改变产品行为，自评仍为 8.9/10。
+
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
 最新一轮对标修正了逐项尺寸容差造成的累计偏移：尺寸反馈按 backend 实际可表示的值判断 no-op，并采用一维单项反馈的临时分配优化。双轴／估算／Masonry 原生布局回归、两轮 Release ABBA 的收益与批量代价见[细微尺寸反馈与单项成本](research/2026-11-04-virtual-list-feedback-review.md)。这不改变单项 Pixels、含 gap slot 舍入及跨 GPU／DPI 的既有精度边界。
