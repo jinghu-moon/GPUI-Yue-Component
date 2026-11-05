@@ -1,0 +1,360 @@
+{
+  "production_head": "6d21622",
+  "native_executable_sha256": "5051775e7c9e2c7c615577fc0fcbd7670f6eb49c4984542f4c2a62a18bacf609",
+  "native_probes_passed": 5,
+  "frames": 768,
+  "summary": {
+    "native-0-rem16": {
+      "n": 96,
+      "draw_p50_ns": 5077950.0,
+      "draw_p95_ns": 7488000,
+      "draw_p99_ns": 8376100,
+      "draw_over_refresh": 27
+    },
+    "native-0-rem20": {
+      "n": 96,
+      "draw_p50_ns": 5874300.0,
+      "draw_p95_ns": 8209100,
+      "draw_p99_ns": 10565400,
+      "draw_over_refresh": 39
+    },
+    "native-1-rem16": {
+      "n": 96,
+      "draw_p50_ns": 2407050.0,
+      "draw_p95_ns": 3555600,
+      "draw_p99_ns": 4360400,
+      "draw_over_refresh": 0
+    },
+    "native-1-rem20": {
+      "n": 96,
+      "draw_p50_ns": 2823250.0,
+      "draw_p95_ns": 4095200,
+      "draw_p99_ns": 4337600,
+      "draw_over_refresh": 0
+    },
+    "native-2-rem16": {
+      "n": 96,
+      "draw_p50_ns": 2375650.0,
+      "draw_p95_ns": 3866100,
+      "draw_p99_ns": 4523100,
+      "draw_over_refresh": 0
+    },
+    "native-2-rem20": {
+      "n": 96,
+      "draw_p50_ns": 2528950.0,
+      "draw_p95_ns": 3870400,
+      "draw_p99_ns": 4257800,
+      "draw_over_refresh": 0
+    },
+    "native-3-rem16": {
+      "n": 96,
+      "draw_p50_ns": 1625950.0,
+      "draw_p95_ns": 2426300,
+      "draw_p99_ns": 2909600,
+      "draw_over_refresh": 0
+    },
+    "native-3-rem20": {
+      "n": 96,
+      "draw_p50_ns": 1971700.0,
+      "draw_p95_ns": 2830700,
+      "draw_p99_ns": 4418000,
+      "draw_over_refresh": 0
+    }
+  },
+  "negative_controls": {
+    "real_zero_test_filter": {
+      "checker_exit": 1,
+      "libtest_exit": 0,
+      "diagnostic": "ValueError: native probe must execute exactly one passing, non-ignored test"
+    },
+    "real_csv_missing_row": {
+      "checker_exit": 1,
+      "diagnostic": "ValueError: incomplete balanced samples: 319/320"
+    },
+    "real_workload_hash_drift": {
+      "checker_exit": 1,
+      "diagnostic": "ValueError: workload differs beyond checkout line endings"
+    }
+  },
+  "workspace": {
+    "passed": 902,
+    "ignored": 17
+  },
+  "no_default": {
+    "passed": 869,
+    "ignored": 10
+  },
+  "clippy": "passed",
+  "vendor_contracts": {
+    "sources": {
+      "core": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre",
+        "version": "0.3.9",
+        "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+        "src_sha256": "42f42598cf6555ca6f9c012aeea43f67f288b87e69eaf6c856cf2e518b15e3bc"
+      },
+      "base": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+        "version": "0.8.0",
+        "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+        "src_sha256": "2db52630245b0c807efe91ed24e66bc4ab4fbff645a6cfc8dbe2281dcdbb9283"
+      },
+      "windows": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+        "version": "0.3.9",
+        "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+        "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+      }
+    },
+    "layers": {
+      "native": {
+        "passed": [
+          "sparse_table_metadata_reaches_native_accesskit_without_synthetic_cells",
+          "sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes",
+          "size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry",
+          "invalid_size_batches_leave_geometry_and_revision_unchanged",
+          "mixed_size_batches_match_input_order_and_precise_prefixes_across_tree_nodes",
+          "size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it",
+          "width_invalidation_keeps_sparse_hints_and_frozen_geometry",
+          "scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input",
+          "frozen_geometry_retains_actual_cross_constraint_when_equal_extents_are_remeasured",
+          "uniform_geometry_is_shared_and_half_open_even_inside_gaps",
+          "direct_estimated_construction_has_the_same_geometry_without_a_replacement_tree",
+          "per_item_hint_splice_preserves_existing_measurements_and_frozen_geometry",
+          "native_hints_survive_first_layout_resize_splice_and_snapshot_reads",
+          "invalid_zero_height_cannot_pull_all_items_into_one_frame",
+          "horizontal_viewport_uses_physical_left_right_padding",
+          "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end",
+          "native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry"
+        ],
+        "lock_sha256": "957ee57c5ba3d29e846d61ecce6859dca08ec8c9b96ac161a95423f96dbc5b41"
+      },
+      "base": {
+        "passed": [
+          "virtualization::grid_span::tests::span_lookup_matches_independent_linear_rectangles_at_half_open_edges",
+          "virtualization::grid_span::tests::sparse_span_visits_match_linear_oracle_without_filling_frozen_body_gaps",
+          "virtualization::geometry::tests::known_prefix_keeps_gap_outside_item_content_and_does_not_append_a_trailing_gap",
+          "virtualization::geometry::tests::fixed_geometry_uses_constant_metadata_and_f64_local_coordinates"
+        ],
+        "lock_sha256": "ea9521187db0a734a4cccbb12cf58fc1c17783d0019c667c668f3c044da2b052"
+      }
+    },
+    "requirements_sha256": "83e9427bb4ace8014d805bef17253a0310ca98cd6b7f97a30099c137f64aa424",
+    "native_test_source_sha256": "3f2d78c1846b8d84dadec22102615b063cda71e47bb3170559c44beaa10c3436",
+    "status": "passed"
+  },
+  "python_evidence_test_groups": 7,
+  "ui_observations": {
+    "initial_cells": 88,
+    "merged_cells": 83,
+    "endpoint_cells": 88,
+    "endpoint_duplicates": 0
+  },
+  "limitations": [
+    "Windows Grid/GridItem bridge",
+    "Narrator audio and browse/read-all",
+    "cross-DPI and multiple monitors",
+    "GPU completion/FPS/input latency",
+    "shared-runner workflow not executed in this session"
+  ],
+  "validation_logs": {
+    "workspace": {
+      "raw_sha256": "6a6c2e7417ac18992517196a396f16f861000de83631ea298ea0b48ee3f5a93a",
+      "utf8_lf_sha256": "e747152ebf9d9f2b6bd09c57709c1baaa5387ff0b5a7cb032efff7eacdc8af72"
+    },
+    "no-default": {
+      "raw_sha256": "ddea7eb189a0878909db464401ab16afe6c6135ea2786f8f60d94832e03c3303",
+      "utf8_lf_sha256": "284df3d3feb84d80792a3c0135f7b855bd27cc0fc372b4a2e9a1d183a5746b85"
+    },
+    "clippy": {
+      "raw_sha256": "5d3b0062c1983816b2a483bc3799da241f1f7d0a6577b80d4199d3d3cbc0d5a4",
+      "utf8_lf_sha256": "8eb59146ff7f29a4edd11add7be3583820e7137c9f7d767ba18c185b2fa39f94"
+    },
+    "contracts": {
+      "raw_sha256": "1ce374b478baf393b108a295dd232ae882226e781c6da576ed797a857d692948",
+      "utf8_lf_sha256": "9045d7c6c354a89e963c55cf28c24dce368c4d05f7a46fa0c327daead0032914"
+    },
+    "native": {
+      "raw_sha256": "5db703d82310e745ab56bdb688b236c29cad07d5956501bc295e838d44bacfaa",
+      "utf8_lf_sha256": "f43c855daf24a1fa8222607bd94afe4b6c1c98ad1ca1183319cf4dabcd94a610"
+    },
+    "interactive": {
+      "raw_sha256": "0de0b2933aa53c089bd9f2d0f6fc2d5fb9f399615f9705cee10361491302c5cb",
+      "utf8_lf_sha256": "e5ae4e3ac90b8e77f78a7f8d8d8f85332780d82b942c19beb540b01f2df72ea2"
+    }
+  },
+  "native_abba": {
+    "identity_file": "virtual-list-nine-native-identity-2026-11-05.json",
+    "csv_file": "virtual-list-series-nine-native-isolated-2026-11-05.csv",
+    "rows": 3072,
+    "independent_targets": true,
+    "same_workload_source": true,
+    "same_dependencies": true,
+    "after_executable_matches_positive_probes": true,
+    "summary": {
+      "native-0-rem16": {
+        "before": {
+          "n": 192,
+          "p50_ns": 2847000.0,
+          "p95_ns": 4761700,
+          "p99_ns": 7942600,
+          "over_refresh": 2
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 2980350.0,
+          "p95_ns": 5153700,
+          "p99_ns": 5578500,
+          "over_refresh": 0
+        }
+      },
+      "native-0-rem20": {
+        "before": {
+          "n": 192,
+          "p50_ns": 3260100.0,
+          "p95_ns": 5469600,
+          "p99_ns": 6643700,
+          "over_refresh": 3
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 3287600.0,
+          "p95_ns": 5727700,
+          "p99_ns": 7002600,
+          "over_refresh": 5
+        }
+      },
+      "native-1-rem16": {
+        "before": {
+          "n": 192,
+          "p50_ns": 1197150.0,
+          "p95_ns": 2080200,
+          "p99_ns": 2279100,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 1146500.0,
+          "p95_ns": 2083500,
+          "p99_ns": 2550200,
+          "over_refresh": 0
+        }
+      },
+      "native-1-rem20": {
+        "before": {
+          "n": 192,
+          "p50_ns": 1297850.0,
+          "p95_ns": 2197200,
+          "p99_ns": 2843300,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 1296850.0,
+          "p95_ns": 2219300,
+          "p99_ns": 2839000,
+          "over_refresh": 0
+        }
+      },
+      "native-2-rem16": {
+        "before": {
+          "n": 192,
+          "p50_ns": 1399200.0,
+          "p95_ns": 2273300,
+          "p99_ns": 2849100,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 1336350.0,
+          "p95_ns": 2198200,
+          "p99_ns": 2706700,
+          "over_refresh": 0
+        }
+      },
+      "native-2-rem20": {
+        "before": {
+          "n": 192,
+          "p50_ns": 1277100.0,
+          "p95_ns": 2239600,
+          "p99_ns": 2550200,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 1321700.0,
+          "p95_ns": 2209100,
+          "p99_ns": 2595600,
+          "over_refresh": 0
+        }
+      },
+      "native-3-rem16": {
+        "before": {
+          "n": 192,
+          "p50_ns": 906800.0,
+          "p95_ns": 1565000,
+          "p99_ns": 1897400,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 1018200.0,
+          "p95_ns": 1646300,
+          "p99_ns": 1817900,
+          "over_refresh": 0
+        }
+      },
+      "native-3-rem20": {
+        "before": {
+          "n": 192,
+          "p50_ns": 869900.0,
+          "p95_ns": 1725800,
+          "p99_ns": 2424400,
+          "over_refresh": 0
+        },
+        "after": {
+          "n": 192,
+          "p50_ns": 797250.0,
+          "p95_ns": 1353100,
+          "p99_ns": 1644800,
+          "over_refresh": 0
+        }
+      }
+    }
+  },
+  "tool_regression": {
+    "span_tool_guard_rows": 320,
+    "checker": "passed",
+    "baseline_api_negative": "expected compile rejection: pre-cache baseline has no VirtualGridSpanSet or span_set",
+    "failed_native_build_attempts": 2,
+    "failed_native_build_samples": 0,
+    "failure_recovery": "full baseline workspace; separate native target directories; pinned executables with SHA256; preserved compiler stdout JSON diagnostics"
+  },
+  "current_vendor_sources": {
+    "vendor/gpui-base": {
+      "raw_sha256": "fe83458678195024db542766dbf43e7eb85d8f8c1872dbb4b9dd653edb867af1",
+      "lf_sha256": "b8d4561f886663d509eb300e36422d45cd48fe63c882196fa3d337d550b3aa88"
+    },
+    "vendor/gpui-pre": {
+      "raw_sha256": "c9874c891b6b58d922f13da7faa3a000a686ee8a78d32191205731958678aa02",
+      "lf_sha256": "7ecb614b23c176b7a1e0ffd6a34ae1a03bbd37a0c13ad311cfc289cb3705d74f"
+    }
+  },
+  "self_assessment": {
+    "overall": 8.8,
+    "scale": 10,
+    "method": "equal-weight qualitative engineering rubric; not a cross-project benchmark score",
+    "dimensions": {
+      "correctness": 9.2,
+      "layout_combinations": 9.0,
+      "cpu_scaling": 9.0,
+      "regression_evidence": 9.2,
+      "public_api_lifecycle": 9.0,
+      "native_accessibility_acceptance": 7.5
+    },
+    "nine_point_blockers": [
+      "native UIA Grid/GridItem bridge and real Narrator validation",
+      "real cross-DPI/multi-monitor validation"
+    ]
+  }
+}

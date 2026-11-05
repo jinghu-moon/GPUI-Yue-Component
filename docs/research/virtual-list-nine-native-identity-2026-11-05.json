@@ -1,0 +1,37 @@
+{
+  "before": "1233387918f68f77cd22d3d778099c8d42b6745b",
+  "filter": "pages::virtual_layouts::native_profile::native_frame_workload",
+  "after_head": "6d21622ab961f081f923d7895d4d82c70dac1fd6",
+  "workload": "examples/windows-showcase/src/pages/virtual_layouts/native_profile.rs",
+  "workload_sha256": "63d0715d702e2cfd9a272b274dfb1f5e6505aa90546e29b2e896b232ed94c7ec",
+  "after_feature": null,
+  "build_identity": {
+    "before": {
+      "manifest_sha256": "dae8280eb8043ee8ebd63b8523f823419b8ec88dd6814657fc458cb672f65cf4",
+      "lock_sha256": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+      "dependency_records_sha256": "11c3eb755b4e7e5cdfc2f50a5c344954923f8d886091a5fb8ce7811c6c9b4e40",
+      "vendor_sources_sha256": "069cf83c84edd3c2166e0de24c3ffc8382b1b98d0bf735815a8d192b0481173e",
+      "executable_sha256": "4519bef4837dc1fedb78dc824424685656bb232315ce35407bd926ba29e0f2ce",
+      "target_dir": "C:\\Temp\\gpui-yue-series-20261104\\native-targets\\1233387918f68f77cd22d3d778099c8d42b6745b"
+    },
+    "after": {
+      "manifest_sha256": "2ce3109fc91ad09a0475827605a59147e01362cfa2f9ded8bfb4e31f39c6beb2",
+      "lock_sha256": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+      "dependency_records_sha256": "11c3eb755b4e7e5cdfc2f50a5c344954923f8d886091a5fb8ce7811c6c9b4e40",
+      "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060",
+      "executable_sha256": "5051775e7c9e2c7c615577fc0fcbd7670f6eb49c4984542f4c2a62a18bacf609",
+      "target_dir": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\target"
+    }
+  },
+  "artifact_date": "2026-11-05",
+  "native": true,
+  "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+  "discarded_samples": [],
+  "order": [
+    "before/0",
+    "after/0",
+    "after/1",
+    "before/1"
+  ],
+  "rows": 3072
+}

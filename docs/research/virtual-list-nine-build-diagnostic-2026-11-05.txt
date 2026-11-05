@@ -1,0 +1,16 @@
+No timing samples were collected from these failed builds.
+
+error[E0432]: unresolved import `gpui_kit::base::virtualization::VirtualGridSpanSet`
+  --> crates\yue-component\src\virtual_list.rs:15:22
+   |
+15 |     VirtualGridSpan, VirtualGridSpanSet, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+   |                      ^^^^^^^^^^^^^^^^^^ no `VirtualGridSpanSet` in `virtualization`
+   |
+help: a similar name exists in the module
+   |
+15 -     VirtualGridSpan, VirtualGridSpanSet, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+15 +     VirtualGridSpan, VirtualGridSpan, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+   |
+
+
+Recovered using independent native targets; baseline API negative and subsequent native/ordinary ABBA passed.

@@ -1,0 +1,72 @@
+Final production source: 6d21622
+Native runner: 5 independent exact tests passed.
+
+pages-virtual_layouts-native_acceptance-native_resize_visibility_resume.log
+test pages::virtual_layouts::native_acceptance::native_resize_visibility_resume ... NATIVE_ENV,displays=1
+NATIVE_DISPLAY,id=DisplayId(65537),bounds=Bounds { origin: Point { x: 0px, y: 0px }, size: Size { 2560px × 1440px } },refresh=Some(6.25ms)
+NATIVE_RESIZE,step=0,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=0,y=0
+NATIVE_RESIZE,step=1,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=113,y=397
+NATIVE_RESIZE,step=2,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=226,y=794
+NATIVE_RESIZE,step=3,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=339,y=1191
+NATIVE_RESIZE,step=4,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=452,y=1588
+NATIVE_RESIZE,step=5,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=565,y=1985
+NATIVE_RESIZE,step=6,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=678,y=2382
+NATIVE_RESIZE,step=7,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=791,y=2779
+NATIVE_RESIZE,step=8,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=904,y=3176
+NATIVE_RESIZE,step=9,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1017,y=3573
+NATIVE_RESIZE,step=10,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1130,y=3970
+NATIVE_RESIZE,step=11,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1243,y=4367
+NATIVE_RESIZE,step=12,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1356,y=4764
+NATIVE_RESIZE,step=13,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1469,y=5161
+NATIVE_RESIZE,step=14,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1582,y=5558
+NATIVE_RESIZE,step=15,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1695,y=5955
+NATIVE_RESIZE,step=16,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1808,y=6352
+NATIVE_RESIZE,step=17,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1921,y=6749
+NATIVE_RESIZE,step=18,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2034,y=7146
+NATIVE_RESIZE,step=19,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2147,y=7543
+NATIVE_RESIZE,step=20,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2260,y=7940
+NATIVE_RESIZE,step=21,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2373,y=8337
+NATIVE_RESIZE,step=22,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2486,y=8734
+NATIVE_RESIZE,step=23,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2599,y=9131
+NATIVE_VISIBILITY,hidden=true,restored=true,reading_offsets_preserved=true
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.96s
+
+pages-virtual_layouts-native_profile-native_frame_workload.log
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 40.13s
+
+pages-virtual_layouts-native_tests-native_frozen_grid_and_masonry_cache_restore.log
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.48s
+
+pages-virtual_layouts-native_tests-native_layouts_render_and_settle.log
+test pages::virtual_layouts::native_tests::native_layouts_render_and_settle ... native layouts: grid=264, masonry=49, horizontal=28 renderer calls
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.47s
+
+pages-virtual_layouts-native_tests-native_smooth_layouts_sample_and_settle.log
+test pages::virtual_layouts::native_tests::native_smooth_layouts_sample_and_settle ... native smooth: RTL frozen/spanned Grid x/y, Masonry and Measured sampled intermediate positions; measured jump tail settled; no GPU timing claim
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.05s
+
+Interactive helper stdout:
+
+running 1 test
+test pages::virtual_layouts::native_acceptance::native_interactive_acceptance_surface ... NATIVE_INTERACTIVE,opened=true,displays=1,timeout_seconds=300
+NATIVE_INTERACTIVE,tick=0,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=212,tab=0,rtl=false,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=275,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=348,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=1050,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=417,tab=0,rtl=true,span=true,frozen=true,x=142849.33337402344,y=35999616,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 138.92s
+
+
+
+CUA observations (summarized from native AX and screenshots):
+initial: Grid name 双轴虚拟网格; 88 named cells; frozen row/column visible.
+merged: 83 named cells; exactly one 2 × 2 · 合并 2×3; covered origin region omitted.
+RTL: switch button became 切换为 LTR; frozen column on right; same merged origin.
+wheel: requested 3000 pixels; visible row labels 31 through 40 plus frozen first row. Requested input distance is not actual owner displacement.
+endpoint: 88 unique named cells; exactly one 1000000 × 1000 and one 1 × 1.
+close: window disappeared from fresh inventory; helper exited successfully.
+AX tool exposes role/name; it did not expose Grid numeric patterns or description.
+No Narrator spoken/browse/read-all verification. One display only; no actual cross-DPI test.
+Screenshots inspected in-session; no screenshot files archived.

@@ -149,6 +149,8 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 精确 cell 保留 | retained_cells／cell_focus_handle | 两轴 key 对稀疏并集，不扩展轴乘积；删除／注销先焦点修复再释放 View |
 | 任意二维画布／节点坐标、三维空间 | 尚不支持 | 需要独立空间索引／裁剪策略，不能把二维 Grid 等同于通用 N 维布局 |
 
+稳定的大量 span 可在 view 初始化时构造 `VirtualGridSpanSet::new(descriptors)`，render 时在冻结配置后调用 `.span_set(&self.spans, cx)?`。描述符变化就替换 set；保持旧 set 的 clone 会保持同一描述符身份。首次配置仍完整验证并占 O(S) 额外存储，缓存命中只复用索引，Known 尺寸反馈仍立即反映在合并矩形中。少量／频繁变化的 span 可继续使用 `.spans(&descriptors, cx)?`；不要逐帧重建 set 来期待复用收益。两轮暖／冷成本见[工程成熟度验收](research/2026-11-05-virtual-list-nine-point-readiness.md)。
+
 Grid 构建的是两轴工作集的交点 `W_rows × W_columns`，不是全量行列乘积。两轴程序命令共用同一帧时间，宿主一次提交 x/y，再分别确认结果；可同时播放有界 smooth。小位移动画只有在时钟推进且宿主接受当前采样位置时才视为进展，不因每帧不足 0.01px 而误报停滞，也不因此放过拒绝移动的宿主。用户 wheel 取消两轴程序意图，减少动态效果、非活动窗口或无可见区域时即时完成安全定位。冻结路径按四区流式遍历，只暂存 R+C 轨道；显式 span 替代覆盖 slots，cell 保留只加入稀疏 key 对。
 
 Masonry 的 `supports_smooth()` 在 Fixed/Known 为 true、Measured 为 false。Masonry 的合法 Smooth 选项在 Measured 下仍安全即时定位；一维 Measured 已支持已测短路径的有界动画，未知几何即时收敛。这个 capability 声明是否播放动画，而不是是否接受共用选项。动态目标仍按真实测量收敛，不能把估算落点当最终实测对齐。
@@ -963,6 +965,7 @@ key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 
 
 ## 17. 依据与关联文档
 
+- [工程成熟度与 9 分门槛](research/2026-11-05-virtual-list-nine-point-readiness.md)：Grid 结构化语义、显式 span 复用、CPU／原生 ABBA、持续守卫与正负控制；综合自评 8.8，保留跨 DPI 和完整表格读屏缺口。
 - [四项验收与取舍](research/2026-11-05-virtual-list-four-acceptance.md)：等价观察尺寸消费者、组合回归、span 分布／规模成本，以及 Windows 实窗与命名条目修复；含原始样本、硬件边界和 Git 回退点。
 - [五项后续实施与组合验证](research/2026-11-05-virtual-list-five-followups.md)：流式冻结区、稀疏 cell、span、一维 Measured 动画、约束 auto 和 Grid RTL，含各项代价与回退点。
 - [历史候选与后续状态](research/2026-11-05-virtual-list-next-opportunities.md)：原候选的交付索引，以及未吸收的 Grid 观察值 collector 原型及其测量限制。

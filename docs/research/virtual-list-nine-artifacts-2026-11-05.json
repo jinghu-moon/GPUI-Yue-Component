@@ -1,0 +1,120 @@
+{
+  "convention": "raw hashes preserve measured bytes; LF hashes survive Git checkout newline conversion; this index excludes itself",
+  "artifacts": {
+    "docs/28-virtual-list.md": {
+      "bytes": 118731,
+      "raw_sha256": "bc72f92eb3dac6f2b7d6e455dc6354103ef6fbcf4b080a2dadb38d19097fe559",
+      "lf_sha256": "41a9c95dcb5b4645f4823fa675f7202613a2799891af06a532a0cc3b6b5f32fe"
+    },
+    "docs/research/2026-11-05-virtual-list-nine-point-readiness.md": {
+      "bytes": 16727,
+      "raw_sha256": "58a3fac340bbf79767d8fea27b96688c84c642454ceace6eb9f0a70075f0a518",
+      "lf_sha256": "a1caf06ddb7aea551fc30f9fc38d6eef7b11c22b8d99a48f0c0827da74e162ec"
+    },
+    "docs/research/virtual-list-nine-a11y-2026-11-05.json": {
+      "bytes": 1072,
+      "raw_sha256": "2f8a293ee59f7246c116b8bc1656fe8c8f333a7b9c5a77ce9f56a02d87ab7c60",
+      "lf_sha256": "4e6551030b14866f7f2801be4c6734f5347a0c374c69172c7b3c79117ec2ca06"
+    },
+    "docs/research/virtual-list-nine-a11y-transcript-2026-11-05.txt": {
+      "bytes": 3306,
+      "raw_sha256": "445d974adb6a2147f03d441498ad7a2193cb8fae8fdd827c33829357828bce35",
+      "lf_sha256": "a03ee9e3d17fc772b1728e9e11e6d76feaa4c574917104756b4204df5373c879"
+    },
+    "docs/research/virtual-list-nine-build-diagnostic-2026-11-05.txt": {
+      "bytes": 777,
+      "raw_sha256": "317403b7b1f76dd8c292258b7051f0d85eb275484aba8e0e59038931ef19fec9",
+      "lf_sha256": "5a0a0e888d8ba531bdcd0b84617ec2936b1521c270af3dca2efc75db3c9374c1"
+    },
+    "docs/research/virtual-list-nine-native-2026-11-05.csv": {
+      "bytes": 53306,
+      "raw_sha256": "c53645c96e5ef4d8ed43633221aad2b98f3e8d2824795c5c19d98bfd2aec145f",
+      "lf_sha256": "0cacde428b0358d728582fe0ad1b1527f0db6776a06b285f713420741b8e9d02"
+    },
+    "docs/research/virtual-list-nine-native-identity-2026-11-05.json": {
+      "bytes": 2003,
+      "raw_sha256": "bb5b7ff9ea5a38762317877071e14444bde3e241a863502376cad1061dd4c401",
+      "lf_sha256": "26799a0aef3b6fc8e21da9e2524848d569168d910e06d7672101e071387f39c2"
+    },
+    "docs/research/virtual-list-nine-native-transcript-2026-11-05.txt": {
+      "bytes": 7678,
+      "raw_sha256": "5d653299220fc9e76466822b2c15d6b108d0965ae6a1e37d5be63f1a6960e49b",
+      "lf_sha256": "f176133c6259491d7eae6aac7f882f396c71a76e9513a1e4fa45c7db86650912"
+    },
+    "docs/research/virtual-list-nine-span-evidence-2026-11-05.json": {
+      "bytes": 54053,
+      "raw_sha256": "ff1d5a31bbe86ca72c809fc20247d9f8635d6392cd6bb7f0d6f78989b2b024b2",
+      "lf_sha256": "ab030b8d63e16a91f894bba5a5a04a98d4ae1233c827acd78c2db1f8899c0f10"
+    },
+    "docs/research/virtual-list-nine-validation-2026-11-05.json": {
+      "bytes": 12347,
+      "raw_sha256": "e23e4b0f22f25dae1ed764a53a96274750a1888ce8ea2f6adc5e51fe64b17fc3",
+      "lf_sha256": "3bee877ba4937a4da6b779e983d3477e29b48935edcc844db3c1d4c1a3a4f247"
+    },
+    "docs/research/virtual-list-series-nine-native-isolated-2026-11-05.csv": {
+      "bytes": 236214,
+      "raw_sha256": "ffd6fd866549fb7cffb443fa826b7ee51b1e070eb03bda04dbfc5711fb13dd01",
+      "lf_sha256": "5585506b0621d340d949b803e5694acba03131416a8e95ab91069d7ddef671a8"
+    },
+    "docs/research/virtual-list-series-span-default-a-2026-11-05.csv": {
+      "bytes": 33012,
+      "raw_sha256": "9d450eaf3c8a54f648521327457c818f32cc2ae60ea9d61fbae526ae378c8254",
+      "lf_sha256": "b9a0f556f35bf9debf92f2193b0ef5e17e1bfc8bcd3b1fa3a33500e3fc9c3a8a"
+    },
+    "docs/research/virtual-list-series-span-reuse-a-2026-11-05.csv": {
+      "bytes": 32821,
+      "raw_sha256": "9977e06e0ae53ca272c09e7a94047c4d0dcde4b233380e558c7d677df980375f",
+      "lf_sha256": "883a32515c15a2f187a32299e554879b2c780dcd1d72b4c7ba1c25e37685f39a"
+    },
+    "docs/research/virtual-list-series-span-reuse-b-2026-11-05.csv": {
+      "bytes": 32818,
+      "raw_sha256": "a8370123be912823ed629562a0ff774ad5905c6ab8567c4668b612defd708298",
+      "lf_sha256": "6d13840c63afa59efc3660218841c2827cc9fefe544f5cbf29fe93b60fafba85"
+    },
+    "docs/research/virtual-list-series-span-reuse-c-2026-11-05.csv": {
+      "bytes": 32836,
+      "raw_sha256": "0ac438afbf3cebfa567673940d693a4b24bb210bbaaeb7ed30a4fc88b350ead2",
+      "lf_sha256": "43a2f1ef0c6fe55ac741ad59351be3d2d147a208777e6e32d2c80a8eb84e169f"
+    },
+    "docs/research/virtual-list-series-span-tool-guard-2026-11-05.csv": {
+      "bytes": 32819,
+      "raw_sha256": "e5602656c2651465f7ea59e713108cbb2b60dea8b3062cc41b19c63e4b780255",
+      "lf_sha256": "5c9338257390a8fc0ab98a5ef83c20e943af88dddd1742857076be6854fcb025"
+    },
+    "docs/research/virtual-list-span-default-a-identity-2026-11-05.json": {
+      "bytes": 1546,
+      "raw_sha256": "989de92547cfbc7c4003128d0251047551aaad13fe30bfccbce25dd9086a4f47",
+      "lf_sha256": "f497346cb13edd7c2f273e8d91cab833425aaa99918c7735c0f0ccc4da1718aa"
+    },
+    "docs/research/virtual-list-span-reuse-2026-11-05.rs": {
+      "bytes": 9062,
+      "raw_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4",
+      "lf_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4"
+    },
+    "docs/research/virtual-list-span-reuse-a-identity-2026-11-05.json": {
+      "bytes": 1554,
+      "raw_sha256": "cefc33a25162d0555c94ca3b76b703353562aeb14f92f1dd32601b4ce8dc3048",
+      "lf_sha256": "8c843cabd86c0bbae2ba1ca6d504442e0fc2fa195cc6184b9f4779268c169ddb"
+    },
+    "docs/research/virtual-list-span-reuse-b-identity-2026-11-05.json": {
+      "bytes": 1554,
+      "raw_sha256": "ea0655d0fb6c45b4298acabcf1483d8ddd460bfa1d6651b100e06d1bcc6352e3",
+      "lf_sha256": "4b93295f45fef3d5a4fb17bff0f484fb06f556ef72fea56b500076bb53a35c06"
+    },
+    "docs/research/virtual-list-span-reuse-c-identity-2026-11-05.json": {
+      "bytes": 1554,
+      "raw_sha256": "ea0655d0fb6c45b4298acabcf1483d8ddd460bfa1d6651b100e06d1bcc6352e3",
+      "lf_sha256": "4b93295f45fef3d5a4fb17bff0f484fb06f556ef72fea56b500076bb53a35c06"
+    },
+    "docs/research/virtual-list-span-reuse-preliminary-2026-11-05.rs": {
+      "bytes": 8973,
+      "raw_sha256": "473a95d50af2cf160304583c18ed00dbd1d082f50437b480704bc7e8d7986c8c",
+      "lf_sha256": "473a95d50af2cf160304583c18ed00dbd1d082f50437b480704bc7e8d7986c8c"
+    },
+    "docs/research/virtual-list-span-tool-guard-identity-2026-11-05.json": {
+      "bytes": 1872,
+      "raw_sha256": "982e8eafdc979551a5c861f95f2aaced3f86e7b71ffbafbed630a19dfd231321",
+      "lf_sha256": "c7f9147de989e0c1fe70566bfb761469765cfb26780f8efd28099c9ac023ea7b"
+    }
+  }
+}

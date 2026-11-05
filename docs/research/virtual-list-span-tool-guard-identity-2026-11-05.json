@@ -1,0 +1,37 @@
+{
+  "before": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+  "filter": "series_span",
+  "after_head": "6d21622ab961f081f923d7895d4d82c70dac1fd6",
+  "workload": "docs/research/virtual-list-span-reuse-2026-11-05.rs",
+  "workload_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4",
+  "after_feature": "span-cache",
+  "build_identity": {
+    "before": {
+      "manifest_sha256": "b18a1fbe16b2af8a179c755d6c85d246d831dd9eec0a5c92154d8c3d646a2d88",
+      "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+      "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+      "vendor_sources_sha256": "6a39f99b5bad2b86b14092fa21b9ada046e5c3d2207fac48a234ffe0de345498",
+      "executable_sha256": "97ac75f56482b9c763bdbbfc788b211dc0a8b2bbee25e630a03149f42187fc35",
+      "target_dir": "C:\\Temp\\gpui-yue-owner-perf-20261104"
+    },
+    "after": {
+      "manifest_sha256": "abfaaf88cf9740c10ad4b9af5f4f2e713b2a45bae68a9769b38407e00d635542",
+      "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+      "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+      "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060",
+      "executable_sha256": "90c7101ed4369fe1d716da1882108a495cca8aa10b7f0757b8cf6816eac575a4",
+      "target_dir": "C:\\Temp\\gpui-yue-owner-perf-20261104"
+    }
+  },
+  "artifact_date": "2026-11-05",
+  "native": false,
+  "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+  "discarded_samples": [],
+  "order": [
+    "before/0",
+    "after/0",
+    "after/1",
+    "before/1"
+  ],
+  "rows": 320
+}

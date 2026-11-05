@@ -1,0 +1,56 @@
+=== yue-nine-grid-a11y-red.log ===
+   Compiling gpui-base v0.8.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-base)
+   Compiling gpui-kit v0.8.0
+   Compiling yue-component-icons v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component-icons)
+   Compiling yue-component v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component)
+   Compiling windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `test` profile [unoptimized] target(s) in 17.93s
+     Running unittests src\main.rs (target\debug\deps\windows_showcase-d556b9de59fc8cb8.exe)
+
+running 1 test
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::tests::grid_accessibility_preserves_logical_coordinates_counts_and_spans' (10608) panicked at examples\windows-showcase\src\pages\virtual_layouts.rs:477:13:
+assertion `left == right` failed
+  left: None
+ right: Some(1000000)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test pages::virtual_layouts::tests::grid_accessibility_preserves_logical_coordinates_counts_and_spans ... FAILED
+
+failures:
+
+failures:
+    pages::virtual_layouts::tests::grid_accessibility_preserves_logical_coordinates_counts_and_spans
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p windows-showcase --bin windows-showcase`
+
+=== yue-nine-grid-a11y-green.log ===
+   Compiling windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `test` profile [unoptimized] target(s) in 5.32s
+     Running unittests src\main.rs (target\debug\deps\windows_showcase-d556b9de59fc8cb8.exe)
+
+running 1 test
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+test pages::virtual_layouts::tests::grid_accessibility_preserves_logical_coordinates_counts_and_spans ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.34s
+
+
+=== yue-nine-a11y-clippy.log ===
+    Checking gpui-pre v0.3.9 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-pre)
+    Checking accesskit_windows v0.34.0
+    Checking gpui-pre-windows v0.3.9 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-pre-windows)
+    Checking gpui-base v0.8.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-base)
+    Checking gpui-pre-platform v0.3.9
+    Checking gpui-kit v0.8.0
+    Checking yue-component-icons v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component-icons)
+    Checking yue-component v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component)
+    Checking windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `dev` profile [unoptimized] target(s) in 28.24s
+
+=== yue-nine-native-contracts.log ===
+Building native contracts
+native: 17 required contracts passed
+Source manifests/locks unchanged. Report: D:\100_Projects\110_Daily\Yue-GPUI-Component\target\virtualization-contracts\last-run.json
