@@ -21,7 +21,7 @@ fn native_frozen_grid_and_masonry_cache_restore() {
                 ..Default::default()
             },
             cx,
-            |_, cx| cx.new(VirtualLayoutsPage::new),
+            |window, cx| cx.new(|cx| VirtualLayoutsPage::new_with_focus(window, cx)),
         )
         .unwrap();
         cx.spawn(async move |cx| {
@@ -187,7 +187,7 @@ fn native_layouts_render_and_settle() {
                 ..Default::default()
             },
             cx,
-            |_, cx| cx.new(VirtualLayoutsPage::new),
+            |window, cx| cx.new(|cx| VirtualLayoutsPage::new_with_focus(window, cx)),
         )
         .unwrap();
         cx.spawn(async move |cx| {

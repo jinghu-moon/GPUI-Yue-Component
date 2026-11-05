@@ -1,4 +1,8 @@
 //! Production layout adapters, mounted only on the active tab.
+mod grid_keyboard;
+#[cfg(all(test, feature = "headless-tests"))]
+#[path = "virtual_layouts/keyboard_tests.rs"]
+mod keyboard_tests;
 #[cfg(all(test, feature = "virtual-profile"))]
 mod native_profile;
 use super::super::*;
@@ -42,10 +46,38 @@ pub(crate) struct VirtualLayoutsPage {
     rtl: bool,
     spanning: bool,
     body_spans: VirtualGridSpanSet,
+    grid_focus: gpui_kit::FocusHandle,
+    grid_cursor: (usize, usize),
+    grid_reveal_on_entry: bool,
+    _grid_focus_subscriptions: Option<[gpui_kit::Subscription; 2]>,
     builds: [Rc<Cell<usize>>; 3],
 }
 impl VirtualLayoutsPage {
-    pub(crate) fn new(cx: &mut Context<Self>) -> Self {
+    pub(crate) fn new_with_focus(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        let mut page = Self::new(cx);
+        let grid_focus = page.grid_focus.clone();
+        let grid_focus_subscription = cx.on_focus(&grid_focus, window, |page, _, cx| {
+            if page.grid_reveal_on_entry {
+                page.reveal_grid_cursor(false, cx);
+                page.grid_reveal_on_entry = false;
+            }
+            cx.notify();
+        });
+        let grid_blur_subscription = cx.on_blur(&grid_focus, window, |page, window, cx| {
+            // Window deactivation preserves the logical focus handle. Do not
+            // scroll back to an offscreen cursor on minimize/restore or Alt+Tab.
+            if !page.grid_focus.is_focused(window) {
+                page.grid_reveal_on_entry = true;
+            }
+            cx.notify();
+        });
+        page._grid_focus_subscriptions = Some([grid_focus_subscription, grid_blur_subscription]);
+        page
+    }
+
+    // Keep the noninteractive draw workload's constructor compatible with its
+    // historical baselines. Production windows use new_with_focus above.
+    fn new(cx: &mut Context<Self>) -> Self {
         let binding = VirtualizerBinding::new();
         let rows = cx.new(|_| {
             VirtualizerState::new_attached(
@@ -88,6 +120,10 @@ impl VirtualLayoutsPage {
             frozen: true,
             rtl: false,
             spanning: false,
+            grid_focus: cx.focus_handle().tab_stop(true),
+            grid_reveal_on_entry: true,
+            _grid_focus_subscriptions: None,
+            grid_cursor: (0, 0),
             body_spans: VirtualGridSpanSet::new(vec![VirtualGridSpan::new(
                 VirtualGridCellKey::new(1usize, 1usize),
                 2,
@@ -185,6 +221,7 @@ impl VirtualLayoutsPage {
                         .on_click(move |_, _, cx| {
                             let _ = span_owner.update(cx, |p, cx| {
                                 p.spanning = !p.spanning;
+                                p.grid_cursor = p.grid_origin(p.grid_cursor);
                                 cx.notify();
                             });
                         }),
@@ -216,8 +253,16 @@ impl VirtualLayoutsPage {
                             &self.rows,
                             &self.columns,
                             &self.scroll,
-                            move |cell, _, _| {
+                            {
+                            let owner = owner.clone();
+                            let cursor = self.grid_cursor;
+                            let focus = self.grid_focus.clone();
+                            move |cell, window, _| {
                                 builds.set(builds.get() + 1);
+                                let position = (cell.row().index(), cell.column().index());
+                                let selected = cursor == position;
+                                let focused = focus.is_focused(window);
+                                let owner = owner.clone();
                                 let is_frozen = cell.is_frozen_row() || cell.is_frozen_column();
                                 let label = format!(
                                     "{} × {}{}",
@@ -229,7 +274,9 @@ impl VirtualLayoutsPage {
                                         ""
                                     }
                                 );
-                                let cell_element = div().bg(gpui_kit::rgb(if is_frozen {
+                                let cell_element = div().relative().bg(gpui_kit::rgb(if selected {
+                                    theme.accent_subtle()
+                                } else if is_frozen {
                                     theme.surface_component()
                                 } else {
                                     theme.surface()
@@ -240,6 +287,8 @@ impl VirtualLayoutsPage {
                                     .aria_label(label.clone())
                                     .aria_row_index(cell.row().index())
                                     .aria_column_index(cell.column().index())
+                                    .aria_selected(selected)
+                                    .when(selected, |this| this.aria_active_descendant())
                                     .aria_description(format!(
                                         "第 {} 行，第 {} 列；跨 {} 行、{} 列",
                                         cell.row().index() + 1,
@@ -261,12 +310,25 @@ impl VirtualLayoutsPage {
                                     .border_r_1()
                                     .border_color(gpui_kit::rgb(theme.border_default()))
                                     .child(label)
+                                    .when(selected, |this| this.child(
+                                        div().absolute().inset_0().border_2().border_color(
+                                            gpui_kit::rgb(if focused { theme.focus_ring() } else { theme.border_default() })
+                                        )
+                                    ))
+                                    .on_click(move |_, window, cx| {
+                                        let _ = owner.update(cx, |page, cx| {
+                                            page.grid_cursor = page.grid_origin(position);
+                                            page.grid_focus.focus(window, cx);
+                                            cx.notify();
+                                        });
+                                    })
                                     .test_support()
-                            },
+                            }},
                         )
                         .frozen_rows(usize::from(frozen))
                         .frozen_columns(usize::from(frozen))
                         .right_to_left(self.rtl)
+                        .retained_cells(vec![VirtualGridCellKey::new(self.grid_cursor.0, self.grid_cursor.1)])
                         .when(self.spanning, |grid| {
                             grid.span_set(&self.body_spans, cx).expect(
                             "showcase body span is inside Fixed source and does not cross freezing",
@@ -277,15 +339,19 @@ impl VirtualLayoutsPage {
                         .aria_row_count(GRID_ROWS)
                         .aria_column_count(GRID_COLUMNS)
                         .aria_description(
-                            "一百万行、一千列；冻结首行首列可切换，单元格说明包含逻辑位置和跨度",
+                            "一百万行、一千列；方向键移动，Home/End 到行首尾，Ctrl+Home/End 到表格首尾，PageUp/PageDown 翻页；Tab 离开网格",
                         )
-                        .test_support(),
+                        .test_support()
+                        .track_focus(&self.grid_focus)
+                        .on_key_down(move |event, window, cx| {
+                            let _ = owner.update(cx, |page, cx| page.grid_key(event, window, cx));
+                        }),
                     )
                     .child(Scrollbar::vertical(&self.scroll))
                     .child(Scrollbar::horizontal(&self.scroll))
                     .into_any_element();
                 (
-                    "Grid · 一百万行 × 一千列，支持首行首列冻结、正文合并与 RTL。共用一个原生滚动位置，定位按逻辑起点避开冻结条带。",
+                    "Grid · 一百万行 × 一千列，支持冻结、合并与 RTL。Tab 进入／离开；方向键、Home/End、Ctrl+Home/End、PageUp/PageDown 移动当前单元格。",
                     controls,
                     content,
                 )
@@ -534,7 +600,7 @@ mod tests {
             yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
             cx.set_reduce_motion(true);
         });
-        let (_, cx) = cx.add_window_view(|_, cx| VirtualLayoutsPage::new(cx));
+        let (_, cx) = cx.add_window_view(VirtualLayoutsPage::new_with_focus);
         cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
         assert!(grid_semantics(cx).contains(&(0, 0, 1, 1)));
         click(cx, "grid-span");
@@ -590,8 +656,8 @@ mod tests {
             yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
             cx.set_reduce_motion(true);
         });
-        let (view, cx) = cx.add_window_view(|_, cx| {
-            let mut page = VirtualLayoutsPage::new(cx);
+        let (view, cx) = cx.add_window_view(|window, cx| {
+            let mut page = VirtualLayoutsPage::new_with_focus(window, cx);
             page.active = 1;
             page
         });
@@ -625,8 +691,8 @@ mod tests {
             yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
             cx.set_reduce_motion(true);
         });
-        let (_, cx) = cx.add_window_view(|_, cx| {
-            let mut page = VirtualLayoutsPage::new(cx);
+        let (_, cx) = cx.add_window_view(|window, cx| {
+            let mut page = VirtualLayoutsPage::new_with_focus(window, cx);
             page.active = 2;
             page
         });
@@ -638,7 +704,7 @@ mod tests {
         assert!(last.contains("节点 2000"));
     }
 
-    fn click(cx: &mut gpui_kit::VisualTestContext, id: &'static str) {
+    pub(super) fn click(cx: &mut gpui_kit::VisualTestContext, id: &'static str) {
         let point = cx.update(|w, _| {
             gpui_kit::base::test_support::snapshots(w)
                 .into_iter()
@@ -656,7 +722,7 @@ mod tests {
             yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
             cx.set_reduce_motion(true);
         });
-        let (view, cx) = cx.add_window_view(|_, cx| VirtualLayoutsPage::new(cx));
+        let (view, cx) = cx.add_window_view(VirtualLayoutsPage::new_with_focus);
         cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
         cx.update(|w, cx| w.draw(cx).clear(cx));
         assert_eq!(view.read_with(cx, |p, _| p.builds[1].get()), 0);

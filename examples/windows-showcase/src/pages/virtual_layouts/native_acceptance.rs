@@ -17,7 +17,12 @@ fn native_resize_visibility_resume() {
             focus: true,
             window_bounds: Some(gpui_kit::WindowBounds::Windowed(gpui_kit::Bounds::new(gpui_kit::point(px(40.), px(40.)), gpui_kit::size(px(1200.), px(800.))))),
             ..Default::default()
-        }, cx, |w, cx| { w.set_window_title("Yue Virtualization Native Acceptance"); cx.new(VirtualLayoutsPage::new) }).unwrap();
+        }, cx, |w, cx| { w.set_window_title("Yue Virtualization Native Acceptance"); cx.new(|cx| VirtualLayoutsPage::new_with_focus(w, cx)) }).unwrap();
+        window.update(cx, |_, w, cx| page.update(cx, |p, cx| {
+            p.grid_cursor = (1, 1);
+            p.grid_focus.focus(w, cx);
+            cx.notify();
+        })).unwrap();
         cx.spawn(async move |cx| {
             let checked: Result<(), String> = async {
                 for step in 0..24 {
@@ -82,6 +87,12 @@ fn native_resize_visibility_resume() {
                     assert_eq!(after, before);
                     println!("NATIVE_VISIBILITY,hidden={hidden},restored={restored},reading_offsets_preserved=true");
                 });
+                window.update(cx, |_, w, cx| {
+                    let p = page.read(cx);
+                    assert!(p.grid_focus.is_focused(w), "native Grid focus survives restore");
+                    assert_eq!(p.grid_cursor, (1, 1), "native reading scroll never changes the cursor");
+                    println!("NATIVE_GRID_FOCUS,restored=true,cursor=1:1,reading_offsets_preserved=true");
+                }).unwrap();
                 Ok(())
             }.await;
             *observed.borrow_mut() = Some(checked);
@@ -109,7 +120,7 @@ fn native_interactive_acceptance_surface() {
         }, cx, |w, cx| {
             w.set_window_title("Yue Virtualization Interactive Acceptance");
             w.on_window_should_close(cx, |_, cx| { cx.quit(); true });
-            cx.new(VirtualLayoutsPage::new)
+            cx.new(|cx| VirtualLayoutsPage::new_with_focus(w, cx))
         }).unwrap();
         println!("NATIVE_INTERACTIVE,opened=true,displays={},timeout_seconds=300", cx.displays().len());
         cx.spawn(async move |cx| {
@@ -118,7 +129,7 @@ fn native_interactive_acceptance_surface() {
                 cx.background_executor().timer(Duration::from_millis(250)).await;
                 let state = window.update(cx, |_, w, cx| {
                     let p = page.read(cx);
-                    format!("tab={},rtl={},span={},frozen={},x={},y={},masonry_y={},horizontal_x={},scale={},bounds={:?},visible={}", p.active,p.rtl,p.spanning,p.frozen,p.columns.read(cx).viewport().map_or(0., |v|v.offset()),p.rows.read(cx).viewport().map_or(0.,|v|v.offset()),-p.masonry.read(cx).scroll_handle().precise_offset().y,p.horizontal.read(cx).viewport().map_or(0.,|v|v.offset()),w.scale_factor(),w.bounds(),w.is_visible())
+                    format!("tab={},rtl={},span={},frozen={},x={},y={},masonry_y={},horizontal_x={},scale={},bounds={:?},visible={},cursor={}:{},grid_focused={}", p.active,p.rtl,p.spanning,p.frozen,p.columns.read(cx).viewport().map_or(0., |v|v.offset()),p.rows.read(cx).viewport().map_or(0.,|v|v.offset()),-p.masonry.read(cx).scroll_handle().precise_offset().y,p.horizontal.read(cx).viewport().map_or(0.,|v|v.offset()),w.scale_factor(),w.bounds(),w.is_visible(),p.grid_cursor.0,p.grid_cursor.1,p.grid_focus.is_focused(w))
                 });
                 let Ok(state) = state else { break; };
                 if state != last { println!("NATIVE_INTERACTIVE,tick={tick},{state}"); last=state; }

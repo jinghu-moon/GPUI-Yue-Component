@@ -524,7 +524,11 @@ impl Render for Showcase {
                         ShowcasePage::VirtualLayouts => self
                             .virtual_layouts_demo
                             .get_or_insert_with(|| {
-                                cx.new(pages::virtual_layouts::VirtualLayoutsPage::new)
+                                cx.new(|cx| {
+                                    pages::virtual_layouts::VirtualLayoutsPage::new_with_focus(
+                                        window, cx,
+                                    )
+                                })
                             })
                             .clone()
                             .into_any_element(),
