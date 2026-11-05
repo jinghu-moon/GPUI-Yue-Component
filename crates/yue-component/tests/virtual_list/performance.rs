@@ -212,6 +212,86 @@ fn grid_observed_size_aggregation_evidence() {
 }
 
 #[test]
+#[ignore = "equivalent consumer ABBA; run release with --ignored --nocapture --test-threads=1"]
+fn grid_observed_equivalent_evidence() {
+    use super::grid_observed::{Consumer, Path, workload};
+    let frames = workload(64);
+    // Equality is checked outside the timed region; consume every output value
+    // inside it. The exhaustive independent oracle is a normal regression test.
+    let mut pair = [Path::Cells, Path::Axes].map(|path| Consumer::new(path, 64, 4096));
+    for epoch in 1..=2 {
+        if epoch > 1 {
+            for c in &mut pair {
+                c.reset(epoch).unwrap();
+            }
+        }
+        for batch in &frames {
+            for c in &mut pair {
+                c.observe(epoch, batch).unwrap();
+            }
+            assert_eq!(pair[0].output(), pair[1].output());
+        }
+    }
+    for scenario in ["cold", "warm", "reset"] {
+        for (sample, path) in [
+            Path::Cells,
+            Path::Axes,
+            Path::Axes,
+            Path::Cells,
+            Path::Cells,
+            Path::Axes,
+            Path::Axes,
+            Path::Cells,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            ALLOCATIONS.with(|stats| stats.set(Some(Allocations::default())));
+            let started = Instant::now();
+            let mut checksum = 0f64;
+            let mut c = Consumer::new(path, 64, 4096);
+            for iteration in 0..40 {
+                if iteration > 0 {
+                    match scenario {
+                        "cold" => c = Consumer::new(path, 64, 4096),
+                        "reset" => c.reset(iteration + 1).unwrap(),
+                        _ => {}
+                    }
+                }
+                let epoch = if scenario == "reset" {
+                    iteration + 1
+                } else {
+                    1
+                };
+                let batches = if scenario == "cold" {
+                    &frames[..1]
+                } else {
+                    &frames[..]
+                };
+                for batch in batches {
+                    c.observe(epoch, batch).unwrap();
+                    let (rows, columns) = c.output();
+                    checksum += rows
+                        .into_iter()
+                        .chain(columns)
+                        .map(|v| f64::from(std::hint::black_box(v)))
+                        .sum::<f64>();
+                }
+            }
+            drop(c);
+            let ns = started.elapsed().as_nanos();
+            let stats = ALLOCATIONS.with(|stats| stats.replace(None).unwrap());
+            assert_eq!(stats.live, 0);
+            std::hint::black_box(checksum);
+            println!(
+                "GRID_OBSERVED_EQ,scenario={scenario},path={path:?},sample={sample},iterations=40,ns={ns},allocations={},peak_bytes={},checksum={checksum}",
+                stats.allocations, stats.peak
+            );
+        }
+    }
+}
+
+#[test]
 #[ignore = "manual retained/peak heap payload evidence; run with --ignored --nocapture"]
 fn geometry_allocation_evidence() {
     for mode in 0..3 {
