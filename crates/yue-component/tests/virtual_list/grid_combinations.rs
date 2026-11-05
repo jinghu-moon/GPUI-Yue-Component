@@ -596,3 +596,175 @@ fn generated_grid_state_trace_keeps_worksets_unique_and_two_axes_coherent(cx: &m
         );
     }
 }
+
+struct TableHarness {
+    axes: [Entity<VirtualizerState>; 2],
+    scroll: ScrollHandle,
+    selected: (usize, usize),
+}
+
+impl Render for TableHarness {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let selected = self.selected;
+        VirtualGrid::new(
+            "consumer-table",
+            &self.axes[0],
+            &self.axes[1],
+            &self.scroll,
+            move |cell, _, _| {
+                let key = (cell.row().key().clone(), cell.column().key().clone());
+                let row = match key.0 {
+                    ElementId::Integer(value) => value as usize,
+                    _ => unreachable!("table keys use integer domain identities"),
+                };
+                let column = match key.1 {
+                    ElementId::Integer(value) => value as usize,
+                    _ => unreachable!("table keys use integer domain identities"),
+                };
+                let is_selected = selected == (row, column);
+                div()
+                    .id(("table-cell", row * 32 + column))
+                    .role(Role::Cell)
+                    .aria_label(format!("{row}:{column}"))
+                    .aria_row_index(cell.row().index())
+                    .aria_column_index(cell.column().index())
+                    .aria_selected(is_selected)
+                    .size_full()
+                    .test_support()
+            },
+        )
+        .role(Role::Grid)
+        .aria_label("业务表格")
+        .aria_row_count(32)
+        .aria_column_count(32)
+        .retained_cells(vec![VirtualGridCellKey::new(selected.0, selected.1)])
+        .w(px(240.))
+        .h(px(100.))
+        .test_support()
+    }
+}
+
+fn table_harness(cx: &mut Context<TableHarness>) -> TableHarness {
+    let binding = VirtualizerBinding::new();
+    TableHarness {
+        axes: [Axis::Vertical, Axis::Horizontal].map(|axis| {
+            cx.new(|_| {
+                VirtualizerState::new_attached(
+                    axis,
+                    Rc::new(Keys((0..32).collect())),
+                    VirtualizerSizing::known(vec![
+                        px(if axis == Axis::Vertical {
+                            20.
+                        } else {
+                            50.
+                        });
+                        32
+                    ]),
+                    &binding,
+                )
+                .unwrap()
+            })
+        }),
+        scroll: ScrollHandle::new(),
+        selected: (7, 3),
+    }
+}
+
+#[gpui_kit::test]
+fn table_consumer_keeps_domain_selection_and_semantics_through_reorder_and_resize(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = cx.add_window_view(|_, cx| table_harness(cx));
+    let selected_cell = |cx: &mut gpui_kit::VisualTestContext| {
+        cx.update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .filter(|node| node.role() == Some(Role::Cell))
+                .filter(|node| node.selected() == Some(true))
+                .collect::<Vec<_>>()
+        })
+    };
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let initial = selected_cell(cx);
+    assert_eq!(initial.len(), 1);
+    assert_eq!(initial[0].label(), Some("7:3"));
+    assert_eq!(initial[0].row_index(), Some(7));
+    assert_eq!(initial[0].column_index(), Some(3));
+
+    let axes = view.read_with(cx, |table, _| table.axes.clone());
+    for (axis, target) in axes.iter().zip([120., 250.]) {
+        axis.update(cx, |state, cx| {
+            state
+                .scroll_to_offset(target, VirtualizerScrollOptions::default())
+                .unwrap();
+            cx.notify();
+        });
+    }
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+
+    let mut order: Vec<_> = (0..32).collect();
+    order.rotate_left(5);
+    let row_sizes = order.iter().map(|_| px(20.)).collect::<Vec<_>>();
+    let column_sizes = order.iter().map(|_| px(50.)).collect::<Vec<_>>();
+    axes[0].update(cx, |state, cx| {
+        state
+            .replace_source(
+                Rc::new(Keys(order.clone())),
+                VirtualizerSizing::known(row_sizes),
+                VirtualizerChange::Reorder,
+            )
+            .unwrap();
+        cx.notify();
+    });
+    axes[1].update(cx, |state, cx| {
+        state
+            .replace_source(
+                Rc::new(Keys(order.clone())),
+                VirtualizerSizing::known(column_sizes),
+                VirtualizerChange::Reorder,
+            )
+            .unwrap();
+        cx.notify();
+    });
+    cx.update(|_, app| {
+        VirtualGrid::update_sizes(
+            &axes[0],
+            &axes[1],
+            &[VirtualizerSizeUpdate::new(7usize, px(27.))],
+            &[VirtualizerSizeUpdate::new(3usize, px(61.))],
+            app,
+        )
+        .unwrap();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let after = selected_cell(cx);
+    assert_eq!(
+        after.len(),
+        1,
+        "selection must remain a single semantic cell"
+    );
+    assert_eq!(after[0].label(), Some("7:3"));
+    assert_eq!(
+        after[0].row_index(),
+        Some(order.iter().position(|key| *key == 7).unwrap())
+    );
+    assert_eq!(
+        after[0].column_index(),
+        Some(order.iter().position(|key| *key == 3).unwrap())
+    );
+    let all_cells = cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .filter(|node| node.role() == Some(Role::Cell))
+            .collect::<Vec<_>>()
+    });
+    let identities = all_cells
+        .iter()
+        .map(|node| (node.row_index(), node.column_index()))
+        .collect::<HashSet<_>>();
+    assert_eq!(
+        identities.len(),
+        all_cells.len(),
+        "reorder must not duplicate cell semantics"
+    );
+}
