@@ -8,6 +8,116 @@ pub struct VirtualGridSpan {
     rows: usize,
     columns: usize,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use gpui::px;
+    use std::{hint::black_box, time::Instant};
+
+    struct Keys;
+    impl VirtualizerSource for Keys {
+        fn len(&self) -> usize {
+            100_000
+        }
+        fn key_at(&self, index: usize) -> ElementId {
+            index.into()
+        }
+        fn index_of(&self, key: &ElementId) -> Option<usize> {
+            match key {
+                ElementId::Integer(i) if *i < 100_000 => Some(*i as usize),
+                _ => None,
+            }
+        }
+    }
+    fn axes() -> [VirtualizerState; 2] {
+        let binding = VirtualizerBinding::new();
+        [Axis::Vertical, Axis::Horizontal].map(|axis| {
+            VirtualizerState::new_attached(
+                axis,
+                Rc::new(Keys),
+                VirtualizerSizing::fixed(px(20.)),
+                &binding,
+            )
+            .unwrap()
+        })
+    }
+    fn descriptors(count: usize, same_row: bool) -> Vec<VirtualGridSpan> {
+        (0..count)
+            .rev()
+            .map(|i| {
+                VirtualGridSpan::new(
+                    VirtualGridCellKey::new(if same_row { 0 } else { i * 3 }, i * 3),
+                    2,
+                    2,
+                )
+            })
+            .collect()
+    }
+    #[test]
+    fn span_lookup_matches_independent_linear_rectangles_at_half_open_edges() {
+        let [rows, columns] = axes();
+        for same_row in [false, true] {
+            for count in [0, 1, 100, 1000] {
+                let spans =
+                    GridSpans::new(&rows, &columns, &descriptors(count, same_row), (0, 0)).unwrap();
+                let mut seed = 783_421u64;
+                for step in 0..3000 {
+                    seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
+                    let column = ((seed >> 32) as usize) % (count * 3 + 3);
+                    let row = if same_row {
+                        step % 4
+                    } else {
+                        column + step % 3
+                    };
+                    let expected = spans.entries.iter().position(|span| {
+                        span.rows.contains(&row) && span.columns.contains(&column)
+                    });
+                    assert_eq!(
+                        spans.covering(row, column),
+                        expected,
+                        "count={count} row={row} column={column}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "manual isolated span validation and point-query CPU cost"]
+    fn span_cost_probe() {
+        let [rows, columns] = axes();
+        for same_row in [false, true] {
+            for count in [0, 100, 1000, 10_000] {
+                let descriptors = descriptors(count, same_row);
+                for sample in 0..5 {
+                    let start = Instant::now();
+                    for _ in 0..20 {
+                        black_box(GridSpans::new(&rows, &columns, &descriptors, (0, 0)).unwrap());
+                    }
+                    println!(
+                        "SPAN_COST,stage=config,same_row={same_row},count={count},sample={sample},iterations=20,ns={}",
+                        start.elapsed().as_nanos()
+                    );
+                    let spans = GridSpans::new(&rows, &columns, &descriptors, (0, 0)).unwrap();
+                    let start = Instant::now();
+                    let mut checksum = 0;
+                    for i in 0..2000 {
+                        let column = (i * 397) % (count * 3 + 3);
+                        let row = if same_row { i % 3 } else { column };
+                        checksum += black_box(spans.covering(black_box(row), black_box(column)))
+                            .map_or(0, |i| i + 1);
+                    }
+                    black_box(checksum);
+                    println!(
+                        "SPAN_COST,stage=query,same_row={same_row},count={count},sample={sample},iterations=2000,ns={}",
+                        start.elapsed().as_nanos()
+                    );
+                }
+            }
+        }
+    }
+}
 impl VirtualGridSpan {
     pub fn new(origin: VirtualGridCellKey, rows: usize, columns: usize) -> Self {
         Self {
