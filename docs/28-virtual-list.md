@@ -161,6 +161,8 @@ Masonry 的 `supports_smooth()` 在 Fixed/Known 为 true、Measured 为 false。
 
 最近一次固定 workload 的真实窗口尾部分位复测见[原生尾部复测](research/2026-11-05-virtual-list-native-tail-review.md)。结果仍是混合变化，Grid 语义成本可见但没有新的全局性能结论；不据此调整默认路径或宣称稳定 FPS。
 
+Grid 稳态帧 cell/mask scratch 容量复用的候选、真实窗口 ABBA、限制及不完整复测见[Grid scratch 复用记录](research/2026-11-06-virtual-grid-scratch-reuse.md)。当前只确认一轮 Grid 尾部改善，不宣称全局渲染提速；第二轮需在无并发编译时重跑。
+
 后续候选按真实消费者、可验证收益和设备条件准入；当前不为评分增加未使用的 reverse、横向 RTL 或通用观察尺寸 API。准入条件与暂缓理由见[下一项工作准入](research/2026-11-05-virtual-list-next-work-gate.md)。
 
 `retained_cells(Vec<VirtualGridCellKey>)` 去重可见／冻结 pair，缺失任一轴 key 后跳过；`cell_focus_handle(pair,handle)` 仅在包含焦点时保留，删除、注销或换 owner 后聚焦 `focus_fallback`（未设置则 blur）。旧轴级 retained 仍是两轴乘积合同。RTL 冻结列位于右侧，在 Grid 边界以 physical = max_scroll - logical 换算原生输入／scrollbar；方向、宽度与总尺寸变化保持逻辑阅读位置，文本方向和 Left/Right 编辑语义由消费者负责。

@@ -535,6 +535,7 @@ pub struct VirtualGridFrame {
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
     mount: Entity<GridMount>,
 }
+const MAX_RETAINED_GRID_BUFFER_CAPACITY: usize = 4096;
 struct GridHorizontal {
     logical: f64,
     physical: f64,
@@ -548,6 +549,8 @@ struct GridMount {
     views: Option<Rc<std::cell::RefCell<CellViews>>>,
     focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
     horizontal: Option<Box<GridHorizontal>>,
+    cell_buffer: Vec<(ElementId, AnyElement)>,
+    mask_buffer: Vec<Bounds<Pixels>>,
 }
 impl Element for VirtualGrid {
     type RequestLayoutState = VirtualGridFrame;
@@ -574,6 +577,8 @@ impl Element for VirtualGrid {
         let rows = self.rows.read(cx);
         let columns = self.columns.read(cx);
         Self::validate_axes(rows, columns).expect("invalid virtual grid configuration");
+        let retain_masks = self.frozen_rows.min(rows.source_for_render().len()) > 0
+            || self.frozen_columns.min(columns.source_for_render().len()) > 0;
         if let Some(spans) = self.options.as_ref().and_then(|o| o.spans.as_ref()) {
             assert_eq!(
                 spans.generations,
@@ -623,6 +628,8 @@ impl Element for VirtualGrid {
                     views: None,
                     focused: Vec::new(),
                     horizontal: None,
+                    cell_buffer: Vec::new(),
+                    mask_buffer: Vec::new(),
                 }
             },
         );
@@ -686,6 +693,12 @@ impl Element for VirtualGrid {
                 None
             }
         });
+        let (cells, masks) = mount.update(cx, |m, _| {
+            (
+                std::mem::take(&mut m.cell_buffer),
+                retain_masks.then(|| std::mem::take(&mut m.mask_buffer)),
+            )
+        });
         if let (Some(factory), Some(views)) = (self.view_factory.clone(), views.clone()) {
             views.borrow_mut().touched.clear();
             let rows = self.rows.clone();
@@ -738,8 +751,8 @@ impl Element for VirtualGrid {
         (
             layout,
             VirtualGridFrame {
-                cells: Vec::new(),
-                masks: None,
+                cells,
+                masks,
                 views,
                 mount,
             },
@@ -913,7 +926,12 @@ impl Element for VirtualGrid {
         );
         let snapshot = VirtualGridSnapshot::new(rows, columns).unwrap();
         let partitioned = row_count > 0 || column_count > 0;
-        frame.masks = partitioned.then(Vec::new);
+        if partitioned && frame.masks.is_none() {
+            frame.masks = Some(Vec::new());
+        }
+        if !partitioned {
+            frame.masks = None;
+        }
         let hitbox = self.base.interactivity().prepaint(
             id,
             inspector,
@@ -1132,5 +1150,23 @@ impl Element for VirtualGrid {
                 });
             },
         );
+        let mut cells = std::mem::take(&mut frame.cells);
+        cells.clear();
+        let mut masks = frame.masks.take();
+        let has_masks = masks.is_some();
+        let mut masks = masks.take().unwrap_or_default();
+        masks.clear();
+        frame.mount.update(cx, |mount, _| {
+            mount.cell_buffer = if cells.capacity() <= MAX_RETAINED_GRID_BUFFER_CAPACITY {
+                cells
+            } else {
+                Vec::new()
+            };
+            if has_masks && masks.capacity() <= MAX_RETAINED_GRID_BUFFER_CAPACITY {
+                mount.mask_buffer = masks;
+            } else if has_masks {
+                mount.mask_buffer = Vec::new();
+            }
+        });
     }
 }
