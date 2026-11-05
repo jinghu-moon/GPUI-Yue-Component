@@ -18,6 +18,8 @@
 
 后续第四项审查确认：Grid 的显式 RTL 能力不代表一维横向列表也支持 RTL。当前 GPUI 样式／文本样式没有可查询的继承 direction，横向 `VirtualList` 按 source 顺序和物理 x 呈现。现有生产视图回归 `known_horizontal_owned_projects_bounds_commands_and_native_wheel_to_x` 已验证 key 定位、wheel 和实际 hitbox 一致；该合同不验证 RTL。对比参考库，virtua 与 TanStack 处理横向 RTL，vlist 明确拒绝；本项目既没有一维显式 RTL 开关，也无法可靠自动拒绝 RTL 容器，因此此项记为未交付，不把当前物理 x 行为包装为 RTL 支持。未来若实现，应提供显式方向配置，并对 Known/Fixed/Measured、Owned/Attached、命令、wheel、scrollbar、命中、方向性缓冲及焦点/语义顺序建立成套坐标合同，再以前后回归验收。
 
+同一轮也补了 `prepend` 回归：Fixed/Known/Measured 与纵／横两轴共 6 组合，在 `Splice { old: 0..0, inserted: 2 }` 后，稳定 key 的相对视口位置保持不变。它验证了参考项目 reverse infinite scroll 所需的锚点补偿接缝；完整反向布局、反向索引、键盘方向语义和尾部策略仍需单独的显式能力合同。
+
 再后续的[四项验收](2026-11-05-virtual-list-four-acceptance.md)已经建立完整 key、epoch、预算与输出等价的私有消费者测试和跨帧计时，并完成混合能力、span 规模及当前 Windows 环境验证；不应继续把“缺少等价消费者测试”列为当前待办。公共 collector 仍未采用，下面保留旧原型和旧微实验的局限，不用新样本覆盖历史记录。
 
 ## 当轮建议顺序（历史）

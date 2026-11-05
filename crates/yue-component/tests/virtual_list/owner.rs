@@ -35,6 +35,30 @@ impl VirtualizerSource for Source {
 fn source(count: usize) -> Rc<dyn VirtualizerSource> {
     Rc::new(Source(count, 0))
 }
+struct RangeSource {
+    start: usize,
+    count: usize,
+}
+impl VirtualizerSource for RangeSource {
+    fn len(&self) -> usize {
+        self.count
+    }
+    fn key_at(&self, ix: usize) -> ElementId {
+        (self.start + ix).into()
+    }
+    fn index_of(&self, key: &ElementId) -> Option<usize> {
+        let ElementId::Integer(key) = key else {
+            return None;
+        };
+        let key = *key as usize;
+        (self.start..self.start + self.count)
+            .contains(&key)
+            .then_some(key - self.start)
+    }
+}
+fn range_source(start: usize, count: usize) -> Rc<dyn VirtualizerSource> {
+    Rc::new(RangeSource { start, count })
+}
 fn sizing(mode: usize, count: usize) -> VirtualizerSizing {
     match mode {
         0 => VirtualizerSizing::fixed(px(20.)),
@@ -87,6 +111,45 @@ fn anchor_blank_regions_observation() {
                     request.as_ref().map_or(offset, |r| r.offset())
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn prepend_keeps_the_keyed_reading_anchor_on_both_axes_and_all_sizing_modes() {
+    for axis in [Axis::Vertical, Axis::Horizontal] {
+        for mode in 0..3 {
+            let sizing = |count| match mode {
+                0 => VirtualizerSizing::fixed(px(20.)),
+                1 => VirtualizerSizing::known(vec![px(20.); count]),
+                _ => VirtualizerSizing::measured(px(20.)),
+            };
+            let mut state =
+                VirtualizerState::new(axis, range_source(100, 100), sizing(100)).unwrap();
+            let before =
+                VirtualizerViewport::new(state.binding().unwrap(), 1, 400., px(100.), px(240.));
+            state.commit(&before).unwrap();
+
+            // The new source prepends keys 98 and 99 while preserving the old
+            // key domain. The visible key 120 therefore moves from index 20
+            // to index 22, and its physical reading position must remain fixed.
+            state
+                .replace_source(
+                    range_source(98, 102),
+                    sizing(102),
+                    VirtualizerChange::Splice {
+                        old: 0..0,
+                        inserted: 2,
+                    },
+                )
+                .unwrap();
+            let after = before.with_revision(2);
+            let (_, request) = state.prepare(&after, Instant::now()).unwrap();
+            assert_eq!(
+                request.as_ref().map_or(400., |request| request.offset()),
+                440.,
+                "prepend must compensate {axis:?}/{mode} by the inserted extent"
+            );
         }
     }
 }
