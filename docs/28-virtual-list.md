@@ -133,7 +133,7 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 借用同一宿主的双轴组合 | VirtualGrid 使用两根 Fixed/Known 轴；同 host、同 viewport revision、配对的主／跨轴空间；一个 ScrollHandle 一次合并提交 |
 | 动态网格行高 | 不依据当前可见列猜测全局行高；调用方显式提供独立的行／列尺寸 |
 | 瀑布流 | 独立 VirtualMasonry，支持估算与真实测量、key／offset 定位和 opt-in 尾部跟随；Fixed/Known 支持短距离 smooth，Measured 安全即时定位；resize／append 保留已有分栏，完整结构替换或显式 reflow 可重排 |
-| 方向 | Grid 可显式 right_to_left(true)，keys 不反序、列命令沿逻辑 start/end；原生 ScrollHandle 仍为物理坐标。一维 List／Masonry 镜像与反向索引未交付 |
+| 方向 | Grid 可显式 right_to_left(true)，keys 不反序、列命令沿逻辑 start/end；原生 ScrollHandle 仍为物理坐标。一维横向 List 与 Masonry 没有 RTL 镜像／反向索引；横向 List 当前按 source 顺序和物理 x 运作，GPUI 未提供可供组件检测的继承文本方向 |
 
 构造、绑定或启用能力时校验 `(axis, sizing, attachment, requested_capability)`，一维通过只读 `VirtualizerCapabilities`、Masonry 通过独立 `VirtualMasonryCapabilities` 查询支持情况；不能把一维 factory 的结果用于推断 Masonry。unsupported 返回明确类型化错误。校验先于 N 级分配、挂载和滚动写入，失败保留旧有效状态，不悄悄换 sizing/backend、忽略选项或制造兼容壳。增加支持必须同时更新矩阵、原生补丁、前后基线与组合测试。
 
