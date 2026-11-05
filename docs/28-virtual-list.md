@@ -290,6 +290,8 @@ Attached：读取宿主 viewport → 求 snapshot → 消费/测量工作集 →
 
 `replace_source` 把 next source、sizing 与变更说明作为一个事务验证并提交，不能先改 count、下一帧再改几何。一个 state 的轴、尺寸模式与滚动绑定固定；Fixed extent、Known 数组或 Measured 估算可更新。切换配置显式验证并重建，按需要移交锚点，解绑旧输入/命令，不做隐式模式猜测。
 
+VirtualGrid 另提供 `update_sizes`／`update_sizes_from_snapshots` 配对接缝：先同时校验行列的 Attached 绑定、Known 输入、key／重复项、几何和 snapshot，再分别提交两轴。任一侧失败时两轴都保持原 revision 与几何；成功后仍沿用各轴既有的锚点恢复，并发出各轴正常 Entity 通知。该接缝不创建第二个滚动 owner，也不改变单轴更新 API。
+
 `invalidate_items(range)` 只解释当前 generation；异步反馈先核对 binding、source generation 和内容/布局版本，再按 key 求当前 index。`scroll_to_key` 也由 source 判断目标是否存在。
 
 显式内容失效对 Fixed/Known/Measured 均生效；以区间边界记录局部 epoch，不逐项枚举整个失效范围。非空失效使先前 snapshot 的迟到写入过期；空区间和非法输入不改变版本。source 事务清理非空旧坐标区间时，提升单调的 base epoch 作为一次准备缓存屏障，不能回到旧 stamp。该屏障保守刷新当前工作集；后续没有新内容失效的 append 不再全工作集刷新。缓存仍按 key/source revision/index 验证，避免把旧 index 的 epoch 移给另一项。宿主在 coherent mutation 后 notify 一次。

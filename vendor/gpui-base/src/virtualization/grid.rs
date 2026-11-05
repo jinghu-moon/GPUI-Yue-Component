@@ -4,7 +4,7 @@ use super::element::ViewStamp;
 use super::*;
 use crate::TestSupportExt as _;
 use gpui::{
-    AnyElement, App, AvailableSpace, Bounds, ContentMask, Div, Element, Entity, GlobalElementId,
+    AnyElement, App, AppContext, AvailableSpace, Bounds, ContentMask, Div, Element, Entity, GlobalElementId,
     Hitbox, InspectorElementId, InteractiveElement, IntoElement, LayoutId, ParentElement,
     ScrollHandle, Stateful, StatefulInteractiveElement, StyleRefinement, Styled, Window, div,
     point, px, size,
@@ -284,6 +284,64 @@ pub struct VirtualGrid {
     options: Option<Box<GridOptions>>,
 }
 impl VirtualGrid {
+    /// Atomically update explicit row and column measurements for one Grid.
+    ///
+    /// Both axes are validated before either is changed. The axes must be the
+    /// same Attached, Fixed/Known Grid pair; Fixed axes reject per-item
+    /// updates, while Known axes apply their ordinary anchor-preserving batch
+    /// semantics. This helper does not write the shared scroll position.
+    pub fn update_sizes(
+        rows: &Entity<VirtualizerState>,
+        columns: &Entity<VirtualizerState>,
+        row_updates: &[VirtualizerSizeUpdate],
+        column_updates: &[VirtualizerSizeUpdate],
+        cx: &mut App,
+    ) -> Result<(), VirtualizerError> {
+        let validation = cx.read_entity(rows, |rows, _| {
+            cx.read_entity(columns, |columns, _| {
+                Self::validate_axes(rows, columns)?;
+                rows.validate_size_batch(row_updates, true)?;
+                columns.validate_size_batch(column_updates, true)
+            })
+        });
+        validation?;
+        cx.update_entity(rows, |rows, cx| {
+            rows.update_sizes(row_updates)?;
+            cx.notify();
+            Ok::<_, VirtualizerError>(())
+        })?;
+        cx.update_entity(columns, |columns, cx| {
+            columns.update_sizes(column_updates)?;
+            cx.notify();
+            Ok::<_, VirtualizerError>(())
+        })?;
+        Ok(())
+    }
+
+    /// Snapshot-guarded form of [`Self::update_sizes`]. Both snapshots are
+    /// checked before either axis is mutated, so a stale pair is a no-op.
+    pub fn update_sizes_from_snapshots(
+        rows: &Entity<VirtualizerState>,
+        columns: &Entity<VirtualizerState>,
+        row_snapshot: &VirtualizerSnapshot,
+        column_snapshot: &VirtualizerSnapshot,
+        row_updates: &[VirtualizerSizeUpdate],
+        column_updates: &[VirtualizerSizeUpdate],
+        cx: &mut App,
+    ) -> Result<(), VirtualizerError> {
+        let row_validation = cx.read_entity(rows, |rows, _| {
+            rows.validate_snapshot(row_snapshot)?;
+            rows.validate_size_batch(row_updates, true)
+        });
+        row_validation?;
+        let column_validation = cx.read_entity(columns, |columns, _| {
+            columns.validate_snapshot(column_snapshot)?;
+            columns.validate_size_batch(column_updates, true)
+        });
+        column_validation?;
+        Self::update_sizes(rows, columns, row_updates, column_updates, cx)
+    }
+
     /// Preflight configuration without claiming a mount, querying the source,
     /// or writing a scroll position. Dynamic cell-derived row heights are not
     /// supported: both dimensions must be provided by the caller.

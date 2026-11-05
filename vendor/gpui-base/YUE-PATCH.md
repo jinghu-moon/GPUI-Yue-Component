@@ -1,5 +1,19 @@
 # Yue Base patches
 
+## Joint VirtualGrid size transactions (2026-11-05)
+
+`VirtualGrid::update_sizes` and its snapshot-guarded variant preflight both
+Attached Fixed/Known axes before applying either batch. Missing keys, duplicate
+keys, invalid extents, wrong axis ownership, binding conflicts and stale
+snapshots therefore leave both axes unchanged. The existing one-axis
+`VirtualizerState::update_sizes` contract remains unchanged; the Grid helper
+only combines two already validated updates and emits the normal owner
+notifications after each state commit. Regression coverage is in
+`crates/yue-component/tests/virtual_list/api_contract.rs`.
+
+Remove this patch when upstream exposes an equivalent paired-axis transaction
+with the same stale-snapshot and failure atomicity guarantees.
+
 ## Fractional virtualization feedback and singleton cost (2026-11-04)
 
 `virtualization/updates.rs` compares feedback in the backend's stored units:

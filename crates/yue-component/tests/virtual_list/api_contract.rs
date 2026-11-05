@@ -1,6 +1,6 @@
 use super::*;
 use gpui_kit::size;
-use yue_component::{VirtualGrid, VirtualMasonryState};
+use yue_component::{VirtualGrid, VirtualMasonryState, VirtualizerSizeUpdate};
 
 #[test]
 fn masonry_feedback_batches_preserve_atomicity_and_frozen_geometry_across_batch_shapes() {
@@ -227,4 +227,164 @@ fn grid_preflight_rejects_unsupported_axes_without_source_reads_or_binding_chang
     );
     assert_eq!(measured_source.calls.get(), before);
     assert_eq!(VirtualGrid::validate_axes(&rows, &columns), Ok(()));
+}
+
+#[gpui_kit::test]
+fn grid_size_transaction_validates_both_axes_before_commit(cx: &mut TestAppContext) {
+    let binding = VirtualizerBinding::new();
+    let rows = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Vertical,
+            source(0, 4),
+            VirtualizerSizing::known(vec![px(20.); 4]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let columns = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Horizontal,
+            source(0, 4),
+            VirtualizerSizing::known(vec![px(30.); 4]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let revisions = |cx: &mut TestAppContext| {
+        cx.read(|app| {
+            let row_viewport = VirtualizerViewport::new(&binding, 1, 0., px(100.), px(100.));
+            let column_viewport = VirtualizerViewport::new(&binding, 1, 0., px(100.), px(100.));
+            (
+                rows.read_with(app, |state, _| {
+                    state.snapshot(&row_viewport).unwrap().geometry_revision()
+                }),
+                columns.read_with(app, |state, _| {
+                    state
+                        .snapshot(&column_viewport)
+                        .unwrap()
+                        .geometry_revision()
+                }),
+            )
+        })
+    };
+    let before = revisions(cx);
+
+    cx.update(|app| {
+        VirtualGrid::update_sizes(
+            &rows,
+            &columns,
+            &[VirtualizerSizeUpdate::new(1usize, px(27.))],
+            &[VirtualizerSizeUpdate::new(2usize, px(41.))],
+            app,
+        )
+        .unwrap();
+    });
+    let after_valid = revisions(cx);
+    assert_eq!(after_valid, (before.0 + 1, before.1 + 1));
+
+    let before_invalid = after_valid;
+    let result = cx.update(|app| {
+        VirtualGrid::update_sizes(
+            &rows,
+            &columns,
+            &[VirtualizerSizeUpdate::new(0usize, px(33.))],
+            &[VirtualizerSizeUpdate::new(99usize, px(52.))],
+            app,
+        )
+    });
+    assert_eq!(result, Err(VirtualizerError::MissingKey));
+    assert_eq!(revisions(cx), before_invalid);
+}
+
+#[gpui_kit::test]
+fn grid_size_transaction_rejects_stale_snapshot_before_either_axis_changes(
+    cx: &mut TestAppContext,
+) {
+    let binding = VirtualizerBinding::new();
+    let rows = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Vertical,
+            source(0, 3),
+            VirtualizerSizing::known(vec![px(20.); 3]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let columns = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Horizontal,
+            source(0, 3),
+            VirtualizerSizing::known(vec![px(30.); 3]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let (row_snapshot, column_snapshot) = cx.update(|app| {
+        let row_viewport = VirtualizerViewport::new(&binding, 1, 0., px(100.), px(100.));
+        let column_viewport = VirtualizerViewport::new(&binding, 1, 0., px(100.), px(100.));
+        (
+            rows.read_with(app, |state, _| state.snapshot(&row_viewport).unwrap()),
+            columns.read_with(app, |state, _| state.snapshot(&column_viewport).unwrap()),
+        )
+    });
+    let before = (
+        rows.read_with(cx, |state, _| {
+            state
+                .snapshot(&VirtualizerViewport::new(
+                    &binding,
+                    1,
+                    0.,
+                    px(100.),
+                    px(100.),
+                ))
+                .unwrap()
+                .geometry_revision()
+        }),
+        columns.read_with(cx, |state, _| {
+            state
+                .snapshot(&VirtualizerViewport::new(
+                    &binding,
+                    1,
+                    0.,
+                    px(100.),
+                    px(100.),
+                ))
+                .unwrap()
+                .geometry_revision()
+        }),
+    );
+    rows.update(cx, |state, cx| {
+        state
+            .update_sizes(&[VirtualizerSizeUpdate::new(0usize, px(25.))])
+            .unwrap();
+        cx.notify();
+    });
+    let result = cx.update(|app| {
+        VirtualGrid::update_sizes_from_snapshots(
+            &rows,
+            &columns,
+            &row_snapshot,
+            &column_snapshot,
+            &[VirtualizerSizeUpdate::new(1usize, px(26.))],
+            &[VirtualizerSizeUpdate::new(1usize, px(36.))],
+            app,
+        )
+    });
+    assert_eq!(result, Err(VirtualizerError::StaleSnapshot));
+    assert_eq!(
+        columns.read_with(cx, |state, _| {
+            state
+                .snapshot(&VirtualizerViewport::new(
+                    &binding,
+                    1,
+                    0.,
+                    px(100.),
+                    px(100.),
+                ))
+                .unwrap()
+                .geometry_revision()
+        }),
+        before.1,
+        "the other axis stays untouched when the row snapshot is stale"
+    );
 }

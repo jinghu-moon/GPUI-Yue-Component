@@ -22,6 +22,38 @@ impl VirtualizerSizeUpdate {
 }
 
 impl VirtualizerState {
+    /// Validate a size batch without changing geometry or revisions.
+    ///
+    /// Grid uses this preflight for its two-axis transaction. Keep the
+    /// validation rules identical to `apply_sizes`; the second pass is safe
+    /// because all fallible input checks have completed before either axis is
+    /// mutated.
+    pub(crate) fn validate_size_batch(
+        &self,
+        updates: &[VirtualizerSizeUpdate],
+        _measured: bool,
+    ) -> Result<(), VirtualizerError> {
+        if self.sizing.kind() == VirtualizerSizingKind::Fixed {
+            return Err(VirtualizerError::WrongBackend);
+        }
+        let mut indexed = Vec::with_capacity(updates.len());
+        for update in updates {
+            let key_index = self
+                .source
+                .index_of(&update.key)
+                .ok_or(VirtualizerError::MissingKey)?;
+            if !valid_positive(update.extent) || !valid_positive(update.extent + self.layout.gap) {
+                return Err(VirtualizerError::InvalidGeometry("size update"));
+            }
+            indexed.push((key_index, update.extent));
+        }
+        indexed.sort_unstable_by_key(|(index, _)| *index);
+        if indexed.windows(2).any(|pair| pair[0].0 == pair[1].0) {
+            return Err(VirtualizerError::InvalidChange);
+        }
+        Ok(())
+    }
+
     /// Atomic batch of known/externally measured content extents (gap excluded).
     /// Fixed lists deliberately reject per-item sizes. Callers notify their entity once.
     pub fn update_sizes(
