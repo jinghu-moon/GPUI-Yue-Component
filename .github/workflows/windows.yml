@@ -20,6 +20,7 @@ jobs:
       - run: cargo test --workspace --locked --features headless-tests,virtual-profile
       - run: cargo test -p yue-component --locked --no-default-features --features headless-tests
       - run: python tools/test-virtualization-contracts.py
+      - run: python tools/test-windows-grid-bridge.py
       - run: python tools/test-virtualization-evidence.py
       - run: cargo clippy --workspace --locked --all-targets -- -D warnings
       - run: cargo clippy --workspace --locked --all-targets --features headless-tests,virtual-profile -- -D warnings
