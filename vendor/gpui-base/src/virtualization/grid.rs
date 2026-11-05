@@ -912,11 +912,6 @@ impl Element for VirtualGrid {
                 if let Some(spans) = spans {
                     let rows = snapshot.rows.working_indices();
                     let columns = snapshot.columns.working_indices();
-                    let intersects = |range: &std::ops::Range<usize>, indices: &[usize]| {
-                        indices
-                            .get(indices.partition_point(|index| *index < range.start))
-                            .is_some_and(|index| *index < range.end)
-                    };
                     let mut needed = std::collections::BTreeSet::new();
                     extras.retain(|cell| {
                         if let Some(index) = spans.covering(cell.row.index(), cell.column.index()) {
@@ -926,11 +921,9 @@ impl Element for VirtualGrid {
                             true
                         }
                     });
-                    for (index, span) in spans.entries.iter().enumerate() {
-                        if intersects(&span.rows, &rows) && intersects(&span.columns, &columns) {
-                            needed.insert(index);
-                        }
-                    }
+                    spans.visit_intersecting(&rows, &columns, |index| {
+                        needed.insert(index);
+                    });
                     for index in needed {
                         let span = &spans.entries[index];
                         let row = snapshot.rows.item(span.rows.start).unwrap();

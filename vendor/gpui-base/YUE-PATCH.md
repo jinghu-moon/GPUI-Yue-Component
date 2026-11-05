@@ -738,3 +738,14 @@ Do not absorb the experimental per-frame intrinsic content probe: it added
 about 20% CPU in both measured rounds and cannot infer unobserved content's
 global maximum. See `docs/research/2026-11-05-virtual-list-five-followups.md` for
 contracts, preserved unfavorable samples, native tests, costs and rollback.
+
+### Sparse span query pruning
+
+Reuse the row-max interval tree to visit spans intersecting sparse working
+tracks, instead of scanning all descriptors per prepaint. Equal row starts
+guarantee column-disjoint sorted intervals after validation, allowing column
+pruning without another index or cache. Preserve span ordering, offscreen
+origins, frozen masks and retained-cell semantics. Configuration remains
+O(S log S); arbitrary two-dimensional worst cases can still query in O(S).
+See `docs/research/2026-11-05-virtual-list-four-acceptance.md` for independent
+oracles, 0/100/1,000/10,000-span Release ABBA, and retained unfavorable samples.

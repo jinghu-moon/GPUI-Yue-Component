@@ -117,6 +117,63 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn sparse_span_visits_match_linear_oracle_without_filling_frozen_body_gaps() {
+        let [rows, columns] = axes();
+        for same_row in [false, true] {
+            for count in [0, 1, 100, 1000] {
+                let mut descriptors = descriptors(count, same_row);
+                // Vary row ends as well as starts; equal-start column pruning
+                // must not assume identical span heights.
+                for (i, span) in descriptors.iter_mut().enumerate() {
+                    if same_row {
+                        span.rows = 1 + i % 17;
+                    }
+                }
+                let spans = GridSpans::new(&rows, &columns, &descriptors, (0, 0)).unwrap();
+                for step in 0..300 {
+                    let mut rows = vec![0, step % 19, step * 7, step * 7 + 1];
+                    rows.sort_unstable();
+                    rows.dedup();
+                    let mut columns = vec![0, step * 3, step * 3 + 1];
+                    columns.sort_unstable();
+                    columns.dedup();
+                    for (rows, columns) in [
+                        (&rows[..], &columns[..]),
+                        (&[][..], &columns[..]),
+                        (&rows[..], &[][..]),
+                    ] {
+                        let expected = spans
+                            .entries
+                            .iter()
+                            .enumerate()
+                            .filter(|(_, span)| {
+                                rows.iter().any(|r| span.rows.contains(r))
+                                    && columns.iter().any(|c| span.columns.contains(c))
+                            })
+                            .map(|(i, _)| i)
+                            .collect::<Vec<_>>();
+                        let mut actual = Vec::new();
+                        spans.visit_intersecting(rows, columns, |i| actual.push(i));
+                        assert_eq!(
+                            actual, expected,
+                            "count={count} same_row={same_row} step={step}"
+                        );
+                        for row in rows {
+                            for column in columns {
+                                assert_eq!(
+                                    spans.covering(*row, *column),
+                                    spans.entries.iter().position(|span| span.rows.contains(row)
+                                        && span.columns.contains(column))
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 impl VirtualGridSpan {
     pub fn new(origin: VirtualGridCellKey, rows: usize, columns: usize) -> Self {
@@ -244,11 +301,66 @@ impl GridSpans {
         if self.max_end[node] <= row || self.entries[lo].rows.start > row {
             return None;
         }
+        // Equal row starts imply disjoint, column-sorted intervals after
+        // overlap validation. Prune those subtrees without a second index.
+        if self.entries[lo].rows.start == self.entries[hi - 1].rows.start
+            && (self.entries[lo].columns.start > column
+                || self.entries[hi - 1].columns.end <= column)
+        {
+            return None;
+        }
         if hi - lo == 1 {
             return self.entries[lo].columns.contains(&column).then_some(lo);
         }
         let mid = (lo + hi) / 2;
         self.find(node * 2, lo, mid, row, column)
             .or_else(|| self.find(node * 2 + 1, mid, hi, row, column))
+    }
+
+    /// Visit only spans intersecting both sparse sorted track working sets.
+    /// Reuses the row-max tree; no cell-area enumeration or per-frame index.
+    pub fn visit_intersecting(
+        &self,
+        rows: &[usize],
+        columns: &[usize],
+        mut visit: impl FnMut(usize),
+    ) {
+        if !self.entries.is_empty() && !rows.is_empty() && !columns.is_empty() {
+            self.visit(1, 0, self.entries.len(), rows, columns, &mut visit);
+        }
+    }
+    fn visit(
+        &self,
+        node: usize,
+        lo: usize,
+        hi: usize,
+        rows: &[usize],
+        columns: &[usize],
+        visit: &mut impl FnMut(usize),
+    ) {
+        let intersects = |start, end, indices: &[usize]| {
+            indices
+                .get(indices.partition_point(|i| *i < start))
+                .is_some_and(|i| *i < end)
+        };
+        let first = &self.entries[lo];
+        let last = &self.entries[hi - 1];
+        if !intersects(first.rows.start, self.max_end[node], rows) {
+            return;
+        }
+        if first.rows.start == last.rows.start
+            && !intersects(first.columns.start, last.columns.end, columns)
+        {
+            return;
+        }
+        if hi - lo == 1 {
+            if intersects(first.columns.start, first.columns.end, columns) {
+                visit(lo);
+            }
+        } else {
+            let mid = (lo + hi) / 2;
+            self.visit(node * 2, lo, mid, rows, columns, visit);
+            self.visit(node * 2 + 1, mid, hi, rows, columns, visit);
+        }
     }
 }

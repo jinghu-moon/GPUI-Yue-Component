@@ -43,7 +43,30 @@ cargo test -p yue-component --features headless-tests --test virtual_list mixed_
 
 ## 3. 大量 span 成本
 
-待本项验证完成后记录。
+已完成并采用两处局部优化：同起始行的已验证非重叠 spans 按列有序，可以剪枝列区间；呈现时复用现有 row-max 树访问与稀疏工作轨道相交的 spans，替换每帧扫描所有描述符。没有增加索引、缓存或公共 API，配置验证仍为 O(S log S)，构建成本没有被消除。一般二维分布的极端查询仍可能为 O(S)，不声称最坏情况保证为 O(log S)。
+
+先提交 `3347e14` 固定 workload，再建立 before 可执行文件；生产优化随后测试。Base 两个普通 oracle 测试分别覆盖点查询和稀疏矩形相交：空集、半开边界、间隙、反序输入、同起始行但不同高度，以及冻结区与远端工作集之间的大空洞。两项通过；完整 virtualization 目标 182 passed / 10 ignored。既有离屏 span origin 唯一呈现、冻结边界、重排、巨大 span 和新组合生命周期测试也都通过。
+
+独立微探针的两轮 ABBA（640 行原始样本）见[CSV](virtual-list-four-acceptance-span-queries-2026-11-05.csv)和[可执行文件／锁身份](virtual-list-four-acceptance-span-queries-2026-11-05.json)。每样本配置 20 次，或点查询 2,000 次，二者分开计时。10,000 个同起始行 spans 的查询中位数从 24.400ms 降为 0.147ms；分散行从 0.169ms 变为 0.188ms，增加约 0.019ms / 2,000 次查询。该不利结果保留，不宣称每个微场景都更快。
+
+完整生产 Grid [工作负载](virtual-list-span-cost-2026-11-05.rs)使用同一源码、同一依赖记录、隔离 vendor 和 Release ABBA，重复两次。每样本 64 次双轴移动＋notify＋draw，5 个样本／进程。每次 draw 在计时外与独立几何 oracle 比较完整 cell 集合，span 尺寸也逐项断言；不是仅消费数量。配置时间在真实 render 内单独累计，剩余时间包含其他 render/layout/prepaint/paint 工作。保留全部时序及 p50/p95/p99：[第一轮](virtual-list-series-span-index-2026-11-05.csv)、[重复轮](virtual-list-series-span-index-repeat-2026-11-05.csv)、[身份与分场景统计](virtual-list-four-acceptance-spans-2026-11-05.json)。
+
+| 分布／span 数 | 第一轮总 CPU 变化 | 重复轮总 CPU 变化 |
+| --- | ---: | ---: |
+| 分散行／0 | −3.2% | −2.3% |
+| 分散行／100 | −3.1% | +0.8% |
+| 分散行／1,000 | −2.6% | −1.9% |
+| 分散行／10,000 | −2.3% | +0.6% |
+| 同起始行／0 | −2.3% | −1.3% |
+| 同起始行／100 | −5.1% | −7.6% |
+| 同起始行／1,000 | −9.2% | −13.2% |
+| 同起始行／10,000 | −9.8% | −10.7% |
+
+10,000 同行 spans 的第一轮总量为 210.85→190.11ms / 64 次 draw，扣配置后的工作为 35.65→11.35ms；配置仍占主要成本。普通分散行总量基本持平，不把小幅波动解释为稳定收益。1,000 同行 spans 的首轮 p99 中位数曾增加 15.2%，原始样本保留；采用理由是热点场景两轮总工作稳定下降、默认零 span 无新增持有结构、回归和完整输出通过，而不是所有尾部分位都下降。本次没有测 draw 工作负载堆分配或真实显示 FPS。
+
+```powershell
+python tools/compare-virtualization.py --before 3347e14 --label <new-label> --date 2026-11-05 --filter series_span_frames --workload docs/research/virtual-list-span-cost-2026-11-05.rs
+```
 
 ## 4. Windows 实窗验收
 

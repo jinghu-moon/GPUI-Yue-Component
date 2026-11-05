@@ -24,6 +24,7 @@
     "description": "Base's actual in-module virtualization geometry tests; the fixture strips only conflicting alternate-backend development dependencies.",
     "tests": [
       "virtualization::grid_span::tests::span_lookup_matches_independent_linear_rectangles_at_half_open_edges",
+      "virtualization::grid_span::tests::sparse_span_visits_match_linear_oracle_without_filling_frozen_body_gaps",
       "virtualization::geometry::tests::known_prefix_keeps_gap_outside_item_content_and_does_not_append_a_trailing_gap",
       "virtualization::geometry::tests::fixed_geometry_uses_constant_metadata_and_f64_local_coordinates"
     ]
