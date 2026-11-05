@@ -99,3 +99,22 @@ cargo test --manifest-path C:/Temp/yue-virtual-next-review-20261105/Cargo.toml -
 ```
 
 本轮只提交调研与观察文件，生产源码、生产 manifests／locks、参考项目均未修改；撤销本轮调研提交不会撤销已采用的 smooth。下一轮每个候选独立建立失败回归／固定 workload、实现提交和 ABBA 证据，未满足净收益或行为门槛则 revert 该候选，保留原始样本。
+
+## Grid 已观察尺寸 epoch 候选：不吸收（2026-11-05）
+
+候选合同为：消费者显式提交已经观察到的 cell 宽高；同一 epoch 内按 cell 记录最大尺寸并按行／列取最大值；epoch 单调递增，换 epoch 清空样本并返回旧 epoch touched tracks，以便消费者恢复自己的默认尺寸；单 epoch cell 数受 budget 限制。它不做 intrinsic layout，也不改变 Grid 默认帧路径。
+
+先写了纯状态测试，覆盖双轴聚合、cell 去重、epoch 过期拒绝、零／超预算和非法几何、Known 两轴快照批次、前序行尺寸改变后的阅读锚点，以及新 epoch 的行列收缩。原型全部通过，但性能对比没有通过吸收门槛：Release 固定 workload 为 4,096 cells、64×64 tracks、100 轮、7 个 ABBA 样本；基线直接从同一批已观察 cell 聚合轴尺寸，原型额外保留 cell map 再生成轴 map 与输出向量。
+
+| 运行 | 原型耗时范围 | 基线耗时范围 | 原型峰值临时分配 | 基线峰值临时分配 |
+| --- | ---: | ---: | ---: | ---: |
+| 首轮 | 73.7–78.1 ms | 6.78–7.55 ms | 1,093,664 B | 5,488 B |
+| 重复 | 73.7–75.5 ms | 6.70–7.20 ms | 1,093,664 B | 5,488 B |
+
+删除生产类型后，保留的可复跑探针用 `(usize, usize)` tuple 表示 cell key，降低了原型自身的 key 成本；该口径仍为 26.6–30.8 ms 对 6.67–7.20 ms，峰值 307,232 B 对 5,488 B，约慢 4.3 倍、空间高约 56 倍。两组数据口径不同，不能相互替代。
+
+完整 key 原型约慢 10.5 倍，峰值临时空间约高 199 倍；tuple 探针约慢 4.3 倍、空间高 56 倍。这个对比说明泛化 collector 的额外 cell 表与轴输出物化不适合作为基础组件 API；同时不否定特定消费者用紧凑索引或已有数据结构实现 epoch 样本表的价值。原型生产类型与功能测试未吸收；手动性能探针保留为参考实现对照，命令为：
+
+```powershell
+cargo test -p yue-component --features headless-tests --test virtual_list grid_observed_size_aggregation_evidence --release -- --ignored --nocapture --test-threads=1
+```

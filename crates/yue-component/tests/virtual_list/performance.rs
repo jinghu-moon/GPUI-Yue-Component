@@ -137,6 +137,81 @@ fn followup_grid_metadata_evidence() {
 }
 
 #[test]
+#[ignore = "manual observed-size aggregation A/B; run release with --ignored --nocapture --test-threads=1"]
+fn grid_observed_size_aggregation_evidence() {
+    use std::collections::HashMap;
+
+    const CELLS: usize = 4096;
+    const SIDE: usize = 64;
+    const SAMPLES: usize = 7;
+    const ITERATIONS: usize = 100;
+    for sample in 0..SAMPLES {
+        for collector_path in if sample % 2 == 0 {
+            [true, false]
+        } else {
+            [false, true]
+        } {
+            ALLOCATIONS.with(|stats| stats.set(Some(Allocations::default())));
+            let started = Instant::now();
+            let mut checksum = 0.0f32;
+            for _epoch in 0..ITERATIONS {
+                if collector_path {
+                    let mut cells = HashMap::<(usize, usize), (f32, f32)>::new();
+                    for index in 0..CELLS {
+                        let width = 40. + (index % 7) as f32;
+                        let height = 20. + (index % 11) as f32;
+                        cells
+                            .entry((index / SIDE, index % SIDE))
+                            .and_modify(|current| {
+                                current.0 = current.0.max(width);
+                                current.1 = current.1.max(height);
+                            })
+                            .or_insert((width, height));
+                    }
+                    let mut rows = HashMap::<usize, f32>::new();
+                    let mut columns = HashMap::<usize, f32>::new();
+                    for ((row, column), (width, height)) in cells {
+                        rows.entry(row)
+                            .and_modify(|current| *current = current.max(height))
+                            .or_insert(height);
+                        columns
+                            .entry(column)
+                            .and_modify(|current| *current = current.max(width))
+                            .or_insert(width);
+                    }
+                    let row_updates = rows.into_iter().collect::<Vec<_>>();
+                    let column_updates = columns.into_iter().collect::<Vec<_>>();
+                    checksum += row_updates.len() as f32 + column_updates.len() as f32;
+                } else {
+                    let mut rows = HashMap::<usize, f32>::new();
+                    let mut columns = HashMap::<usize, f32>::new();
+                    for index in 0..CELLS {
+                        let width = 40. + (index % 7) as f32;
+                        let height = 20. + (index % 11) as f32;
+                        rows.entry(index / SIDE)
+                            .and_modify(|current| *current = current.max(height))
+                            .or_insert(height);
+                        columns
+                            .entry(index % SIDE)
+                            .and_modify(|current| *current = current.max(width))
+                            .or_insert(width);
+                    }
+                    checksum += rows.len() as f32 + columns.len() as f32;
+                }
+            }
+            let elapsed = started.elapsed().as_nanos();
+            let stats = ALLOCATIONS.with(|stats| stats.replace(None).unwrap());
+            assert_eq!(stats.live, 0);
+            std::hint::black_box(checksum);
+            println!(
+                "GRID_OBSERVED_SIZES,collector={collector_path},sample={sample},cells={CELLS},iterations={ITERATIONS},ns={elapsed},allocations={},peak_bytes={}",
+                stats.allocations, stats.peak
+            );
+        }
+    }
+}
+
+#[test]
 #[ignore = "manual retained/peak heap payload evidence; run with --ignored --nocapture"]
 fn geometry_allocation_evidence() {
     for mode in 0..3 {
