@@ -1,0 +1,42 @@
+name: Virtualization CPU comparison
+on:
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: Committed pre-span-reuse baseline revision
+        required: true
+        default: e7b09cf
+  schedule:
+    - cron: '23 18 * * 0'
+jobs:
+  span-reuse:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      YUE_VIRTUAL_BENCH: C:/Temp/yue-virtual-ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.98.1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: cargo fetch --locked
+      - run: python tools/test-virtualization-evidence.py
+      - name: Date the actual run
+        run: '"EVIDENCE_DATE=$(Get-Date -Format yyyy-MM-dd)" | Out-File -FilePath $env:GITHUB_ENV -Append'
+      - name: Isolated Release ABBA
+        env:
+          BASELINE: ${{ inputs.baseline || 'e7b09cf' }}
+        run: python tools/compare-virtualization.py --before "$env:BASELINE" --label ci-span-reuse --date "$env:EVIDENCE_DATE" --filter series_span --workload docs/research/virtual-list-span-reuse-2026-11-05.rs --after-feature span-cache
+      - name: Reject incomplete evidence and coarse regressions
+        run: python tools/virtualization_evidence.py perf --csv "docs/research/virtual-list-series-ci-span-reuse-$env:EVIDENCE_DATE.csv" --identity C:/Temp/yue-virtual-ci/ci-span-reuse/identity.json --max-regression-percent 35
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: virtualization-cpu-${{ github.run_id }}
+          if-no-files-found: error
+          path: |
+            docs/research/virtual-list-series-ci-span-reuse-*.csv
+            C:/Temp/yue-virtual-ci/ci-span-reuse

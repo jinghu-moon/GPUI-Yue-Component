@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import time
 import tomllib
@@ -55,23 +56,29 @@ def main():
         parser.error("comparison label already has recorded evidence; choose a new label")
     reference = run(["git", "rev-parse", args.before], capture_output=True, text=True).stdout.strip()
     archive = run(["git", "archive", "--format=zip", reference,
-                   "vendor/gpui-base", "vendor/gpui-pre"], capture_output=True).stdout
+                   *([] if args.native else ["vendor/gpui-base", "vendor/gpui-pre"])], capture_output=True).stdout
     baseline = CACHE / "baselines" / reference
-    for entry in zipfile.ZipFile(io.BytesIO(archive)).infolist():
+    package = zipfile.ZipFile(io.BytesIO(archive))
+    for entry in package.infolist():
         if entry.is_dir():
             continue
         destination = baseline / entry.filename
         if not destination.resolve().is_relative_to(baseline.resolve()):
             raise ValueError("unexpected archive entry")
-        data = zipfile.ZipFile(io.BytesIO(archive)).read(entry)
+        data = package.read(entry)
         destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists() or destination.read_bytes() != data:
             destination.write_bytes(data)
     logs.mkdir(parents=True, exist_ok=True)
+    if args.native and (baseline / args.workload).read_bytes().replace(b"\r\n", b"\n") != (ROOT / args.workload).read_bytes().replace(b"\r\n", b"\n"):
+        raise ValueError("native workload differs between revisions; compare identical probe source")
     executables = {}
     build_identity = {}
     for version in ["before", "after"]:
-        fixture = CACHE / (f"native-{version}" if args.native else version)
+        # Native consumers and their public exports must match their own Base
+        # revision. Mixing today's Yue with an old Base can fail to compile or
+        # silently compare different consumer contracts after an API addition.
+        fixture = (baseline if version == "before" else ROOT) if args.native else CACHE / version
         fixture.mkdir(parents=True, exist_ok=True)
         vendor = baseline / "vendor" if version == "before" else ROOT / "vendor"
         manifest = f"""[package]
@@ -104,35 +111,37 @@ span-cache = []
             (ROOT / 'docs/research/virtual-list-optimization-series-2026-11-04.rs').as_posix(),
             (ROOT / args.workload).resolve().as_posix(),
         )
-        if args.native:
-            # Match the production app's dependency features: the native
-            # Application does not need the headless snapshot/test helpers.
-            manifest = manifest.replace(
-                'gpui-base = { version = "0.8.0", features = ["test-support"] }\n', '',
-            )
-            manifest = manifest.replace(
-                f'[[test]]\nname = "perf"\npath = "{(ROOT / args.workload).as_posix()}"',
-                f'[[bin]]\nname = "yue-virtual-series-{version}"\npath = "{(ROOT / "examples/windows-showcase/src/main.rs").as_posix()}"',
-            ).replace(
-                '[patch.crates-io]',
-                f'yue-component = {{ path = "{(ROOT / "crates/yue-component").as_posix()}", features = ["bundled-fonts"] }}\n[patch.crates-io]',
-            ).replace('masonry-views = []', 'masonry-views = []\nvirtual-profile = ["gpui-kit/profiler"]\nheadless-tests = ["yue-component/headless-tests"]')
-        (fixture / "Cargo.toml").write_text(manifest, encoding="utf-8")
-        if not (fixture / "Cargo.lock").exists():
-            (fixture / "Cargo.lock").write_bytes((ROOT / "Cargo.lock").read_bytes())
+        if not args.native:
+            (fixture / "Cargo.toml").write_text(manifest, encoding="utf-8")
+            if not (fixture / "Cargo.lock").exists():
+                (fixture / "Cargo.lock").write_bytes((ROOT / "Cargo.lock").read_bytes())
+        # Full native workspaces share package names, unlike the two synthetic
+        # fixtures. Keep their artifacts separate and pin the resulting binary.
+        target = (CACHE / "native-targets" / reference if version == "before" else ROOT / "target") if args.native else TARGET
         command = ["cargo", "test", "--manifest-path", str(fixture / "Cargo.toml"),
-                   "--target-dir", str(TARGET), "--offline", "--release",
-                   *( ["--bin", f"yue-virtual-series-{version}", "--features", "virtual-profile"] if args.native else ["--test", "perf"] ),
+                   "--target-dir", str(target), "--offline", "--release",
+                   *( ["--locked", "-p", "windows-showcase", "--bin", "windows-showcase", "--features", "virtual-profile"] if args.native else ["--test", "perf"] ),
                    "--no-run", "--message-format=json"]
         if version == "after" and args.after_feature:
             command += ["--features", args.after_feature]
         print(f"Building {args.label} {version}", flush=True)
-        built = run(command, capture_output=True, text=True, encoding="utf-8")
+        try:
+            built = run(command, capture_output=True, text=True, encoding="utf-8")
+        except subprocess.CalledProcessError as error:
+            # Rust JSON diagnostics are on stdout, while Cargo's short failure
+            # summary is on stderr. Preserve both before propagating a failure.
+            (logs / f"{version}-build-failed.jsonl").write_text(error.stdout or "", encoding="utf-8")
+            (logs / f"{version}-build-failed.txt").write_text(error.stderr or "", encoding="utf-8")
+            raise
         (logs / f"{version}-build.txt").write_text(built.stderr, encoding="utf-8")
         for line in built.stdout.splitlines():
             artifact = json.loads(line)
             if artifact.get("reason") == "compiler-artifact" and artifact.get("executable"):
                 executables[version] = artifact["executable"]
+        if args.native:
+            pinned = logs / f"{version}.exe"
+            shutil.copyfile(executables[version], pinned)
+            executables[version] = str(pinned)
         lock = fixture / "Cargo.lock"
         packages = [p for p in tomllib.loads(lock.read_text(encoding="utf-8"))["package"]
                     if not p["name"].startswith("yue-virtual-series-")]
@@ -147,6 +156,8 @@ span-cache = []
             "lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest(),
             "dependency_records_sha256": hashlib.sha256(json.dumps(packages, sort_keys=True).encode()).hexdigest(),
             "vendor_sources_sha256": source_hash.hexdigest(),
+            "executable_sha256": hashlib.sha256(Path(executables[version]).read_bytes()).hexdigest(),
+            "target_dir": str(target),
         }
     if build_identity["before"]["dependency_records_sha256"] != build_identity["after"]["dependency_records_sha256"]:
         raise ValueError("before/after dependency records differ; do not sample")

@@ -7,6 +7,8 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 if (-not $TargetDir) { $TargetDir = Join-Path $repo 'target' }
+$logDir = Join-Path $TargetDir ('virtualization-native/' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 # Native Application owns process-global Win32 state. Keep each probe in its
 # own process when this list grows; do not combine filters into one test run.
 $filters = @(
@@ -22,7 +24,19 @@ foreach ($filter in $filters) {
     if ($Offline) { $cargoArgs += '--offline' }
     if ($IncludeFrameProfile) { $cargoArgs += @('--features', 'virtual-profile') }
     $cargoArgs += @('--', '--ignored', '--exact', $filter, '--nocapture', '--test-threads=1')
-    & cargo @cargoArgs
+    # Cargo's progress uses stderr. Capture it without PowerShell converting
+    # ordinary progress into a terminating NativeCommandError on older hosts.
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $lines = @(& cargo @cargoArgs 2>&1)
+        $cargoExit = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $previousPreference }
+    $lines | ForEach-Object { Write-Host $_ }
+    $log = Join-Path $logDir (($filter -replace '::', '-') + '.log')
+    [IO.File]::WriteAllLines($log, [string[]]$lines, [Text.UTF8Encoding]::new($false))
+    if ($cargoExit -ne 0) { exit $cargoExit }
+    & python (Join-Path $PSScriptRoot 'virtualization_evidence.py') native --log $log --filter $filter
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 exit 0
