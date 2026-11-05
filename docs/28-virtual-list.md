@@ -2,6 +2,8 @@
 
 状态：阅读锚点、Attached 宿主边界与 Masonry 输入所有权已修复；Measured 原生累计树与偏移已接通 f64，portable cache 为 schema 2。新增 Masonry 可选 View 准备缓存、原生稀疏测量导出／宽度失效与分块快照追加；逐项收益、代价及拒绝方案见[本轮实测取舍](research/2026-11-04-virtual-list-adoption.md)。本轮追加 Grid 内容准备缓存、有界方向性 overscan、Masonry 活动生命周期／纯值冷恢复及 Grid 冻结前缀，证据见[五项实施记录](research/2026-11-05-virtual-list-next-implementation.md)。单项 Pixels 等剩余精度边界见第 13.3 节；自动原生探针与人工视觉验收分别记录。更新：2026-11-05。
 
+后续已交付 Grid 稀疏 cell／焦点保留、显式行列跨格、约束驱动 auto tracks、RTL，以及一维 Measured 的受限短路径 smooth／可选末段动画，见[五项后续实施](research/2026-11-05-virtual-list-five-followups.md)。当前支持范围以第 2.5–2.6 节为准；研究报告中的能力、测试计数和待办均对应各自的历史提交。通用 Grid 已观察尺寸 epoch collector 原型未吸收，见[候选取舍与测量限制](research/2026-11-05-virtual-list-next-opportunities.md#grid-已观察尺寸-epoch-候选不吸收2026-11-05)。
+
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
 最新一轮对标修正了逐项尺寸容差造成的累计偏移：尺寸反馈按 backend 实际可表示的值判断 no-op，并采用一维单项反馈的临时分配优化。双轴／估算／Masonry 原生布局回归、两轮 Release ABBA 的收益与批量代价见[细微尺寸反馈与单项成本](research/2026-11-04-virtual-list-feedback-review.md)。这不改变单项 Pixels、含 gap slot 舍入及跨 GPU／DPI 的既有精度边界。
@@ -153,6 +155,8 @@ Masonry 的 `supports_smooth()` 在 Fixed/Known 为 true、Measured 为 false。
 `retained_cells(Vec<VirtualGridCellKey>)` 去重可见／冻结 pair，缺失任一轴 key 后跳过；`cell_focus_handle(pair,handle)` 仅在包含焦点时保留，删除、注销或换 owner 后聚焦 `focus_fallback`（未设置则 blur）。旧轴级 retained 仍是两轴乘积合同。RTL 冻结列位于右侧，在 Grid 边界以 physical = max_scroll - logical 换算原生输入／scrollbar；方向、宽度与总尺寸变化保持逻辑阅读位置，文本方向和 Left/Right 编辑语义由消费者负责。
 
 `VirtualGridTrack::resolve` 只解析调用方明确给出的 min/max/weight 列表；不足保持 min 并滚动，达到所有 max 后留白。约束变化时结果交给 Known sizing／update_sizes 合批，不每帧重建百万行数组。逐帧对所有工作 cell 做额外 intrinsic 测量的通用方案本轮不吸收：实测 CPU 增加约 20%，且工作集观测不能推断全局最大内容；预算／epoch／失效由显式消费者控制。
+
+另一次显式观察值 collector 原型也未吸收；当前没有公开的 `VirtualGridObservedSizes` API。该实验只比较特定 cell map／轴聚合实现的构造与聚合成本，没有证明等价的跨帧 epoch 策略都不值得实现，也没有提供两轴更新的联合原子事务。调用方仍通过各轴既有 `update_sizes`／`update_sizes_from_snapshot` 提交一致的 Known 尺寸；每轴原子性不能等同于两轴共同回滚。
 
 一维 Measured 的 `JumpThenSmooth { duration,max_distance }` 是独立策略，先跳至附近再播放已测末段；普通 Smooth 的长距即时行为保留。Fixed/Known 和 Masonry 类型化拒绝此专用策略。同 now 中间动画样本复用，完成后的真实对齐仍按最新几何重求；动画几何变化从实际位置按剩余截止时间续接。
 
@@ -948,10 +952,12 @@ Grid 冻结行／列默认为 0，按当前顺序 clamp；行纵坐标固定而�
 
 key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 scroll padding；可见冻结目标不滚回 0。完全藏在超大冻结前缀中的目标、或 body 为零时的非冻结目标，以 NoProgress 结束。`scroll_to_offset` 仍是原生内容 offset。帧级遮挡约束不持久改写 axis layout。轴 snapshot 的 visible/rendered 描述 body，working items 额外合入可见冻结前缀和 retained；自然 item.start 不变，冻结位移只在 Grid 呈现中应用。Showcase 有冻结切换与 Masonry 缓存后销毁重建的真实控件。
 
-逐项采用依据、默认路径代价、失败基线、Release ABBA、Windows 原生验证及 Git 回退见[本轮记录](research/2026-11-05-virtual-list-next-implementation.md)。历史章节中的待实施项按该节的当前状态解释。
+本节所述五项能力的采用依据、默认路径代价、失败基线、Release ABBA、Windows 原生验证及 Git 回退见[当轮记录](research/2026-11-05-virtual-list-next-implementation.md)。后续布局扩展与 Measured 动画见[五项后续实施](research/2026-11-05-virtual-list-five-followups.md)；当前能力以第 2.5–2.6 节为准，不把历史报告的未交付项直接当作当前待办。
 
 ## 17. 依据与关联文档
 
+- [五项后续实施与组合验证](research/2026-11-05-virtual-list-five-followups.md)：流式冻结区、稀疏 cell、span、一维 Measured 动画、约束 auto 和 Grid RTL，含各项代价与回退点。
+- [历史候选与后续状态](research/2026-11-05-virtual-list-next-opportunities.md)：原候选的交付索引，以及未吸收的 Grid 观察值 collector 原型及其测量限制。
 - [继续对标与 Git 回退](research/2026-11-04-virtual-list-continuation.md)：测量代次、有界批次、冷构造拒绝项，含持续尺寸变化和峰值保护证据。
 - [本轮候选优化取舍与 Git 回退](research/2026-11-04-virtual-list-adoption.md)：六类候选的 ABBA、内存与覆盖证据，采用项和拒绝项分别记录。
 - [原生 Measured 精度与前序优化](research/2026-11-04-virtual-list-optimization-series.md)：工作集迭代、反馈、计时器、f64 精度的前后对照与代价。

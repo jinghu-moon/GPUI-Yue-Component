@@ -2,7 +2,21 @@
 
 审查基线为 `f0f7583b93bd0a9041fda08a1debf7b38d77d9c0`，包含此前已采用的 smooth、Grid 动效策略与可选 motion 状态隔离。本轮重新阅读本地三个参考项目、当前 Base 源码及历史实验，并增加两个观察探针；未修改生产实现、能力声明或默认值。下列内容是候选与验收条件，不是已获得的性能提升。
 
-## 建议顺序
+## 后续状态同步（2026-11-05）
+
+下文第 1–4 节及“暂不优先”保留上述基线的候选判断，其中“当前”“尚无”等措辞描述当轮源码，不能直接作为现行待办。原候选已按[五项实施记录](2026-11-05-virtual-list-next-implementation.md)完成：
+
+| 原候选 | 后续状态 |
+| --- | --- |
+| Grid 内容准备复用 | 已交付 `VirtualGrid::new_with_cell_views`，保持 opt-in |
+| 有界方向性 overscan | 已交付列表／Grid／Masonry 的 opt-in 策略，默认不变 |
+| Masonry 活动／方向／idle | 已交付活动查询、事件和有界 idle 生命周期 |
+| Masonry 纯值冷恢复缓存 | 已交付显式 `VirtualMasonryCache`，公开 O(N) 存储及恢复代价 |
+| 冻结前缀行／列 | 已交付同一 owner 上的四区裁剪／命中／定位合同 |
+
+其后 Grid 的精确 cell 保留、span、约束 auto、RTL 和一维 Measured 受限动画也已交付，见[五项后续实施](2026-11-05-virtual-list-five-followups.md)。当前能力及限制以[组件文档第 2.5–2.6 节](../28-virtual-list.md#26-布局选择与二维边界)为准；本文件末尾另记随后未吸收的观察值 collector 原型。
+
+## 当轮建议顺序（历史）
 
 | 顺序 | 候选 | 当前事实 | 预期价值与限制 |
 | --- | --- | --- | --- |
@@ -104,16 +118,20 @@ cargo test --manifest-path C:/Temp/yue-virtual-next-review-20261105/Cargo.toml -
 
 候选合同为：消费者显式提交已经观察到的 cell 宽高；同一 epoch 内按 cell 记录最大尺寸并按行／列取最大值；epoch 单调递增，换 epoch 清空样本并返回旧 epoch touched tracks，以便消费者恢复自己的默认尺寸；单 epoch cell 数受 budget 限制。它不做 intrinsic layout，也不改变 Grid 默认帧路径。
 
-先写了纯状态测试，覆盖双轴聚合、cell 去重、epoch 过期拒绝、零／超预算和非法几何、Known 两轴快照批次、前序行尺寸改变后的阅读锚点，以及新 epoch 的行列收缩。原型全部通过，但性能对比没有通过吸收门槛：Release 固定 workload 为 4,096 cells、64×64 tracks、100 轮、7 个 ABBA 样本；基线直接从同一批已观察 cell 聚合轴尺寸，原型额外保留 cell map 再生成轴 map 与输出向量。
+阶段原型的三项测试曾通过，覆盖双轴聚合、cell 去重、epoch 过期拒绝、零／超预算和非法几何、Known 两轴分别更新及新 epoch 的较小行列尺寸。未吸收的原型与这些测试已撤下，不作为当前回归集；后加的锚点断言没有执行记录，不计入通过证据。当前阅读锚点保证由正式反馈／冻结锚点回归及相应实施记录支撑。
+
+Release 微实验为每组 4,096 cells、64×64 tracks、100 轮，7 组按 AB／BA 交替顺序执行；基线直接聚合轴最大值，原型额外保留 cell map 再生成轴 map 与输出向量。它不是隔离 Git 前后版本的完整 Grid 帧 benchmark。
 
 | 运行 | 原型耗时范围 | 基线耗时范围 | 原型峰值临时分配 | 基线峰值临时分配 |
 | --- | ---: | ---: | ---: | ---: |
 | 首轮 | 73.7–78.1 ms | 6.78–7.55 ms | 1,093,664 B | 5,488 B |
 | 重复 | 73.7–75.5 ms | 6.70–7.20 ms | 1,093,664 B | 5,488 B |
 
-删除生产类型后，保留的可复跑探针用 `(usize, usize)` tuple 表示 cell key，降低了原型自身的 key 成本；该口径仍为 26.6–30.8 ms 对 6.67–7.20 ms，峰值 307,232 B 对 5,488 B，约慢 4.3 倍、空间高约 56 倍。两组数据口径不同，不能相互替代。
+完整 key 原型与测试未归档，以上两轮为当次运行摘要；现存探针不能复现该版本的确切结果。删除生产类型后，保留的可复跑探针用 `(usize, usize)` tuple 表示 cell key，降低了原型自身的 key 成本；该口径为 26.6–30.8 ms 对 6.67–7.20 ms，峰值 307,232 B 对 5,488 B，约慢 4.3 倍、空间高约 56 倍。两组数据口径不同，不能相互替代。
 
-完整 key 原型约慢 10.5 倍，峰值临时空间约高 199 倍；tuple 探针约慢 4.3 倍、空间高 56 倍。这个对比说明泛化 collector 的额外 cell 表与轴输出物化不适合作为基础组件 API；同时不否定特定消费者用紧凑索引或已有数据结构实现 epoch 样本表的价值。原型生产类型与功能测试未吸收；手动性能探针保留为参考实现对照，命令为：
+对照限制：两条路径未实现等价的完整 epoch 合同；完整 key 原型与基线的 key 表示不同；现存探针中只有 collector 路径物化输出向量，每轮都重新建表，且只消费输出数量，没有断言行列最大值等价。因此上述倍数只能描述这些实现的构造／聚合成本，不能当作等价行为的整体前后优化结论，也不能否定复用容量、直接按轴保存最大值或消费者已有索引等方案。
+
+决策是未吸收本次通用 collector 原型，当前没有公开 `VirtualGridObservedSizes` API；后续若有实际消费者，须先建立等价的版本失效、epoch、预算、收缩与输出正确性合同，再比较完整更新和跨帧复用成本。手动探针仅保留为额外 cell 表成本的微实验，命令为：
 
 ```powershell
 cargo test -p yue-component --features headless-tests --test virtual_list grid_observed_size_aggregation_evidence --release -- --ignored --nocapture --test-threads=1

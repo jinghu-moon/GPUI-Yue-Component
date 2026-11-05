@@ -2,6 +2,8 @@
 
 基线为 `b934f22465ab9955455f461675d9a07bc1fdbfeb`，分支为 `quality/virtualization-four-priorities-20261104`。继续检查上一轮五项能力的组合边界，本轮确认并修复一个问题：冻结条带与正文共用普通视口起点锚点，尺寸反馈可能多补偿或漏补偿。采用依据是可复现的阅读跳动被消除，不是吞吐提速。
 
+本文保留当轮修复与验证范围。后续布局与动画能力见[五项后续实施](2026-11-05-virtual-list-five-followups.md)，当前能力以[组件文档第 2.5–2.6 节](../28-virtual-list.md#26-布局选择与二维边界)为准。
+
 ## 三个参考项目提供了什么依据
 
 本轮继续使用本地只读源码，不把历史候选记录中已交付的能力重新列为缺陷。
@@ -75,4 +77,4 @@ python tools/compare-virtualization.py --before b934f22 --label frozen-anchor-de
 
 实现／测试提交为 `d24340b194d54200d1d44050c67907996b33d77c`。已在独立临时 Git index 逆向应用该提交，得到 tree `6e2a21a3924f975ba4afc83743c74c84a31c3d5a`，与 `b934f22^{tree}` 完全一致；主 index 未变，临时 index 已删除。文档／数据在独立提交交付。撤销修复可用 `git revert d24340b`，不改写远端历史；后续如有依赖提交须先检查。测试和采样之后只改文档，不替换已测生产源码。
 
-auto 轨道、cell span、精确单 cell 保留、任意二维／三维布局、Measured 长距离 smooth、RTL 镜像仍是尚未交付的边界。本轮优先修复已有冻结合同的可复现问题，没有在缺乏消费者与基准时扩大布局 API。
+本轮修复没有扩展布局 API；当时尚未交付的 Grid 约束 auto、cell span、精确单 cell 保留及 RTL 已由后续实施补齐。一维 Measured 也已支持已测、有界短路径及显式末段动画；任意二维／三维空间布局、Grid Measured 轴与未知尺寸长路径的连续动画仍不在当前合同中。

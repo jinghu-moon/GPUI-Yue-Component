@@ -12,7 +12,9 @@
 
 这里只对标本地源码机制，没有运行三个 JavaScript 项目的 benchmark，也没有比较跨框架绝对 FPS。参考项目存在某项能力，不代表本项目的不同几何／所有权模型可以直接支持它。
 
-## 当前布局支持
+## 本轮结束时的布局支持（历史快照）
+
+下表和本节 smooth 合同对应 `b83013b`，不是当前能力清单。后续已交付冻结前缀、精确 cell 保留、显式跨格、约束 auto、Grid RTL 和一维 Measured 受限动画；当前矩阵见[组件文档第 2.5–2.6 节](../28-virtual-list.md#26-布局选择与二维边界)，实施证据见[五项能力](2026-11-05-virtual-list-next-implementation.md)及[五项后续](2026-11-05-virtual-list-five-followups.md)。
 
 | 布局 | 当前支持 | 明确限制 |
 | --- | --- | --- |
@@ -24,7 +26,7 @@
 
 Grid 构建的是保留行列工作集的交点 `W_rows × W_columns`，不创建全量 `N × M`。不依据当前可见列自动推断所有行的真实高度；动态内容若要影响行高，调用方须先提供一致的 Known 行尺寸。双轴基础不自动带来自动轨道、跨格或冻结区支持。
 
-## Smooth 的合同
+## 本轮结束时的 Smooth 合同
 
 这里的 smooth 是显式 key／offset 程序定位的短距离缓动。滚轮／触控板继续走原生输入路径，不额外叠加惯性。该能力默认不启用，由 `VirtualizerMotion::Smooth { duration, max_distance }` 请求。
 
@@ -133,4 +135,4 @@ python tools/compare-virtualization.py --before 4230ee5 --label smooth-final-gua
 - Windows Showcase Release 构建通过；两个实窗测试各 1 passed。布局测试 Grid／Masonry／Horizontal renderer calls 为 264／49／28；smooth 测试实际采到 Grid x/y 与 Masonry 中间位置，最终 Grid 为 (-100,-80)、Masonry offset 为 80。它们不是硬件输入录制或 GPU 性能证据。
 - 用独立临时 Git index 从 b83013b 逆向应用 b83013b、aa5b7f8、173c80b，结果 tree 与 4230ee5 一致：`dc42628398a81fd1d67a64aa8f3289b0a40dc9dd`。检查没有改主 index 或工作区，也没有实际回退分支。
 
-采用上述三个实现提交，文档与六轮数据另作一份提交。需要撤销本轮时，先 revert 该文档数据提交，再依次 revert `b83013b`、`aa5b7f8`、`173c80b`，保留已推送历史，不使用 hard reset。当前未交付的自动轨道／跨格／冻结区／通用空间布局需独立需求与消费者验证；Measured smooth 仍使用安全即时策略。
+采用上述三个实现提交，文档与六轮数据另作一份提交。本轮原始回退顺序为文档数据提交，再依次 `b83013b`、`aa5b7f8`、`173c80b`；如基于后续 HEAD 撤销，须先检查依赖并按逆序 revert，不使用 hard reset。自动轨道／跨格／冻结区及一维 Measured 受限动画随后已交付；Masonry Measured 仍即时定位，通用空间布局仍未支持。历史采样与本轮回退核对不作为后续能力的验收证据。

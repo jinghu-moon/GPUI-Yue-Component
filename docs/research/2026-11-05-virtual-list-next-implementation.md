@@ -2,6 +2,8 @@
 
 用户授权将[下一轮候选](2026-11-05-virtual-list-next-opportunities.md)全部实施，包括冻结表头／首列。起点为 `df0f2117aa27985e0069d3cc21788e9b93f487f7`，保持当前质量分支；参考目录只读。沿用 GPUI Kit coding/design guides 和 feat 实施流程。
 
+本文是本轮提交与实测的历史记录。后续 Grid cell 保留、span、约束 auto、RTL 和一维 Measured 受限动画已另行交付，见[五项后续实施](2026-11-05-virtual-list-five-followups.md)；当前支持矩阵见[组件文档第 2.5–2.6 节](../28-virtual-list.md#26-布局选择与二维边界)。下列测试计数、采样和回退范围不因文档同步扩展到后续提交。
+
 | 项目 | 状态 | 验收 |
 | --- | --- | --- |
 | Grid 内容准备复用 | 已实现；ABBA 两轮 | 内容身份、失效、生命周期、几何独立；复杂／轻量单元格 ABBA 与默认守卫 |
@@ -141,7 +143,7 @@ python tools/compare-virtualization.py --before df0f211 --label masonry-cache-in
 
 对标来源仍为只读 `refer/virtual` 三项目：TanStack Virtual 的 scrolling/direction、snapshot/lanes，virtua 的缓冲／滚动活动与内容职责分离，vlist 的 pipeline／idle 事件。候选推导和已读源码位置见[本轮调研](2026-11-05-virtual-list-next-opportunities.md)与其机器来源；参考源码 LF SHA 在本轮机器记录再次核对未变。GPUI Base/Yue 保留自身一个 owner、真实测量／Entity 生命周期和既有焦点／布局合同，不移植第二套 store/runtime。
 
-Grid auto 轨道、cell span、精确单个 cell 保留、任意空间布局、Measured 长距离 smooth、RTL 镜像仍未交付。本轮完成不意味着这些边界自动消失。
+在本轮结束时，Grid auto 轨道、cell span、精确单个 cell 保留和 RTL 尚未交付；这些能力已在[后续实施](2026-11-05-virtual-list-five-followups.md)中采用。当前仍不支持通用二维／三维空间布局、Grid Measured 轴和未知尺寸长路径的连续 smooth；一维 Measured 的已测短路径及显式末段动画不能等同于全程动画。
 
 ## 最终验收与回退核对
 

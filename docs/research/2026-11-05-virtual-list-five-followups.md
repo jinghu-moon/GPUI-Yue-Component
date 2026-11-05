@@ -92,6 +92,8 @@ Grid 的 `right_to_left(true)` 镜像列矩形、冻结列（右侧）、mask �
 
 因此采用约束 auto，内容尺寸仍由业务显式 hints／版本失效和 `update_sizes` 合批控制。若消费者要“已观察内容的最大值”，必须明确 epoch、预算和容量；epoch 内增长，重置后才允许收缩，不能承诺所有离屏内容已适配。此结论只拒绝本轮逐帧通用测量候选，不声称所有内容适配策略都不值得做。
 
+后续又试验了消费者显式输入尺寸的 epoch collector，未吸收该原型，当前也没有新增公开 collector API。[后续取舍](2026-11-05-virtual-list-next-opportunities.md#grid-已观察尺寸-epoch-候选不吸收2026-11-05)保留构造／聚合成本及对照限制；它与本节额外 intrinsic layout 实验是两个不同候选，不能合并百分比，也不能据此否定所有消费者自适应方案。
+
 ## 6. 最终接受源码与整轮验证
 
 最终实现提交为 `e7fa10d`；后续归档提交只整理文档与样本。以下六份 accepted CSV 的 after vendor source fingerprint 均与最终测试工作区一致，Git 的 LF 归一化后整套 vendor source 与该提交一致；before/after 的依赖记录也相同。完整身份、日志哈希和分场景统计见 [机器证据](virtual-list-five-followups-2026-11-05.json)。
