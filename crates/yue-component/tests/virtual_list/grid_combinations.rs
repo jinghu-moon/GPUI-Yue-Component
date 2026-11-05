@@ -3,7 +3,9 @@
 use super::*;
 use gpui_kit::{FocusHandle, WeakEntity};
 use std::{cell::RefCell, collections::HashSet};
-use yue_component::{VirtualGrid, VirtualGridCellKey, VirtualGridSpan, VirtualizerSizeUpdate};
+use yue_component::{
+    VirtualGrid, VirtualGridCellKey, VirtualGridSnapshot, VirtualGridSpan, VirtualizerSizeUpdate,
+};
 
 struct Keys(Vec<usize>);
 impl VirtualizerSource for Keys {
@@ -469,5 +471,128 @@ fn mixed_grid_trace_preserves_anchor_hits_focus_and_releases_every_mount(cx: &mu
         drop(held);
         assert!(editors.borrow().iter().all(|e| e.upgrade().is_none()));
         editors.borrow_mut().clear();
+    }
+}
+
+fn trace_rand(seed: &mut u64) -> u64 {
+    *seed = seed
+        .wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407);
+    *seed
+}
+
+#[gpui_kit::test]
+fn generated_grid_state_trace_keeps_worksets_unique_and_two_axes_coherent(cx: &mut TestAppContext) {
+    let binding = VirtualizerBinding::new();
+    let rows = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Vertical,
+            Rc::new(Keys((0..32).collect())),
+            VirtualizerSizing::known(vec![px(20.); 32]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let columns = cx.new(|_| {
+        VirtualizerState::new_attached(
+            Axis::Horizontal,
+            Rc::new(Keys((0..32).collect())),
+            VirtualizerSizing::known(vec![px(50.); 32]),
+            &binding,
+        )
+        .unwrap()
+    });
+    let mut seed = 0x5eed_2026_u64;
+    let mut row_offset = 0.;
+    let mut column_offset = 0.;
+    for step in 0..128u64 {
+        match trace_rand(&mut seed) % 5 {
+            0 => {
+                let row = (trace_rand(&mut seed) % 32) as usize;
+                let column = (trace_rand(&mut seed) % 32) as usize;
+                let row_extent = 18. + (trace_rand(&mut seed) % 12) as f32;
+                let column_extent = 42. + (trace_rand(&mut seed) % 20) as f32;
+                cx.update(|app| {
+                    VirtualGrid::update_sizes(
+                        &rows,
+                        &columns,
+                        &[VirtualizerSizeUpdate::new(row, px(row_extent))],
+                        &[VirtualizerSizeUpdate::new(column, px(column_extent))],
+                        app,
+                    )
+                    .unwrap();
+                });
+            }
+            1 => {
+                row_offset = (trace_rand(&mut seed) % 500) as f64;
+                column_offset = (trace_rand(&mut seed) % 900) as f64;
+            }
+            2 => {
+                let row = (trace_rand(&mut seed) % 32) as usize;
+                let column = (trace_rand(&mut seed) % 32) as usize;
+                cx.update_entity(&rows, |state, cx| {
+                    state
+                        .scroll_to_offset(row as f64 * 20., VirtualizerScrollOptions::default())
+                        .unwrap();
+                    cx.notify();
+                });
+                cx.update_entity(&columns, |state, cx| {
+                    state
+                        .scroll_to_offset(column as f64 * 50., VirtualizerScrollOptions::default())
+                        .unwrap();
+                    cx.notify();
+                });
+            }
+            3 => {
+                let shift = (trace_rand(&mut seed) % 31 + 1) as usize;
+                let mut keys: Vec<_> = (0..32).collect();
+                keys.rotate_left(shift);
+                let row_sizes = keys.iter().map(|_| px(20.)).collect::<Vec<_>>();
+                let column_sizes = keys.iter().map(|_| px(50.)).collect::<Vec<_>>();
+                cx.update_entity(&rows, |state, cx| {
+                    state
+                        .replace_source(
+                            Rc::new(Keys(keys.clone())),
+                            VirtualizerSizing::known(row_sizes),
+                            VirtualizerChange::Reorder,
+                        )
+                        .unwrap();
+                    cx.notify();
+                });
+                cx.update_entity(&columns, |state, cx| {
+                    state
+                        .replace_source(
+                            Rc::new(Keys(keys)),
+                            VirtualizerSizing::known(column_sizes),
+                            VirtualizerChange::Reorder,
+                        )
+                        .unwrap();
+                    cx.notify();
+                });
+            }
+            _ => {
+                row_offset = 0.;
+                column_offset = 0.;
+            }
+        }
+        let rv = VirtualizerViewport::new(&binding, step + 1, row_offset, px(100.), px(240.));
+        let cv = VirtualizerViewport::new(&binding, step + 1, column_offset, px(240.), px(100.));
+        let grid = cx.read(|app| {
+            VirtualGridSnapshot::new(
+                rows.read_with(app, |state, _| state.snapshot(&rv).unwrap()),
+                columns.read_with(app, |state, _| state.snapshot(&cv).unwrap()),
+            )
+            .unwrap()
+        });
+        let cells = grid.cells().collect::<Vec<_>>();
+        let unique = cells
+            .iter()
+            .map(|cell| (cell.row().key().clone(), cell.column().key().clone()))
+            .collect::<HashSet<_>>();
+        assert_eq!(cells.len(), unique.len(), "step {step} duplicates a cell");
+        assert!(
+            cells.len() <= 120,
+            "step {step} escaped the bounded workset"
+        );
     }
 }
