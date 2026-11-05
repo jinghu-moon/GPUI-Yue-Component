@@ -1,0 +1,53 @@
+   Compiling windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `test` profile [unoptimized] target(s) in 5.67s
+     Running unittests src\main.rs (target\debug\deps\windows_showcase-d556b9de59fc8cb8.exe)
+
+running 4 tests
+test pages::virtual_layouts::keyboard_tests::grid_keyboard_arrows_edges_and_corners ... FAILED
+test pages::virtual_layouts::keyboard_tests::grid_keyboard_ignores_modifiers_and_releases_tab_focus ... FAILED
+test pages::virtual_layouts::keyboard_tests::grid_keyboard_page_uses_body_extent_and_survives_resize ... FAILED
+test pages::virtual_layouts::keyboard_tests::grid_keyboard_rtl_and_merged_cells ... FAILED
+
+failures:
+
+---- pages::virtual_layouts::keyboard_tests::grid_keyboard_arrows_edges_and_corners stdout ----
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::keyboard_tests::grid_keyboard_arrows_edges_and_corners' (7800) panicked at examples\windows-showcase\src\pages\virtual_layouts\keyboard_tests.rs:60:5:
+click enters the single Grid tab stop
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- pages::virtual_layouts::keyboard_tests::grid_keyboard_ignores_modifiers_and_releases_tab_focus stdout ----
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::keyboard_tests::grid_keyboard_ignores_modifiers_and_releases_tab_focus' (28212) panicked at examples\windows-showcase\src\pages\virtual_layouts\keyboard_tests.rs:28:9:
+assertion `left == right` failed: one logical cell cursor
+  left: 0
+ right: 1
+
+---- pages::virtual_layouts::keyboard_tests::grid_keyboard_page_uses_body_extent_and_survives_resize stdout ----
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::keyboard_tests::grid_keyboard_page_uses_body_extent_and_survives_resize' (36964) panicked at examples\windows-showcase\src\pages\virtual_layouts\keyboard_tests.rs:28:9:
+assertion `left == right` failed: one logical cell cursor
+  left: 0
+ right: 1
+
+---- pages::virtual_layouts::keyboard_tests::grid_keyboard_rtl_and_merged_cells stdout ----
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::keyboard_tests::grid_keyboard_rtl_and_merged_cells' (33748) panicked at examples\windows-showcase\src\pages\virtual_layouts\keyboard_tests.rs:28:9:
+assertion `left == right` failed: one logical cell cursor
+  left: 0
+ right: 1
+
+
+failures:
+    pages::virtual_layouts::keyboard_tests::grid_keyboard_arrows_edges_and_corners
+    pages::virtual_layouts::keyboard_tests::grid_keyboard_ignores_modifiers_and_releases_tab_focus
+    pages::virtual_layouts::keyboard_tests::grid_keyboard_page_uses_body_extent_and_survives_resize
+    pages::virtual_layouts::keyboard_tests::grid_keyboard_rtl_and_merged_cells
+
+test result: FAILED. 0 passed; 4 failed; 0 ignored; 0 measured; 37 filtered out; finished in 0.66s
+
+error: test failed, to rerun pass `-p windows-showcase --bin windows-showcase`

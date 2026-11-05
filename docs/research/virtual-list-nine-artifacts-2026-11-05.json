@@ -1,4 +1,5 @@
 {
+  "snapshot_ref": "1c8eb93e773d344037e2afdd70138b55d80c88e8",
   "convention": "raw hashes preserve measured bytes; LF hashes survive Git checkout newline conversion; this index excludes itself",
   "artifacts": {
     "docs/28-virtual-list.md": {

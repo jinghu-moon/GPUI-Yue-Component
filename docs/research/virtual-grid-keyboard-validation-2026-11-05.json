@@ -1,0 +1,186 @@
+{
+  "code_ref": "10a77a37858dc1b5857387445940a5e332830f77",
+  "tools_ref": "70fe510101d29b0a41e1c53efc8fbe95e8a26010",
+  "previous_published_ref": "1c8eb93e773d344037e2afdd70138b55d80c88e8",
+  "workspace": {
+    "passed": 907,
+    "failed": 0,
+    "ignored": 17,
+    "targets": 27
+  },
+  "final_showcase": {
+    "passed": 36,
+    "ignored": 7,
+    "keyboard_tests_included": 5
+  },
+  "red_baseline": {
+    "passed": 0,
+    "failed": 4,
+    "compile_fixture_errors_excluded": true
+  },
+  "clippy": "workspace all-targets headless-tests,virtual-profile -D warnings passed",
+  "native_exact_processes": 5,
+  "bridge_exact_contracts": 3,
+  "evidence_test_groups": 7,
+  "hardware": {
+    "displays": 1,
+    "scale": 1.5,
+    "real_cross_dpi_multi_monitor": "hardware-limited deferred",
+    "rem_sizes": [
+      16,
+      20
+    ],
+    "rem_is_not_os_dpi": true,
+    "narrator": "not started/listened"
+  },
+  "native_cpu": {
+    "kind": "two regression snapshots; not contemporaneous source A/B; not GPU/FPS/input latency",
+    "quantile": "nearest-rank",
+    "total_samples": 1536,
+    "summary": {
+      "first": {
+        "native-0-rem16": {
+          "samples": 96,
+          "p50_ms": 3.9893,
+          "p95_ms": 8.2485,
+          "p99_ms": 10.146,
+          "above_6_25ms": 24
+        },
+        "native-0-rem20": {
+          "samples": 96,
+          "p50_ms": 3.5453,
+          "p95_ms": 9.0958,
+          "p99_ms": 12.7986,
+          "above_6_25ms": 23
+        },
+        "native-1-rem16": {
+          "samples": 96,
+          "p50_ms": 1.2266,
+          "p95_ms": 4.1349,
+          "p99_ms": 4.9221,
+          "above_6_25ms": 0
+        },
+        "native-1-rem20": {
+          "samples": 96,
+          "p50_ms": 1.9959,
+          "p95_ms": 4.1723,
+          "p99_ms": 5.6134,
+          "above_6_25ms": 0
+        },
+        "native-2-rem16": {
+          "samples": 96,
+          "p50_ms": 2.0761,
+          "p95_ms": 4.4718,
+          "p99_ms": 5.9426,
+          "above_6_25ms": 0
+        },
+        "native-2-rem20": {
+          "samples": 96,
+          "p50_ms": 1.3236,
+          "p95_ms": 4.9223,
+          "p99_ms": 5.6764,
+          "above_6_25ms": 0
+        },
+        "native-3-rem16": {
+          "samples": 96,
+          "p50_ms": 1.2965,
+          "p95_ms": 2.6196,
+          "p99_ms": 3.0917,
+          "above_6_25ms": 0
+        },
+        "native-3-rem20": {
+          "samples": 96,
+          "p50_ms": 0.8294,
+          "p95_ms": 2.4577,
+          "p99_ms": 3.0517,
+          "above_6_25ms": 0
+        }
+      },
+      "final": {
+        "native-0-rem16": {
+          "samples": 96,
+          "p50_ms": 3.0209,
+          "p95_ms": 5.001,
+          "p99_ms": 5.6452,
+          "above_6_25ms": 0
+        },
+        "native-0-rem20": {
+          "samples": 96,
+          "p50_ms": 3.5486,
+          "p95_ms": 5.49,
+          "p99_ms": 6.7908,
+          "above_6_25ms": 1
+        },
+        "native-1-rem16": {
+          "samples": 96,
+          "p50_ms": 1.2198,
+          "p95_ms": 2.1598,
+          "p99_ms": 2.4933,
+          "above_6_25ms": 0
+        },
+        "native-1-rem20": {
+          "samples": 96,
+          "p50_ms": 1.2882,
+          "p95_ms": 2.3407,
+          "p99_ms": 4.6466,
+          "above_6_25ms": 0
+        },
+        "native-2-rem16": {
+          "samples": 96,
+          "p50_ms": 1.3098,
+          "p95_ms": 2.32,
+          "p99_ms": 3.3741,
+          "above_6_25ms": 0
+        },
+        "native-2-rem20": {
+          "samples": 96,
+          "p50_ms": 1.2923,
+          "p95_ms": 2.3637,
+          "p99_ms": 2.5962,
+          "above_6_25ms": 0
+        },
+        "native-3-rem16": {
+          "samples": 96,
+          "p50_ms": 0.8358,
+          "p95_ms": 1.3567,
+          "p99_ms": 2.1993,
+          "above_6_25ms": 0
+        },
+        "native-3-rem20": {
+          "samples": 96,
+          "p50_ms": 0.836,
+          "p95_ms": 1.5277,
+          "p99_ms": 1.7622,
+          "above_6_25ms": 0
+        }
+      }
+    },
+    "first_executable_sha256": "10876158ce766ff728b9eda27ea07973b4fccf30648519a5ed25ae4b411db035",
+    "first_identity_limit": "uncommitted implementation before factory compatibility adaptation; no full source snapshot captured; excluded from adoption comparisons",
+    "final_executable_sha256": "54f58d69b865a4a5293f82895b899d425a5994b1e634f9028d734a0ed3dce3bd",
+    "unchanged_workload_lf_sha256": "63d0715d702e2cfd9a272b274dfb1f5e6505aa90546e29b2e896b232ed94c7ec"
+  },
+  "production_manifests_and_locks_unchanged": {
+    "Cargo.toml": "dae8280eb8043ee8ebd63b8523f823419b8ec88dd6814657fc458cb672f65cf4",
+    "Cargo.lock": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+    "vendor/gpui-base/Cargo.toml": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+    "vendor/gpui-pre/Cargo.toml": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+    "vendor/gpui-pre/Cargo.lock": "246244d81914c181d684ac1cca0d0d812c3abb8574c380cd5075ac2e8a3090ee",
+    "vendor/gpui-pre-windows/Cargo.toml": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+    "vendor/gpui-pre-windows/Cargo.lock": "e1644c726a6616e97460a4358fd4011c9c75c6462e769f67cfae1296e29a6849"
+  },
+  "historical_lf_hashes_checked_against_published_ref": 23,
+  "self_assessment": {
+    "dimensions": [
+      9.2,
+      9.0,
+      9.0,
+      9.2,
+      9.0,
+      7.8
+    ],
+    "rounded_score": 8.9,
+    "nine_point_goal_complete": false
+  },
+  "cloud_ci": "configured; not claimed executed/passed in this session"
+}

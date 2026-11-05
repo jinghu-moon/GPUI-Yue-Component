@@ -1,0 +1,62 @@
+{
+  "convention": "Current artifact bytes; LF hash survives checkout conversion. Excludes this index itself.",
+  "code_ref": "10a77a37858dc1b5857387445940a5e332830f77",
+  "tools_ref": "70fe510101d29b0a41e1c53efc8fbe95e8a26010",
+  "artifacts": {
+    "docs/research/virtual-grid-keyboard-before-2026-11-05.txt": {
+      "bytes": 3217,
+      "raw_sha256": "73cd9f880f5c753e5307e103d97015bea189fe439fe499d97c5db303f9e992b4",
+      "lf_sha256": "73cd9f880f5c753e5307e103d97015bea189fe439fe499d97c5db303f9e992b4"
+    },
+    "docs/research/virtual-grid-keyboard-bridge-2026-11-05.json": {
+      "bytes": 2206,
+      "raw_sha256": "0ddfc54261570ea892b4cbb10ffeb617200856bd9adf4d6cf20b37d7c280f926",
+      "lf_sha256": "0ddfc54261570ea892b4cbb10ffeb617200856bd9adf4d6cf20b37d7c280f926"
+    },
+    "docs/research/virtual-grid-keyboard-checks-2026-11-05.txt": {
+      "bytes": 90677,
+      "raw_sha256": "4a9f963cd56be8b583f46c74316662c8725e20e98f607f88b39659a6834f391f",
+      "lf_sha256": "4a9f963cd56be8b583f46c74316662c8725e20e98f607f88b39659a6834f391f"
+    },
+    "docs/research/virtual-grid-keyboard-native-first-2026-11-05.txt": {
+      "bytes": 124060,
+      "raw_sha256": "bc61102d566a7aea7fe31a10dc38e01bf1af9bae1ce4f88de761900502eb60e6",
+      "lf_sha256": "bc61102d566a7aea7fe31a10dc38e01bf1af9bae1ce4f88de761900502eb60e6"
+    },
+    "docs/research/virtual-grid-keyboard-native-final-2026-11-05.txt": {
+      "bytes": 123593,
+      "raw_sha256": "b362acc1df8704ac9dbc1d7c680931aa8e7bc7f81ad8548f740016f1e2bbb15f",
+      "lf_sha256": "b362acc1df8704ac9dbc1d7c680931aa8e7bc7f81ad8548f740016f1e2bbb15f"
+    },
+    "docs/research/virtual-grid-keyboard-frames-2026-11-05.csv": {
+      "bytes": 113150,
+      "raw_sha256": "55ef05415e6442ed5870ad8f113bfe4211b2056e22de7e633f218f4bb9e241eb",
+      "lf_sha256": "55ef05415e6442ed5870ad8f113bfe4211b2056e22de7e633f218f4bb9e241eb"
+    },
+    "docs/research/virtual-grid-keyboard-interactive-2026-11-05.txt": {
+      "bytes": 8171,
+      "raw_sha256": "9115c83dd811cc6fde54afe00681c35da1eef78ded17570db0a5cedfe738550d",
+      "lf_sha256": "9115c83dd811cc6fde54afe00681c35da1eef78ded17570db0a5cedfe738550d"
+    },
+    "docs/research/virtual-grid-keyboard-validation-2026-11-05.json": {
+      "bytes": 5506,
+      "raw_sha256": "01585855d13c7970e577411d6e0022f0dc9d69c8cd8b1e4b1a3aaf81530bf196",
+      "lf_sha256": "01585855d13c7970e577411d6e0022f0dc9d69c8cd8b1e4b1a3aaf81530bf196"
+    },
+    "docs/28-virtual-list.md": {
+      "bytes": 119095,
+      "raw_sha256": "3103ee57b18e170290d8120f4032bc6e329671975448a61cfe13e80975d82d7a",
+      "lf_sha256": "50213c493990e468ae437ac6c29e3e6e2e89be3e734936973aa8bf2f4e866de7"
+    },
+    "docs/research/2026-11-05-virtual-grid-keyboard-and-hardware-boundary.md": {
+      "bytes": 10874,
+      "raw_sha256": "6eb9021385afdfb22745e66272e296b7f0d2d479567b7e50297a5d6e5faaf7cb",
+      "lf_sha256": "6eb9021385afdfb22745e66272e296b7f0d2d479567b7e50297a5d6e5faaf7cb"
+    },
+    "docs/research/virtual-list-nine-artifacts-2026-11-05.json": {
+      "bytes": 6606,
+      "raw_sha256": "693ab7351198ace8927efb795290f6146d4d550497fcc6bf2079cecf11d24ddd",
+      "lf_sha256": "2a3e8abf0e121cebab5d992a562e118fb012499478578f10b1ba02da07baa20e"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+FIRST IMPLEMENTATION STDOUT
+    Finished `release` profile [optimized] target(s) in 0.50s
+     Running unittests src\main.rs (target\release\deps\windows_showcase-871f0ca1f91290c4.exe)
+
+running 1 test
+test pages::virtual_layouts::native_acceptance::native_interactive_acceptance_surface ... NATIVE_INTERACTIVE,opened=true,displays=1,timeout_seconds=300
+NATIVE_INTERACTIVE,tick=0,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=false
+NATIVE_INTERACTIVE,tick=220,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=285,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=2:2,grid_focused=true
+NATIVE_INTERACTIVE,tick=319,tab=0,rtl=false,span=false,frozen=true,x=142849.328125,y=35999616,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=999999:999,grid_focused=true
+NATIVE_INTERACTIVE,tick=352,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=true
+NATIVE_INTERACTIVE,tick=408,tab=0,rtl=false,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=false
+NATIVE_INTERACTIVE,tick=488,tab=0,rtl=false,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=528,tab=0,rtl=false,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:4,grid_focused=true
+NATIVE_INTERACTIVE,tick=583,tab=0,rtl=false,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:4,grid_focused=false
+NATIVE_INTERACTIVE,tick=636,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:4,grid_focused=false
+NATIVE_INTERACTIVE,tick=671,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:4,grid_focused=true
+NATIVE_INTERACTIVE,tick=706,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=751,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=1050,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=787,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=1050,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=false
+NATIVE_INTERACTIVE,tick=818,tab=0,rtl=true,span=true,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=819,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 223.38s
+
+
+FINAL BUILD STDOUT
+
+running 1 test
+test pages::virtual_layouts::native_acceptance::native_interactive_acceptance_surface ... NATIVE_INTERACTIVE,opened=true,displays=1,timeout_seconds=300
+NATIVE_INTERACTIVE,tick=0,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=false
+NATIVE_INTERACTIVE,tick=240,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=1:1,grid_focused=true
+NATIVE_INTERACTIVE,tick=315,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=2:2,grid_focused=true
+NATIVE_INTERACTIVE,tick=348,tab=0,rtl=false,span=false,frozen=true,x=142849.328125,y=35999616,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=999999:999,grid_focused=true
+NATIVE_INTERACTIVE,tick=385,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=true
+NATIVE_INTERACTIVE,tick=386,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=false
+NATIVE_INTERACTIVE,tick=444,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true,cursor=0:0,grid_focused=true
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 126.73s
+
+
+CUA AX/visual notes (observed in this session, no Narrator audio evidence)
+Initial implementation window 4656512:
+Clicked 2 x 2; final AX focus 17 item 2 x 2 (initial immediate AX capture lagged).
+Right, Down: focused item 25, 3 x 3.
+Ctrl+End: focused item 174, 1000000 x 1000; visible blue border at endpoint.
+Ctrl+Home: focused item 104, 1 x 1; body viewport returned to first rows/columns.
+Merge control: focused button 14; one merged item 192, 2 x 2 span 2 x 3.
+Clicked merged origin; Right: focused item 195, 2 x 5.
+Shift+Tab: focused toolbar button 15; two more Shift+Tab: button 13, direction.
+Return enabled RTL; Tab x 3 returned focus to item 195, 2 x 5.
+Right: item 192, merged origin. Screenshot showed frozen column at right and complete span border.
+Physical wheel request 3000 px: visible row labels 31-40; focus remained merged origin.
+Owner trace measured y=1050; requested wheel pixels are not measured displacement.
+Shift+Tab to button 15, Tab back to merged origin; screenshot showed initial body rows restored.
+Closed via observed title-bar Close; fresh inventory confirmed window removed.
+
+Final committed build window 4984192 (same executable as final native probes):
+Clicked body, Right and Down: focused item 25, 3 x 3.
+Ctrl+End: focused item 174, 1000000 x 1000.
+Ctrl+Home and Shift+Tab: toolbar button 15; Tab: focused item 104, 1 x 1.
+Screenshot confirmed visible focus border and first body rows.
+Closed via observed title-bar Close; fresh inventory confirmed window removed.
+Screenshots inspected live, not saved. No Grid numeric UIA pattern or Narrator acceptance inferred from AX labels.

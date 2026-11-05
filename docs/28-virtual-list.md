@@ -965,7 +965,8 @@ key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 
 
 ## 17. 依据与关联文档
 
-- [工程成熟度与 9 分门槛](research/2026-11-05-virtual-list-nine-point-readiness.md)：Grid 结构化语义、显式 span 复用、CPU／原生 ABBA、持续守卫与正负控制；综合自评 8.8，保留跨 DPI 和完整表格读屏缺口。
+- [Grid 键盘与当前设备验收](research/2026-11-05-virtual-grid-keyboard-and-hardware-boundary.md)：当前进展。补齐示例的逻辑单元格导航、焦点重入、回收／恢复保持；直接 COM 合同确认锁定 Windows 桥的能力边界。综合自评 8.9；真实跨 DPI／多显示器因设备受限延期，完整表格读屏仍待补齐。
+- [工程成熟度与 9 分门槛](research/2026-11-05-virtual-list-nine-point-readiness.md)：前一轮 Grid 结构化语义、显式 span 复用、CPU／原生 ABBA、持续守卫与正负控制；当轮综合自评 8.8，后续状态见上一项。
 - [四项验收与取舍](research/2026-11-05-virtual-list-four-acceptance.md)：等价观察尺寸消费者、组合回归、span 分布／规模成本，以及 Windows 实窗与命名条目修复；含原始样本、硬件边界和 Git 回退点。
 - [五项后续实施与组合验证](research/2026-11-05-virtual-list-five-followups.md)：流式冻结区、稀疏 cell、span、一维 Measured 动画、约束 auto 和 Grid RTL，含各项代价与回退点。
 - [历史候选与后续状态](research/2026-11-05-virtual-list-next-opportunities.md)：原候选的交付索引，以及未吸收的 Grid 观察值 collector 原型及其测量限制。
