@@ -159,6 +159,8 @@ Masonry 的 `supports_smooth()` 在 Fixed/Known 为 true、Measured 为 false。
 
 本轮五项后续的逐项实现、拒绝候选、CPU／分配代价和回退证据见[实施记录](research/2026-11-05-virtual-list-five-followups.md)。`VirtualGrid::spans(&descriptors,cx)` 是 fallible builder，先配置冻结数量，再按当前 stable key 验证；每次 render 随 source 事务重新解析。`cell.extent()` 为合并矩形（含内部 gap），row()/column() 保持 origin 原轨道，另有跨度 readers。业务编辑 Entity 按 domain key 持有，不能依赖任意工作集缓存永久保存业务状态。
 
+最近一次固定 workload 的真实窗口尾部分位复测见[原生尾部复测](research/2026-11-05-virtual-list-native-tail-review.md)。结果仍是混合变化，Grid 语义成本可见但没有新的全局性能结论；不据此调整默认路径或宣称稳定 FPS。
+
 `retained_cells(Vec<VirtualGridCellKey>)` 去重可见／冻结 pair，缺失任一轴 key 后跳过；`cell_focus_handle(pair,handle)` 仅在包含焦点时保留，删除、注销或换 owner 后聚焦 `focus_fallback`（未设置则 blur）。旧轴级 retained 仍是两轴乘积合同。RTL 冻结列位于右侧，在 Grid 边界以 physical = max_scroll - logical 换算原生输入／scrollbar；方向、宽度与总尺寸变化保持逻辑阅读位置，文本方向和 Left/Right 编辑语义由消费者负责。
 
 `VirtualGridTrack::resolve` 只解析调用方明确给出的 min/max/weight 列表；不足保持 min 并滚动，达到所有 max 后留白。约束变化时结果交给 Known sizing／update_sizes 合批，不每帧重建百万行数组。逐帧对所有工作 cell 做额外 intrinsic 测量的通用方案本轮不吸收：实测 CPU 增加约 20%，且工作集观测不能推断全局最大内容；预算／epoch／失效由显式消费者控制。
