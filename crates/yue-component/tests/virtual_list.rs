@@ -33,6 +33,8 @@ mod followup;
 mod followup_edges;
 #[path = "virtual_list/frozen_grid.rs"]
 mod frozen_grid;
+#[path = "virtual_list/grid_combinations.rs"]
+mod grid_combinations;
 #[path = "virtual_list/grid_observed.rs"]
 mod grid_observed;
 #[path = "virtual_list/grid_preparation.rs"]

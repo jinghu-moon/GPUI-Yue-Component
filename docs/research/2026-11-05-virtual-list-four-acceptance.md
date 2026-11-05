@@ -31,7 +31,15 @@ cargo test -p yue-component --features headless-tests --test virtual_list grid_o
 
 ## 2. 多能力组合回归
 
-待本项验证完成后记录。
+已完成，新增 [grid_combinations.rs](../../crates/yue-component/tests/virtual_list/grid_combinations.rs) 的生产组件组合轨迹。32 次挂载交替 LTR/RTL；同一个 Grid 同时开启冻结首行／列、2×2 span、稀疏保留及远端聚焦 editor，然后交错双轴定位、Known 冻结尺寸反馈、resize、源重排、50ms 动画采样、真实 `ScrollWheelEvent` 取消动画、撤销焦点注册、带待执行动画和 idle timer 卸载。
+
+每轮 5 个阶段分别通过独立线性几何 oracle 检查四区共 20 次原生指针命中（合计 640 次），不是仅检查 renderer 调用数；语义 cell key 全部唯一，工作集小于 120。锚点检查使用 stable key 到冻结 body 边缘的相对位置；重排后未变 key 的编辑内容仍保留，变动索引的旧内容释放。每轮卸载后两轴及所有 cell view 的 weak 引用失效。第一轮故意保留一个强引用作负控制，确认它仍存活，再释放并验证归零。
+
+借鉴 TanStack 的命令／尺寸／重排／frame 混合轨迹、virtua 的阅读锚点、vlist 的 scoped 生命周期和真实 hit 断言，没有运行参考项目的浏览器测试来代替 GPUI 测试。初始化类型／借用编译错误均已修正；初次运行还暴露测试自身两个错误假设（点击会正常移走焦点、未变内容身份应复用），已改成在指针输入前检查焦点，并只要求变动身份释放。最终组合测试 1 passed，目标 Clippy `-D warnings` 通过；生产代码无需修改。
+
+```powershell
+cargo test -p yue-component --features headless-tests --test virtual_list mixed_grid_trace --offline --locked -- --nocapture --test-threads=1
+```
 
 ## 3. 大量 span 成本
 
