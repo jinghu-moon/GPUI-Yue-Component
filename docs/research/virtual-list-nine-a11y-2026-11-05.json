@@ -1,0 +1,25 @@
+{
+  "logs": {
+    "yue-nine-grid-a11y-red.log": {
+      "raw_sha256": "873e74f8d170cab1cdd3404de86bd324dea05bf6f7d582ddabfb372dedc682a6",
+      "lf_sha256": "e58f16afed8eb175ba7a55db3ce49e37b823361cd685a223a5ee73d401f62708"
+    },
+    "yue-nine-grid-a11y-green.log": {
+      "raw_sha256": "957490922562bb063027872844526cebfd9a1d6589d30efcf3528a55c438c3ea",
+      "lf_sha256": "baca20edb80e242fc9ddf8163c86cac7933f912c0c6fb93fdfb8552c11224b70"
+    },
+    "yue-nine-a11y-clippy.log": {
+      "raw_sha256": "c47a77a5c0fc3e59efe620cfde845d929521950157f89fb4cc8f317d3d3ddf9f",
+      "lf_sha256": "26b21658acc66f4ccad1459ace2ffb3fc1dfdc1dbde83d1c6c955340f9bba8c1"
+    },
+    "yue-nine-native-contracts.log": {
+      "raw_sha256": "cc48e5a3cc838f7d244d13a5cb0e81881503a4b5143b0f1daeecc32722d511c0",
+      "lf_sha256": "0a4926165c027db0e343842d18481c2131701f1b7b5a14ce139a92baf233bd4d"
+    }
+  },
+  "native_contracts": 17,
+  "base_contracts": "pending final run",
+  "targeted_showcase_passed": 1,
+  "clippy": "passed",
+  "native_reader": "not verified"
+}

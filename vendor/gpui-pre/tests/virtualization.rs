@@ -3,6 +3,46 @@ use gpui::{
     div, list, px, uniform_list_range,
 };
 
+#[test]
+fn sparse_table_metadata_reaches_native_accesskit_without_synthetic_cells() {
+    use gpui::{Element as _, InteractiveElement as _, Role, StatefulInteractiveElement as _};
+    let mut node = gpui::accesskit::Node::new(Role::Cell);
+    let ordinary = div().id("ordinary").aria_row_index(0).aria_column_index(9);
+    ordinary.write_a11y_info(&mut node);
+    assert_eq!((node.row_index(), node.column_index()), (Some(0), Some(9)));
+    assert_eq!((node.row_span(), node.column_span()), (None, None));
+    let span = div()
+        .id("merged")
+        .aria_row_index(998)
+        .aria_column_index(12)
+        .aria_row_span(3)
+        .aria_column_span(2);
+    let mut merged = gpui::accesskit::Node::new(Role::Cell);
+    span.write_a11y_info(&mut merged);
+    assert_eq!(
+        (merged.row_index(), merged.column_index()),
+        (Some(998), Some(12))
+    );
+    assert_eq!(
+        (merged.row_span(), merged.column_span()),
+        (Some(3), Some(2))
+    );
+    let grid = div()
+        .id("grid")
+        .aria_row_count(1_000_000)
+        .aria_column_count(1_000);
+    let mut root = gpui::accesskit::Node::new(Role::Grid);
+    grid.write_a11y_info(&mut root);
+    assert_eq!(
+        (root.row_count(), root.column_count()),
+        (Some(1_000_000), Some(1_000))
+    );
+    assert!(
+        root.children().is_empty(),
+        "logical counts never synthesize a million nodes"
+    );
+}
+
 #[gpui::test]
 fn native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry(cx: &mut TestAppContext) {
     use std::{cell::RefCell, rc::Rc};

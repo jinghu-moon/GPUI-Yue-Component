@@ -749,3 +749,10 @@ origins, frozen masks and retained-cell semantics. Configuration remains
 O(S log S); arbitrary two-dimensional worst cases can still query in O(S).
 See `docs/research/2026-11-05-virtual-list-four-acceptance.md` for independent
 oracles, 0/100/1,000/10,000-span Release ABBA, and retained unfavorable samples.
+
+### Observe actual table semantics
+
+Test snapshots expose optional native table counts, indices and spans from the
+same AccessKit Node written by the element. Share the payload across snapshot
+clones and allocate nothing for nodes without table metadata. This observation
+surface does not synthesize semantic nodes or claim platform reader support.

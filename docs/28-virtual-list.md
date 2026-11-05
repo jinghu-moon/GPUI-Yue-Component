@@ -668,6 +668,8 @@ Measured 复用原生 splice 的 focus 保留路径；新增项可通过 `splice
 
 ### 11.3 原生语义
 
+Grid 消费者可在根提供 `aria_row_count`／`aria_column_count`，在实际 cell 提供 `aria_row_index`／`aria_column_index` 和正整数 `aria_row_span`／`aria_column_span`。原生 AccessKit 坐标是 **零基**，不能照搬 DOM ARIA 的一基索引。Showcase 保留逻辑总数及绝对坐标，合并区域只创建 origin，并提供可读位置说明。当前 Windows AccessKit 桥尚未完整提供 UIA Grid／GridItem；节点元数据通过不等于 Narrator 表格导航通过。见[工程成熟度验收](research/2026-11-05-virtual-list-nine-point-readiness.md)。
+
 当前 GPUI 已提供 role、aria_label、aria_selected、aria_active_descendant、aria_position_in_set、aria_size_of_set，由第 11.1 节确定的语义所有者映射到真实节点。活动后代声明在子节点，与网页容器上的 ARIA 属性方式不同。
 
 - 行的 set position 使用逻辑位置，不使用工作窗口中的 0..W；size 使用逻辑总数。

@@ -2,6 +2,7 @@
   "native": {
     "description": "Maintained ListState, ScrollHandle, geometry, measurement and input contracts; integration source stays in this repository when testing an upstream candidate.",
     "tests": [
+      "sparse_table_metadata_reaches_native_accesskit_without_synthetic_cells",
       "sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes",
       "size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry",
       "invalid_size_batches_leave_geometry_and_revision_unchanged",

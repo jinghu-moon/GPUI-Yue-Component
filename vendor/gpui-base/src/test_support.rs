@@ -35,6 +35,16 @@ pub struct ElementSnapshot {
     max_numeric_value: Option<f64>,
     numeric_value_step: Option<f64>,
     orientation: Option<gpui::Orientation>,
+    table: Option<Rc<TableMetadata>>,
+}
+#[derive(Default)]
+struct TableMetadata {
+    row_index: Option<usize>,
+    column_index: Option<usize>,
+    row_count: Option<usize>,
+    column_count: Option<usize>,
+    row_span: Option<usize>,
+    column_span: Option<usize>,
 }
 impl fmt::Debug for ElementSnapshot {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -136,6 +146,26 @@ impl ElementSnapshot {
     }
     pub fn orientation(&self) -> Option<gpui::Orientation> {
         self.orientation
+    }
+    /// Native AccessKit zero-based logical row, independent of the working set.
+    pub fn row_index(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.row_index)
+    }
+    /// Native AccessKit zero-based logical column.
+    pub fn column_index(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.column_index)
+    }
+    pub fn row_count(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.row_count)
+    }
+    pub fn column_count(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.column_count)
+    }
+    pub fn row_span(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.row_span)
+    }
+    pub fn column_span(&self) -> Option<usize> {
+        self.table.as_ref().and_then(|table| table.column_span)
     }
 }
 
@@ -346,6 +376,24 @@ impl<E: Element<PrepaintState = Option<Hitbox>> + InteractiveElement> Element fo
         let mut node = gpui::accesskit::Node::new(role.unwrap_or(gpui::Role::Unknown));
         self.inner.write_a11y_info(&mut node);
         let toggled = node.toggled();
+        let table = TableMetadata {
+            row_index: node.row_index(),
+            column_index: node.column_index(),
+            row_count: node.row_count(),
+            column_count: node.column_count(),
+            row_span: node.row_span(),
+            column_span: node.column_span(),
+        };
+        let has_table = [
+            table.row_index,
+            table.column_index,
+            table.row_count,
+            table.column_count,
+            table.row_span,
+            table.column_span,
+        ]
+        .iter()
+        .any(Option::is_some);
         let facts = ElementSnapshot {
             role,
             path: global_id.to_vec(),
@@ -366,6 +414,7 @@ impl<E: Element<PrepaintState = Option<Hitbox>> + InteractiveElement> Element fo
             max_numeric_value: node.max_numeric_value(),
             numeric_value_step: node.numeric_value_step(),
             orientation: node.orientation(),
+            table: has_table.then(|| Rc::new(table)),
         };
         let registration =
             window.with_element_state(global_id, |state: Option<Rc<Registration>>, window| {

@@ -1471,13 +1471,13 @@ pub trait StatefulInteractiveElement: InteractiveElement {
         self
     }
 
-    /// Set the row index for this element.
+    /// Set the native AccessKit row index (zero-based, not DOM aria-rowindex).
     fn aria_row_index(mut self, index: usize) -> Self {
         self.interactivity().aria.row_index = Some(index);
         self
     }
 
-    /// Set the column index for this element.
+    /// Set the native AccessKit column index (zero-based).
     fn aria_column_index(mut self, index: usize) -> Self {
         self.interactivity().aria.column_index = Some(index);
         self
@@ -1492,6 +1492,28 @@ pub trait StatefulInteractiveElement: InteractiveElement {
     /// Set the column count for this element.
     fn aria_column_count(mut self, count: usize) -> Self {
         self.interactivity().aria.column_count = Some(count);
+        self
+    }
+
+    /// Set a positive logical row span. Ordinary cells default to one.
+    fn aria_row_span(mut self, rows: usize) -> Self {
+        assert!(rows > 0, "accessibility row span must be positive");
+        self.interactivity()
+            .aria
+            .table_span
+            .get_or_insert_with(Default::default)
+            .rows = rows;
+        self
+    }
+
+    /// Set a positive logical column span. Ordinary cells default to one.
+    fn aria_column_span(mut self, columns: usize) -> Self {
+        assert!(columns > 0, "accessibility column span must be positive");
+        self.interactivity()
+            .aria
+            .table_span
+            .get_or_insert_with(Default::default)
+            .columns = columns;
         self
     }
 
@@ -2102,6 +2124,20 @@ impl IntoElement for Div {
     }
 }
 
+// Only explicit spanning cells allocate this payload; default divs retain one
+// optional pointer rather than two Option<usize> properties.
+struct AriaTableSpan {
+    rows: usize,
+    columns: usize,
+}
+impl Default for AriaTableSpan {
+    fn default() -> Self {
+        Self {
+            rows: 1,
+            columns: 1,
+        }
+    }
+}
 #[derive(Default)]
 pub(crate) struct AriaProperties {
     pub(crate) author_id: Option<SharedString>,
@@ -2125,6 +2161,7 @@ pub(crate) struct AriaProperties {
     pub(crate) column_index: Option<usize>,
     pub(crate) row_count: Option<usize>,
     pub(crate) column_count: Option<usize>,
+    table_span: Option<Box<AriaTableSpan>>,
 }
 
 /// The interactivity struct. Powers all of the general-purpose
@@ -3596,6 +3633,10 @@ impl Interactivity {
         }
         if let Some(count) = self.aria.column_count {
             node.set_column_count(count);
+        }
+        if let Some(span) = &self.aria.table_span {
+            node.set_row_span(span.rows);
+            node.set_column_span(span.columns);
         }
         if !self.click_listeners.is_empty() {
             node.add_action(accesskit::Action::Click);

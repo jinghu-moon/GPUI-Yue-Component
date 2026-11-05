@@ -11,6 +11,8 @@ use yue_component::{
     VirtualizerSizing, VirtualizerSource, VirtualizerState, YueTabItem, YueTabs,
 };
 
+const GRID_ROWS: usize = 1_000_000;
+const GRID_COLUMNS: usize = 1_000;
 struct Records(usize);
 impl VirtualizerSource for Records {
     fn len(&self) -> usize {
@@ -46,7 +48,7 @@ impl VirtualLayoutsPage {
         let rows = cx.new(|_| {
             VirtualizerState::new_attached(
                 Axis::Vertical,
-                Rc::new(Records(1_000_000)),
+                Rc::new(Records(GRID_ROWS)),
                 VirtualizerSizing::fixed(px(36.)),
                 &binding,
             )
@@ -55,7 +57,7 @@ impl VirtualLayoutsPage {
         let columns = cx.new(|_| {
             VirtualizerState::new_attached(
                 Axis::Horizontal,
-                Rc::new(Records(1_000)),
+                Rc::new(Records(GRID_COLUMNS)),
                 VirtualizerSizing::fixed(px(144.)),
                 &binding,
             )
@@ -229,6 +231,21 @@ impl VirtualLayoutsPage {
                                     .id("grid-cell")
                                     .role(Role::Cell)
                                     .aria_label(label.clone())
+                                    .aria_row_index(cell.row().index())
+                                    .aria_column_index(cell.column().index())
+                                    .aria_description(format!(
+                                        "第 {} 行，第 {} 列；跨 {} 行、{} 列",
+                                        cell.row().index() + 1,
+                                        cell.column().index() + 1,
+                                        cell.row_span(),
+                                        cell.column_span()
+                                    ))
+                                    .when(cell.row_span() > 1, |this| {
+                                        this.aria_row_span(cell.row_span())
+                                    })
+                                    .when(cell.column_span() > 1, |this| {
+                                        this.aria_column_span(cell.column_span())
+                                    })
                                     .size_full()
                                     .px_3()
                                     .flex()
@@ -259,6 +276,12 @@ impl VirtualLayoutsPage {
                             "showcase body span is inside Fixed source and does not cross freezing",
                         )
                         .role(Role::Grid)
+                        .aria_label("双轴虚拟网格")
+                        .aria_row_count(GRID_ROWS)
+                        .aria_column_count(GRID_COLUMNS)
+                        .aria_description(
+                            "一百万行、一千列；冻结首行首列可切换，单元格说明包含逻辑位置和跨度",
+                        )
                         .test_support(),
                     )
                     .child(Scrollbar::vertical(&self.scroll))
@@ -468,6 +491,76 @@ mod tests {
     use super::*;
     use gpui_kit::TestAppContext;
     use std::collections::HashSet;
+
+    fn grid_semantics(cx: &mut gpui_kit::VisualTestContext) -> Vec<(usize, usize, usize, usize)> {
+        cx.update(|w, cx| {
+            w.draw(cx).clear(cx);
+            let nodes = gpui_kit::base::test_support::snapshots(w);
+            let grid = nodes.iter().find(|n| n.role() == Some(Role::Grid)).unwrap();
+            assert_eq!(grid.row_count(), Some(1_000_000));
+            assert_eq!(grid.column_count(), Some(1_000));
+            let cells = nodes
+                .iter()
+                .filter(|n| n.role() == Some(Role::Cell))
+                .map(|n| {
+                    let row = n.row_index().expect("logical row metadata");
+                    let column = n.column_index().expect("logical column metadata");
+                    assert!(row < 1_000_000 && column < 1_000);
+                    assert!(n.label().unwrap().starts_with(&format!(
+                        "{} × {}",
+                        row + 1,
+                        column + 1
+                    )));
+                    assert!(n.description().unwrap().contains(&format!(
+                        "第 {} 行，第 {} 列",
+                        row + 1,
+                        column + 1
+                    )));
+                    (
+                        row,
+                        column,
+                        n.row_span().unwrap_or(1),
+                        n.column_span().unwrap_or(1),
+                    )
+                })
+                .collect::<Vec<_>>();
+            assert!(!cells.is_empty() && cells.len() < 200);
+            let unique = cells.iter().map(|c| (c.0, c.1)).collect::<HashSet<_>>();
+            assert_eq!(cells.len(), unique.len());
+            cells
+        })
+    }
+
+    #[gpui_kit::test]
+    fn grid_accessibility_preserves_logical_coordinates_counts_and_spans(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let (_, cx) = cx.add_window_view(|_, cx| VirtualLayoutsPage::new(cx));
+        cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
+        assert!(grid_semantics(cx).contains(&(0, 0, 1, 1)));
+        click(cx, "grid-span");
+        let merged = grid_semantics(cx);
+        assert_eq!(merged.iter().filter(|c| **c == (1, 1, 2, 3)).count(), 1);
+        assert!(
+            !merged
+                .iter()
+                .any(|c| (1..3).contains(&c.0) && (1..4).contains(&c.1) && (c.0, c.1) != (1, 1))
+        );
+        click(cx, "grid-direction");
+        assert_eq!(
+            grid_semantics(cx).into_iter().collect::<HashSet<_>>(),
+            merged.into_iter().collect()
+        );
+        click(cx, "grid-last");
+        let last = grid_semantics(cx);
+        assert!(last.contains(&(999_999, 999, 1, 1)));
+        assert!(
+            last.contains(&(0, 0, 1, 1)),
+            "frozen corner retains logical coordinates"
+        );
+    }
 
     fn named_items(cx: &mut gpui_kit::VisualTestContext, prefix: &str) -> HashSet<String> {
         cx.update(|w, cx| {

@@ -307,3 +307,11 @@ symmetrically. Leading layout and budget continuation use the leading reserve;
 trailing work remains on the trailing reserve. No second measurement tree,
 offset or workset is introduced. Maintained native contracts cover bounded
 intrinsic roots and restoration of the legacy symmetric behavior.
+
+### Sparse native table semantics
+
+Forward explicit positive row/column spans into AccessKit alongside native
+zero-based indices and logical counts. Ordinary Divs retain only an optional
+pointer; only explicit spans allocate the small payload. The native contract
+checks actual Node data without creating offscreen cells. AccessKit metadata
+does not imply that every platform bridge implements Grid/GridItem providers.
