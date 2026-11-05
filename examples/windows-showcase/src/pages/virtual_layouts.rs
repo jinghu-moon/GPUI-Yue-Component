@@ -314,7 +314,18 @@ impl VirtualLayoutsPage {
                             move |item, _, _| {
                                 builds.set(builds.get() + 1);
                                 let ix = item.item().index();
+                                let title = format!("卡片 {} · 第 {} 列", ix + 1, item.lane() + 1);
+                                let content =
+                                    "卡片内容自然换行，尺寸由真实布局反馈；滚动时保持列归属。"
+                                        .repeat(ix % 4 + 1);
                                 div()
+                                    .id("masonry-card")
+                                    .role(Role::ListItem)
+                                    .aria_label(title.clone())
+                                    .aria_description(content.clone())
+                                    .aria_position_in_set(ix + 1)
+                                    .aria_size_of_set(10_000)
+                                    .test_support()
                                     .w_full()
                                     .p_3()
                                     .flex()
@@ -322,11 +333,8 @@ impl VirtualLayoutsPage {
                                     .gap_2()
                                     .border_1()
                                     .border_color(gpui_kit::rgb(theme.border_default()))
-                                    .child(format!("卡片 {} · 第 {} 列", ix + 1, item.lane() + 1))
-                                    .child(
-                                        "卡片内容自然换行，尺寸由真实布局反馈；滚动时保持列归属。"
-                                            .repeat(ix % 4 + 1),
-                                    )
+                                    .child(title)
+                                    .child(content)
                             },
                         )
                         .role(Role::List)
@@ -365,7 +373,15 @@ impl VirtualLayoutsPage {
                             &self.horizontal,
                             move |item, _, _| {
                                 builds.set(builds.get() + 1);
+                                let title = format!("节点 {}", item.index() + 1);
                                 div()
+                                    .id("horizontal-node")
+                                    .role(Role::ListItem)
+                                    .aria_label(title.clone())
+                                    .aria_description("实际宽度由条目布局确定")
+                                    .aria_position_in_set(item.index() + 1)
+                                    .aria_size_of_set(2_000)
+                                    .test_support()
                                     .w(gpui_kit::rems(8. + (item.index() % 4) as f32 * 2.))
                                     .h_full()
                                     .p_3()
@@ -374,12 +390,12 @@ impl VirtualLayoutsPage {
                                     .gap_2()
                                     .border_1()
                                     .border_color(gpui_kit::rgb(theme.border_default()))
-                                    .child(format!("节点 {}", item.index() + 1))
+                                    .child(title)
                                     .child("实际宽度由条目布局确定")
                             },
                         )
                         .role(Role::List)
-                        .item_role(Some(Role::ListItem))
+                        .item_role(None)
                         .test_support(),
                     )
                     .child(Scrollbar::horizontal(&handle))
@@ -441,6 +457,9 @@ impl Render for VirtualLayoutsPage {
 }
 
 #[cfg(all(test, target_os = "windows"))]
+#[path = "virtual_layouts/native_acceptance.rs"]
+mod native_acceptance;
+#[cfg(all(test, target_os = "windows"))]
 #[path = "virtual_layouts/native_tests.rs"]
 mod native_tests;
 
@@ -448,6 +467,87 @@ mod native_tests;
 mod tests {
     use super::*;
     use gpui_kit::TestAppContext;
+    use std::collections::HashSet;
+
+    fn named_items(cx: &mut gpui_kit::VisualTestContext, prefix: &str) -> HashSet<String> {
+        cx.update(|w, cx| {
+            w.draw(cx).clear(cx);
+            let items = gpui_kit::base::test_support::snapshots(w)
+                .into_iter()
+                .filter(|node| node.role() == Some(Role::ListItem))
+                .collect::<Vec<_>>();
+            assert!(
+                !items.is_empty(),
+                "visible virtual items need semantic nodes"
+            );
+            assert!(items.len() < 100, "virtual semantics must remain bounded");
+            let names = items
+                .iter()
+                .map(|item| {
+                    let name = item.label().expect("every item needs an accessible name");
+                    assert!(name.starts_with(prefix), "unexpected item name: {name}");
+                    name.to_owned()
+                })
+                .collect::<HashSet<_>>();
+            assert_eq!(names.len(), items.len(), "no duplicate item semantics");
+            names
+        })
+    }
+
+    #[gpui_kit::test]
+    fn masonry_accessibility_names_follow_scroll_rebuild_and_reflow(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let (view, cx) = cx.add_window_view(|_, cx| {
+            let mut page = VirtualLayoutsPage::new(cx);
+            page.active = 1;
+            page
+        });
+        cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
+        let first = named_items(cx, "卡片 ");
+        view.update(cx, |p, cx| {
+            p.masonry.update(cx, |s, cx| {
+                s.scroll_to_key(5_000usize.into(), VirtualizerScrollOptions::default())
+                    .unwrap();
+                cx.notify();
+            });
+        });
+        let scrolled = named_items(cx, "卡片 ");
+        assert!(
+            first.is_disjoint(&scrolled),
+            "names must follow recycled content"
+        );
+        click(cx, "masonry-rebuild");
+        assert_eq!(named_items(cx, "卡片 "), scrolled);
+        click(cx, "masonry-reflow");
+        let reflowed = named_items(cx, "卡片 ");
+        assert!(reflowed.iter().all(|name| {
+            let lane = name.split(" · 第 ").nth(1).unwrap().trim_end_matches(" 列");
+            (1..=5).contains(&lane.parse::<usize>().unwrap())
+        }));
+    }
+
+    #[gpui_kit::test]
+    fn horizontal_accessibility_names_follow_measured_scroll(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let (_, cx) = cx.add_window_view(|_, cx| {
+            let mut page = VirtualLayoutsPage::new(cx);
+            page.active = 2;
+            page
+        });
+        cx.simulate_resize(gpui_kit::size(px(1_400.), px(1_000.)));
+        let first = named_items(cx, "节点 ");
+        click(cx, "horizontal-measured-last");
+        let last = named_items(cx, "节点 ");
+        assert!(first.is_disjoint(&last));
+        assert!(last.contains("节点 2000"));
+    }
+
     fn click(cx: &mut gpui_kit::VisualTestContext, id: &'static str) {
         let point = cx.update(|w, _| {
             gpui_kit::base::test_support::snapshots(w)

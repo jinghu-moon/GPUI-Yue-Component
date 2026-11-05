@@ -16,6 +16,8 @@
 
 其后 Grid 的精确 cell 保留、span、约束 auto、RTL 和一维 Measured 受限动画也已交付，见[五项后续实施](2026-11-05-virtual-list-five-followups.md)。当前能力及限制以[组件文档第 2.5–2.6 节](../28-virtual-list.md#26-布局选择与二维边界)为准；本文件末尾另记随后未吸收的观察值 collector 原型。
 
+再后续的[四项验收](2026-11-05-virtual-list-four-acceptance.md)已经建立完整 key、epoch、预算与输出等价的私有消费者测试和跨帧计时，并完成混合能力、span 规模及当前 Windows 环境验证；不应继续把“缺少等价消费者测试”列为当前待办。公共 collector 仍未采用，下面保留旧原型和旧微实验的局限，不用新样本覆盖历史记录。
+
 ## 当轮建议顺序（历史）
 
 | 顺序 | 候选 | 当前事实 | 预期价值与限制 |
@@ -115,6 +117,8 @@ cargo test --manifest-path C:/Temp/yue-virtual-next-review-20261105/Cargo.toml -
 本轮只提交调研与观察文件，生产源码、生产 manifests／locks、参考项目均未修改；撤销本轮调研提交不会撤销已采用的 smooth。下一轮每个候选独立建立失败回归／固定 workload、实现提交和 ABBA 证据，未满足净收益或行为门槛则 revert 该候选，保留原始样本。
 
 ## Grid 已观察尺寸 epoch 候选：不吸收（2026-11-05）
+
+本节记录旧原型的未采用决定。后续已按[等价消费者验收](2026-11-05-virtual-list-four-acceptance.md#1-grid-观察尺寸的等价消费者)补齐完整行为与跨帧复用证据，吸收的是私有消费者模式和回归，仍没有公开 `VirtualGridObservedSizes` API。
 
 候选合同为：消费者显式提交已经观察到的 cell 宽高；同一 epoch 内按 cell 记录最大尺寸并按行／列取最大值；epoch 单调递增，换 epoch 清空样本并返回旧 epoch touched tracks，以便消费者恢复自己的默认尺寸；单 epoch cell 数受 budget 限制。它不做 intrinsic layout，也不改变 Grid 默认帧路径。
 

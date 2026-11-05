@@ -1,0 +1,265 @@
+=== native_before_a11y ===
+Original log SHA-256: 0e3a93402b80d661db5e773f8c7e7a3b46b0a2a057fcdd031257ecf18b4ebdb1
+test pages::virtual_layouts::native_acceptance::native_resize_visibility_resume ... NATIVE_ENV,displays=1
+NATIVE_DISPLAY,id=DisplayId(65537),bounds=Bounds { origin: Point { x: 0px, y: 0px }, size: Size { 2560px × 1440px } },refresh=Some(6.25ms)
+NATIVE_RESIZE,step=0,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=0,y=0
+NATIVE_RESIZE,step=1,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=113,y=397
+NATIVE_RESIZE,step=2,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=226,y=794
+NATIVE_RESIZE,step=3,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=339,y=1191
+NATIVE_RESIZE,step=4,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=452,y=1588
+NATIVE_RESIZE,step=5,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=565,y=1985
+NATIVE_RESIZE,step=6,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=678,y=2382
+NATIVE_RESIZE,step=7,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=791,y=2779
+NATIVE_RESIZE,step=8,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=904,y=3176
+NATIVE_RESIZE,step=9,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1017,y=3573
+NATIVE_RESIZE,step=10,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1130,y=3970
+NATIVE_RESIZE,step=11,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1243,y=4367
+NATIVE_RESIZE,step=12,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1356,y=4764
+NATIVE_RESIZE,step=13,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1469,y=5161
+NATIVE_RESIZE,step=14,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1582,y=5558
+NATIVE_RESIZE,step=15,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1695,y=5955
+NATIVE_RESIZE,step=16,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1808,y=6352
+NATIVE_RESIZE,step=17,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1921,y=6749
+NATIVE_RESIZE,step=18,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2034,y=7146
+NATIVE_RESIZE,step=19,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2147,y=7543
+NATIVE_RESIZE,step=20,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2260,y=7940
+NATIVE_RESIZE,step=21,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2373,y=8337
+NATIVE_RESIZE,step=22,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2486,y=8734
+NATIVE_RESIZE,step=23,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2599,y=9131
+NATIVE_VISIBILITY,hidden=true,restored=true,reading_offsets_preserved=true
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.86s
+test pages::virtual_layouts::native_tests::native_frozen_grid_and_masonry_cache_restore ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.47s
+test pages::virtual_layouts::native_tests::native_layouts_render_and_settle ... native layouts: grid=264, masonry=49, horizontal=28 renderer calls
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.46s
+test pages::virtual_layouts::native_tests::native_smooth_layouts_sample_and_settle ... native smooth: RTL frozen/spanned Grid x/y, Masonry and Measured sampled intermediate positions; measured jump tail settled; no GPU timing claim
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.06s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 40.10s
+
+=== native_after_a11y ===
+Original log SHA-256: c168abe844806e3475b451a29a01fc8a4bc5f48f6671680b286d330a7b6e5fdf
+test pages::virtual_layouts::native_acceptance::native_resize_visibility_resume ... NATIVE_ENV,displays=1
+NATIVE_DISPLAY,id=DisplayId(65537),bounds=Bounds { origin: Point { x: 0px, y: 0px }, size: Size { 2560px × 1440px } },refresh=Some(6.25ms)
+NATIVE_RESIZE,step=0,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=0,y=0
+NATIVE_RESIZE,step=1,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=113,y=397
+NATIVE_RESIZE,step=2,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=226,y=794
+NATIVE_RESIZE,step=3,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=339,y=1191
+NATIVE_RESIZE,step=4,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=452,y=1588
+NATIVE_RESIZE,step=5,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=565,y=1985
+NATIVE_RESIZE,step=6,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=678,y=2382
+NATIVE_RESIZE,step=7,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=791,y=2779
+NATIVE_RESIZE,step=8,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=904,y=3176
+NATIVE_RESIZE,step=9,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1017,y=3573
+NATIVE_RESIZE,step=10,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1130,y=3970
+NATIVE_RESIZE,step=11,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1243,y=4367
+NATIVE_RESIZE,step=12,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1356,y=4764
+NATIVE_RESIZE,step=13,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1469,y=5161
+NATIVE_RESIZE,step=14,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1582,y=5558
+NATIVE_RESIZE,step=15,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1695,y=5955
+NATIVE_RESIZE,step=16,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1808,y=6352
+NATIVE_RESIZE,step=17,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1921,y=6749
+NATIVE_RESIZE,step=18,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2034,y=7146
+NATIVE_RESIZE,step=19,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2147,y=7543
+NATIVE_RESIZE,step=20,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2260,y=7940
+NATIVE_RESIZE,step=21,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2373,y=8337
+NATIVE_RESIZE,step=22,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2486,y=8734
+NATIVE_RESIZE,step=23,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2599,y=9131
+NATIVE_VISIBILITY,hidden=true,restored=true,reading_offsets_preserved=true
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.87s
+test pages::virtual_layouts::native_tests::native_frozen_grid_and_masonry_cache_restore ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.47s
+test pages::virtual_layouts::native_tests::native_layouts_render_and_settle ... native layouts: grid=264, masonry=49, horizontal=28 renderer calls
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.48s
+test pages::virtual_layouts::native_tests::native_smooth_layouts_sample_and_settle ... native smooth: RTL frozen/spanned Grid x/y, Masonry and Measured sampled intermediate positions; measured jump tail settled; no GPU timing claim
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.07s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 40.28s
+
+=== initial_four_only ===
+Original log SHA-256: ca162716a16a3cf9506faebf449eb77747daca7914d8c68a98591dd77426f393
+test pages::virtual_layouts::native_acceptance::native_resize_visibility_resume ... NATIVE_ENV,displays=1
+NATIVE_DISPLAY,id=DisplayId(65537),bounds=Bounds { origin: Point { x: 0px, y: 0px }, size: Size { 2560px × 1440px } },refresh=Some(6.25ms)
+NATIVE_RESIZE,step=0,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=0,y=0
+NATIVE_RESIZE,step=1,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=113,y=397
+NATIVE_RESIZE,step=2,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=226,y=794
+NATIVE_RESIZE,step=3,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=339,y=1191
+NATIVE_RESIZE,step=4,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=452,y=1588
+NATIVE_RESIZE,step=5,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=565,y=1985
+NATIVE_RESIZE,step=6,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=678,y=2382
+NATIVE_RESIZE,step=7,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=791,y=2779
+NATIVE_RESIZE,step=8,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=904,y=3176
+NATIVE_RESIZE,step=9,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1017,y=3573
+NATIVE_RESIZE,step=10,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1130,y=3970
+NATIVE_RESIZE,step=11,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1243,y=4367
+NATIVE_RESIZE,step=12,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1356,y=4764
+NATIVE_RESIZE,step=13,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1469,y=5161
+NATIVE_RESIZE,step=14,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1582,y=5558
+NATIVE_RESIZE,step=15,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1695,y=5955
+NATIVE_RESIZE,step=16,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=1808,y=6352
+NATIVE_RESIZE,step=17,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=1921,y=6749
+NATIVE_RESIZE,step=18,rtl=false,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2034,y=7146
+NATIVE_RESIZE,step=19,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2147,y=7543
+NATIVE_RESIZE,step=20,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2260,y=7940
+NATIVE_RESIZE,step=21,rtl=true,scale=1.5,rem=20,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2373,y=8337
+NATIVE_RESIZE,step=22,rtl=false,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1100px × 760px } },x=2486,y=8734
+NATIVE_RESIZE,step=23,rtl=true,scale=1.5,rem=16,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 900px × 680px } },x=2599,y=9131
+NATIVE_VISIBILITY,hidden=true,restored=true,reading_offsets_preserved=true
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.91s
+test pages::virtual_layouts::native_tests::native_frozen_grid_and_masonry_cache_restore ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.47s
+test pages::virtual_layouts::native_tests::native_layouts_render_and_settle ... native layouts: grid=264, masonry=49, horizontal=28 renderer calls
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.46s
+test pages::virtual_layouts::native_tests::native_smooth_layouts_sample_and_settle ... native smooth: RTL frozen/spanned Grid x/y, Masonry and Measured sampled intermediate positions; measured jump tail settled; no GPU timing claim
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 1.05s
+
+=== interactive_before_a11y ===
+Original log SHA-256: 4363474c7adf9ce6adb4569d84f3ca3e82035973dc5c69da3ba0a9454af08567
+running 1 test
+test pages::virtual_layouts::native_acceptance::native_interactive_acceptance_surface ... NATIVE_INTERACTIVE,opened=true,displays=1,timeout_seconds=300
+NATIVE_INTERACTIVE,tick=0,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=283,tab=0,rtl=false,span=false,frozen=true,x=0,y=1750,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=406,tab=0,rtl=true,span=false,frozen=true,x=0.0052490234375,y=1750,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=471,tab=0,rtl=true,span=false,frozen=true,x=700.0052490234375,y=1750,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=597,tab=0,rtl=true,span=true,frozen=true,x=700.0052490234375,y=1750,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=663,tab=0,rtl=true,span=true,frozen=true,x=700.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=713,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=952,tab=1,rtl=true,span=true,frozen=true,x=0,y=0,masonry_y=0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=1004,tab=2,rtl=true,span=true,frozen=true,x=0,y=0,masonry_y=0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 314.20s
+
+=== interactive_after_a11y ===
+Original log SHA-256: 0da8a5773f91b5a9b5c0f2301a821b4e8c6619624f6bf72673c119d69b71d9ac
+running 1 test
+test pages::virtual_layouts::native_acceptance::native_interactive_acceptance_surface ... NATIVE_INTERACTIVE,opened=true,displays=1,timeout_seconds=300
+NATIVE_INTERACTIVE,tick=0,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=-0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=224,tab=1,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=0,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=275,tab=1,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=1050,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=331,tab=1,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=368,tab=2,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=410,tab=2,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=639.9999923706055,horizontal_x=335033.33337402344,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=612,tab=2,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=639.9999923706055,horizontal_x=333783.33337402344,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=675,tab=0,rtl=false,span=false,frozen=true,x=0,y=0,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=732,tab=0,rtl=true,span=false,frozen=true,x=0.0052490234375,y=0,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=808,tab=0,rtl=true,span=true,frozen=true,x=0.0052490234375,y=1750,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+NATIVE_INTERACTIVE,tick=869,tab=0,rtl=true,span=true,frozen=true,x=700.0052490234375,y=1750,masonry_y=639.9999923706055,horizontal_x=0,scale=1.5,bounds=Bounds { origin: Point { x: 40px, y: 51.333332px }, size: Size { 1200px × 800px } },visible=true
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 243.67s
+
+=== a11y_red ===
+Original log SHA-256: 3c15e209f1decd74fb1f8d69fd94a99a32d12241c3cabb1227a4ba97910ac685
+Compiling windows v0.62.2
+   Compiling gpui-pre v0.3.9 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-pre)
+   Compiling accesskit_windows v0.34.0
+   Compiling gpui-pre-windows v0.3.9 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-pre-windows)
+   Compiling gpui-base v0.8.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\vendor\gpui-base)
+   Compiling gpui-pre-platform v0.3.9
+   Compiling gpui-kit v0.8.0
+   Compiling yue-component-icons v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component-icons)
+   Compiling yue-component v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\crates\yue-component)
+   Compiling windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `test` profile [unoptimized] target(s) in 1m 05s
+     Running unittests src\main.rs (target\debug\deps\windows_showcase-d556b9de59fc8cb8.exe)
+
+running 2 tests
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::tests::horizontal_accessibility_names_follow_measured_scroll' (44308) panicked at examples\windows-showcase\src\pages\virtual_layouts.rs:468:45:
+every item needs an accessible name
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test pages::virtual_layouts::tests::horizontal_accessibility_names_follow_measured_scroll ... FAILED
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+
+thread 'pages::virtual_layouts::tests::masonry_accessibility_names_follow_scroll_rebuild_and_reflow' (43320) panicked at examples\windows-showcase\src\pages\virtual_layouts.rs:463:13:
+visible virtual items need semantic nodes
+test pages::virtual_layouts::tests::masonry_accessibility_names_follow_scroll_rebuild_and_reflow ... FAILED
+
+failures:
+
+failures:
+    pages::virtual_layouts::tests::horizontal_accessibility_names_follow_measured_scroll
+    pages::virtual_layouts::tests::masonry_accessibility_names_follow_scroll_rebuild_and_reflow
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p windows-showcase --bin windows-showcase`
+
+=== a11y_green ===
+Original log SHA-256: ee9acdd580203fec44a092956b7f904e360a192869c0a58bd40258d3cbac8643
+Compiling windows-showcase v0.1.0 (D:\100_Projects\110_Daily\Yue-GPUI-Component\examples\windows-showcase)
+    Finished `test` profile [unoptimized] target(s) in 3.90s
+     Running unittests src\main.rs (target\debug\deps\windows_showcase-d556b9de59fc8cb8.exe)
+
+running 2 tests
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+test pages::virtual_layouts::tests::horizontal_accessibility_names_follow_measured_scroll ... ok
+YueTooltip requires yue_component::init before creating a Base Root; keeping the trigger without a tooltip
+test pages::virtual_layouts::tests::masonry_accessibility_names_follow_scroll_rebuild_and_reflow ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.13s
+
+=== workspace ===
+Original log SHA-256: 05f3ab9b24263239fb9a24f1397f8d21e3ca9230a4cb0dd90b629e4cd90ee681
+    Finished `test` profile [unoptimized] target(s) in 50.30s
+test result: ok. 30 passed; 0 failed; 7 ignored; 0 measured; 0 filtered out; finished in 30.02s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 354 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 31.43s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.46s
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.40s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.42s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.61s
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.45s
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+test result: ok. 182 passed; 0 failed; 10 ignored; 0 measured; 0 filtered out; finished in 16.01s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.00s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+=== clippy ===
+Original log SHA-256: 33a7e11395e472b84de4888d71349d2df5ca62965331ca752608787014609106
+    Finished `dev` profile [unoptimized] target(s) in 35.37s
+
+=== vendor_contracts ===
+Original log SHA-256: f30f719694944ced703c64f771b5834b73fa2a863b7eb9e840645171a912f87d
+Building native contracts
+native: 16 required contracts passed
+Building base contracts
+base: 4 required contracts passed
+Source manifests/locks unchanged. Report: D:\100_Projects\110_Daily\Yue-GPUI-Component\target\virtualization-contracts\last-run.json
+
+=== no_default_features ===
+Original log SHA-256: 70394ded83cc0c91b275993a601a36c539726eaa28c0eb5f68c58f3c9f1b6888
+    Finished `test` profile [unoptimized] target(s) in 16.50s
+test result: ok. 354 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 30.98s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.33s
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.44s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+test result: ok. 38 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 11.00s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+test result: ok. 55 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.59s
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.41s
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+test result: ok. 182 passed; 0 failed; 10 ignored; 0 measured; 0 filtered out; finished in 14.68s
+test result: ok. 35 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.56s

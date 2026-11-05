@@ -1,0 +1,128 @@
+Windows UIA excerpts observed through native computer-use, 2026-11-05.
+These are selected lines, not a complete UIA dump or an audio transcript.
+Window: Yue Virtualization Interactive Acceptance
+Actual display scale: 1.5. The helper uses the production VirtualLayoutsPage.
+Screenshots were visually inspected during the session; no screenshot artifact is archived.
+
+BEFORE — keyboard Right switches from Grid to Masonry; cards are visible.
+    382 选项卡面板 动态 Masonry
+        385 列表
+Focused element: 9 选项卡项目 (selectable) 动态 Masonry
+No ListItem nodes were exposed.
+
+BEFORE — keyboard Right switches to Horizontal Measured.
+    387 选项卡面板 横向 Measured
+        389 列表
+            390 列表项目
+            391 列表项目
+            392 列表项目
+            393 列表项目
+            394 列表项目
+            395 列表项目
+            396 列表项目
+Focused element: 10 选项卡项目 (selectable) 横向 Measured
+
+AFTER — keyboard Right switches from Grid to Masonry.
+    105 选项卡面板 动态 Masonry
+        108 列表
+            109 列表项目 卡片 1 · 第 1 列
+            110 列表项目 卡片 2 · 第 2 列
+            111 列表项目 卡片 3 · 第 3 列
+            112 列表项目 卡片 4 · 第 1 列
+            113 列表项目 卡片 5 · 第 2 列
+            114 列表项目 卡片 6 · 第 3 列
+            115 列表项目 卡片 7 · 第 2 列
+            116 列表项目 卡片 8 · 第 1 列
+            117 列表项目 卡片 9 · 第 3 列
+            118 列表项目 卡片 10 · 第 2 列
+            119 列表项目 卡片 11 · 第 3 列
+            120 列表项目 卡片 12 · 第 1 列
+            121 列表项目 卡片 13 · 第 2 列
+            122 列表项目 卡片 14 · 第 3 列
+Focused element: 9 选项卡项目 (selectable) 动态 Masonry
+
+AFTER — native wheel injection down, requested distance 3000; actual owner y=1050.
+The UIA list has 14 named items, including:
+            124 列表项目 卡片 26 · 第 2 列
+            125 列表项目 卡片 27 · 第 3 列
+            126 列表项目 卡片 28 · 第 1 列
+            127 列表项目 卡片 29 · 第 2 列
+            128 列表项目 卡片 30 · 第 3 列
+            129 列表项目 卡片 31 · 第 2 列
+            130 列表项目 卡片 32 · 第 1 列
+            131 列表项目 卡片 33 · 第 3 列
+            132 列表项目 卡片 34 · 第 2 列
+            133 列表项目 卡片 35 · 第 3 列
+            134 列表项目 卡片 36 · 第 1 列
+            135 列表项目 卡片 37 · 第 2 列
+            136 列表项目 卡片 38 · 第 3 列
+            137 列表项目 卡片 40 · 第 1 列
+
+AFTER — click cache/rebuild; 17 named items were exposed, including:
+            138 列表项目 卡片 23 · 第 2 列
+            139 列表项目 卡片 24 · 第 1 列
+            140 列表项目 卡片 25 · 第 3 列
+            124 列表项目 卡片 26 · 第 2 列
+Focused element: 106 按钮 缓存并重建 Masonry
+
+AFTER — click three/five lanes; 24 named items were exposed, including:
+            141 列表项目 卡片 20 · 第 4 列
+            142 列表项目 卡片 22 · 第 2 列
+            138 列表项目 卡片 23 · 第 5 列
+            139 列表项目 卡片 24 · 第 3 列
+            140 列表项目 卡片 25 · 第 1 列
+            124 列表项目 卡片 26 · 第 4 列
+Focused element: 107 按钮 切换三列／五列
+The changing buffer/reflow working set is not an assertion of identical pixel offsets.
+
+AFTER — keyboard Right switches to Horizontal Measured.
+    148 选项卡面板 横向 Measured
+        150 列表
+            151 列表项目 节点 1
+            152 列表项目 节点 2
+            153 列表项目 节点 3
+            154 列表项目 节点 4
+            155 列表项目 节点 5
+            156 列表项目 节点 6
+            157 列表项目 节点 7
+Focused element: 10 选项卡项目 (selectable) 横向 Measured
+
+AFTER — click last node, then native wheel left requested 2500.
+Before wheel:
+            158 列表项目 节点 1995
+            159 列表项目 节点 1996
+            160 列表项目 节点 1997
+            161 列表项目 节点 1998
+            162 列表项目 节点 1999
+            163 列表项目 节点 2000
+After wheel:
+            164 列表项目 节点 1987
+            165 列表项目 节点 1988
+            166 列表项目 节点 1989
+            167 列表项目 节点 1990
+            168 列表项目 节点 1991
+            169 列表项目 节点 1992
+            170 列表项目 节点 1993
+Focused element: 149 按钮 定位最后节点
+Actual owner x changed from 335033.33337402344 to 333783.33337402344.
+An earlier left injection at the start and right injection at the end were clamped;
+those attempts were not counted as successful content movement.
+
+AFTER — Grid RTL + span + native two-axis wheel.
+At origin, exactly one merged cell and no covered 2x2..3x4 children:
+            177 项 2 × 2 · 合并 2×3
+After down requested 5000 and left requested 2000, actual x=700.0052490234375,y=1750.
+The grid exposed 108 named cells. Frozen excerpts:
+            251 项 1 × 6
+            412 项 1 × 13
+            342 项 50 × 1
+            352 项 60 × 1
+            264 项 1 × 1
+The right frozen column and top frozen row were visually inspected.
+Window Close was clicked and its disappearance confirmed; fixture exited successfully.
+
+LIMITS
+UIA names and keyboard tab switching are observed. Narrator was not launched,
+speech was not recorded or listened to, and browse/read-all behavior is unverified.
+No real cross-DPI or multi-monitor transition was available. rem changes are font zoom.
+These input injections are real native events, not human reaction/latency measurements.

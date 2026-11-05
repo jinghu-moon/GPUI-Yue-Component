@@ -70,4 +70,66 @@ python tools/compare-virtualization.py --before 3347e14 --label <new-label> --da
 
 ## 4. Windows 实窗验收
 
-待本项验证完成后记录；真实窗口、headless CPU 和无法覆盖的硬件条件分别记录。
+已完成当前 Windows 环境可执行的原生窗口、输入、UIA 和时序检查，并修复实窗发现的 Showcase 消费者语义缺口。跨 DPI／多显示器迁移和 Narrator 实际朗读仍未覆盖，不能把本项写成所有硬件条件均已验收。
+
+新增 [native_acceptance.rs](../../examples/windows-showcase/src/pages/virtual_layouts/native_acceptance.rs)：自动探针在真实 Windows 窗口运行 24 轮 1100×760／900×680 resize、16／20 rem、LTR／RTL、span 与双轴定位，检查逻辑位置、RTL 原生投影、冻结工作集有界；实际最小化至不可见后激活恢复，阅读偏移保持。手动 helper 只打开生产 `VirtualLayoutsPage`，记录状态并设定约 300 秒的等待循环，实际退出受系统调度影响；其 `1 passed` 仅代表窗口流程结束，不代表自动通过视觉／读屏断言。原生 runner 新增 `-IncludeFrameProfile`，5 个探针各自独立进程，避免共享 Win32 全局状态。
+
+本机 GPUI 只枚举到 1 个显示环境，逻辑 2560×1440，真实 scale=1.5，刷新间隔 6.25ms。系统枚举的活动显示适配器为 RTX 4070 Ti SUPER，另有 GameViewer 虚拟适配器；没有独立查询 GPUI 最终渲染 adapter 的身份。Windows、CPU、驱动、编译器、锁文件和源码身份见[机器记录](virtual-list-four-acceptance-native-2026-11-05.json)。改变 rem 是字体／界面缩放测试，不是更换显示器或真实 DPI 迁移。
+
+### 原生输入与可访问性修复
+
+通过原生窗口注入键盘／滚轮并观察 UIA 和截图：Grid 的冻结首行首列、RTL 镜像、2×3 合并 origin 唯一呈现、合并覆盖项不重复，以及滚动后的命名 cell 工作集均符合观察。修复后双轴滚动的 UIA 为 108 个 cell，包含冻结条带；工具注入距离和实际逻辑位移并不相同，实际 `x=700.0052490234375,y=1750` 已记录，不能拿请求的滚轮数值声称同等像素位移或输入延迟。
+
+本轮发现两处真实缺口：Masonry 显示卡片但 UIA 的 List 没有条目；横向 Measured 有 ListItem 却没有名称。先新增生产页回归，得到 0 passed／2 failed，再在 renderer 根补 `ListItem`、复用可见标题的名称、内容说明及集合位置／总数；横向关闭默认 item role，避免重复无名包装。没有给 Base 增加业务命名 API，也没有修改可见布局。两个回归随后通过，覆盖滚动后的名称替换、Masonry 缓存重建／五列 reflow、横向第 2000 项和语义工作集有界／名称唯一。
+
+原生 UIA 复验中，Masonry 初始／滚后分别有 14 个命名条目，重建后 17 个，五列 reflow 后 24 个；名称随卡片与列归属更新。横向初始有 7 个命名条目，末端 6 个，原生向前滚动后为“节点 1987”至“节点 1993”共 7 个。键盘 Right 切换标签、按钮操作、窗口关闭退出均已实际观察。前后 [UIA 摘录](virtual-list-four-acceptance-uia-2026-11-05.txt)及[失败／通过、实窗状态记录](virtual-list-four-acceptance-native-transcript-2026-11-05.txt)保留；截图当场检查，未归档成图片文件。
+
+这些证据确认 UIA 条目可识别，不等于 Narrator 语音、浏览模式或全文朗读均已通过。本轮未启动 Narrator，也没有采集／试听声音。仍需在带声音的读屏环境完成该项；不将 UIA 名称检查改写为“已通过屏幕阅读器验收”。
+
+### 原生 draw／present 工作样本
+
+修复后 Release、offline、locked 的 5 个独立原生探针全部通过。Frame 探针含 Grid、Masonry 滚动、Masonry 滚动中 reflow、横向 Measured，分别在 rem 16／20 下运行；每组丢弃 12 个预热 step，记录 96 个 draw，共 768 个最终样本。修复前的另一组 768 个样本一并保留，[原始 CSV](virtual-list-four-acceptance-native-2026-11-05.csv)合计 1,536 行，不挑选有利轮次。解析使用行内 `FRAME,case=`，包含 libtest 前缀后的首条数据，避免每进程漏掉首样本。
+
+| 场景／rem | draw P50 | draw P95 | draw P99 | draw 超过 6.25ms |
+| --- | ---: | ---: | ---: | ---: |
+| Grid／16 | 3.515 ms | 5.303 ms | 6.633 ms | 1 / 96 |
+| Grid／20 | 3.867 ms | 5.577 ms | 5.957 ms | 0 / 96 |
+| Masonry 滚动／16 | 1.654 ms | 2.575 ms | 3.145 ms | 0 / 96 |
+| Masonry 滚动／20 | 1.383 ms | 2.432 ms | 3.675 ms | 0 / 96 |
+| Masonry reflow／16 | 1.665 ms | 2.629 ms | 3.255 ms | 0 / 96 |
+| Masonry reflow／20 | 1.776 ms | 2.730 ms | 3.241 ms | 0 / 96 |
+| 横向 Measured／16 | 1.109 ms | 1.544 ms | 1.803 ms | 0 / 96 |
+| 横向 Measured／20 | 1.106 ms | 1.654 ms | 2.040 ms | 0 / 96 |
+
+P50 为中位数，P95／P99 为 nearest rank；全部分段与 CPU present 时长见 JSON／CSV。这里是原生应用侧 draw／present 工作，输入由 owner 定时写入；不是 GPU 完成时间、实际呈现 FPS 或硬件输入至显示延迟。Grid 的不利尾样本保留，因此不承诺稳定 160 FPS。可访问性修复前后的两轮并非 ABBA，语义输出也不同，且旧二进制重建前未另存哈希：旧样本只作历史环境记录，不作为“语义修复零开销”或性能采用依据。
+
+```powershell
+& tools/test-virtualization-native.ps1 -Release -Offline -IncludeFrameProfile
+# 手动验收 helper：只在明确授权真实桌面操作时运行。
+cargo test -p windows-showcase --release --features virtual-profile --offline --locked native_interactive_acceptance_surface -- --ignored --nocapture --test-threads=1
+```
+
+## 最终验证与回退
+
+- workspace（`headless-tests,virtual-profile`）：898 passed／17 ignored，包含 36 个 doctest；其中 virtual_list 182 passed／10 ignored。ignored 的性能／实窗探针不算普通自动覆盖，实窗 5 项另行运行并通过。
+- workspace all-targets Clippy `-D warnings`：通过。
+- 生产 pin 隔离 fixture：16 个 GPUI 原生合同＋4 个 Base 合同通过，生产 manifests／locks 不变；报告身份已纳入 native JSON。
+- yue-component 无默认特性＋`headless-tests`：866 passed／10 ignored；`cargo fmt --all -- --check`、`git diff --check` 及 99 个本地文档链接／锚点检查通过。原始样本、源码哈希和归档文件哈希已核对；提交推送状态由最终 Git 检查确认。
+
+```powershell
+cargo test --workspace --features headless-tests,virtual-profile --offline --locked -- --test-threads=1
+cargo clippy --workspace --all-targets --features headless-tests,virtual-profile --offline --locked -- -D warnings
+python tools/test-virtualization-contracts.py --offline
+cargo test -p yue-component --no-default-features --features headless-tests --offline --locked -- --test-threads=1
+cargo fmt --all -- --check
+```
+
+| 项目 | 独立 Git 点 | 回退范围 |
+| --- | --- | --- |
+| 等价观察尺寸消费者 | `dbd9512` | 私有案例、等价计时与第 1 项记录 |
+| 组合回归 | `a4a7bb5` | 混合轨迹及生命周期回归，不改生产行为 |
+| span 基线 | `3347e14` | 固定优化前 workload |
+| span 优化 | `954a94e` | 两处局部树剪枝与 oracle；可单独 revert 恢复旧生产路径 |
+| Windows 验收与语义修复 | 本文同批提交 | 原生探针、runner、Showcase 命名条目与第 4 项证据；可按提交独立 revert |
+
+参考目录保持只读；不执行 reset／force push。后续真正剩下的是跨 DPI／多显示器与 Narrator 声音验收，以及由真实消费者证明是否需要通用观察尺寸 API；不是再次把已完成的四项从头实施。

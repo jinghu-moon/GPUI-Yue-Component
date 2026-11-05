@@ -1,0 +1,984 @@
+{
+  "date": "2026-11-05",
+  "source_head_before_native_commit": "954a94e95b0b7a98387a790879a7ee21cd51e568",
+  "branch": "quality/virtualization-four-priorities-20261104",
+  "source_state": "HEAD plus uncommitted native acceptance and Showcase item semantics; exact current files are hashed below",
+  "baseline_production_page_commit": "954a94e",
+  "baseline_executable_sha256": null,
+  "baseline_identity_limit": "The pre-a11y native binary was overwritten on rebuild without a saved hash. Its samples are retained as historical context, not an equivalence/performance adoption claim.",
+  "final_native_executable_sha256": "def602e500cdf5e50beb3414e057962b5c7919bcbefb5941eb572bb1c7aa71f5",
+  "source_sha256": {
+    "Cargo.toml": "2ce3109fc91ad09a0475827605a59147e01362cfa2f9ded8bfb4e31f39c6beb2",
+    "Cargo.lock": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+    "examples/windows-showcase/Cargo.toml": "dced6286a232467ec2ca5178536cecac6b96eba74b6923f19970b971e191dca6",
+    "examples/windows-showcase/src/pages/virtual_layouts.rs": "752569c2c231e62a338f6c508a1b5c7fa24dbba9953df806f147d37957aacd31",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_acceptance.rs": "8b539cbad9f00c9b5de7ce3f20b4b090f4accef89e5d77f180ee689661fa4541",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_tests.rs": "ff1549f3d48310f54dfe1d1daf0ab20155d9616394f29798fa9e8ab5474f8c1a",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_profile.rs": "63d0715d702e2cfd9a272b274dfb1f5e6505aa90546e29b2e896b232ed94c7ec",
+    "tools/test-virtualization-native.ps1": "160bc2271b96490d11923979efbf09cd2bf604161c46f9f52c01ad4fdce0ce47",
+    "tools/virtualization-contracts.json": "d72bc412a8c693958c3d05d8459a00755d3857c5e2f8b1c208dcb889ae7f4afc"
+  },
+  "toolchain": {
+    "rustc": "1.98.1 (48a229cea 2026-09-01)",
+    "cargo": "1.98.1 (797e8a9bc 2026-08-05)"
+  },
+  "environment": {
+    "os": "Windows 11 IoT Enterprise LTSC 10.0.26100 build 26100",
+    "cpu": "13th Gen Intel Core i5-13600KF; 14 cores / 20 logical processors",
+    "adapters": [
+      {
+        "name": "NVIDIA GeForce RTX 4070 Ti SUPER",
+        "driver": "32.0.16.2101",
+        "current_mode": [
+          3840,
+          2160
+        ]
+      },
+      {
+        "name": "GameViewer Virtual Display Adapter",
+        "driver": "15.6.5.199",
+        "current_mode": null
+      }
+    ],
+    "render_adapter_identity": "not independently queried from GPUI renderer; adapters above are OS enumeration",
+    "gpui_displays": 1,
+    "logical_display_size": [
+      2560,
+      1440
+    ],
+    "actual_scale": 1.5,
+    "refresh_interval_ns": 6250000,
+    "rem_sizes": [
+      16,
+      20
+    ],
+    "font_zoom_is_not_dpi_transition": true
+  },
+  "native_protocol": {
+    "command": "& tools/test-virtualization-native.ps1 -Release -Offline -IncludeFrameProfile",
+    "separate_processes": 5,
+    "warmup_steps_per_case": 12,
+    "measured_steps_per_case": 96,
+    "case_mapping": {
+      "0": "Grid dual axis",
+      "1": "Masonry scrolling",
+      "2": "Masonry reflow while scrolling",
+      "3": "horizontal Measured"
+    },
+    "window_sizes_resize_probe": [
+      [
+        1100,
+        760
+      ],
+      [
+        900,
+        680
+      ]
+    ],
+    "resize_cycles": 24,
+    "measured_scope": "native application draw and CPU present work, owner-driven; not GPU completion, actual presented FPS, or hardware input-to-display latency",
+    "comparison_limit": "Before/after-a11y runs are sequential environment records, not ABBA, not equivalent semantics, and not a claimed speedup or zero-overhead proof",
+    "percentiles": "median for P50; nearest rank for P95/P99; durations in nanoseconds",
+    "stats": {
+      "native_before_a11y": {
+        "native-0-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 5509800.0,
+              "p95_nearest_rank": 7529300,
+              "p99_nearest_rank": 8067700,
+              "max": 8067700
+            },
+            "layout_ns": {
+              "median": 632650.0,
+              "p95_nearest_rank": 852100,
+              "p99_nearest_rank": 1054600,
+              "max": 1054600
+            },
+            "prepaint_ns": {
+              "median": 3642500.0,
+              "p95_nearest_rank": 5256400,
+              "p99_nearest_rank": 5512500,
+              "max": 5512500
+            },
+            "paint_ns": {
+              "median": 837250.0,
+              "p95_nearest_rank": 1207200,
+              "p99_nearest_rank": 1937300,
+              "max": 1937300
+            },
+            "present_ns": {
+              "median": 90550.0,
+              "p95_nearest_rank": 155500,
+              "p99_nearest_rank": 303500,
+              "max": 303500
+            }
+          },
+          "draw_over_refresh": 31,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-0-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 6438300.0,
+              "p95_nearest_rank": 8291900,
+              "p99_nearest_rank": 8860500,
+              "max": 8860500
+            },
+            "layout_ns": {
+              "median": 651700.0,
+              "p95_nearest_rank": 1032600,
+              "p99_nearest_rank": 1528700,
+              "max": 1528700
+            },
+            "prepaint_ns": {
+              "median": 4252400.0,
+              "p95_nearest_rank": 5666900,
+              "p99_nearest_rank": 6210900,
+              "max": 6210900
+            },
+            "paint_ns": {
+              "median": 954100.0,
+              "p95_nearest_rank": 1339000,
+              "p99_nearest_rank": 1709500,
+              "max": 1709500
+            },
+            "present_ns": {
+              "median": 87800.0,
+              "p95_nearest_rank": 123100,
+              "p99_nearest_rank": 167300,
+              "max": 167300
+            }
+          },
+          "draw_over_refresh": 53,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-1-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 2537450.0,
+              "p95_nearest_rank": 3355300,
+              "p99_nearest_rank": 4305600,
+              "max": 4305600
+            },
+            "layout_ns": {
+              "median": 604000.0,
+              "p95_nearest_rank": 940000,
+              "p99_nearest_rank": 1175700,
+              "max": 1175700
+            },
+            "prepaint_ns": {
+              "median": 1103900.0,
+              "p95_nearest_rank": 1633600,
+              "p99_nearest_rank": 2112800,
+              "max": 2112800
+            },
+            "paint_ns": {
+              "median": 515300.0,
+              "p95_nearest_rank": 756000,
+              "p99_nearest_rank": 834400,
+              "max": 834400
+            },
+            "present_ns": {
+              "median": 126750.0,
+              "p95_nearest_rank": 190900,
+              "p99_nearest_rank": 286900,
+              "max": 286900
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-1-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 2278250.0,
+              "p95_nearest_rank": 3903300,
+              "p99_nearest_rank": 4830800,
+              "max": 4830800
+            },
+            "layout_ns": {
+              "median": 501850.0,
+              "p95_nearest_rank": 822700,
+              "p99_nearest_rank": 1321800,
+              "max": 1321800
+            },
+            "prepaint_ns": {
+              "median": 1014300.0,
+              "p95_nearest_rank": 1872200,
+              "p99_nearest_rank": 2203000,
+              "max": 2203000
+            },
+            "paint_ns": {
+              "median": 510050.0,
+              "p95_nearest_rank": 907600,
+              "p99_nearest_rank": 1130600,
+              "max": 1130600
+            },
+            "present_ns": {
+              "median": 116800.0,
+              "p95_nearest_rank": 202800,
+              "p99_nearest_rank": 314500,
+              "max": 314500
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-2-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 2795350.0,
+              "p95_nearest_rank": 4160300,
+              "p99_nearest_rank": 4442700,
+              "max": 4442700
+            },
+            "layout_ns": {
+              "median": 625250.0,
+              "p95_nearest_rank": 906700,
+              "p99_nearest_rank": 1346300,
+              "max": 1346300
+            },
+            "prepaint_ns": {
+              "median": 1351000.0,
+              "p95_nearest_rank": 2164900,
+              "p99_nearest_rank": 2459500,
+              "max": 2459500
+            },
+            "paint_ns": {
+              "median": 575650.0,
+              "p95_nearest_rank": 836300,
+              "p99_nearest_rank": 966900,
+              "max": 966900
+            },
+            "present_ns": {
+              "median": 139650.0,
+              "p95_nearest_rank": 230200,
+              "p99_nearest_rank": 281800,
+              "max": 281800
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-2-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 2528550.0,
+              "p95_nearest_rank": 4026200,
+              "p99_nearest_rank": 6336200,
+              "max": 6336200
+            },
+            "layout_ns": {
+              "median": 598900.0,
+              "p95_nearest_rank": 891300,
+              "p99_nearest_rank": 1119600,
+              "max": 1119600
+            },
+            "prepaint_ns": {
+              "median": 1123500.0,
+              "p95_nearest_rank": 2132800,
+              "p99_nearest_rank": 3894000,
+              "max": 3894000
+            },
+            "paint_ns": {
+              "median": 550300.0,
+              "p95_nearest_rank": 873700,
+              "p99_nearest_rank": 1170900,
+              "max": 1170900
+            },
+            "present_ns": {
+              "median": 130350.0,
+              "p95_nearest_rank": 221400,
+              "p99_nearest_rank": 269700,
+              "max": 269700
+            }
+          },
+          "draw_over_refresh": 1,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-3-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1567800.0,
+              "p95_nearest_rank": 2548500,
+              "p99_nearest_rank": 3001800,
+              "max": 3001800
+            },
+            "layout_ns": {
+              "median": 505750.0,
+              "p95_nearest_rank": 794100,
+              "p99_nearest_rank": 868000,
+              "max": 868000
+            },
+            "prepaint_ns": {
+              "median": 639600.0,
+              "p95_nearest_rank": 1113000,
+              "p99_nearest_rank": 1258000,
+              "max": 1258000
+            },
+            "paint_ns": {
+              "median": 237000.0,
+              "p95_nearest_rank": 430100,
+              "p99_nearest_rank": 541800,
+              "max": 541800
+            },
+            "present_ns": {
+              "median": 113300.0,
+              "p95_nearest_rank": 204300,
+              "p99_nearest_rank": 239000,
+              "max": 239000
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-3-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1889650.0,
+              "p95_nearest_rank": 2483500,
+              "p99_nearest_rank": 3019500,
+              "max": 3019500
+            },
+            "layout_ns": {
+              "median": 626900.0,
+              "p95_nearest_rank": 820500,
+              "p99_nearest_rank": 998800,
+              "max": 998800
+            },
+            "prepaint_ns": {
+              "median": 752650.0,
+              "p95_nearest_rank": 1080700,
+              "p99_nearest_rank": 1398000,
+              "max": 1398000
+            },
+            "paint_ns": {
+              "median": 282150.0,
+              "p95_nearest_rank": 430100,
+              "p99_nearest_rank": 494100,
+              "max": 494100
+            },
+            "present_ns": {
+              "median": 143250.0,
+              "p95_nearest_rank": 203300,
+              "p99_nearest_rank": 266900,
+              "max": 266900
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        }
+      },
+      "native_after_a11y": {
+        "native-0-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 3515300.0,
+              "p95_nearest_rank": 5302600,
+              "p99_nearest_rank": 6632600,
+              "max": 6632600
+            },
+            "layout_ns": {
+              "median": 348650.0,
+              "p95_nearest_rank": 684200,
+              "p99_nearest_rank": 827200,
+              "max": 827200
+            },
+            "prepaint_ns": {
+              "median": 2180450.0,
+              "p95_nearest_rank": 3479000,
+              "p99_nearest_rank": 4232900,
+              "max": 4232900
+            },
+            "paint_ns": {
+              "median": 597300.0,
+              "p95_nearest_rank": 957100,
+              "p99_nearest_rank": 1196400,
+              "max": 1196400
+            },
+            "present_ns": {
+              "median": 75450.0,
+              "p95_nearest_rank": 120500,
+              "p99_nearest_rank": 270900,
+              "max": 270900
+            }
+          },
+          "draw_over_refresh": 1,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-0-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 3866900.0,
+              "p95_nearest_rank": 5576600,
+              "p99_nearest_rank": 5956800,
+              "max": 5956800
+            },
+            "layout_ns": {
+              "median": 369500.0,
+              "p95_nearest_rank": 561200,
+              "p99_nearest_rank": 888100,
+              "max": 888100
+            },
+            "prepaint_ns": {
+              "median": 2422650.0,
+              "p95_nearest_rank": 3725500,
+              "p99_nearest_rank": 3968600,
+              "max": 3968600
+            },
+            "paint_ns": {
+              "median": 659500.0,
+              "p95_nearest_rank": 1036900,
+              "p99_nearest_rank": 1156600,
+              "max": 1156600
+            },
+            "present_ns": {
+              "median": 75600.0,
+              "p95_nearest_rank": 106800,
+              "p99_nearest_rank": 189200,
+              "max": 189200
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-1-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1653700.0,
+              "p95_nearest_rank": 2575100,
+              "p99_nearest_rank": 3145200,
+              "max": 3145200
+            },
+            "layout_ns": {
+              "median": 365600.0,
+              "p95_nearest_rank": 619000,
+              "p99_nearest_rank": 703300,
+              "max": 703300
+            },
+            "prepaint_ns": {
+              "median": 691950.0,
+              "p95_nearest_rank": 1264100,
+              "p99_nearest_rank": 1757100,
+              "max": 1757100
+            },
+            "paint_ns": {
+              "median": 310050.0,
+              "p95_nearest_rank": 509000,
+              "p99_nearest_rank": 665100,
+              "max": 665100
+            },
+            "present_ns": {
+              "median": 94800.0,
+              "p95_nearest_rank": 155600,
+              "p99_nearest_rank": 204100,
+              "max": 204100
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-1-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1383300.0,
+              "p95_nearest_rank": 2432200,
+              "p99_nearest_rank": 3674700,
+              "max": 3674700
+            },
+            "layout_ns": {
+              "median": 309000.0,
+              "p95_nearest_rank": 597000,
+              "p99_nearest_rank": 789700,
+              "max": 789700
+            },
+            "prepaint_ns": {
+              "median": 588500.0,
+              "p95_nearest_rank": 1045700,
+              "p99_nearest_rank": 2041600,
+              "max": 2041600
+            },
+            "paint_ns": {
+              "median": 277950.0,
+              "p95_nearest_rank": 557500,
+              "p99_nearest_rank": 766100,
+              "max": 766100
+            },
+            "present_ns": {
+              "median": 79350.0,
+              "p95_nearest_rank": 129000,
+              "p99_nearest_rank": 178900,
+              "max": 178900
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-2-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1665000.0,
+              "p95_nearest_rank": 2629400,
+              "p99_nearest_rank": 3255000,
+              "max": 3255000
+            },
+            "layout_ns": {
+              "median": 346700.0,
+              "p95_nearest_rank": 592000,
+              "p99_nearest_rank": 716200,
+              "max": 716200
+            },
+            "prepaint_ns": {
+              "median": 745650.0,
+              "p95_nearest_rank": 1403500,
+              "p99_nearest_rank": 1782800,
+              "max": 1782800
+            },
+            "paint_ns": {
+              "median": 288200.0,
+              "p95_nearest_rank": 588200,
+              "p99_nearest_rank": 686000,
+              "max": 686000
+            },
+            "present_ns": {
+              "median": 81450.0,
+              "p95_nearest_rank": 128100,
+              "p99_nearest_rank": 166100,
+              "max": 166100
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-2-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1775950.0,
+              "p95_nearest_rank": 2730000,
+              "p99_nearest_rank": 3241000,
+              "max": 3241000
+            },
+            "layout_ns": {
+              "median": 374950.0,
+              "p95_nearest_rank": 656200,
+              "p99_nearest_rank": 1242800,
+              "max": 1242800
+            },
+            "prepaint_ns": {
+              "median": 762200.0,
+              "p95_nearest_rank": 1255400,
+              "p99_nearest_rank": 1960200,
+              "max": 1960200
+            },
+            "paint_ns": {
+              "median": 340450.0,
+              "p95_nearest_rank": 587700,
+              "p99_nearest_rank": 685400,
+              "max": 685400
+            },
+            "present_ns": {
+              "median": 97750.0,
+              "p95_nearest_rank": 184100,
+              "p99_nearest_rank": 217300,
+              "max": 217300
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-3-rem16": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1109050.0,
+              "p95_nearest_rank": 1544000,
+              "p99_nearest_rank": 1803000,
+              "max": 1803000
+            },
+            "layout_ns": {
+              "median": 355200.0,
+              "p95_nearest_rank": 500900,
+              "p99_nearest_rank": 759000,
+              "max": 759000
+            },
+            "prepaint_ns": {
+              "median": 453650.0,
+              "p95_nearest_rank": 606700,
+              "p99_nearest_rank": 756100,
+              "max": 756100
+            },
+            "paint_ns": {
+              "median": 162150.0,
+              "p95_nearest_rank": 266400,
+              "p99_nearest_rank": 300300,
+              "max": 300300
+            },
+            "present_ns": {
+              "median": 86900.0,
+              "p95_nearest_rank": 180600,
+              "p99_nearest_rank": 200800,
+              "max": 200800
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        },
+        "native-3-rem20": {
+          "samples": 96,
+          "timings_ns": {
+            "draw_ns": {
+              "median": 1106150.0,
+              "p95_nearest_rank": 1653500,
+              "p99_nearest_rank": 2039500,
+              "max": 2039500
+            },
+            "layout_ns": {
+              "median": 347400.0,
+              "p95_nearest_rank": 642400,
+              "p99_nearest_rank": 952800,
+              "max": 952800
+            },
+            "prepaint_ns": {
+              "median": 434450.0,
+              "p95_nearest_rank": 716000,
+              "p99_nearest_rank": 974800,
+              "max": 974800
+            },
+            "paint_ns": {
+              "median": 159750.0,
+              "p95_nearest_rank": 270600,
+              "p99_nearest_rank": 437800,
+              "max": 437800
+            },
+            "present_ns": {
+              "median": 84350.0,
+              "p95_nearest_rank": 120600,
+              "p99_nearest_rank": 233900,
+              "max": 233900
+            }
+          },
+          "draw_over_refresh": 0,
+          "scale_factors": [
+            1.5
+          ],
+          "refresh_intervals_ns": [
+            6250000
+          ]
+        }
+      }
+    }
+  },
+  "interactive": {
+    "fixture": "native_interactive_acceptance_surface",
+    "fixture_pass_is_not_automatic_a11y_assertion": true,
+    "source": "native CUA keyboard, wheel, UIA and visual inspection of production page",
+    "after_masonry_uia_counts": {
+      "initial": 14,
+      "scrolled": 14,
+      "rebuilt": 17,
+      "five_lanes": 24
+    },
+    "after_horizontal_uia_counts": {
+      "initial": 7,
+      "last": 6,
+      "wheel_back": 7
+    },
+    "after_grid_two_axis_uia_cells": 108,
+    "merged_origin_count": 1,
+    "native_input_distances": "tool injection distances are not equal to resulting logical owner distances; use transcript for actual offsets",
+    "uia_excerpts_sha256": "f70d1e53add211f59dd0fb4fa83060684fdf36f9238a1cbfd86b9ffcbbd0fe81"
+  },
+  "coverage_limits": [
+    "Only one physical scale was available; no cross-DPI/multi-monitor transition was tested.",
+    "UIA names are verified, but Narrator was not launched and spoken/browse/read-all behavior is not verified.",
+    "Screenshots were observed in session but are not archived as files.",
+    "At least one final draw exceeded the 6.25ms refresh interval; samples do not prove stable 160FPS."
+  ],
+  "checks": {
+    "native_before_a11y": {
+      "original_log_sha256": "0e3a93402b80d661db5e773f8c7e7a3b46b0a2a057fcdd031257ecf18b4ebdb1",
+      "original_log_path": "C:/Temp/yue-native-four-acceptance-20261105.log",
+      "test_totals": {
+        "targets": 5,
+        "passed": 5,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "native_after_a11y": {
+      "original_log_sha256": "c168abe844806e3475b451a29a01fc8a4bc5f48f6671680b286d330a7b6e5fdf",
+      "original_log_path": "C:/Temp/yue-native-four-acceptance-final-20261105.log",
+      "test_totals": {
+        "targets": 5,
+        "passed": 5,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "initial_four_only": {
+      "original_log_sha256": "ca162716a16a3cf9506faebf449eb77747daca7914d8c68a98591dd77426f393",
+      "original_log_path": "C:/Temp/yue-native-four-acceptance-initial-20261105.log",
+      "test_totals": {
+        "targets": 4,
+        "passed": 4,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "interactive_before_a11y": {
+      "original_log_sha256": "4363474c7adf9ce6adb4569d84f3ca3e82035973dc5c69da3ba0a9454af08567",
+      "original_log_path": "C:/Temp/yue-native-interactive-20261105.log",
+      "test_totals": {
+        "targets": 1,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "interactive_after_a11y": {
+      "original_log_sha256": "0da8a5773f91b5a9b5c0f2301a821b4e8c6619624f6bf72673c119d69b71d9ac",
+      "original_log_path": "C:/Temp/yue-native-interactive-final-20261105.log",
+      "test_totals": {
+        "targets": 1,
+        "passed": 1,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "a11y_red": {
+      "original_log_sha256": "3c15e209f1decd74fb1f8d69fd94a99a32d12241c3cabb1227a4ba97910ac685",
+      "original_log_path": "C:/Temp/yue-native-a11y-red-20261105.log",
+      "test_totals": {
+        "targets": 1,
+        "passed": 0,
+        "failed": 2,
+        "ignored": 0
+      }
+    },
+    "a11y_green": {
+      "original_log_sha256": "ee9acdd580203fec44a092956b7f904e360a192869c0a58bd40258d3cbac8643",
+      "original_log_path": "C:/Temp/yue-native-a11y-green-20261105.log",
+      "test_totals": {
+        "targets": 1,
+        "passed": 2,
+        "failed": 0,
+        "ignored": 0
+      }
+    },
+    "workspace": {
+      "original_log_sha256": "05f3ab9b24263239fb9a24f1397f8d21e3ca9230a4cb0dd90b629e4cd90ee681",
+      "original_log_path": "C:/Temp/yue-four-acceptance-workspace-20261105.log",
+      "test_totals": {
+        "targets": 27,
+        "passed": 898,
+        "failed": 0,
+        "ignored": 17
+      }
+    },
+    "clippy": {
+      "original_log_sha256": "33a7e11395e472b84de4888d71349d2df5ca62965331ca752608787014609106",
+      "original_log_path": "C:/Temp/yue-four-acceptance-clippy-20261105.log"
+    },
+    "vendor_contracts": {
+      "original_log_sha256": "f30f719694944ced703c64f771b5834b73fa2a863b7eb9e840645171a912f87d",
+      "original_log_path": "C:/Temp/yue-four-acceptance-contracts-20261105.log"
+    },
+    "no_default_features": {
+      "original_log_sha256": "70394ded83cc0c91b275993a601a36c539726eaa28c0eb5f68c58f3c9f1b6888",
+      "original_log_path": "C:/Temp/yue-four-acceptance-no-default-20261105.log",
+      "test_totals": {
+        "targets": 18,
+        "passed": 866,
+        "failed": 0,
+        "ignored": 10
+      }
+    }
+  },
+  "vendor_contract_report": {
+    "sources": {
+      "core": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre",
+        "version": "0.3.9",
+        "manifest_sha256": "def7d004aac1d44a6f63d36d4b2681439dde600ad83e374cee0214257a523d48",
+        "src_sha256": "bd01f79de723ba903dca0aeb646827cf1d0839bcaca5bb62ac5bf035d8eb9f94"
+      },
+      "base": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-base",
+        "version": "0.8.0",
+        "manifest_sha256": "32bf44eee7999662dad6fe2b13a2906ba5e05aaff013714cfc72f78ae63c5e3d",
+        "src_sha256": "8f0fea411d5c9efad89ed1cd400bd6d16696e9caaf273e88064548b4598a6190"
+      },
+      "windows": {
+        "path": "D:\\100_Projects\\110_Daily\\Yue-GPUI-Component\\vendor\\gpui-pre-windows",
+        "version": "0.3.9",
+        "manifest_sha256": "cd381b39bfb027a5848eace33b6e5166650502a0491dd81248c62c0786c0caf5",
+        "src_sha256": "d73f04366c5ce29df232c98c2c5a9019333ee0fa478ac0abfb1db29034014b13"
+      }
+    },
+    "layers": {
+      "native": {
+        "passed": [
+          "sparse_focus_handles_follow_live_and_frozen_geometry_lifetimes",
+          "size_batches_preserve_order_last_duplicate_hints_and_frozen_geometry",
+          "invalid_size_batches_leave_geometry_and_revision_unchanged",
+          "mixed_size_batches_match_input_order_and_precise_prefixes_across_tree_nodes",
+          "size_batches_keep_focus_alive_until_live_and_frozen_owners_release_it",
+          "width_invalidation_keeps_sparse_hints_and_frozen_geometry",
+          "scroll_handle_preserves_exact_positions_and_explicit_jumps_reset_fractional_input",
+          "frozen_geometry_retains_actual_cross_constraint_when_equal_extents_are_remeasured",
+          "uniform_geometry_is_shared_and_half_open_even_inside_gaps",
+          "direct_estimated_construction_has_the_same_geometry_without_a_replacement_tree",
+          "per_item_hint_splice_preserves_existing_measurements_and_frozen_geometry",
+          "native_hints_survive_first_layout_resize_splice_and_snapshot_reads",
+          "invalid_zero_height_cannot_pull_all_items_into_one_frame",
+          "horizontal_viewport_uses_physical_left_right_padding",
+          "measured_native_large_prefix_keeps_input_bounds_and_scrollbar_end",
+          "native_overdraw_edges_bound_layout_and_legacy_setter_restores_symmetry"
+        ],
+        "lock_sha256": "957ee57c5ba3d29e846d61ecce6859dca08ec8c9b96ac161a95423f96dbc5b41"
+      },
+      "base": {
+        "passed": [
+          "virtualization::grid_span::tests::span_lookup_matches_independent_linear_rectangles_at_half_open_edges",
+          "virtualization::grid_span::tests::sparse_span_visits_match_linear_oracle_without_filling_frozen_body_gaps",
+          "virtualization::geometry::tests::known_prefix_keeps_gap_outside_item_content_and_does_not_append_a_trailing_gap",
+          "virtualization::geometry::tests::fixed_geometry_uses_constant_metadata_and_f64_local_coordinates"
+        ],
+        "lock_sha256": "ea9521187db0a734a4cccbb12cf58fc1c17783d0019c667c668f3c044da2b052"
+      }
+    },
+    "requirements_sha256": "d72bc412a8c693958c3d05d8459a00755d3857c5e2f8b1c208dcb889ae7f4afc",
+    "native_test_source_sha256": "c72fb80364ba4e2f9097efe700224e7da4c1956629ed1822b951bdc9ba5b9062",
+    "status": "passed"
+  },
+  "artifacts": {
+    "native_csv": {
+      "path": "virtual-list-four-acceptance-native-2026-11-05.csv",
+      "rows": 1536,
+      "sha256": "d7d213b15d0f8e3c5405c451353b7e82d97787d9315417b088eb1ccba46a9d36",
+      "lf_sha256": "2d37241a5961ac8f3542b16ee92cb58be33f991b38475901a98c320bf6def0f7"
+    },
+    "native_transcript": {
+      "path": "virtual-list-four-acceptance-native-transcript-2026-11-05.txt",
+      "sha256": "ea39f3133156b1d530911bade27ef1911578c28a2257f0806a1d215cd4c1534f",
+      "lf_sha256": "c51e93c252d0ac3b8e3e310248c10ff98c970722ae75084bf4cacce433dcfca4"
+    },
+    "uia_excerpts": {
+      "path": "virtual-list-four-acceptance-uia-2026-11-05.txt",
+      "sha256": "f70d1e53add211f59dd0fb4fa83060684fdf36f9238a1cbfd86b9ffcbbd0fe81",
+      "lf_sha256": "f70d1e53add211f59dd0fb4fa83060684fdf36f9238a1cbfd86b9ffcbbd0fe81"
+    }
+  },
+  "hash_convention": "Existing sha256 fields hash as-measured raw working-tree bytes. Additional lf_sha256 fields normalize CRLF to LF for comparison with Git text blobs; original log and executable hashes remain raw.",
+  "source_lf_sha256": {
+    "Cargo.toml": "dae8280eb8043ee8ebd63b8523f823419b8ec88dd6814657fc458cb672f65cf4",
+    "Cargo.lock": "5e24cd19ea8f8f7b8d612a5a6ad18fad9abd4ca7a0988520e78595fc93e588da",
+    "examples/windows-showcase/Cargo.toml": "dced6286a232467ec2ca5178536cecac6b96eba74b6923f19970b971e191dca6",
+    "examples/windows-showcase/src/pages/virtual_layouts.rs": "752569c2c231e62a338f6c508a1b5c7fa24dbba9953df806f147d37957aacd31",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_acceptance.rs": "8b539cbad9f00c9b5de7ce3f20b4b090f4accef89e5d77f180ee689661fa4541",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_tests.rs": "ff1549f3d48310f54dfe1d1daf0ab20155d9616394f29798fa9e8ab5474f8c1a",
+    "examples/windows-showcase/src/pages/virtual_layouts/native_profile.rs": "63d0715d702e2cfd9a272b274dfb1f5e6505aa90546e29b2e896b232ed94c7ec",
+    "tools/test-virtualization-native.ps1": "160bc2271b96490d11923979efbf09cd2bf604161c46f9f52c01ad4fdce0ce47",
+    "tools/virtualization-contracts.json": "1efbab211416ad7b7e3187cf070f647f1bfca996266c745258682fbe055d51a8"
+  },
+  "final_static_checks": {
+    "cargo_fmt_all_check": "passed",
+    "git_diff_check": "passed",
+    "local_document_links_and_anchors": {
+      "checked": 99,
+      "result": "passed"
+    },
+    "protected_manifest_lock_diff_from_954a94e": "empty",
+    "stage_source_artifact_lf_hashes": "match working-tree evidence"
+  }
+}

@@ -4,6 +4,8 @@
 
 后续已交付 Grid 稀疏 cell／焦点保留、显式行列跨格、约束驱动 auto tracks、RTL，以及一维 Measured 的受限短路径 smooth／可选末段动画，见[五项后续实施](research/2026-11-05-virtual-list-five-followups.md)。当前支持范围以第 2.5–2.6 节为准；研究报告中的能力、测试计数和待办均对应各自的历史提交。通用 Grid 已观察尺寸 epoch collector 原型未吸收，见[候选取舍与测量限制](research/2026-11-05-virtual-list-next-opportunities.md#grid-已观察尺寸-epoch-候选不吸收2026-11-05)。
 
+最新四项验收已补齐等价的 Grid 观察尺寸私有消费者、32 轮混合能力与释放回归、0／100／1,000／10,000 span 成本及树剪枝优化，并完成当前 Windows 环境的实窗检查。实窗发现并修复 Showcase 的 Masonry／横向 Measured 条目语义缺口；原始不利样本、跨 DPI 与 Narrator 声音的未覆盖范围见[四项验收报告](research/2026-11-05-virtual-list-four-acceptance.md)。观察尺寸案例不新增 Base 公共 API，span 优化不承诺所有分布提速，实窗 draw 时长不等于呈现 FPS。
+
 继续对标已采用 Masonry 测量代次失效与原生有界尺寸批次；source-slot 批量冷构造因重复热反馈退化被撤销，整批树反馈改为每八项提交以控制峰值。前后数据、剩余代价和 Git 回退点见[失效／冷构造／批量反馈报告](research/2026-11-04-virtual-list-continuation.md)。
 
 最新一轮对标修正了逐项尺寸容差造成的累计偏移：尺寸反馈按 backend 实际可表示的值判断 no-op，并采用一维单项反馈的临时分配优化。双轴／估算／Masonry 原生布局回归、两轮 Release ABBA 的收益与批量代价见[细微尺寸反馈与单项成本](research/2026-11-04-virtual-list-feedback-review.md)。这不改变单项 Pixels、含 gap slot 舍入及跨 GPU／DPI 的既有精度边界。
@@ -676,6 +678,8 @@ Measured 复用原生 splice 的 focus 保留路径；新增项可通过 `splice
 
 无头测试证明节点属性、动作和焦点逻辑；Windows Narrator 的实际播报、浏览模式能否访问离屏项由用户实窗验证，不能仅凭 API 存在宣称完成。
 
+renderer 根上的业务名称由消费者显式提供；默认 `ListItem` role 不保证自动获得可见子文本的名称。若 renderer 自己拥有命名 `ListItem` 与逻辑 position／size，一维适配器使用 `.item_role(None)` 避免重复的无名包装；Masonry 的卡片语义同样由 renderer 拥有。Showcase 已采用此接线，滚动回收、缓存重建和 reflow 的名称回归及 Windows UIA 前后记录见[本轮验收](research/2026-11-05-virtual-list-four-acceptance.md#原生输入与可访问性修复)。这项 UIA 验证不替代 Narrator 声音／离屏浏览验收。
+
 ### 11.4 滚动时的 overlay 与命中
 
 Tooltip/Dropdown 的锚点是行 key 与本帧 bounds。滚动后重算有效锚点；行已回收、删除或变更身份则关闭对应浮层，不能继续附着到旧 index。对正在独立 Dialog 中编辑的对象，Dialog 可继续存在，恢复焦点时重新按 key 寻找合法目标。
@@ -862,7 +866,7 @@ examples/windows-showcase/src/
 | 布局 | 窄/宽视口、rem 放大、DPI、隐藏/恢复、滚动条拖拽 |
 | 生命周期 | 多次创建销毁、不同 query generation、数据规模显著缩小 |
 
-同时比较“同一业务语义的旧路径”和“新统一接缝”，不能拿无内容的 fixed 行与复杂动态行横比后宣称更快。真实 GPU/Windows 帧节奏、动效观感与 Narrator 由用户检查；自动化提供计数、时序与无头几何证据，**不主动启动 Showcase、截图或接管真实 UI**。
+同时比较“同一业务语义的旧路径”和“新统一接缝”，不能拿无内容的 fixed 行与复杂动态行横比后宣称更快。真实 GPU/Windows 帧节奏、动效观感与 Narrator 需实窗检查；没有明确授权时，自动化只提供计数、时序与无头几何证据，**不主动启动 Showcase、截图或接管真实 UI**。2026-11-05 的四项任务已获得实窗验收授权，其自动原生探针、原生输入／UIA 观察及未覆盖条件单独归档，不构成后续轮次的默认桌面接管授权。
 
 第 13.5 节的两个对照须分别记录；复杂度增加时不能要求帧耗时恒定，而应验证成本可归因、没有非必要重复工作。参考项目的简单文本 benchmark 不能代替复杂卡片基线。首版必须完成第 15.6 节双轴最小组合；动态 Grid 行高仍需明确未呈现列的依赖；已交付的 Masonry 单独覆盖稳定 lanes、显式重排和真实测量，不把一次组合验证当作全部布局能力。
 
@@ -956,6 +960,7 @@ key Start／Center／End／Nearest 相对未遮挡 body，叠加调用方既有 
 
 ## 17. 依据与关联文档
 
+- [四项验收与取舍](research/2026-11-05-virtual-list-four-acceptance.md)：等价观察尺寸消费者、组合回归、span 分布／规模成本，以及 Windows 实窗与命名条目修复；含原始样本、硬件边界和 Git 回退点。
 - [五项后续实施与组合验证](research/2026-11-05-virtual-list-five-followups.md)：流式冻结区、稀疏 cell、span、一维 Measured 动画、约束 auto 和 Grid RTL，含各项代价与回退点。
 - [历史候选与后续状态](research/2026-11-05-virtual-list-next-opportunities.md)：原候选的交付索引，以及未吸收的 Grid 观察值 collector 原型及其测量限制。
 - [继续对标与 Git 回退](research/2026-11-04-virtual-list-continuation.md)：测量代次、有界批次、冷构造拒绝项，含持续尺寸变化和峰值保护证据。
