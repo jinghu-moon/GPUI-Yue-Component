@@ -39,7 +39,7 @@ pub mod typography;
 mod virtual_list;
 pub use virtual_list::{
     VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot,
-    VirtualGridSpan, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+    VirtualGridSpan, VirtualGridSpanSet, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
     VirtualMasonryCacheItem, VirtualMasonryCapabilities, VirtualMasonryItem,
     VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign, VirtualizerAnchorPosition,
     VirtualizerAttachment, VirtualizerBinding, VirtualizerCache, VirtualizerCapabilities,

@@ -1,6 +1,93 @@
 //! Sparse explicit spans. Geometry never feeds back into track sizing.
 use super::*;
-use std::{collections::BTreeMap, ops::Range};
+use std::{
+    cell::RefCell,
+    collections::BTreeMap,
+    ops::{Deref, Range},
+};
+
+/// Immutable sparse span descriptors with opt-in reuse of one validated
+/// configuration. Retain this value in the consumer, rather than recreating it
+/// in render. Clones share descriptors and the single bounded cache entry.
+///
+/// Only track indices are cached: current sizes, layout and cells remain
+/// frame-local. Source identity/generation and frozen prefixes invalidate the
+/// entry. The set retains no controller, window, source or scroll owner.
+#[derive(Clone, Default)]
+pub struct VirtualGridSpanSet(Option<Rc<SpanSetData>>);
+
+struct SpanSetData {
+    descriptors: Vec<VirtualGridSpan>,
+    resolved: RefCell<Option<SpanResolution>>,
+}
+struct SpanResolution {
+    owners: (gpui::EntityId, gpui::EntityId),
+    spans: Rc<GridSpans>,
+}
+impl VirtualGridSpanSet {
+    /// Takes ownership of descriptors; an empty set allocates no cache payload.
+    /// Validation occurs when applied to a Grid's current axes.
+    pub fn new(descriptors: Vec<VirtualGridSpan>) -> Self {
+        if descriptors.is_empty() {
+            Self::default()
+        } else {
+            Self(Some(Rc::new(SpanSetData {
+                descriptors,
+                resolved: RefCell::new(None),
+            })))
+        }
+    }
+    pub fn len(&self) -> usize {
+        self.0.as_ref().map_or(0, |data| data.descriptors.len())
+    }
+    pub fn is_empty(&self) -> bool {
+        self.0.is_none()
+    }
+    pub(super) fn resolve(
+        &self,
+        rows: &gpui::Entity<VirtualizerState>,
+        columns: &gpui::Entity<VirtualizerState>,
+        frozen: (usize, usize),
+        cx: &gpui::App,
+    ) -> Result<Option<Rc<GridSpans>>, VirtualizerError> {
+        let rs = rows.read(cx);
+        let cs = columns.read(cx);
+        VirtualGrid::validate_axes(rs, cs)?;
+        let Some(data) = &self.0 else { return Ok(None) };
+        let owners = (rows.entity_id(), columns.entity_id());
+        if let Some(entry) = data.resolved.borrow().as_ref()
+            && entry.owners == owners
+            && entry.spans.generations == (rs.generation(), cs.generation())
+            && entry.spans.frozen == frozen
+        {
+            return Ok(Some(entry.spans.clone()));
+        }
+        // Build completely before replacing the last good entry. A rejected
+        // configuration cannot publish partially resolved rectangles.
+        let spans = Rc::new(GridSpans::new(rs, cs, &data.descriptors, frozen)?);
+        *data.resolved.borrow_mut() = Some(SpanResolution {
+            owners,
+            spans: spans.clone(),
+        });
+        Ok(Some(spans))
+    }
+}
+
+// Existing .spans() keeps its owned value and allocation behavior. Only the
+// explicit .span_set() path shares a retained resolution across frames.
+pub(super) enum GridSpanStorage {
+    Owned(GridSpans),
+    Shared(Rc<GridSpans>),
+}
+impl Deref for GridSpanStorage {
+    type Target = GridSpans;
+    fn deref(&self) -> &Self::Target {
+        match self {
+            Self::Owned(spans) => spans,
+            Self::Shared(spans) => spans,
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct VirtualGridSpan {

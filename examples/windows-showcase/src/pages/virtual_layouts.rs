@@ -6,9 +6,10 @@ use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList
 use gpui_kit::{AnyElement, App, Axis, ElementId, Entity, Role, ScrollHandle, px};
 use std::{cell::Cell, rc::Rc};
 use yue_component::{
-    VirtualGrid, VirtualGridCellKey, VirtualGridSpan, VirtualMasonry, VirtualMasonryState,
-    VirtualizerAlign, VirtualizerBinding, VirtualizerLayout, VirtualizerScrollOptions,
-    VirtualizerSizing, VirtualizerSource, VirtualizerState, YueTabItem, YueTabs,
+    VirtualGrid, VirtualGridCellKey, VirtualGridSpan, VirtualGridSpanSet, VirtualMasonry,
+    VirtualMasonryState, VirtualizerAlign, VirtualizerBinding, VirtualizerLayout,
+    VirtualizerScrollOptions, VirtualizerSizing, VirtualizerSource, VirtualizerState, YueTabItem,
+    YueTabs,
 };
 
 const GRID_ROWS: usize = 1_000_000;
@@ -40,6 +41,7 @@ pub(crate) struct VirtualLayoutsPage {
     frozen: bool,
     rtl: bool,
     spanning: bool,
+    body_spans: VirtualGridSpanSet,
     builds: [Rc<Cell<usize>>; 3],
 }
 impl VirtualLayoutsPage {
@@ -86,6 +88,11 @@ impl VirtualLayoutsPage {
             frozen: true,
             rtl: false,
             spanning: false,
+            body_spans: VirtualGridSpanSet::new(vec![VirtualGridSpan::new(
+                VirtualGridCellKey::new(1usize, 1usize),
+                2,
+                3,
+            )]),
             builds: std::array::from_fn(|_| Rc::new(Cell::new(0))),
         }
     }
@@ -260,21 +267,11 @@ impl VirtualLayoutsPage {
                         .frozen_rows(usize::from(frozen))
                         .frozen_columns(usize::from(frozen))
                         .right_to_left(self.rtl)
-                        .spans(
-                            &if self.spanning {
-                                vec![VirtualGridSpan::new(
-                                    VirtualGridCellKey::new(1usize, 1usize),
-                                    2,
-                                    3,
-                                )]
-                            } else {
-                                Vec::new()
-                            },
-                            cx,
-                        )
-                        .expect(
+                        .when(self.spanning, |grid| {
+                            grid.span_set(&self.body_spans, cx).expect(
                             "showcase body span is inside Fixed source and does not cross freezing",
                         )
+                        })
                         .role(Role::Grid)
                         .aria_label("双轴虚拟网格")
                         .aria_row_count(GRID_ROWS)

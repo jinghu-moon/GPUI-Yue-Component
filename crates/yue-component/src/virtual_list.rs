@@ -12,7 +12,7 @@ type ViewFactory = Rc<dyn Fn(VirtualizerItemIdentity, &mut Window, &mut App) -> 
 
 pub use gpui_kit::base::virtualization::{
     VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot,
-    VirtualGridSpan, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
+    VirtualGridSpan, VirtualGridSpanSet, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
     VirtualMasonryCacheItem, VirtualMasonryCapabilities, VirtualMasonryItem,
     VirtualMasonrySnapshot, VirtualMasonryState, VirtualizerAlign, VirtualizerAnchorPosition,
     VirtualizerAttachment, VirtualizerBinding, VirtualizerCache, VirtualizerCapabilities,

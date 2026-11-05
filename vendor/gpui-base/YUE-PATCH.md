@@ -756,3 +756,14 @@ Test snapshots expose optional native table counts, indices and spans from the
 same AccessKit Node written by the element. Share the payload across snapshot
 clones and allocate nothing for nodes without table metadata. This observation
 surface does not synthesize semantic nodes or claim platform reader support.
+
+### Explicit immutable span configuration reuse
+
+VirtualGridSpanSet takes owned immutable descriptors and shares one validated
+resolution keyed by both controller identities, source generations and frozen
+prefixes. Cache indices only; current track geometry remains frame-local.
+Validate axes even on hits, and publish a miss only after complete validation.
+Neither descriptors nor resolution retain sources, controllers or windows.
+Existing .spans keeps owned storage with no retained configuration cache.
+Opt-in storage is O(S), and cold initialization can cost more; see the nine-point
+readiness report for warm/cold Release ABBA, default guards and rollback.

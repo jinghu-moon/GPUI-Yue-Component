@@ -1,0 +1,1891 @@
+{
+  "span-reuse-a": {
+    "identity": {
+      "before": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "filter": "series_span",
+      "after_head": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "workload": "docs/research/virtual-list-span-reuse-2026-11-05.rs",
+      "workload_sha256": "473a95d50af2cf160304583c18ed00dbd1d082f50437b480704bc7e8d7986c8c",
+      "after_feature": "span-cache",
+      "build_identity": {
+        "before": {
+          "manifest_sha256": "b18a1fbe16b2af8a179c755d6c85d246d831dd9eec0a5c92154d8c3d646a2d88",
+          "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "6a39f99b5bad2b86b14092fa21b9ada046e5c3d2207fac48a234ffe0de345498"
+        },
+        "after": {
+          "manifest_sha256": "abfaaf88cf9740c10ad4b9af5f4f2e713b2a45bae68a9769b38407e00d635542",
+          "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060"
+        }
+      },
+      "artifact_date": "2026-11-05",
+      "native": false,
+      "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+      "discarded_samples": [],
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 320
+    },
+    "summary": {
+      "cold-false-0": {
+        "ns": {
+          "before": 8550.0,
+          "after": 9900.0,
+          "change_percent": 15.789473684210531
+        },
+        "config_ns": {
+          "before": 8550.0,
+          "after": 9900.0,
+          "change_percent": 15.789473684210531
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 800.0,
+          "after": 1050.0,
+          "change_percent": 31.25
+        },
+        "p99": {
+          "before": 800.0,
+          "after": 1050.0,
+          "change_percent": 31.25
+        }
+      },
+      "cold-false-100": {
+        "ns": {
+          "before": 75500.0,
+          "after": 82350.0,
+          "change_percent": 9.0728476821192
+        },
+        "config_ns": {
+          "before": 75500.0,
+          "after": 82350.0,
+          "change_percent": 9.0728476821192
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 5000.0,
+          "after": 5550.0,
+          "change_percent": 11.00000000000001
+        },
+        "p99": {
+          "before": 5000.0,
+          "after": 5550.0,
+          "change_percent": 11.00000000000001
+        }
+      },
+      "cold-false-1000": {
+        "ns": {
+          "before": 567000.0,
+          "after": 606350.0,
+          "change_percent": 6.940035273368617
+        },
+        "config_ns": {
+          "before": 567000.0,
+          "after": 606350.0,
+          "change_percent": 6.940035273368617
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 36400.0,
+          "after": 41300.0,
+          "change_percent": 13.461538461538458
+        },
+        "p99": {
+          "before": 36400.0,
+          "after": 41300.0,
+          "change_percent": 13.461538461538458
+        }
+      },
+      "cold-false-10000": {
+        "ns": {
+          "before": 7135150.0,
+          "after": 8200400.0,
+          "change_percent": 14.929609048162963
+        },
+        "config_ns": {
+          "before": 7135150.0,
+          "after": 8200400.0,
+          "change_percent": 14.929609048162963
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 484300.0,
+          "after": 606950.0,
+          "change_percent": 25.325211645674162
+        },
+        "p99": {
+          "before": 484300.0,
+          "after": 606950.0,
+          "change_percent": 25.325211645674162
+        }
+      },
+      "cold-true-0": {
+        "ns": {
+          "before": 9000.0,
+          "after": 9400.0,
+          "change_percent": 4.444444444444451
+        },
+        "config_ns": {
+          "before": 9000.0,
+          "after": 9400.0,
+          "change_percent": 4.444444444444451
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 1350.0,
+          "after": 800.0,
+          "change_percent": -40.74074074074075
+        },
+        "p99": {
+          "before": 1350.0,
+          "after": 800.0,
+          "change_percent": -40.74074074074075
+        }
+      },
+      "cold-true-100": {
+        "ns": {
+          "before": 151250.0,
+          "after": 162900.0,
+          "change_percent": 7.702479338842982
+        },
+        "config_ns": {
+          "before": 151250.0,
+          "after": 162900.0,
+          "change_percent": 7.702479338842982
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 9850.0,
+          "after": 10850.0,
+          "change_percent": 10.152284263959398
+        },
+        "p99": {
+          "before": 9850.0,
+          "after": 10850.0,
+          "change_percent": 10.152284263959398
+        }
+      },
+      "cold-true-1000": {
+        "ns": {
+          "before": 1874450.0,
+          "after": 1991650.0,
+          "change_percent": 6.252500733548505
+        },
+        "config_ns": {
+          "before": 1874450.0,
+          "after": 1991650.0,
+          "change_percent": 6.252500733548505
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 122150.0,
+          "after": 139900.0,
+          "change_percent": 14.531313958248049
+        },
+        "p99": {
+          "before": 122150.0,
+          "after": 139900.0,
+          "change_percent": 14.531313958248049
+        }
+      },
+      "cold-true-10000": {
+        "ns": {
+          "before": 24427950.0,
+          "after": 26043100.0,
+          "change_percent": 6.611893343485642
+        },
+        "config_ns": {
+          "before": 24427950.0,
+          "after": 26043100.0,
+          "change_percent": 6.611893343485642
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 1635500.0,
+          "after": 1790850.0,
+          "change_percent": 9.49862427392234
+        },
+        "p99": {
+          "before": 1635500.0,
+          "after": 1790850.0,
+          "change_percent": 9.49862427392234
+        }
+      },
+      "span-false-0": {
+        "ns": {
+          "before": 11596200.0,
+          "after": 11727450.0,
+          "change_percent": 1.13183629119884
+        },
+        "config_ns": {
+          "before": 8300.0,
+          "after": 12400.0,
+          "change_percent": 49.39759036144578
+        },
+        "render_ns": {
+          "before": 11588000.0,
+          "after": 11714850.0,
+          "change_percent": 1.0946668967897866
+        },
+        "p95": {
+          "before": 194450.0,
+          "after": 208700.0,
+          "change_percent": 7.328362046798653
+        },
+        "p99": {
+          "before": 282150.0,
+          "after": 305300.0,
+          "change_percent": 8.204855573276614
+        }
+      },
+      "span-false-100": {
+        "ns": {
+          "before": 11246950.0,
+          "after": 11004350.0,
+          "change_percent": -2.157029239038144
+        },
+        "config_ns": {
+          "before": 418600.0,
+          "after": 16950.0,
+          "change_percent": -95.95078834209268
+        },
+        "render_ns": {
+          "before": 10824700.0,
+          "after": 10987450.0,
+          "change_percent": 1.5035058708324556
+        },
+        "p95": {
+          "before": 210900.0,
+          "after": 204800.0,
+          "change_percent": -2.892366050260786
+        },
+        "p99": {
+          "before": 332400.0,
+          "after": 298750.0,
+          "change_percent": -10.123345367027682
+        }
+      },
+      "span-false-1000": {
+        "ns": {
+          "before": 13573050.0,
+          "after": 10588600.0,
+          "change_percent": -21.988057216322055
+        },
+        "config_ns": {
+          "before": 3264200.0,
+          "after": 16900.0,
+          "change_percent": -99.48226211629189
+        },
+        "render_ns": {
+          "before": 10211450.0,
+          "after": 10571450.0,
+          "change_percent": 3.525454269472017
+        },
+        "p95": {
+          "before": 229400.0,
+          "after": 183250.0,
+          "change_percent": -20.1176983435048
+        },
+        "p99": {
+          "before": 295250.0,
+          "after": 229750.0,
+          "change_percent": -22.184589331075355
+        }
+      },
+      "span-false-10000": {
+        "ns": {
+          "before": 43439850.0,
+          "after": 10265150.0,
+          "change_percent": -76.36927843903698
+        },
+        "config_ns": {
+          "before": 31931950.0,
+          "after": 17100.0,
+          "change_percent": -99.94644861964271
+        },
+        "render_ns": {
+          "before": 11424200.0,
+          "after": 10248800.0,
+          "change_percent": -10.288685422173982
+        },
+        "p95": {
+          "before": 749750.0,
+          "after": 176250.0,
+          "change_percent": -76.49216405468489
+        },
+        "p99": {
+          "before": 950400.0,
+          "after": 210200.0,
+          "change_percent": -77.88299663299662
+        }
+      },
+      "span-true-0": {
+        "ns": {
+          "before": 9912350.0,
+          "after": 9807000.0,
+          "change_percent": -1.0628155785459503
+        },
+        "config_ns": {
+          "before": 9000.0,
+          "after": 12300.0,
+          "change_percent": 36.66666666666667
+        },
+        "render_ns": {
+          "before": 9903350.0,
+          "after": 9795000.0,
+          "change_percent": -1.094074227407893
+        },
+        "p95": {
+          "before": 175150.0,
+          "after": 161550.0,
+          "change_percent": -7.764773051669993
+        },
+        "p99": {
+          "before": 301050.0,
+          "after": 216400.0,
+          "change_percent": -28.118252781929908
+        }
+      },
+      "span-true-100": {
+        "ns": {
+          "before": 9511500.0,
+          "after": 8897750.0,
+          "change_percent": -6.452715134311093
+        },
+        "config_ns": {
+          "before": 891700.0,
+          "after": 17100.0,
+          "change_percent": -98.08231467982506
+        },
+        "render_ns": {
+          "before": 8609100.0,
+          "after": 8881050.0,
+          "change_percent": 3.158866780499703
+        },
+        "p95": {
+          "before": 172000.0,
+          "after": 169300.0,
+          "change_percent": -1.5697674418604701
+        },
+        "p99": {
+          "before": 217750.0,
+          "after": 247400.0,
+          "change_percent": 13.616532721010334
+        }
+      },
+      "span-true-1000": {
+        "ns": {
+          "before": 22597100.0,
+          "after": 8436400.0,
+          "change_percent": -62.666005814905446
+        },
+        "config_ns": {
+          "before": 13985750.0,
+          "after": 17550.0,
+          "change_percent": -99.8745151314731
+        },
+        "render_ns": {
+          "before": 8635550.0,
+          "after": 8418850.0,
+          "change_percent": -2.5093943060951585
+        },
+        "p95": {
+          "before": 383550.0,
+          "after": 141700.0,
+          "change_percent": -63.05566418980576
+        },
+        "p99": {
+          "before": 479450.0,
+          "after": 184800.0,
+          "change_percent": -61.45583481072061
+        }
+      },
+      "span-true-10000": {
+        "ns": {
+          "before": 185990850.0,
+          "after": 8109000.0,
+          "change_percent": -95.64010810209211
+        },
+        "config_ns": {
+          "before": 174243850.0,
+          "after": 17200.0,
+          "change_percent": -99.99012877642454
+        },
+        "render_ns": {
+          "before": 11511600.0,
+          "after": 8091500.0,
+          "change_percent": -29.710031620278677
+        },
+        "p95": {
+          "before": 3277300.0,
+          "after": 135900.0,
+          "change_percent": -95.85329386995393
+        },
+        "p99": {
+          "before": 4244450.0,
+          "after": 147500.0,
+          "change_percent": -96.52487365854233
+        }
+      }
+    },
+    "status": "preliminary; cold destruction scopes differ; excluded from adoption"
+  },
+  "span-reuse-b": {
+    "identity": {
+      "before": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "filter": "series_span",
+      "after_head": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "workload": "docs/research/virtual-list-span-reuse-2026-11-05.rs",
+      "workload_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4",
+      "after_feature": "span-cache",
+      "build_identity": {
+        "before": {
+          "manifest_sha256": "b18a1fbe16b2af8a179c755d6c85d246d831dd9eec0a5c92154d8c3d646a2d88",
+          "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "6a39f99b5bad2b86b14092fa21b9ada046e5c3d2207fac48a234ffe0de345498"
+        },
+        "after": {
+          "manifest_sha256": "abfaaf88cf9740c10ad4b9af5f4f2e713b2a45bae68a9769b38407e00d635542",
+          "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060"
+        }
+      },
+      "artifact_date": "2026-11-05",
+      "native": false,
+      "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+      "discarded_samples": [],
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 320
+    },
+    "summary": {
+      "cold-false-0": {
+        "ns": {
+          "before": 9000.0,
+          "after": 9950.0,
+          "change_percent": 10.555555555555562
+        },
+        "config_ns": {
+          "before": 9000.0,
+          "after": 9950.0,
+          "change_percent": 10.555555555555562
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 800.0,
+          "after": 900.0,
+          "change_percent": 12.5
+        },
+        "p99": {
+          "before": 800.0,
+          "after": 900.0,
+          "change_percent": 12.5
+        }
+      },
+      "cold-false-100": {
+        "ns": {
+          "before": 77900.0,
+          "after": 82900.0,
+          "change_percent": 6.418485237483962
+        },
+        "config_ns": {
+          "before": 77900.0,
+          "after": 82900.0,
+          "change_percent": 6.418485237483962
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 5300.0,
+          "after": 6300.0,
+          "change_percent": 18.867924528301884
+        },
+        "p99": {
+          "before": 5300.0,
+          "after": 6300.0,
+          "change_percent": 18.867924528301884
+        }
+      },
+      "cold-false-1000": {
+        "ns": {
+          "before": 592500.0,
+          "after": 607650.0,
+          "change_percent": 2.556962025316456
+        },
+        "config_ns": {
+          "before": 592500.0,
+          "after": 607650.0,
+          "change_percent": 2.556962025316456
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 41100.0,
+          "after": 45300.0,
+          "change_percent": 10.21897810218979
+        },
+        "p99": {
+          "before": 41100.0,
+          "after": 45300.0,
+          "change_percent": 10.21897810218979
+        }
+      },
+      "cold-false-10000": {
+        "ns": {
+          "before": 8075400.0,
+          "after": 8067150.0,
+          "change_percent": -0.10216212200014896
+        },
+        "config_ns": {
+          "before": 8075400.0,
+          "after": 8067150.0,
+          "change_percent": -0.10216212200014896
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 569800.0,
+          "after": 554100.0,
+          "change_percent": -2.755352755352758
+        },
+        "p99": {
+          "before": 569800.0,
+          "after": 554100.0,
+          "change_percent": -2.755352755352758
+        }
+      },
+      "cold-true-0": {
+        "ns": {
+          "before": 9000.0,
+          "after": 9850.0,
+          "change_percent": 9.444444444444455
+        },
+        "config_ns": {
+          "before": 9000.0,
+          "after": 9850.0,
+          "change_percent": 9.444444444444455
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 800.0,
+          "after": 900.0,
+          "change_percent": 12.5
+        },
+        "p99": {
+          "before": 800.0,
+          "after": 900.0,
+          "change_percent": 12.5
+        }
+      },
+      "cold-true-100": {
+        "ns": {
+          "before": 162000.0,
+          "after": 158300.0,
+          "change_percent": -2.2839506172839474
+        },
+        "config_ns": {
+          "before": 162000.0,
+          "after": 158300.0,
+          "change_percent": -2.2839506172839474
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 19700.0,
+          "after": 10450.0,
+          "change_percent": -46.954314720812185
+        },
+        "p99": {
+          "before": 19700.0,
+          "after": 10450.0,
+          "change_percent": -46.954314720812185
+        }
+      },
+      "cold-true-1000": {
+        "ns": {
+          "before": 1882950.0,
+          "after": 1937100.0,
+          "change_percent": 2.875806580100382
+        },
+        "config_ns": {
+          "before": 1882950.0,
+          "after": 1937100.0,
+          "change_percent": 2.875806580100382
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 122900.0,
+          "after": 127650.0,
+          "change_percent": 3.86493083807975
+        },
+        "p99": {
+          "before": 122900.0,
+          "after": 127650.0,
+          "change_percent": 3.86493083807975
+        }
+      },
+      "cold-true-10000": {
+        "ns": {
+          "before": 26181900.0,
+          "after": 25881050.0,
+          "change_percent": -1.149076270247762
+        },
+        "config_ns": {
+          "before": 26181900.0,
+          "after": 25881050.0,
+          "change_percent": -1.149076270247762
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 1752150.0,
+          "after": 1839450.0,
+          "change_percent": 4.982450132694116
+        },
+        "p99": {
+          "before": 1752150.0,
+          "after": 1839450.0,
+          "change_percent": 4.982450132694116
+        }
+      },
+      "span-false-0": {
+        "ns": {
+          "before": 12110150.0,
+          "after": 11869000.0,
+          "change_percent": -1.9913048145563828
+        },
+        "config_ns": {
+          "before": 7800.0,
+          "after": 11950.0,
+          "change_percent": 53.20512820512822
+        },
+        "render_ns": {
+          "before": 12102050.0,
+          "after": 11856900.0,
+          "change_percent": -2.0256898624613218
+        },
+        "p95": {
+          "before": 218550.0,
+          "after": 197650.0,
+          "change_percent": -9.56302905513613
+        },
+        "p99": {
+          "before": 370350.0,
+          "after": 268600.0,
+          "change_percent": -27.474011070608885
+        }
+      },
+      "span-false-100": {
+        "ns": {
+          "before": 11127950.0,
+          "after": 10741050.0,
+          "change_percent": -3.4768308628273847
+        },
+        "config_ns": {
+          "before": 388900.0,
+          "after": 16000.0,
+          "change_percent": -95.88583183337619
+        },
+        "render_ns": {
+          "before": 10745300.0,
+          "after": 10725200.0,
+          "change_percent": -0.18705852791452982
+        },
+        "p95": {
+          "before": 194100.0,
+          "after": 189600.0,
+          "change_percent": -2.3183925811437356
+        },
+        "p99": {
+          "before": 243700.0,
+          "after": 228550.0,
+          "change_percent": -6.216659827656956
+        }
+      },
+      "span-false-1000": {
+        "ns": {
+          "before": 14042900.0,
+          "after": 10726350.0,
+          "change_percent": -23.617272785535746
+        },
+        "config_ns": {
+          "before": 3122050.0,
+          "after": 16350.0,
+          "change_percent": -99.4763056325171
+        },
+        "render_ns": {
+          "before": 10923600.0,
+          "after": 10710000.0,
+          "change_percent": -1.9553993189058594
+        },
+        "p95": {
+          "before": 263150.0,
+          "after": 189300.0,
+          "change_percent": -28.06384191525746
+        },
+        "p99": {
+          "before": 356350.0,
+          "after": 251550.0,
+          "change_percent": -29.40928862073804
+        }
+      },
+      "span-false-10000": {
+        "ns": {
+          "before": 42148450.0,
+          "after": 10161700.0,
+          "change_percent": -75.89069111675518
+        },
+        "config_ns": {
+          "before": 30539750.0,
+          "after": 16550.0,
+          "change_percent": -99.94580833176434
+        },
+        "render_ns": {
+          "before": 11493800.0,
+          "after": 10145450.0,
+          "change_percent": -11.731107205623903
+        },
+        "p95": {
+          "before": 741850.0,
+          "after": 173900.0,
+          "change_percent": -76.55860349127181
+        },
+        "p99": {
+          "before": 969350.0,
+          "after": 198350.0,
+          "change_percent": -79.53783463145407
+        }
+      },
+      "span-true-0": {
+        "ns": {
+          "before": 9805000.0,
+          "after": 9586100.0,
+          "change_percent": -2.232534421213661
+        },
+        "config_ns": {
+          "before": 7900.0,
+          "after": 12050.0,
+          "change_percent": 52.531645569620245
+        },
+        "render_ns": {
+          "before": 9796600.0,
+          "after": 9573900.0,
+          "change_percent": -2.2732376538799226
+        },
+        "p95": {
+          "before": 169550.0,
+          "after": 159200.0,
+          "change_percent": -6.104393984075496
+        },
+        "p99": {
+          "before": 236950.0,
+          "after": 189200.0,
+          "change_percent": -20.15193078708588
+        }
+      },
+      "span-true-100": {
+        "ns": {
+          "before": 9967300.0,
+          "after": 8846200.0,
+          "change_percent": -11.247780241389338
+        },
+        "config_ns": {
+          "before": 939750.0,
+          "after": 16600.0,
+          "change_percent": -98.23357275871243
+        },
+        "render_ns": {
+          "before": 8989900.0,
+          "after": 8829900.0,
+          "change_percent": -1.7797750809241508
+        },
+        "p95": {
+          "before": 185500.0,
+          "after": 160700.0,
+          "change_percent": -13.36927223719676
+        },
+        "p99": {
+          "before": 329450.0,
+          "after": 233550.0,
+          "change_percent": -29.10912126271058
+        }
+      },
+      "span-true-1000": {
+        "ns": {
+          "before": 23076250.0,
+          "after": 8489650.0,
+          "change_percent": -63.21044363793944
+        },
+        "config_ns": {
+          "before": 14210050.0,
+          "after": 16850.0,
+          "change_percent": -99.88142195136541
+        },
+        "render_ns": {
+          "before": 8789000.0,
+          "after": 8472600.0,
+          "change_percent": -3.599954488565249
+        },
+        "p95": {
+          "before": 422550.0,
+          "after": 144100.0,
+          "change_percent": -65.89752691989113
+        },
+        "p99": {
+          "before": 521150.0,
+          "after": 178000.0,
+          "change_percent": -65.84476638203972
+        }
+      },
+      "span-true-10000": {
+        "ns": {
+          "before": 188272050.0,
+          "after": 8528750.0,
+          "change_percent": -95.46998611849183
+        },
+        "config_ns": {
+          "before": 177167550.0,
+          "after": 16150.0,
+          "change_percent": -99.9908843351957
+        },
+        "render_ns": {
+          "before": 10954500.0,
+          "after": 8512600.0,
+          "change_percent": -22.291295814505453
+        },
+        "p95": {
+          "before": 3389300.0,
+          "after": 145400.0,
+          "change_percent": -95.71002861947895
+        },
+        "p99": {
+          "before": 4046700.0,
+          "after": 206600.0,
+          "change_percent": -94.89460548100922
+        }
+      }
+    },
+    "status": "adoption"
+  },
+  "span-reuse-c": {
+    "identity": {
+      "before": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "filter": "series_span",
+      "after_head": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "workload": "docs/research/virtual-list-span-reuse-2026-11-05.rs",
+      "workload_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4",
+      "after_feature": "span-cache",
+      "build_identity": {
+        "before": {
+          "manifest_sha256": "b18a1fbe16b2af8a179c755d6c85d246d831dd9eec0a5c92154d8c3d646a2d88",
+          "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "6a39f99b5bad2b86b14092fa21b9ada046e5c3d2207fac48a234ffe0de345498"
+        },
+        "after": {
+          "manifest_sha256": "abfaaf88cf9740c10ad4b9af5f4f2e713b2a45bae68a9769b38407e00d635542",
+          "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060"
+        }
+      },
+      "artifact_date": "2026-11-05",
+      "native": false,
+      "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+      "discarded_samples": [],
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 320
+    },
+    "summary": {
+      "cold-false-0": {
+        "ns": {
+          "before": 8450.0,
+          "after": 10350.0,
+          "change_percent": 22.48520710059172
+        },
+        "config_ns": {
+          "before": 8450.0,
+          "after": 10350.0,
+          "change_percent": 22.48520710059172
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 800.0,
+          "after": 1250.0,
+          "change_percent": 56.25
+        },
+        "p99": {
+          "before": 800.0,
+          "after": 1250.0,
+          "change_percent": 56.25
+        }
+      },
+      "cold-false-100": {
+        "ns": {
+          "before": 77650.0,
+          "after": 85300.0,
+          "change_percent": 9.85189954925949
+        },
+        "config_ns": {
+          "before": 77650.0,
+          "after": 85300.0,
+          "change_percent": 9.85189954925949
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 5150.0,
+          "after": 5700.0,
+          "change_percent": 10.679611650485432
+        },
+        "p99": {
+          "before": 5150.0,
+          "after": 5700.0,
+          "change_percent": 10.679611650485432
+        }
+      },
+      "cold-false-1000": {
+        "ns": {
+          "before": 593050.0,
+          "after": 612400.0,
+          "change_percent": 3.26279403085743
+        },
+        "config_ns": {
+          "before": 593050.0,
+          "after": 612400.0,
+          "change_percent": 3.26279403085743
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 39250.0,
+          "after": 40550.0,
+          "change_percent": 3.3121019108280247
+        },
+        "p99": {
+          "before": 39250.0,
+          "after": 40550.0,
+          "change_percent": 3.3121019108280247
+        }
+      },
+      "cold-false-10000": {
+        "ns": {
+          "before": 8094100.0,
+          "after": 8237650.0,
+          "change_percent": 1.7735140410916506
+        },
+        "config_ns": {
+          "before": 8094100.0,
+          "after": 8237650.0,
+          "change_percent": 1.7735140410916506
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 536250.0,
+          "after": 593400.0,
+          "change_percent": 10.65734265734266
+        },
+        "p99": {
+          "before": 536250.0,
+          "after": 593400.0,
+          "change_percent": 10.65734265734266
+        }
+      },
+      "cold-true-0": {
+        "ns": {
+          "before": 8950.0,
+          "after": 9900.0,
+          "change_percent": 10.61452513966481
+        },
+        "config_ns": {
+          "before": 8950.0,
+          "after": 9900.0,
+          "change_percent": 10.61452513966481
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 700.0,
+          "after": 800.0,
+          "change_percent": 14.28571428571428
+        },
+        "p99": {
+          "before": 700.0,
+          "after": 800.0,
+          "change_percent": 14.28571428571428
+        }
+      },
+      "cold-true-100": {
+        "ns": {
+          "before": 155800.0,
+          "after": 164950.0,
+          "change_percent": 5.872913992297812
+        },
+        "config_ns": {
+          "before": 155800.0,
+          "after": 164950.0,
+          "change_percent": 5.872913992297812
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 10300.0,
+          "after": 10800.0,
+          "change_percent": 4.854368932038833
+        },
+        "p99": {
+          "before": 10300.0,
+          "after": 10800.0,
+          "change_percent": 4.854368932038833
+        }
+      },
+      "cold-true-1000": {
+        "ns": {
+          "before": 1908100.0,
+          "after": 1958000.0,
+          "change_percent": 2.6151669199727445
+        },
+        "config_ns": {
+          "before": 1908100.0,
+          "after": 1958000.0,
+          "change_percent": 2.6151669199727445
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 124650.0,
+          "after": 129100.0,
+          "change_percent": 3.5699959887685484
+        },
+        "p99": {
+          "before": 124650.0,
+          "after": 129100.0,
+          "change_percent": 3.5699959887685484
+        }
+      },
+      "cold-true-10000": {
+        "ns": {
+          "before": 25757650.0,
+          "after": 25834650.0,
+          "change_percent": 0.2989403148190961
+        },
+        "config_ns": {
+          "before": 25757650.0,
+          "after": 25834650.0,
+          "change_percent": 0.2989403148190961
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 1712250.0,
+          "after": 1754650.0,
+          "change_percent": 2.476273908599791
+        },
+        "p99": {
+          "before": 1712250.0,
+          "after": 1754650.0,
+          "change_percent": 2.476273908599791
+        }
+      },
+      "span-false-0": {
+        "ns": {
+          "before": 11979100.0,
+          "after": 12080400.0,
+          "change_percent": 0.8456394887762952
+        },
+        "config_ns": {
+          "before": 8350.0,
+          "after": 12600.0,
+          "change_percent": 50.89820359281436
+        },
+        "render_ns": {
+          "before": 11970500.0,
+          "after": 12068000.0,
+          "change_percent": 0.8145023181989064
+        },
+        "p95": {
+          "before": 206000.0,
+          "after": 235850.0,
+          "change_percent": 14.490291262135923
+        },
+        "p99": {
+          "before": 277950.0,
+          "after": 317350.0,
+          "change_percent": 14.175211368951256
+        }
+      },
+      "span-false-100": {
+        "ns": {
+          "before": 11277300.0,
+          "after": 10757900.0,
+          "change_percent": -4.605712360228065
+        },
+        "config_ns": {
+          "before": 382950.0,
+          "after": 16550.0,
+          "change_percent": -95.6782869826348
+        },
+        "render_ns": {
+          "before": 10898200.0,
+          "after": 10742100.0,
+          "change_percent": -1.432346626048342
+        },
+        "p95": {
+          "before": 204800.0,
+          "after": 190450.0,
+          "change_percent": -7.0068359375
+        },
+        "p99": {
+          "before": 270650.0,
+          "after": 223000.0,
+          "change_percent": -17.605763901718085
+        }
+      },
+      "span-false-1000": {
+        "ns": {
+          "before": 13705150.0,
+          "after": 10706700.0,
+          "change_percent": -21.878272036424264
+        },
+        "config_ns": {
+          "before": 3071900.0,
+          "after": 16300.0,
+          "change_percent": -99.46938376900289
+        },
+        "render_ns": {
+          "before": 10554100.0,
+          "after": 10690400.0,
+          "change_percent": 1.2914412408447928
+        },
+        "p95": {
+          "before": 233100.0,
+          "after": 190300.0,
+          "change_percent": -18.361218361218356
+        },
+        "p99": {
+          "before": 326000.0,
+          "after": 258600.0,
+          "change_percent": -20.674846625766875
+        }
+      },
+      "span-false-10000": {
+        "ns": {
+          "before": 41934500.0,
+          "after": 10763400.0,
+          "change_percent": -74.33282857790124
+        },
+        "config_ns": {
+          "before": 30575950.0,
+          "after": 16900.0,
+          "change_percent": -99.94472780077153
+        },
+        "render_ns": {
+          "before": 11509900.0,
+          "after": 10746700.0,
+          "change_percent": -6.630813473618369
+        },
+        "p95": {
+          "before": 769250.0,
+          "after": 190550.0,
+          "change_percent": -75.2291192720182
+        },
+        "p99": {
+          "before": 867150.0,
+          "after": 262000.0,
+          "change_percent": -69.78608083953179
+        }
+      },
+      "span-true-0": {
+        "ns": {
+          "before": 9869450.0,
+          "after": 10033450.0,
+          "change_percent": 1.6616934074340506
+        },
+        "config_ns": {
+          "before": 8100.0,
+          "after": 12800.0,
+          "change_percent": 58.02469135802468
+        },
+        "render_ns": {
+          "before": 9862150.0,
+          "after": 10020450.0,
+          "change_percent": 1.6051266711619716
+        },
+        "p95": {
+          "before": 165450.0,
+          "after": 165950.0,
+          "change_percent": 0.3022061045633073
+        },
+        "p99": {
+          "before": 294700.0,
+          "after": 258250.0,
+          "change_percent": -12.368510349507977
+        }
+      },
+      "span-true-100": {
+        "ns": {
+          "before": 9426250.0,
+          "after": 8755650.0,
+          "change_percent": -7.114175838748171
+        },
+        "config_ns": {
+          "before": 897100.0,
+          "after": 16750.0,
+          "change_percent": -98.1328725894549
+        },
+        "render_ns": {
+          "before": 8555350.0,
+          "after": 8738500.0,
+          "change_percent": 2.1407657196958585
+        },
+        "p95": {
+          "before": 169200.0,
+          "after": 159450.0,
+          "change_percent": -5.762411347517727
+        },
+        "p99": {
+          "before": 213950.0,
+          "after": 232600.0,
+          "change_percent": 8.716989950923114
+        }
+      },
+      "span-true-1000": {
+        "ns": {
+          "before": 22827650.0,
+          "after": 8533750.0,
+          "change_percent": -62.61660749135369
+        },
+        "config_ns": {
+          "before": 14181650.0,
+          "after": 17250.0,
+          "change_percent": -99.87836394213649
+        },
+        "render_ns": {
+          "before": 8779900.0,
+          "after": 8517050.0,
+          "change_percent": -2.993769860704565
+        },
+        "p95": {
+          "before": 401450.0,
+          "after": 144700.0,
+          "change_percent": -63.95566072985428
+        },
+        "p99": {
+          "before": 521100.0,
+          "after": 203900.0,
+          "change_percent": -60.871233928228754
+        }
+      },
+      "span-true-10000": {
+        "ns": {
+          "before": 186929550.0,
+          "after": 8400700.0,
+          "change_percent": -95.50595398105864
+        },
+        "config_ns": {
+          "before": 176164950.0,
+          "after": 16700.0,
+          "change_percent": -99.99052024821056
+        },
+        "render_ns": {
+          "before": 10647100.0,
+          "after": 8384250.0,
+          "change_percent": -21.253205098101834
+        },
+        "p95": {
+          "before": 3194900.0,
+          "after": 138650.0,
+          "change_percent": -95.66027105699709
+        },
+        "p99": {
+          "before": 3786800.0,
+          "after": 170750.0,
+          "change_percent": -95.4909158128235
+        }
+      }
+    },
+    "status": "adoption"
+  },
+  "span-default-a": {
+    "identity": {
+      "before": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "filter": "series_span",
+      "after_head": "e7b09cfe000398a6bf47a0f698ceb8061441939d",
+      "workload": "docs/research/virtual-list-span-reuse-2026-11-05.rs",
+      "workload_sha256": "8612fa4ea39ca868291786dc6eb6b9afdd915b505a858ad55058745169f799b4",
+      "after_feature": null,
+      "build_identity": {
+        "before": {
+          "manifest_sha256": "b18a1fbe16b2af8a179c755d6c85d246d831dd9eec0a5c92154d8c3d646a2d88",
+          "lock_sha256": "d3b840f9af92b87b4587b56f8e3fdc89d74c5213ba91376fadf5739578b2a1af",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "6a39f99b5bad2b86b14092fa21b9ada046e5c3d2207fac48a234ffe0de345498"
+        },
+        "after": {
+          "manifest_sha256": "abfaaf88cf9740c10ad4b9af5f4f2e713b2a45bae68a9769b38407e00d635542",
+          "lock_sha256": "222182f2bef2254606d44b740aaa5138aac35a340f3c0c4e0e373ac0bd3b8ddd",
+          "dependency_records_sha256": "94bfadcdcb3aad15819d277a1eeaa63b76c257eb60b856c06f060a7e2a98a2d8",
+          "vendor_sources_sha256": "5ac19972c307ef039af9a4b17e11a3dbf62ccba2272c289b9890c3075e929060"
+        }
+      },
+      "artifact_date": "2026-11-05",
+      "native": false,
+      "compiler_wait_policy": "exclude idle cargo dev watcher; two quiet observations before every round; poll during each run and at completion; discard observed interference",
+      "discarded_samples": [],
+      "order": [
+        "before/0",
+        "after/0",
+        "after/1",
+        "before/1"
+      ],
+      "rows": 320
+    },
+    "summary": {
+      "cold-false-0": {
+        "ns": {
+          "before": 8400.0,
+          "after": 8700.0,
+          "change_percent": 3.571428571428581
+        },
+        "config_ns": {
+          "before": 8400.0,
+          "after": 8700.0,
+          "change_percent": 3.571428571428581
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 750.0,
+          "after": 800.0,
+          "change_percent": 6.666666666666665
+        },
+        "p99": {
+          "before": 750.0,
+          "after": 800.0,
+          "change_percent": 6.666666666666665
+        }
+      },
+      "cold-false-100": {
+        "ns": {
+          "before": 77350.0,
+          "after": 75850.0,
+          "change_percent": -1.9392372333548846
+        },
+        "config_ns": {
+          "before": 77350.0,
+          "after": 75850.0,
+          "change_percent": -1.9392372333548846
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 5250.0,
+          "after": 5200.0,
+          "change_percent": -0.952380952380949
+        },
+        "p99": {
+          "before": 5250.0,
+          "after": 5200.0,
+          "change_percent": -0.952380952380949
+        }
+      },
+      "cold-false-1000": {
+        "ns": {
+          "before": 592850.0,
+          "after": 567500.0,
+          "change_percent": -4.275955131989539
+        },
+        "config_ns": {
+          "before": 592850.0,
+          "after": 567500.0,
+          "change_percent": -4.275955131989539
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 38500.0,
+          "after": 37750.0,
+          "change_percent": -1.9480519480519431
+        },
+        "p99": {
+          "before": 38500.0,
+          "after": 37750.0,
+          "change_percent": -1.9480519480519431
+        }
+      },
+      "cold-false-10000": {
+        "ns": {
+          "before": 8105600.0,
+          "after": 8048950.0,
+          "change_percent": -0.6988995262534492
+        },
+        "config_ns": {
+          "before": 8105600.0,
+          "after": 8048950.0,
+          "change_percent": -0.6988995262534492
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 580050.0,
+          "after": 557800.0,
+          "change_percent": -3.8358762175674466
+        },
+        "p99": {
+          "before": 580050.0,
+          "after": 557800.0,
+          "change_percent": -3.8358762175674466
+        }
+      },
+      "cold-true-0": {
+        "ns": {
+          "before": 9000.0,
+          "after": 8900.0,
+          "change_percent": -1.1111111111111072
+        },
+        "config_ns": {
+          "before": 9000.0,
+          "after": 8900.0,
+          "change_percent": -1.1111111111111072
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 750.0,
+          "after": 750.0,
+          "change_percent": 0.0
+        },
+        "p99": {
+          "before": 750.0,
+          "after": 750.0,
+          "change_percent": 0.0
+        }
+      },
+      "cold-true-100": {
+        "ns": {
+          "before": 155200.0,
+          "after": 155050.0,
+          "change_percent": -0.09664948453608213
+        },
+        "config_ns": {
+          "before": 155200.0,
+          "after": 155050.0,
+          "change_percent": -0.09664948453608213
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 10050.0,
+          "after": 10050.0,
+          "change_percent": 0.0
+        },
+        "p99": {
+          "before": 10050.0,
+          "after": 10050.0,
+          "change_percent": 0.0
+        }
+      },
+      "cold-true-1000": {
+        "ns": {
+          "before": 1916850.0,
+          "after": 1879700.0,
+          "change_percent": -1.9380754884315454
+        },
+        "config_ns": {
+          "before": 1916850.0,
+          "after": 1879700.0,
+          "change_percent": -1.9380754884315454
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 126400.0,
+          "after": 126050.0,
+          "change_percent": -0.2768987341772111
+        },
+        "p99": {
+          "before": 126400.0,
+          "after": 126050.0,
+          "change_percent": -0.2768987341772111
+        }
+      },
+      "cold-true-10000": {
+        "ns": {
+          "before": 26274950.0,
+          "after": 26406000.0,
+          "change_percent": 0.49876403190109997
+        },
+        "config_ns": {
+          "before": 26274950.0,
+          "after": 26406000.0,
+          "change_percent": 0.49876403190109997
+        },
+        "render_ns": {
+          "before": 0.0,
+          "after": 0.0,
+          "change_percent": null
+        },
+        "p95": {
+          "before": 1841600.0,
+          "after": 1843250.0,
+          "change_percent": 0.08959600347524521
+        },
+        "p99": {
+          "before": 1841600.0,
+          "after": 1843250.0,
+          "change_percent": 0.08959600347524521
+        }
+      },
+      "span-false-0": {
+        "ns": {
+          "before": 11996600.0,
+          "after": 12240800.0,
+          "change_percent": 2.035576746744905
+        },
+        "config_ns": {
+          "before": 7650.0,
+          "after": 7800.0,
+          "change_percent": 1.9607843137254832
+        },
+        "render_ns": {
+          "before": 11989200.0,
+          "after": 12232600.0,
+          "change_percent": 2.030160477763321
+        },
+        "p95": {
+          "before": 207350.0,
+          "after": 217400.0,
+          "change_percent": 4.846877260670368
+        },
+        "p99": {
+          "before": 379050.0,
+          "after": 337700.0,
+          "change_percent": -10.90885107505606
+        }
+      },
+      "span-false-100": {
+        "ns": {
+          "before": 11309700.0,
+          "after": 11309450.0,
+          "change_percent": -0.0022104918786514105
+        },
+        "config_ns": {
+          "before": 390750.0,
+          "after": 389800.0,
+          "change_percent": -0.2431222008957179
+        },
+        "render_ns": {
+          "before": 10921950.0,
+          "after": 10918600.0,
+          "change_percent": -0.03067217850292181
+        },
+        "p95": {
+          "before": 197900.0,
+          "after": 203750.0,
+          "change_percent": 2.9560384032339515
+        },
+        "p99": {
+          "before": 287950.0,
+          "after": 243350.0,
+          "change_percent": -15.488800138913007
+        }
+      },
+      "span-false-1000": {
+        "ns": {
+          "before": 13773700.0,
+          "after": 14227900.0,
+          "change_percent": 3.297588883161384
+        },
+        "config_ns": {
+          "before": 3084950.0,
+          "after": 3168900.0,
+          "change_percent": 2.7212758715700502
+        },
+        "render_ns": {
+          "before": 10683300.0,
+          "after": 11021550.0,
+          "change_percent": 3.166156524669339
+        },
+        "p95": {
+          "before": 243900.0,
+          "after": 286650.0,
+          "change_percent": 17.527675276752763
+        },
+        "p99": {
+          "before": 338550.0,
+          "after": 451500.0,
+          "change_percent": 33.3628710677891
+        }
+      },
+      "span-false-10000": {
+        "ns": {
+          "before": 41877350.0,
+          "after": 41424500.0,
+          "change_percent": -1.081372149861437
+        },
+        "config_ns": {
+          "before": 30315350.0,
+          "after": 29713900.0,
+          "change_percent": -1.9839784135759597
+        },
+        "render_ns": {
+          "before": 11477200.0,
+          "after": 11544600.0,
+          "change_percent": 0.5872512459484946
+        },
+        "p95": {
+          "before": 740200.0,
+          "after": 710950.0,
+          "change_percent": -3.9516346933261226
+        },
+        "p99": {
+          "before": 1116600.0,
+          "after": 980600.0,
+          "change_percent": -12.179831631739212
+        }
+      },
+      "span-true-0": {
+        "ns": {
+          "before": 9787650.0,
+          "after": 10012350.0,
+          "change_percent": 2.295750256701057
+        },
+        "config_ns": {
+          "before": 8100.0,
+          "after": 7600.0,
+          "change_percent": -6.172839506172845
+        },
+        "render_ns": {
+          "before": 9779350.0,
+          "after": 10004300.0,
+          "change_percent": 2.3002551294308837
+        },
+        "p95": {
+          "before": 164200.0,
+          "after": 167850.0,
+          "change_percent": 2.222898903775894
+        },
+        "p99": {
+          "before": 191900.0,
+          "after": 293500.0,
+          "change_percent": 52.94424179260031
+        }
+      },
+      "span-true-100": {
+        "ns": {
+          "before": 9749650.0,
+          "after": 9790200.0,
+          "change_percent": 0.4159123660849362
+        },
+        "config_ns": {
+          "before": 904700.0,
+          "after": 906750.0,
+          "change_percent": 0.22659445119930233
+        },
+        "render_ns": {
+          "before": 8835450.0,
+          "after": 8913350.0,
+          "change_percent": 0.8816755230350415
+        },
+        "p95": {
+          "before": 179650.0,
+          "after": 183700.0,
+          "change_percent": 2.2543835235179444
+        },
+        "p99": {
+          "before": 258350.0,
+          "after": 272850.0,
+          "change_percent": 5.612541126378945
+        }
+      },
+      "span-true-1000": {
+        "ns": {
+          "before": 22928500.0,
+          "after": 22581550.0,
+          "change_percent": -1.5131822840569575
+        },
+        "config_ns": {
+          "before": 14154300.0,
+          "after": 13681150.0,
+          "change_percent": -3.342800421073455
+        },
+        "render_ns": {
+          "before": 8784000.0,
+          "after": 8816100.0,
+          "change_percent": 0.36543715846995006
+        },
+        "p95": {
+          "before": 402550.0,
+          "after": 396700.0,
+          "change_percent": -1.4532356229039922
+        },
+        "p99": {
+          "before": 551250.0,
+          "after": 461650.0,
+          "change_percent": -16.253968253968253
+        }
+      },
+      "span-true-10000": {
+        "ns": {
+          "before": 186328950.0,
+          "after": 189497550.0,
+          "change_percent": 1.7005408982340153
+        },
+        "config_ns": {
+          "before": 175960100.0,
+          "after": 178407850.0,
+          "change_percent": 1.3910824101600383
+        },
+        "render_ns": {
+          "before": 10588750.0,
+          "after": 11167950.0,
+          "change_percent": 5.469956321567704
+        },
+        "p95": {
+          "before": 3194300.0,
+          "after": 3351850.0,
+          "change_percent": 4.932223022258397
+        },
+        "p99": {
+          "before": 3665300.0,
+          "after": 4087250.0,
+          "change_percent": 11.51201811584317
+        }
+      }
+    },
+    "status": "unchanged public API control"
+  },
+  "notes": {
+    "cold_iterations_per_sample": 16,
+    "warm_draws_per_sample": 64,
+    "samples_per_case_per_process": 5,
+    "processes_per_abba": 4,
+    "cpu_only": true,
+    "allocation_peak": "unmeasured",
+    "compiler_interference": "none observed in accepted rounds"
+  }
+}

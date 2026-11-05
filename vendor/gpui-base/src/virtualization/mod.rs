@@ -12,7 +12,7 @@ mod state;
 
 pub use anchor::VirtualizerAnchorPosition;
 pub use element::VirtualList;
-pub use grid_span::VirtualGridSpan;
+pub use grid_span::{VirtualGridSpan, VirtualGridSpanSet};
 pub use grid_track::VirtualGridTrack;
 pub use grid::{VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot};
 pub use masonry::{

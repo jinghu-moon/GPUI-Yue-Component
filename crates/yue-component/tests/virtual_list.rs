@@ -41,6 +41,8 @@ mod grid_observed;
 mod grid_preparation;
 #[path = "virtual_list/grid_retention.rs"]
 mod grid_retention;
+#[path = "virtual_list/grid_span_set.rs"]
+mod grid_span_set;
 #[path = "virtual_list/grid_spans.rs"]
 mod grid_spans;
 #[path = "virtual_list/grid_tracks.rs"]

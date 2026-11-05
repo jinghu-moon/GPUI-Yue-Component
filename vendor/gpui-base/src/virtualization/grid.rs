@@ -259,7 +259,7 @@ struct GridOptions {
     retained: Vec<VirtualGridCellKey>,
     focused: Vec<(VirtualGridCellKey, gpui::FocusHandle)>,
     fallback: Option<gpui::FocusHandle>,
-    spans: Option<super::grid_span::GridSpans>,
+    spans: Option<super::grid_span::GridSpanStorage>,
     right_to_left: bool,
 }
 type Renderer = Rc<dyn Fn(VirtualGridCell, &mut Window, &mut App) -> AnyElement>;
@@ -425,7 +425,29 @@ impl VirtualGrid {
                 spans,
                 (self.frozen_rows, self.frozen_columns),
             )?;
-            self.options.get_or_insert_with(Default::default).spans = Some(resolved);
+            self.options.get_or_insert_with(Default::default).spans =
+                Some(super::grid_span::GridSpanStorage::Owned(resolved));
+        } else if let Some(options) = &mut self.options {
+            options.spans = None;
+        }
+        Ok(self)
+    }
+    /// Apply retained immutable descriptors, reusing at most one validated
+    /// resolution. Call after freezing. Retain the set outside render; replace
+    /// it when descriptors change. Source transactions invalidate automatically.
+    pub fn span_set(
+        mut self,
+        spans: &VirtualGridSpanSet,
+        cx: &App,
+    ) -> Result<Self, VirtualizerError> {
+        if let Some(resolved) = spans.resolve(
+            &self.rows,
+            &self.columns,
+            (self.frozen_rows, self.frozen_columns),
+            cx,
+        )? {
+            self.options.get_or_insert_with(Default::default).spans =
+                Some(super::grid_span::GridSpanStorage::Shared(resolved));
         } else if let Some(options) = &mut self.options {
             options.spans = None;
         }

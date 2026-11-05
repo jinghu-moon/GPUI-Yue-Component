@@ -144,6 +144,7 @@ TanStack 的两个轴共享滚动容器、多个 lanes 沿主轴分配条目的�
 | 多列瀑布流 | VirtualMasonry；稳定分栏、真实测量、显式 reflow 改列数 | 多列内容沿一个纵向滚动轴；不是横纵独立滚动的矩阵 |
 | 冻结前缀行／列 | `VirtualGrid::frozen_rows(n)`／`frozen_columns(n)` | 当前顺序前缀，Fixed/Known 尺寸，一个滚动 owner，四区互斥裁剪；无自动表头 role |
 | 显式跨格 | VirtualGridSpan，Fixed/Known | 稳定 origin、离屏矩形查询、唯一 View／hit；拒绝重叠、越界和跨冻结边界，不自动反推轨道 |
+| 跨格配置复用 | VirtualGridSpanSet，显式 opt-in | 消费者在 render 外持有不可变描述符；只缓存一份索引解析，轴身份／generation／冻结边界变化时重验，不缓存尺寸 |
 | 约束 auto | VirtualGridTrack::resolve 的 min/max/weight | O(T log T) 解析显式轨道列表，交给 Known；不测 cells、不保证离屏全局最大内容 |
 | 精确 cell 保留 | retained_cells／cell_focus_handle | 两轴 key 对稀疏并集，不扩展轴乘积；删除／注销先焦点修复再释放 View |
 | 任意二维画布／节点坐标、三维空间 | 尚不支持 | 需要独立空间索引／裁剪策略，不能把二维 Grid 等同于通用 N 维布局 |

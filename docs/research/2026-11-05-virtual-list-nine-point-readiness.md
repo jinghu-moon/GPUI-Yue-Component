@@ -17,9 +17,36 @@ GPUI 新增正跨度的 `aria_row_span`／`aria_column_span` 接线；普通 Div
 
 当前锁定的 `accesskit_windows 0.34.0` 未完整实现 UIA Grid／GridItem provider；结构化 AccessKit 数据不能直接宣称已经成为 Windows 原生表格导航能力。本轮不修改 Cargo registry、不扩充生产依赖，也不以文字说明冒充结构化跨度。真实读屏／桥接缺口在最终结论中保留。
 
-## 2. span 配置候选
+定向 Showcase 回归 1 项通过，Showcase all-targets Clippy 通过；原生 vendor 合同 17 项通过，源码 manifests／locks 未变。合同首次编译发现 Div 必须先设置 id 才能调用 StatefulInteractiveElement 的表格方法，修正后通过。日志散列见 `virtual-list-nine-a11y-2026-11-05.json`。
 
-待实现与前后测量；未测前不声明采用。
+## 2. span 配置复用
+
+采用显式 `VirtualGridSpanSet`／`.span_set()`，保留 `.spans()` 默认路径。消费者在 render 外持有不可变描述符；克隆共享描述符和最多一份缓存解析。缓存键包含两个完整 EntityId、两个 source generation 与冻结前缀；每次验证轴合同，未命中完整验证后才发布。失败不会破坏最后一份良好缓存。仅存索引和范围，不持有源／controller／窗口／滚动 owner，不缓存 track 尺寸；被旧 frame 持有的解析快照可自然释放。
+
+三项定向回归通过：32 次命中零源反查；冻结变化重验／非法配置原子拒绝；新实体同 generation 不复用；源删除拒绝缺失 origin；轴不支持的模式拒绝；源 reorder／Known 尺寸反馈／离屏 origin 的完整 cell 几何及点击目标与旧路径一致；释放 controller 后保留 set 不保活源。首版测试试图通过 replace_source 改 sizing 模式，被已有合同拒绝，测试已改为重建轴，未放宽生产限制。Showcase 的单个正文 span 在 view 初始化时构造 set，原生测试也将覆盖这一接线。
+
+### 同一完整 Grid 的 Release ABBA
+
+基线为 `e7b09cf`，依赖记录散列一致，工作负载分别针对前／后源码构建。每轮 ABBA 四个独立进程；16 个场景 × 5 个样本 × 4，共 320 行；暖帧每样本 64 次 notify＋draw，冷启动每样本 16 次等价描述符复制＋首次配置＋释放。暖帧有独立 BTreeSet oracle 并逐格核对尺寸，保持实际 workset 相同。预热首帧不计，计时期间没有修改源或运行其他 Cargo 构建。
+
+初次 `span-reuse-a` 的冷启动释放时点不一致，320 行原样保留并排除采用判断；初版 workload 按原始 hash 复原保存。修正后 `span-reuse-b/c` 两轮数据完整且均通过检查。下表是各轮 10 个样本的完整暖帧 CPU 总时长中位数变化，不是配置单项收益或 GPU FPS。
+
+| 分布／跨度数 | B 轮变化 | C 轮变化 |
+| --- | ---: | ---: |
+| 分散／0 | −2.0% | +0.8% |
+| 分散／100 | −3.5% | −4.6% |
+| 分散／1,000 | −23.6% | −21.9% |
+| 分散／10,000 | −75.9% | −74.3% |
+| 同排／0 | −2.2% | +1.7% |
+| 同排／100 | −11.2% | −7.1% |
+| 同排／1,000 | −63.2% | −62.6% |
+| 同排／10,000 | −95.5% | −95.5% |
+
+冷启动不是免费：非空集合变化为 −2.3% 至 +9.9%；10,000 分散为 −0.1%／+1.8%，同排为 −1.1%／+0.3%。空集合首次配置 +9.4% 至 +22.5%，但每 16 次配置只增加约 0.0008–0.0019ms。额外持有描述符与解析索引均为 O(S)，分配次数／峰值本轮未测，不能宣称零内存开销。
+
+另跑 `span-default-a`，两边均调用旧 `.spans()`：暖帧 −1.5% 至 +3.3%，冷启动 −4.3% 至 +3.6%，未观察到同规模实质退化；并不据此宣称严格零开销。默认路径没有新增 retained cache／Rc 分配，非空 GridOptions 的 enum 包装仍有布局成本。
+
+原始 CSV、独立 identity 与完整汇总见 `virtual-list-series-span-{reuse-b,reuse-c,default-a}-2026-11-05.csv`、`virtual-list-nine-span-evidence-2026-11-05.json`。普通切片适用于少量／频繁改变的 descriptors；大量稳定 span 才显式持有 set，不能每次 render 重建来期待缓存收益。
 
 ## 3. 持续守卫
 
