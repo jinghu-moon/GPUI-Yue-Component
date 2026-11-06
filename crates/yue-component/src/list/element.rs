@@ -89,13 +89,15 @@ impl RenderOnce for YueList {
             }
         }
         let (font, line_height) = self.size.text();
+        // Continuous rows and bands need normal block flow. Nested column flex
+        // containers repeatedly query intrinsic text sizes during page layout.
+        // Keep flex for horizontal rows, and let GridBody select native grid.
         let mut root = div()
             .id(self.id)
             .test_support()
             .w_full()
             .min_w_0()
-            .flex()
-            .flex_col()
+            .block()
             .flex_shrink_0()
             .text_size(rems(theme, font))
             .line_height(rems(theme, line_height))
@@ -119,10 +121,10 @@ impl RenderOnce for YueList {
             .id("list-body")
             .test_support()
             .min_w_0()
-            .flex()
+            .block()
             .flex_shrink_0()
             .role(Role::List)
-            .when(!horizontal, |el| el.flex_col());
+            .when(horizontal, |el| el.flex());
         if let Some(label) = self.label {
             body = body.aria_label(label);
         }
@@ -168,8 +170,7 @@ impl RenderOnce for YueList {
                         .id(group.id)
                         .test_support()
                         .min_w_0()
-                        .flex()
-                        .flex_col()
+                        .block()
                         .flex_shrink_0()
                         .role(Role::ListItem);
                     if self.grid.is_some() {
@@ -184,8 +185,7 @@ impl RenderOnce for YueList {
                         .id("list-group-body")
                         .test_support()
                         .min_w_0()
-                        .flex()
-                        .flex_col()
+                        .block()
                         .role(Role::List)
                         .aria_label(group.title);
                     let len = group.items.len();

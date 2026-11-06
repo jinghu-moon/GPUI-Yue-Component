@@ -133,6 +133,35 @@ fn meta(
         .description(description)
         .theme(theme)
 }
+// These examples fill the available width. Normal flow avoids another pair of
+// intrinsic flex measurements around every nested list; spacing stays explicit.
+fn list_section(
+    theme: YueTheme,
+    title: &'static str,
+    description: &'static str,
+    example: impl IntoElement,
+) -> impl IntoElement {
+    div()
+        .min_w_0()
+        .flex_shrink_0()
+        .child(div().text_lg().mb_3().child(title))
+        .child(
+            div()
+                .text_sm()
+                .mb_3()
+                .text_color(gpui_kit::rgb(theme.text_secondary()))
+                .child(description),
+        )
+        .child(
+            div()
+                .p_4()
+                .rounded_md()
+                .border_1()
+                .border_color(gpui_kit::rgb(theme.border_default()))
+                .bg(gpui_kit::rgb(theme.surface()))
+                .child(example),
+        )
+}
 impl Render for ListPage {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = yue_component::current_theme(cx);
@@ -433,7 +462,15 @@ impl Render for ListPage {
             column()
                 .when(self.grid_narrow, |el| el.max_w(rems(28.)))
                 .child(normal_cards)
-                .child(div().w_full().h(rems(22.)).child(virtual_cards)),
+                .child(
+                    div()
+                        .w_full()
+                        .h(rems(22.))
+                        // The child handles its wheel first. Keep the same
+                        // gesture from also moving the surrounding demo page.
+                        .on_scroll_wheel(|_, _, cx| cx.stop_propagation())
+                        .child(virtual_cards),
+                ),
         );
         column()
             .debug_selector(|| "list-content".into())
@@ -444,53 +481,55 @@ impl Render for ListPage {
                 theme,
                 "组织文本、元信息和独立操作；支持连续列表、分组及文章条目。".into(),
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "配置预览",
                 "调整局部密度和表面。复选框与查看按钮分别获得焦点。",
                 column().child(controls).child(preview),
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "尺寸",
                 "三种尺寸共同调整间距和排版，内容高度自然变化。",
                 density,
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "分组",
                 "普通分组标题随内容滚动，斑马纹按完整数据顺序连续计算。",
                 groups,
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "文章条目",
                 "条目方向与集合方向分别配置；右侧附加内容不强制竖排。",
                 article,
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "内容状态与头尾",
                 "切换示例状态，或追加文档；加载、重试和页码由宿主组合。",
                 column().child(status_controls).child(status),
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "横向短集合",
                 "单行排列，不自动换行或创建滚动容器。",
                 horizontal,
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "规则卡片网格",
                 "按容器宽度自动分列，或固定三列。上方为普通集合，下方为一万张按行虚拟化卡片；可测试窄容器、变高正文和远端跳转。",
                 cards,
             ))
-            .child(section(
+            .child(list_section(
                 theme,
                 "一万条虚拟内容",
                 "复用现有虚拟列表与动态测量，只挂载视口内的条目。",
-                div().w_full().h(rems(18.)).child(
+                div().w_full().h(rems(18.))
+                    .on_scroll_wheel(|_, _, cx| cx.stop_propagation())
+                    .child(
                     YueVirtualList::new("list-virtual", &self.virtual_state, |item, _, cx| {
                         let theme = yue_component::current_theme(cx);
                         YueListItem::new(item.key().clone())
@@ -514,6 +553,118 @@ mod tests {
     use super::*;
     use gpui_kit::base::{Root, test_support::snapshots};
     use gpui_kit::{Modifiers, TestAppContext, VisualTestContext, size};
+    #[gpui_kit::test]
+    #[ignore = "manual production-page scroll CPU probe; run --release --ignored --nocapture"]
+    fn list_page_scroll_cpu_evidence(cx: &mut TestAppContext) {
+        use std::time::Instant;
+        cx.update(|cx| {
+            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let (_, cx) = cx.add_window_view(|w, cx| {
+            let view = cx.new(|cx| ListPage::new(w, cx));
+            Root::new(cx.new(|_| ScrollProbe { page: view }), w, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        draw(cx);
+        draw(cx);
+        for step in 0..24 {
+            let (elapsed, nodes, bounds) = cx.update(|w, cx| {
+                w.refresh();
+                let start = Instant::now();
+                w.draw(cx).clear(cx);
+                let elapsed = start.elapsed().as_micros();
+                let nodes = snapshots(w);
+                let bounds: Vec<_> = nodes
+                    .iter()
+                    .filter(|n| {
+                        n.label() == Some("一万张项目卡片") || n.label() == Some("一万条记录")
+                    })
+                    .map(|n| (n.label().unwrap().to_string(), n.bounds()))
+                    .collect();
+                (elapsed, nodes.len(), bounds)
+            });
+            println!("LIST_PAGE_SCROLL,{step},{elapsed},{nodes},{bounds:?}");
+            cx.simulate_event(gpui_kit::ScrollWheelEvent {
+                // Page padding routes the wheel to the outer viewport even
+                // when a virtual example crosses the middle of the window.
+                position: gpui_kit::point(px(1192.), px(400.)),
+                delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.), px(-120.))),
+                touch_phase: gpui_kit::TouchPhase::Moved,
+                ..Default::default()
+            });
+            cx.run_until_parked();
+        }
+    }
+    struct ScrollProbe {
+        page: Entity<ListPage>,
+    }
+    impl Render for ScrollProbe {
+        fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+            div()
+                .size_full()
+                .child(self.page.clone())
+                .overflow_y_scrollbar()
+        }
+    }
+    #[gpui_kit::test]
+    fn page_scroll_preserves_natural_layout_and_inner_scroll_ownership(cx: &mut TestAppContext) {
+        cx.update(|cx| {
+            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let mut page = None;
+        let (_, cx) = cx.add_window_view(|w, cx| {
+            let view = cx.new(|cx| ListPage::new(w, cx));
+            page = Some(view.clone());
+            Root::new(cx.new(|_| ScrollProbe { page: view }), w, cx)
+        });
+        cx.simulate_resize(size(px(1200.), px(800.)));
+        draw(cx);
+        let page = page.unwrap();
+        let grid = page.read_with(cx, |p, _| p.grid_state.clone());
+        let initial = cx.debug_bounds("list-content").unwrap();
+        cx.simulate_event(gpui_kit::ScrollWheelEvent {
+            position: gpui_kit::point(px(1192.), px(400.)),
+            delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.), px(-2400.))),
+            touch_phase: gpui_kit::TouchPhase::Moved,
+            ..Default::default()
+        });
+        draw(cx);
+        let scrolled = cx.debug_bounds("list-content").unwrap();
+        assert_eq!(
+            initial.size, scrolled.size,
+            "scrolling must not resize the content"
+        );
+        assert_eq!(scrolled.top(), initial.top() - px(2400.));
+        let viewport = cx.update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .find(|n| n.label() == Some("一万张项目卡片"))
+                .unwrap()
+                .bounds()
+        });
+        assert_eq!(viewport.size.height, px(352.));
+        assert!(viewport.center().y < px(800.));
+        let before = grid.read_with(cx, |s, cx| {
+            s.virtualizer().read(cx).viewport().unwrap().offset()
+        });
+        cx.simulate_event(gpui_kit::ScrollWheelEvent {
+            position: viewport.center(),
+            delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.), px(-120.))),
+            touch_phase: gpui_kit::TouchPhase::Moved,
+            ..Default::default()
+        });
+        draw(cx);
+        assert_eq!(cx.debug_bounds("list-content").unwrap(), scrolled);
+        let after = grid.read_with(cx, |s, cx| {
+            s.virtualizer().read(cx).viewport().unwrap().offset()
+        });
+        assert!(
+            after > before,
+            "inner wheel must reach the existing virtual scroll owner"
+        );
+    }
     fn draw(cx: &mut VisualTestContext) {
         cx.run_until_parked();
         cx.update(|w, cx| {
