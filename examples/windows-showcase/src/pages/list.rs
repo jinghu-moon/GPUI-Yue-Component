@@ -7,8 +7,10 @@ use yue_component::{
     YueListGroup, YueListItem, YueListItemMeta, YueSegmented, YueSegmentedOption, YueSkeleton,
     YueTag, YueVirtualList, YueVirtualListGrid,
 };
+mod settings;
 
 pub(crate) struct ListPage {
+    settings: Entity<settings::SettingsExamples>,
     size: ListSize,
     split: bool,
     striped: bool,
@@ -45,7 +47,7 @@ impl VirtualizerSource for Records {
     }
 }
 impl ListPage {
-    pub(crate) fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub(crate) fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let grid_focus = cx.focus_handle().tab_stop(true);
         let grid_state = cx.new(|cx| {
             ListGridState::new(
@@ -62,6 +64,7 @@ impl ListPage {
                 .unwrap()
         });
         Self {
+            settings: cx.new(|cx| settings::SettingsExamples::new(window, cx)),
             size: ListSize::Medium,
             split: true,
             striped: false,
@@ -495,6 +498,12 @@ impl Render for ListPage {
             ))
             .child(list_section(
                 theme,
+                "设置列表",
+                "常规偏好、通知联动、只读信息与维护操作。修改仅保留在本示例中，可切换行尾和下方控件布局。",
+                self.settings.clone(),
+            ))
+            .child(list_section(
+                theme,
                 "分组",
                 "普通分组标题随内容滚动，斑马纹按完整数据顺序连续计算。",
                 groups,
@@ -624,9 +633,18 @@ mod tests {
         let page = page.unwrap();
         let grid = page.read_with(cx, |p, _| p.grid_state.clone());
         let initial = cx.debug_bounds("list-content").unwrap();
+        let distance = cx.update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .find(|n| n.label() == Some("一万张项目卡片"))
+                .unwrap()
+                .bounds()
+                .top()
+                - px(300.)
+        });
         cx.simulate_event(gpui_kit::ScrollWheelEvent {
             position: gpui_kit::point(px(1192.), px(400.)),
-            delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.), px(-2400.))),
+            delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(px(0.), -distance)),
             touch_phase: gpui_kit::TouchPhase::Moved,
             ..Default::default()
         });
@@ -636,7 +654,7 @@ mod tests {
             initial.size, scrolled.size,
             "scrolling must not resize the content"
         );
-        assert_eq!(scrolled.top(), initial.top() - px(2400.));
+        assert_eq!(scrolled.top(), initial.top() - distance);
         let viewport = cx.update(|w, _| {
             snapshots(w)
                 .into_iter()

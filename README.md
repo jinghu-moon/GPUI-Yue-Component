@@ -99,7 +99,7 @@ Use `.collapse(BreadcrumbCollapse::new(5).before(2).after(2))` to retain both en
 
 `YueList::new("members").child(YueListItem::new("alex").content(YueListItemMeta::new("Alex").description("Design team")))` provides stateless content layout. Three sizes, horizontal/vertical item content, leading/body/extra/actions slots, separators, stripes, groups, header/footer and empty content use Yue tokens. Compose existing buttons and checkboxes; hosts retain data, selection, loading and scrolling.
 
-Browse **组件 → List** for working configuration, states and ten thousand measured virtual items using `YueVirtualList`. See [the List guide](docs/29-list.md) for ownership and testing; use `ListGrid::columns` or `ListGrid::min_width` with `YueVirtualListGrid` for responsive and large card collections.
+Browse **组件 → List** for working configuration, settings lists (preferences, dependent notification controls, read-only values and maintenance actions), states and ten thousand measured virtual items using `YueVirtualList`. Settings examples offer inline and stacked controls using existing Yue components. See [the List guide](docs/29-list.md) for ownership and testing; use `ListGrid::columns` or `ListGrid::min_width` with `YueVirtualListGrid` for responsive and large card collections.
 
 ## Links
 
