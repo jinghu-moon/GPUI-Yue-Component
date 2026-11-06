@@ -20,6 +20,7 @@ mod image_preview;
 mod input;
 pub mod layout;
 mod link;
+mod list;
 mod loading;
 pub mod motion;
 mod popup;
@@ -93,6 +94,10 @@ pub use input::{
 };
 pub use layout::Breakpoint;
 pub use link::{LinkHover, LinkSize, LinkVariant, YueLink};
+pub use list::{
+    ListGrid, ListGridGeometry, ListGridSizing, ListGridState, ListItemLayout, ListLayout,
+    ListSize, YueList, YueListGroup, YueListItem, YueListItemMeta, YueVirtualListGrid,
+};
 pub use loading::{
     FeedbackSize, ProgressShape, ProgressStatus, ProgressValue, SkeletonAnimation, SkeletonShape,
     YueLoadingRegion, YueProgress, YueSkeleton, YueSpinner,
@@ -148,9 +153,9 @@ pub mod prelude {
     };
     pub use crate::{
         ToastSpec, VirtualizerSizing, VirtualizerSource, VirtualizerState, YueCollapse,
-        YueCollapseItem, YueDialog, YueDialogState, YueImagePreview, YueImagePreviewState,
-        YueLoadingRegion, YueProgress, YueSkeleton, YueSpinner, YueTag, YueTagGroup, YueToaster,
-        YueToasterState, YueVirtualList,
+        YueCollapseItem, YueDialog, YueDialogState, YueImagePreview, YueImagePreviewState, YueList,
+        YueListGroup, YueListItem, YueListItemMeta, YueLoadingRegion, YueProgress, YueSkeleton,
+        YueSpinner, YueTag, YueTagGroup, YueToaster, YueToasterState, YueVirtualList,
     };
     pub use gpui_kit::{
         InteractiveElement, IntoElement, ParentElement, StatefulInteractiveElement, Styled,

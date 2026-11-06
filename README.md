@@ -95,6 +95,12 @@ Use `.collapse(BreadcrumbCollapse::new(5).before(2).after(2))` to retain both en
 
 `YueDivider::new("section-rule", theme)` renders a full-width horizontal rule. Add `.label("Details").align(DividerAlign::Start)` for a text divider, `.dashed(true)` for dashed lines, or `.layout(DividerLayout::Vertical).height(gpui_kit::rems(1.5))` for an unlabelled inline rule. Dividers use Yue tokens and add no keyboard stop. Browse **组件 → Divider** in Showcase; see [the component guide](docs/14-divider.md) for API and sizing details.
 
+## Lists
+
+`YueList::new("members").child(YueListItem::new("alex").content(YueListItemMeta::new("Alex").description("Design team")))` provides stateless content layout. Three sizes, horizontal/vertical item content, leading/body/extra/actions slots, separators, stripes, groups, header/footer and empty content use Yue tokens. Compose existing buttons and checkboxes; hosts retain data, selection, loading and scrolling.
+
+Browse **组件 → List** for working configuration, states and ten thousand measured virtual items using `YueVirtualList`. See [the List guide](docs/29-list.md) for ownership and testing; use `ListGrid::columns` or `ListGrid::min_width` with `YueVirtualListGrid` for responsive and large card collections.
+
 ## Links
 
 `YueLink::new("guide", "使用指南", "https://example.com/guide")` opens a resource through the system's default application. `LinkVariant` provides Default/Primary/Danger/Warning/Success, `LinkSize` provides three sizes, and `LinkHover` selects animated underline, color, or no hover effect. Primary is the default; `.underline(true)` remains visible independently of the hover policy. Optional `.leading_icon(outline::Link)` and `.trailing_icon(outline::ExternalLink)` reuse Tabler SVGs.
@@ -310,3 +316,4 @@ See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先
 - [ImagePreview design and implementation](docs/25-image-preview.md)
 - [Local Gaussian backdrop foundation](docs/26-backdrop-blur.md)
 - [Windows HDR pipeline and implementation status](docs/27-hdr-pipeline.md) — high-precision resources and opt-in Windows scRGB output are implemented for verification; native-display acceptance and SnapClip capture/consumer migration remain incomplete. See [evidence and outstanding gates](docs/performance/2026-11-03-hdr-resources.md).
+- [List design and implementation](docs/29-list.md) — linear layouts, item slots, grouping, states, responsive card grids and row-based virtualization.

@@ -29,6 +29,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ),
     ("input-page", "输入框 Input", ShowcasePage::Input),
     ("link-page", "链接 Link", ShowcasePage::Link),
+    ("list-page", "列表 List", ShowcasePage::List),
     ("progress-page", "进度 Progress", ShowcasePage::Progress),
     ("radio-page", "单选框 Radio", ShowcasePage::Radio),
     (
@@ -412,6 +413,7 @@ mod tests {
             ("icon-page", ShowcasePage::Icon, "icon-component-content"),
             ("tooltip-page", ShowcasePage::Tooltip, "tooltip-content"),
             ("link-page", ShowcasePage::Link, "link-content"),
+            ("list-page", ShowcasePage::List, "list-content"),
             ("tag-page", ShowcasePage::Tag, "tag-content"),
             ("select-page", ShowcasePage::Select, "select-content"),
             ("progress-page", ShowcasePage::Progress, "progress-content"),

@@ -67,6 +67,7 @@ enum ShowcasePage {
     Slider,
     Checkbox,
     Collapse,
+    List,
     VirtualList,
     VirtualLayouts,
     ColorPicker,
@@ -95,6 +96,7 @@ struct Showcase {
     tag_demo: gpui_kit::Entity<pages::tag::TagPage>,
     tabs_demo: gpui_kit::Entity<pages::tabs::TabsPage>,
     collapse_demo: gpui_kit::Entity<pages::collapse::CollapsePage>,
+    list_demo: Option<gpui_kit::Entity<pages::list::ListPage>>,
     virtual_list_demo: Option<gpui_kit::Entity<pages::virtual_list::VirtualListPage>>,
     virtual_layouts_demo: Option<gpui_kit::Entity<pages::virtual_layouts::VirtualLayoutsPage>>,
     image_preview_demo: Option<gpui_kit::Entity<pages::image_preview::ImagePreviewPage>>,
@@ -267,6 +269,7 @@ impl Showcase {
             tag_demo: cx.new(|cx| pages::tag::TagPage::new(window, cx)),
             tabs_demo: cx.new(|cx| pages::tabs::TabsPage::new(window, cx)),
             collapse_demo: cx.new(|cx| pages::collapse::CollapsePage::new(window, cx)),
+            list_demo: None,
             virtual_list_demo: None,
             virtual_layouts_demo: None,
             image_preview_demo: None,
@@ -521,6 +524,13 @@ impl Render for Showcase {
                         ShowcasePage::Tag => self.tag_demo.clone().into_any_element(),
                         ShowcasePage::Tabs => self.tabs_demo.clone().into_any_element(),
                         ShowcasePage::Collapse => self.collapse_demo.clone().into_any_element(),
+                        ShowcasePage::List => self
+                            .list_demo
+                            .get_or_insert_with(|| {
+                                cx.new(|cx| pages::list::ListPage::new(window, cx))
+                            })
+                            .clone()
+                            .into_any_element(),
                         ShowcasePage::VirtualLayouts => self
                             .virtual_layouts_demo
                             .get_or_insert_with(|| {

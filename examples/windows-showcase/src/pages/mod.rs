@@ -11,6 +11,7 @@ pub(crate) mod icon;
 pub(crate) mod image_preview;
 pub(crate) mod input;
 pub(crate) mod link;
+pub(crate) mod list;
 pub(crate) mod loading;
 pub(crate) mod radio;
 pub(crate) mod segmented;
