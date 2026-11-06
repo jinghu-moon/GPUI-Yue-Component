@@ -422,6 +422,9 @@ pub struct VirtualizerState {
     viewport: Option<VirtualizerViewport>,
     anchor: Option<(ElementId, VirtualizerAnchorPosition)>,
     pending_anchor: Option<f64>,
+    // A measured source/layout transaction changes the native prefix under its
+    // logical scroll index. That offset change is geometry, not user input.
+    owned_geometry_offset: Option<f64>,
     command: Option<Command>,
     serial: u64,
     outstanding: Option<VirtualizerScrollRequest>,
@@ -557,6 +560,7 @@ impl VirtualizerState {
             viewport: None,
             anchor: None,
             pending_anchor: None,
+            owned_geometry_offset: None,
             command: None,
             serial: 0,
             outstanding: None,
@@ -1610,6 +1614,7 @@ impl VirtualizerState {
     pub fn commit(&mut self, viewport: &VirtualizerViewport) -> Result<(), VirtualizerError> {
         self.validate_current_viewport(viewport)?;
         let snapshot = self.snapshot(viewport)?;
+        self.owned_geometry_offset = None;
         let range = (
             self.generation,
             snapshot.visible.clone(),
@@ -1806,6 +1811,7 @@ impl VirtualizerState {
     fn changed_geometry(&mut self) {
         self.geometry_revision += 1;
         self.outstanding = None;
+        self.owned_geometry_offset = self.measured.as_ref().map(|list| -list.precise_scroll_offset().y);
     }
     fn restore_anchor(&mut self) {
         self.pending_anchor = self.anchor.as_ref().and_then(|(key, position)| {
@@ -2007,7 +2013,8 @@ impl VirtualizerState {
             .map_or(1, |viewport| viewport.revision + 1);
         let input_revision = self.viewport.as_ref().map_or(0, |viewport| {
             viewport.input_revision
-                + u64::from(!self.is_following_tail() && (viewport.offset - offset).abs() > 0.01)
+                + u64::from(!self.is_following_tail()
+                    && (self.owned_geometry_offset.unwrap_or(viewport.offset) - offset).abs() > 0.01)
         });
         Ok(
             VirtualizerViewport::new(self.binding()?, revision, offset.max(0.0), extent, cross)

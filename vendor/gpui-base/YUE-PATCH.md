@@ -1,5 +1,22 @@
 # Yue Base patches
 
+## Owned measured geometry and reading anchors (2026-11-06)
+
+`virtualization/state.rs` records the native offset after geometry changes.
+An Owned Measured source remap or remeasure can change prefix heights under
+the existing native logical index. Compare the next native offset to that
+geometry baseline when inferring user input, so this internal change does not
+cancel the pending domain-key reading anchor. Committing a viewport clears
+the baseline; wheel input still cancels/restores through the existing owner.
+No GPUI core API or scroll owner is added.
+
+Regression coverage: `tests/virtual_list/owned_reflow.rs` replaces a measured
+source and its estimates under a partially read row, then verifies both its
+key/offset and subsequent real wheel input. `tests/list_grid.rs` covers the
+same failure through a responsive card consumer, including reparenting.
+Remove this patch when upstream distinguishes native geometry remapping
+from input with the same source/layout/real-input contracts.
+
 ## Joint VirtualGrid size transactions (2026-11-05)
 
 `VirtualGrid::update_sizes` and its snapshot-guarded variant preflight both

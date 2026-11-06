@@ -61,6 +61,8 @@ mod masonry_smooth;
 mod measured_smooth;
 #[path = "virtual_list/optimizations.rs"]
 mod optimizations;
+#[path = "virtual_list/owned_reflow.rs"]
+mod owned_reflow;
 #[path = "virtual_list/owner.rs"]
 mod owner;
 #[path = "virtual_list/priorities.rs"]
