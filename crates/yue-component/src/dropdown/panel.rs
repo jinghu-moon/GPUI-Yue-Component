@@ -612,6 +612,14 @@ impl MenuPanel {
                 if let Some(hotkey) = item.hotkey.clone().filter(|_| ctx.interactive) {
                     row = row.aria_keyshortcuts(hotkey);
                 }
+                if let Some(value) = item
+                    .shortcut
+                    .as_ref()
+                    .filter(|_| ctx.interactive)
+                    .and_then(crate::ShortcutSpec::aria_keyshortcuts_value)
+                {
+                    row = row.aria_keyshortcuts(value);
+                }
                 match if ctx.interactive {
                     item.mark
                 } else {
@@ -718,6 +726,23 @@ impl MenuPanel {
                     .text_size(rems(theme, crate::theme::keys::FONT_SIZE_SM))
                     .text_color(glyph)
                     .child(hotkey),
+            );
+        }
+        if let Some(spec) = &item.shortcut {
+            content = content.child(
+                crate::YueShortcut::new(
+                    (self.row_key(item, ctx.index), "menu-shortcut"),
+                    spec.clone(),
+                )
+                .theme(theme)
+                .size(crate::KbdSize::Small)
+                .variant(crate::KbdVariant::Ghost)
+                .state(if item.disabled {
+                    crate::KbdState::Disabled
+                } else {
+                    crate::KbdState::Default
+                })
+                .semantics(false),
             );
         }
         if submenu {

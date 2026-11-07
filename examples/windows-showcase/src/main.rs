@@ -60,6 +60,7 @@ enum ShowcasePage {
     Form,
     Switch,
     Tag,
+    Shortcut,
     Tabs,
     Radio,
     Segmented,
@@ -84,6 +85,7 @@ enum ShowcasePage {
 }
 
 struct Showcase {
+    shortcut_demo: Option<gpui_kit::Entity<pages::shortcut::ShortcutPage>>,
     breadcrumb_demo: gpui_kit::Entity<pages::breadcrumb::BreadcrumbPage>,
     slider_demo: gpui_kit::Entity<pages::slider::SliderPage>,
     page: ShowcasePage,
@@ -285,6 +287,7 @@ impl Showcase {
             select_demo: cx.new(|cx| pages::select::SelectPageView::new(window, cx)),
             breadcrumb_demo: cx.new(pages::breadcrumb::BreadcrumbPage::new),
             slider_demo: cx.new(|cx| pages::slider::SliderPage::new(window, cx)),
+            shortcut_demo: None,
             page: ShowcasePage::Button,
             sidebar_open: [true, true],
             segmented_values: [
@@ -522,6 +525,13 @@ impl Render for Showcase {
                         ShowcasePage::Tooltip => self.tooltip_demo.clone().into_any_element(),
                         ShowcasePage::Toast => self.toast_demo.clone().into_any_element(),
                         ShowcasePage::Tag => self.tag_demo.clone().into_any_element(),
+                        ShowcasePage::Shortcut => self
+                            .shortcut_demo
+                            .get_or_insert_with(|| {
+                                cx.new(|cx| pages::shortcut::ShortcutPage::new(window, cx))
+                            })
+                            .clone()
+                            .into_any_element(),
                         ShowcasePage::Tabs => self.tabs_demo.clone().into_any_element(),
                         ShowcasePage::Collapse => self.collapse_demo.clone().into_any_element(),
                         ShowcasePage::List => self

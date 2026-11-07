@@ -18,6 +18,7 @@ mod form;
 pub mod icon;
 mod image_preview;
 mod input;
+mod kbd;
 pub mod layout;
 mod link;
 mod list;
@@ -27,6 +28,7 @@ mod popup;
 mod radio;
 mod segmented;
 mod select;
+mod shortcut_recorder;
 mod slider;
 mod swatch;
 mod switch;
@@ -92,6 +94,10 @@ pub use image_preview::{
 pub use input::{
     InputSize, InputStatus, InputTextAlign, InputType, YueInput, YueNumberInput, YueTextarea,
 };
+pub use kbd::{
+    KbdSize, KbdState, KbdVariant, ShortcutParseError, ShortcutSeparator, ShortcutSpec, YueKbd,
+    YueShortcut,
+};
 pub use layout::Breakpoint;
 pub use link::{LinkHover, LinkSize, LinkVariant, YueLink};
 pub use list::{
@@ -114,6 +120,10 @@ pub use select::{
     SelectPage, SelectPanelWidth, SelectRequest, SelectRequestTicket, SelectResultState,
     SelectRowLayout, SelectSearch, SelectSize, SelectTagLayout, SelectValue, SelectVariant,
     SelectVirtualization, YueSelect, YueSelectState,
+};
+pub use shortcut_recorder::{
+    ShortcutRecorderEvent, ShortcutRecorderValidation, YueShortcutRecorder,
+    YueShortcutRecorderState,
 };
 pub use slider::{
     SliderControls, SliderDomain, SliderLayout, SliderMark, SliderSize, SliderTooltip, SliderValue,
@@ -142,14 +152,19 @@ pub use typography::{FontStack, TextRole, TypeStyle, load_fonts, tabular_nums};
 /// used component options explicitly from the crate root.
 pub mod prelude {
     pub use crate::{
-        Accent, Icon, SelectMode, SelectOption, SelectValue, SliderControls, SliderDomain,
-        SliderLayout, SliderMark, SliderSize, SliderTooltip, SliderValue, ThemeMode,
-        ThemePreference, YueBreadcrumb, YueButton, YueCheckbox, YueColorPicker,
-        YueColorPickerPanel, YueColorPickerState, YueDivider, YueDropdownMenu, YueField, YueForm,
-        YueInput, YueLink, YueMenuItem, YueNumberInput, YueOverflowTooltip, YueRadio,
-        YueRadioGroup, YueSegmented, YueSegmentedOption, YueSelect, YueSelectState, YueSlider,
-        YueSliderEvent, YueSliderState, YueSwatchGroup, YueSwatchOption, YueSwitch, YueTabItem,
-        YueTabs, YueTextarea, YueTheme, YueTooltip, YueTooltipGroup, current_theme, outline,
+        Accent, Icon, KbdSize, KbdState, KbdVariant, SelectMode, SelectOption, SelectValue,
+        ShortcutSeparator, ShortcutSpec, SliderControls, SliderDomain, SliderLayout, SliderMark,
+        SliderSize, SliderTooltip, SliderValue, ThemeMode, ThemePreference, YueBreadcrumb,
+        YueButton, YueCheckbox, YueColorPicker, YueColorPickerPanel, YueColorPickerState,
+        YueDivider, YueDropdownMenu, YueField, YueForm, YueInput, YueKbd, YueLink, YueMenuItem,
+        YueNumberInput, YueOverflowTooltip, YueRadio, YueRadioGroup, YueSegmented,
+        YueSegmentedOption, YueSelect, YueSelectState, YueShortcut, YueSlider, YueSliderEvent,
+        YueSliderState, YueSwatchGroup, YueSwatchOption, YueSwitch, YueTabItem, YueTabs,
+        YueTextarea, YueTheme, YueTooltip, YueTooltipGroup, current_theme, outline,
+    };
+    pub use crate::{
+        ShortcutRecorderEvent, ShortcutRecorderValidation, YueShortcutRecorder,
+        YueShortcutRecorderState,
     };
     pub use crate::{
         ToastSpec, VirtualizerSizing, VirtualizerSource, VirtualizerState, YueCollapse,

@@ -125,6 +125,52 @@ struct TextProbe {
     config: Config,
     measured: Option<surface::Measure>,
 }
+
+#[gpui_kit::test]
+fn shortcut_tooltip_measures_real_keycaps_and_falls_back_when_too_wide(cx: &mut TestAppContext) {
+    let theme = YueTheme::new(crate::ThemeMode::Light, crate::Accent::Azure);
+    cx.update(|cx| {
+        crate::init(cx, theme).unwrap();
+        cx.set_reduce_motion(true);
+    });
+    let mut saved = None;
+    let (_, cx) = cx.add_window_view(|w, cx| {
+        let view = cx.new(|_| TextProbe {
+            config: Config::new("保存文件".into(), theme, TooltipOptions::default()),
+            measured: None,
+        });
+        saved = Some(view.clone());
+        Root::new(view, w, cx)
+    });
+    let view = saved.unwrap();
+    for scale in [1., 1.25, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        for value in ["Ctrl+Shift+S", "Ctrl+K Ctrl+Shift+P | Ctrl+Alt+Shift+F12"] {
+            view.update(cx, |v, cx| {
+                v.config.shortcut = Some(crate::ShortcutSpec::parse(value).unwrap());
+                cx.notify();
+            });
+            draw(cx);
+            let measured = view.read_with(cx, |v, _| v.measured.unwrap());
+            cx.update(|w,_|{
+                let nodes=snapshots(w);
+                let surface=nodes.iter().find(|n|n.path().last()==Some(&ElementId::from("yue-tooltip-surface"))).unwrap();
+                assert_eq!(surface.label(),Some(format!("保存文件，{}",crate::ShortcutSpec::parse(value).unwrap().display_label()).as_str()));
+                let shortcut_id=ElementId::from((ElementId::from("yue-tooltip-text"),"shortcut"));
+                let shortcut=nodes.iter().find(|n|n.path().last()==Some(&shortcut_id));
+                assert_eq!(shortcut.is_some(),measured.shortcut);
+                if let Some(keys)=shortcut {
+                    assert!(keys.bounds().right()<=surface.bounds().right());
+                    assert!(keys.bounds().bottom()<=surface.bounds().bottom());
+                    assert_eq!(keys.role(),None,"Tooltip owns the single accessible name");
+                    let expected=crate::ShortcutSpec::parse(value).unwrap().measured_size(theme,crate::KbdSize::Small,crate::KbdVariant::Inverse,crate::ShortcutSeparator::Plus,w);
+                    assert!((keys.bounds().size.width-expected.width).abs()<=px(5. / scale),"measurement must match actual composed keys: actual={:?}, expected={:?}, scale={scale}", keys.bounds().size, expected);
+                }
+            });
+            assert_eq!(measured.shortcut, value == "Ctrl+Shift+S");
+        }
+    }
+}
 impl Render for TextProbe {
     fn render(&mut self, w: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         // Measuring and laying out in different inherited styles reproduces

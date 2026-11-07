@@ -50,7 +50,8 @@ impl RenderOnce for YueButton {
                         ..
                     } => accessibility_label.clone(),
                 });
-        let icon_only = matches!(&self.content, ButtonContent::Icon { .. });
+        let icon_only =
+            matches!(&self.content, ButtonContent::Icon { .. }) && self.shortcut.is_none();
         let (background_token, hover_token, foreground_token, border_token) = match self.variant {
             ButtonVariant::Primary => (
                 crate::theme::keys::BUTTON_PRIMARY_BACKGROUND,
@@ -214,6 +215,13 @@ impl RenderOnce for YueButton {
         if let Some(expanded) = self.expanded {
             button = button.aria_expanded(expanded);
         }
+        if let Some(value) = self
+            .shortcut
+            .as_ref()
+            .and_then(crate::ShortcutSpec::aria_keyshortcuts_value)
+        {
+            button = button.aria_keyshortcuts(value);
+        }
 
         if let Some(state) = motion_state {
             let hover = window.listener_for(&state, |state, hovered, window, cx| {
@@ -314,7 +322,7 @@ impl RenderOnce for YueButton {
             )),
         };
         let render_content = || -> AnyElement {
-            match &self.content {
+            let main = match &self.content {
                 ButtonContent::Text(label) => div()
                     .text_color(content_color)
                     .child(label.clone())
@@ -338,6 +346,29 @@ impl RenderOnce for YueButton {
                         }
                     }
                 }
+            };
+            if let Some(spec) = &self.shortcut {
+                div()
+                    .flex()
+                    .items_center()
+                    .gap(button_gap)
+                    .text_color(content_color)
+                    .child(main)
+                    .child(
+                        crate::YueShortcut::new((self.id.clone(), "button-shortcut"), spec.clone())
+                            .theme(self.theme)
+                            .size(crate::KbdSize::Small)
+                            .variant(crate::KbdVariant::Inverse)
+                            .state(if disabled {
+                                crate::KbdState::Disabled
+                            } else {
+                                crate::KbdState::Default
+                            })
+                            .semantics(false),
+                    )
+                    .into_any_element()
+            } else {
+                main
             }
         };
         let sized_content = div()

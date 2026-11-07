@@ -11,6 +11,7 @@ pub(super) struct Measure {
     pub size: Size<Pixels>,
     pub line_height: Pixels,
     pub single_line: bool,
+    pub shortcut: bool,
 }
 pub(super) fn length(theme: YueTheme, key: crate::theme::TokenKey, window: &Window) -> Pixels {
     px(pixels(theme, key) / 16. * f32::from(window.rem_size()))
@@ -60,8 +61,32 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
             .width,
         )
         .max(padding_x * 2. + px(1.));
+    let shortcut = config
+        .shortcut
+        .as_ref()
+        .map(|spec| {
+            spec.measured_size(
+                t,
+                crate::KbdSize::Small,
+                crate::KbdVariant::Inverse,
+                crate::ShortcutSeparator::Plus,
+                window,
+            )
+        })
+        .filter(|s| {
+            s.width + length(t, keys::SPACE_8, window) + font_size * 4.
+                <= max_width - padding_x * 2.
+        });
+    // When the complete key group cannot fit, keep all information as wrapped
+    // text rather than clipping an indivisible chord outside its tooltip.
+    let text = if config.shortcut.is_some() && shortcut.is_none() {
+        config.accessible_text()
+    } else {
+        config.text.clone()
+    };
+    let shortcut_width = shortcut.map_or(px(0.), |s| s.width + length(t, keys::SPACE_8, window));
     let runs = [TextRun {
-        len: config.text.len(),
+        len: text.len(),
         font: text_font(config),
         color: color.into(),
         ..Default::default()
@@ -69,10 +94,10 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
     let lines = window
         .text_system()
         .shape_text(
-            config.text.clone(),
+            text,
             font_size,
             &runs,
-            Some(max_width - padding_x * 2.),
+            Some((max_width - padding_x * 2. - shortcut_width).max(px(1.))),
             None,
         )
         .expect("Tooltip text shaping");
@@ -91,14 +116,17 @@ pub(super) fn measure(config: &Config, window: &Window) -> Measure {
             // pixel, then round outwards so a final glyph cannot wrap at the
             // measured boundary (especially with fractional DPI/rem sizes).
             px(
-                ((f32::from(width + padding_x * 2.) * window.scale_factor()).ceil() + 1.)
+                ((f32::from(width + shortcut_width + padding_x * 2.) * window.scale_factor())
+                    .ceil()
+                    + 1.)
                     / window.scale_factor(),
             )
             .min(max_width),
-            height + padding_y * 2.,
+            height.max(shortcut.map_or(px(0.), |s| s.height)) + padding_y * 2.,
         ),
         line_height,
         single_line: count <= 1,
+        shortcut: shortcut.is_some(),
     }
 }
 fn text_font(config: &Config) -> gpui_kit::Font {
@@ -175,7 +203,7 @@ pub(super) fn content(
         .when(semantic, |surface| {
             surface
                 .role(gpui_kit::Role::Tooltip)
-                .aria_label(config.text.clone())
+                .aria_label(config.accessible_text())
         })
         .w(measure.size.width)
         .h(measure.size.height)
@@ -220,7 +248,29 @@ fn text_layer(config: &Config, measure: Measure, opacity: f32, id: &'static str)
                 .id(id)
                 .test_support()
                 .w_full()
-                .child(config.text.clone()),
+                .flex()
+                .items_center()
+                .gap(rems(config.theme, keys::SPACE_8))
+                .child(div().flex_1().min_w_0().child(
+                    if config.shortcut.is_some() && !measure.shortcut {
+                        config.accessible_text()
+                    } else {
+                        config.text.clone()
+                    },
+                ))
+                .children(
+                    config
+                        .shortcut
+                        .clone()
+                        .filter(|_| measure.shortcut)
+                        .map(|spec| {
+                            crate::YueShortcut::new((ElementId::from(id), "shortcut"), spec)
+                                .theme(config.theme)
+                                .size(crate::KbdSize::Small)
+                                .variant(crate::KbdVariant::Inverse)
+                                .semantics(false)
+                        }),
+                ),
         )
         .into_any_element()
 }

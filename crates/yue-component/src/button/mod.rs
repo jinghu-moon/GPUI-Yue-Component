@@ -73,6 +73,7 @@ pub struct YueButton {
     icon_position: IconPosition,
     icon_size_override: Option<gpui_kit::Rems>,
     content: ButtonContent,
+    shortcut: Option<crate::ShortcutSpec>,
     disabled: bool,
     loading: bool,
     block: bool,
@@ -214,6 +215,7 @@ impl YueButton {
             icon_position: IconPosition::Leading,
             icon_size_override: None,
             content,
+            shortcut: None,
             disabled: false,
             loading: false,
             block: false,
@@ -226,6 +228,11 @@ impl YueButton {
 
     pub fn variant(mut self, variant: ButtonVariant) -> Self {
         self.variant = variant;
+        self
+    }
+    /// Display the owner's binding and expose its ARIA value; does not bind input.
+    pub fn shortcut(mut self, shortcut: crate::ShortcutSpec) -> Self {
+        self.shortcut = Some(shortcut);
         self
     }
     pub fn size(mut self, size: ButtonSize) -> Self {

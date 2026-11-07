@@ -1,6 +1,6 @@
 # GPUI Yue Component
 
-Windows component library built on GPUI Kit's Base behavior and Yue Design System tokens. Includes Breadcrumb, Button, Link, Input/Textarea/NumberInput, Field/Form, Switch, Radio, Checkbox, Segmented, Tabs, Tag/TagGroup, Divider, Dropdown menus, Tooltip/OverflowTooltip, ColorPicker/Panel and SwatchGroup, plus Tabler icons and typography/layout/motion helpers.
+Windows component library built on GPUI Kit's Base behavior and Yue Design System tokens. Includes Breadcrumb, Button, Link, Input/Textarea/NumberInput, Field/Form, Switch, Radio, Checkbox, Segmented, Tabs, Tag/TagGroup, Kbd/Shortcut display, Divider, Dropdown menus, Tooltip/OverflowTooltip, ColorPicker/Panel and SwatchGroup, plus Tabler icons and typography/layout/motion helpers.
 
 ## Integrate
 
@@ -317,3 +317,5 @@ See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先
 - [Local Gaussian backdrop foundation](docs/26-backdrop-blur.md)
 - [Windows HDR pipeline and implementation status](docs/27-hdr-pipeline.md) — high-precision resources and opt-in Windows scRGB output are implemented for verification; native-display acceptance and SnapClip capture/consumer migration remain incomplete. See [evidence and outstanding gates](docs/performance/2026-11-03-hdr-resources.md).
 - [List design and implementation](docs/29-list.md) — linear layouts, item slots, grouping, states, responsive card grids and row-based virtualization.
+- [YueKbd and YueShortcut design](docs/30-shortcut.md) — Windows-only keycap and shortcut display, visual states, composition grammar and accessibility boundaries.
+- [ShortcutRecorder guide](docs/31-shortcut-recorder.md) — focused Windows shortcut recording, validation and explicit conflict replacement.

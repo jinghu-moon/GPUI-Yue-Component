@@ -118,6 +118,7 @@ type TriggerBuilder = Box<dyn FnOnce(&FocusHandle, &mut Window, &mut App) -> Any
 #[derive(Clone)]
 pub(crate) struct Config {
     text: SharedString,
+    shortcut: Option<crate::ShortcutSpec>,
     theme: YueTheme,
     options: TooltipOptions,
     mode: TooltipTrigger,
@@ -130,6 +131,7 @@ impl Config {
     pub(super) fn new(text: SharedString, theme: YueTheme, options: TooltipOptions) -> Self {
         Self {
             text,
+            shortcut: None,
             theme,
             options,
             mode: TooltipTrigger::HoverFocus,
@@ -141,6 +143,7 @@ impl Config {
     }
     fn same_content(&self, other: &Self) -> bool {
         self.text == other.text
+            && self.shortcut == other.shortcut
             && self.options == other.options
             && self.mode == other.mode
             && self.disabled == other.disabled
@@ -157,6 +160,12 @@ impl Config {
     pub(crate) fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
         self
+    }
+    fn accessible_text(&self) -> SharedString {
+        self.shortcut.as_ref().map_or_else(
+            || self.text.clone(),
+            |spec| format!("{}，{}", self.text, spec.display_label()).into(),
+        )
     }
 }
 
@@ -225,6 +234,11 @@ impl YueTooltip {
     pub fn trigger(mut self, child: impl IntoElement) -> Self {
         self.child = Some(child.into_any_element());
         self.builder = None;
+        self
+    }
+    /// Append compact keycaps to the explanation; no command binding is installed.
+    pub fn shortcut(mut self, shortcut: crate::ShortcutSpec) -> Self {
+        self.config.shortcut = Some(shortcut);
         self
     }
     pub fn trigger_with(

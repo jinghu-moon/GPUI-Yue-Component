@@ -242,6 +242,7 @@ pub struct YueMenuItem {
     icon: Option<Icon>,
     avatar: Option<SharedString>,
     hotkey: Option<SharedString>,
+    shortcut: Option<crate::ShortcutSpec>,
     danger: bool,
     disabled: bool,
     keep_open: bool,
@@ -305,6 +306,7 @@ impl YueMenuItem {
             icon: None,
             avatar: None,
             hotkey: None,
+            shortcut: None,
             danger: false,
             disabled: false,
             keep_open: false,
@@ -334,6 +336,13 @@ impl YueMenuItem {
     /// has not actually bound, and it is not a substitute for one.
     pub fn hotkey(mut self, hint: impl Into<SharedString>) -> Self {
         self.hotkey = Some(hint.into());
+        self.shortcut = None;
+        self
+    }
+    /// Structured keycaps; the owner remains responsible for the real binding.
+    pub fn shortcut(mut self, shortcut: crate::ShortcutSpec) -> Self {
+        self.shortcut = Some(shortcut);
+        self.hotkey = None;
         self
     }
 

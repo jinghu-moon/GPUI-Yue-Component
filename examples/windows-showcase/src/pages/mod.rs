@@ -16,6 +16,7 @@ pub(crate) mod loading;
 pub(crate) mod radio;
 pub(crate) mod segmented;
 pub(crate) mod select;
+pub(crate) mod shortcut;
 pub(crate) mod slider;
 pub(crate) mod switch;
 pub(crate) mod tabs;
