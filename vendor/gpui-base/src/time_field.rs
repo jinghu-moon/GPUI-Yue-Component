@@ -18,6 +18,9 @@ use crate::{
 
 const CONTEXT: &str = "TimeField";
 
+mod rules;
+pub use rules::{TimeChoices, TimeRules, TimeSteps};
+
 pub(crate) fn init(cx: &mut App) {
     cx.bind_keys([
         KeyBinding::new("up", Increment, Some(CONTEXT)),
@@ -303,6 +306,7 @@ impl SegmentEditor {
 pub struct TimeFieldState {
     focus_handle: FocusHandle,
     editor: SegmentEditor,
+    selection_rules: Option<TimeRules>,
 }
 
 impl TimeFieldState {
@@ -310,6 +314,7 @@ impl TimeFieldState {
         Self {
             focus_handle: cx.focus_handle().tab_stop(true),
             editor: SegmentEditor::new(),
+            selection_rules: None,
         }
     }
 
@@ -370,10 +375,75 @@ impl TimeFieldState {
     }
 
     fn edit(&mut self, cx: &mut Context<Self>, edit: impl FnOnce(&mut SegmentEditor) -> bool) {
-        if edit(&mut self.editor) {
+        let before = self.editor;
+        let changed = edit(&mut self.editor);
+        if let Some(rules) = &self.selection_rules {
+            let segment = before.segment;
+            let value = match segment {
+                TimeSegment::Hour => self.editor.time.hour(),
+                TimeSegment::Minute => self.editor.time.minute(),
+                TimeSegment::Second => self.editor.time.second(),
+                TimeSegment::Period => self.editor.time.hour() / 12,
+            };
+            if let Some(time) = rules.choices(before.time).candidate(segment, value) {
+                self.editor.time = time;
+            } else {
+                self.editor = before;
+            }
+        }
+        if changed && (self.selection_rules.is_none() || self.editor.time != before.time) {
             cx.emit(TimeFieldEvent::Change(self.editor.time));
         }
         cx.notify();
+    }
+
+    /// Opt-in proposal validation; legacy editors keep their original behavior.
+    pub fn set_selection_rules(&mut self, rules: Option<TimeRules>) {
+        self.selection_rules = rules;
+    }
+
+    /// Compute a digit/period proposal without publishing or replacing the candidate.
+    /// The facade accepts it through its own atomic range transaction.
+    pub fn input_proposal(
+        &mut self,
+        segment: TimeSegment,
+        key: char,
+    ) -> Option<(NaiveTime, TimeSegment)> {
+        if self.editor.segment != segment {
+            self.editor.select_segment(segment);
+        }
+        let mut proposed = self.editor;
+        match key {
+            '0'..='9' => {
+                proposed.input_digit(key as u32 - '0' as u32);
+            }
+            'a' | 'A' | 'p' | 'P' => {
+                proposed.input_period(matches!(key, 'p' | 'P'));
+            }
+            _ => return None,
+        }
+        self.editor.pending_digit = proposed.pending_digit;
+        Some((proposed.time, proposed.segment))
+    }
+
+    /// Reset only the in-progress numeric buffer, without changing the value or emitting events.
+    pub fn reset_pending_input(&mut self) {
+        self.editor.pending_digit = None;
+    }
+
+    /// Accept a proposal while retaining an in-progress digit buffer.
+    pub fn accept_time_proposal(&mut self, time: NaiveTime, cx: &mut Context<Self>) {
+        let time = self.editor.precision.truncate(time);
+        if self.editor.time != time {
+            self.editor.time = time;
+            cx.notify();
+        }
+    }
+
+    /// Reuse the segmented digit buffer and stepping rules from another facade.
+    pub fn edit_segment(&mut self, segment: TimeSegment, delta: i32, cx: &mut Context<Self>) {
+        self.editor.select_segment(segment);
+        self.edit(cx, |editor| editor.step(delta));
     }
 
     fn on_increment(&mut self, _: &Increment, _: &mut Window, cx: &mut Context<Self>) {
@@ -632,6 +702,80 @@ impl RenderOnce for TimeField {
     }
 }
 
+/// Controlled, unstyled time option. The owner commits the proposed value;
+/// this root supplies native option semantics and accessible activation.
+#[derive(IntoElement)]
+pub struct TimeOption {
+    id: ElementId,
+    label: SharedString,
+    selected: bool,
+    disabled: bool,
+    active: bool,
+    style: StyleRefinement,
+    hover: StyleRefinement,
+    change: Rc<dyn Fn(&mut Window, &mut App)>,
+}
+impl TimeOption {
+    pub fn new(id: impl Into<ElementId>, label: impl Into<SharedString>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            selected: false,
+            disabled: false,
+            active: false,
+            style: Default::default(),
+            hover: Default::default(),
+            change: Rc::new(|_, _| {}),
+        }
+    }
+    pub fn selected(mut self, v: bool) -> Self {
+        self.selected = v;
+        self
+    }
+    pub fn disabled(mut self, v: bool) -> Self {
+        self.disabled = v;
+        self
+    }
+    pub fn active(mut self, v: bool) -> Self {
+        self.active = v;
+        self
+    }
+    pub fn hover_style(mut self, style: StyleRefinement) -> Self {
+        self.hover = style;
+        self
+    }
+    pub fn on_change(mut self, f: impl Fn(&mut Window, &mut App) + 'static) -> Self {
+        self.change = Rc::new(f);
+        self
+    }
+}
+impl Styled for TimeOption {
+    fn style(&mut self) -> &mut StyleRefinement {
+        &mut self.style
+    }
+}
+impl RenderOnce for TimeOption {
+    fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
+        let click = self.change.clone();
+        let a11y = self.change;
+        div()
+            .id(self.id)
+            .test_support()
+            .role(Role::ListBoxOption)
+            .aria_label(self.label.clone())
+            .aria_selected(self.selected)
+            .when(self.active, |s| s.aria_active_descendant())
+            .when(!self.disabled, |s| {
+                s.hover(move |_| self.hover)
+                    .on_click(move |_, w, cx| click(w, cx))
+                    .on_a11y_action(gpui::AccessibleAction::Click, move |_, w, cx| a11y(w, cx))
+            })
+            .refine_style(&self.style)
+            .child(self.label)
+            .a11y_disabled(self.disabled)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -772,5 +916,32 @@ mod tests {
         editor.step(1);
         assert_eq!(editor.time, hms(0, 0, 0));
         assert!(!editor.input_digit(1), "digits do not edit the period");
+    }
+    #[gpui::test]
+    fn opt_in_rules_repair_before_publication_and_legacy_still_wraps(
+        cx: &mut gpui::TestAppContext,
+    ) {
+        let (state, _) = cx.add_window_view(TimeFieldState::new);
+        state.update(cx, |s, cx| {
+            s.editor.set_time(hms(10, 10, 0));
+            s.set_selection_rules(Some(
+                TimeRules::new()
+                    .min(hms(9, 30, 0))
+                    .configured(TimePrecision::Minute, TimeSteps::new())
+                    .unwrap(),
+            ));
+            s.edit_segment(TimeSegment::Hour, -1, cx);
+            assert_eq!(s.time(), hms(9, 30, 0));
+            s.edit_segment(TimeSegment::Hour, -1, cx);
+            assert_eq!(
+                s.time(),
+                hms(9, 30, 0),
+                "reject the whole unreachable hour proposal"
+            );
+            s.set_selection_rules(None);
+            s.editor.set_time(hms(23, 59, 0));
+            s.edit_segment(TimeSegment::Hour, 1, cx);
+            assert_eq!(s.time(), hms(0, 59, 0));
+        });
     }
 }

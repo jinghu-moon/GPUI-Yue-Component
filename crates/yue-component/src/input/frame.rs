@@ -20,6 +20,37 @@ use crate::tokens::{rems, rgba as color};
 /// feature of `gpui-kit` the alias collapses to the plain stateful div.
 type ObservedFrame = gpui_kit::base::ObservedElement<gpui_kit::Stateful<gpui_kit::Div>>;
 
+/// Shared surface for a single editor or a composite field (for example a date range).
+/// The caller owns padding, height and the semantic nodes of its editors.
+pub(crate) fn surface_style(
+    theme: YueTheme,
+    status: InputStatus,
+    disabled: bool,
+    readonly: bool,
+    bordered: bool,
+    focused: bool,
+) -> gpui_kit::StyleRefinement {
+    let mut shell = div()
+        .bg(color(
+            theme,
+            if disabled {
+                "--input-background-disabled"
+            } else if readonly {
+                "--input-background-readonly"
+            } else {
+                "--input-background"
+            },
+        ))
+        .rounded(rems(theme, "--input-border-radius"))
+        .border(if bordered {
+            rems(theme, "--input-border-width")
+        } else {
+            gpui_kit::rems(0.)
+        })
+        .border_color(color(theme, border_token(status, disabled, focused)));
+    shell.style().clone()
+}
+
 pub(crate) fn border_token(
     status: InputStatus,
     disabled: bool,

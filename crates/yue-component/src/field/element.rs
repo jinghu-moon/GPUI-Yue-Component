@@ -23,6 +23,27 @@ impl RenderOnce for YueField {
         let label = self.label.clone();
         let announced = announced(self.required, &self.description, &message);
         let child = self.child.map(|child| match child {
+            FieldChild::TreeSelect(select) => (*select)
+                .required(self.required)
+                .when_some(label, |this, label| this.accessibility_label(label))
+                .when_some(announced, |this, text| this.accessibility_description(text))
+                .when_some(child_status, |this, status| this.status(status))
+                .render(window, cx)
+                .into_any_element(),
+            FieldChild::DatePicker(picker) => (*picker)
+                .required(self.required)
+                .when_some(label, |this, label| this.accessibility_label(label))
+                .when_some(announced, |this, text| this.accessibility_description(text))
+                .when_some(child_status, |this, status| this.status(status))
+                .render(window, cx)
+                .into_any_element(),
+            FieldChild::TimePicker(picker) => (*picker)
+                .required(self.required)
+                .when_some(label, |this, label| this.accessibility_label(label))
+                .when_some(announced, |this, text| this.accessibility_description(text))
+                .when_some(child_status, |this, status| this.status(status))
+                .render(window, cx)
+                .into_any_element(),
             FieldChild::Select(select) => (*select)
                 .required(self.required)
                 .when_some(label, |this, label| this.accessibility_label(label))

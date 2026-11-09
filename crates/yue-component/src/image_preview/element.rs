@@ -58,6 +58,15 @@ impl RenderOnce for YueImagePreview {
             }
         });
         let s = state.read(cx);
+        let gallery = s.gallery().to_vec();
+        let gallery_index = s.gallery_index();
+        let bottom_toolbar_id = s.child_id("bottom-toolbar");
+        let titlebar_id = s.child_id("titlebar");
+        let title_fullscreen_id = s.child_id("title-fullscreen");
+        let gallery_previous_id = s.child_id("gallery-previous");
+        let gallery_next_id = s.child_id("gallery-next");
+        let gallery_count_id = s.child_id("gallery-count");
+        let title_image = s.source().cloned().or_else(|| s.reference().cloned());
         let id = s.id.clone();
         let viewport_id = s.child_id("viewport");
         let mode_id = s.child_id("modes");
@@ -68,9 +77,6 @@ impl RenderOnce for YueImagePreview {
         let result_available = s.mode_available(ImagePreviewMode::Result);
         let disabled = self.disabled;
         let (status, busy, error) = s.status();
-        let snap = s.snapshot();
-        let source_size = s.source().map(|i| i.pixel_size());
-        let result_size = s.result.as_ref().map(|i| i.pixel_size());
         let description = s
             .reference()
             .map(|i| i.description.clone())
@@ -87,16 +93,27 @@ impl RenderOnce for YueImagePreview {
             .flex_1()
             .min_h_0()
             .min_w_0()
-            .rounded(rems(theme, "--image-preview-radius"))
-            .border_1()
-            .border_color(gpui_kit::rgb(if focus_visible {
-                theme.focus_ring()
-            } else {
-                theme.border_default()
-            }))
             .when(!disabled, |d| d.track_focus(&focus))
             .key_context("YueImagePreview")
             .child(paint::viewport(&state, theme, self.overlay));
+        let gallery_owner = state.clone();
+        let gallery_owner_leave = state.clone();
+        viewport = viewport
+            .on_mouse_move(move |_, w, cx| {
+                gallery_owner.update(cx, |s, cx| {
+                    let bottom = s.viewport.origin[1] + s.viewport.size[1];
+                    let y = f32::from(w.mouse_position().y);
+                    let clearance =
+                        f32::from(w.rem_size()) * if s.filmstrip_visible() { 5.5 } else { 1.5 };
+                    s.update_filmstrip_pointer(y >= bottom - clearance, w, cx);
+                });
+            })
+            .on_hover(move |hovered, w, cx| {
+                if !hovered {
+                    gallery_owner_leave
+                        .update(cx, |s, cx| s.update_filmstrip_pointer(false, w, cx));
+                }
+            });
         macro_rules! action {
             ($view:ident,$ty:ty,$op:expr) => {{
                 let owner = state.clone();
@@ -168,6 +185,21 @@ impl RenderOnce for YueImagePreview {
             w,
             cx
         ));
+        let owner = state.clone();
+        viewport = viewport.on_action(move |_: &Fullscreen, w, cx| {
+            if owner.read(cx).disabled || !owner.read(cx).focus.is_focused(w) {
+                cx.propagate();
+                return;
+            }
+            w.toggle_fullscreen();
+        });
+        viewport = viewport.on_action(move |_: &ExitFullscreen, w, cx| {
+            if !w.is_fullscreen() {
+                cx.propagate();
+                return;
+            }
+            w.toggle_fullscreen();
+        });
         macro_rules! pan_action {
             ($ty:ty,$dx:expr,$dy:expr) => {
                 action!(viewport, $ty, |s: &mut YueImagePreviewState,
@@ -248,35 +280,33 @@ impl RenderOnce for YueImagePreview {
         let mut footer = div()
             .flex()
             .items_center()
-            .justify_between()
-            .flex_wrap()
-            .gap_2()
+            .gap_1()
             .text_sm()
             .text_color(gpui_kit::rgb(theme.text_secondary()));
-        if let Some([width, height]) = source_size {
-            let proxy = s.source().filter(|i| i.is_proxy()).map(|i| {
-                let [tw, th] = i.texture_size();
-                format!(" · 代理纹理 {tw} × {th}")
-            });
-            footer = footer.child(div().child(format!(
-                "原始 {width} × {height}{}",
-                proxy.unwrap_or_default()
-            )));
-        }
-        if let Some([width, height]) = result_size {
-            let proxy = s.result.as_ref().filter(|i| i.is_proxy()).map(|i| {
-                let [tw, th] = i.texture_size();
-                format!(" · 代理纹理 {tw} × {th}")
-            });
-            footer = footer.child(div().child(format!(
-                "输出 {width} × {height}{}{}",
-                proxy.unwrap_or_default(),
-                if snap.result_revision() != Some(snap.revision()) {
-                    " · 上一版"
-                } else {
-                    ""
-                }
-            )));
+        let mut modes = None;
+        if self.modes && (result_available || compare_available) {
+            let owner = state.clone();
+            modes = Some(
+                YueSegmented::new(mode_id, theme, mode.value())
+                    .size(SegmentedSize::Small)
+                    .accessibility_label("预览模式")
+                    .distribution(SegmentedDistribution::Equal)
+                    .disabled(disabled)
+                    .options([
+                        YueSegmentedOption::new("source", "原图").disabled(!source_available),
+                        YueSegmentedOption::new("compare", "对比").disabled(!compare_available),
+                        YueSegmentedOption::new("result", self.result_label)
+                            .disabled(!result_available),
+                    ])
+                    .on_change(move |v, w, cx| {
+                        let mode = match v.as_ref() {
+                            "compare" => ImagePreviewMode::Compare,
+                            "result" => ImagePreviewMode::Result,
+                            _ => ImagePreviewMode::Source,
+                        };
+                        owner.update(cx, |s, cx| s.user_mode(mode, w, cx));
+                    }),
+            );
         }
         if s.has_proxy() {
             footer = footer.child(
@@ -284,7 +314,7 @@ impl RenderOnce for YueImagePreview {
                     .id(s.child_id("proxy-info"))
                     .test_support()
                     .aria_label("代理预览；100% 按原始尺寸，细节已缩减")
-                    .child("代理预览；100% 按原始尺寸，细节已缩减"),
+                    .child("代理预览"),
             );
         }
         if s.reference()
@@ -317,50 +347,241 @@ impl RenderOnce for YueImagePreview {
             .min_h_0()
             .flex()
             .flex_col()
-            .gap(rems(theme, "--image-preview-gap"));
-        if self.modes {
-            let owner = state.clone();
+            .rounded(rems(theme, "--image-preview-radius"))
+            .border_1()
+            .border_color(gpui_kit::rgb(if focus_visible {
+                theme.focus_ring()
+            } else {
+                theme.border_default()
+            }))
+            .bg(gpui_kit::rgb(theme.surface()))
+            .overflow_hidden();
+        let mut bottom_toolbar = None;
+        {
+            let title = title_image
+                .as_ref()
+                .map(|image| image.description.clone())
+                .unwrap_or_else(|| "图片预览".into());
+            let dimensions = title_image.as_ref().map(ImagePreviewImage::pixel_size);
             outer = outer.child(
-                YueSegmented::new(mode_id, theme, mode.value())
-                    .size(SegmentedSize::Small)
-                    .accessibility_label("预览模式")
-                    .distribution(SegmentedDistribution::Equal)
-                    .disabled(disabled)
-                    .options([
-                        YueSegmentedOption::new("source", "原图").disabled(!source_available),
-                        YueSegmentedOption::new("compare", "对比").disabled(!compare_available),
-                        YueSegmentedOption::new("result", self.result_label)
-                            .disabled(!result_available),
-                    ])
-                    .on_change(move |v, w, cx| {
-                        let mode = match v.as_ref() {
-                            "compare" => ImagePreviewMode::Compare,
-                            "result" => ImagePreviewMode::Result,
-                            _ => ImagePreviewMode::Source,
-                        };
-                        owner.update(cx, |s, cx| s.user_mode(mode, w, cx));
-                    }),
+                div()
+                    .id(titlebar_id)
+                    .test_support()
+                    .role(Role::Toolbar)
+                    .aria_label("图片标题栏")
+                    .flex()
+                    .items_center()
+                    .justify_between()
+                    .gap_3()
+                    .w_full()
+                    .h(gpui_kit::rems(3.25))
+                    .flex_shrink_0()
+                    .px_3()
+                    .border_b_1()
+                    .border_color(gpui_kit::rgb(theme.border_default()))
+                    .child(
+                        div()
+                            .flex_1()
+                            .min_w_0()
+                            .flex()
+                            .items_center()
+                            .gap_2()
+                            .text_sm()
+                            .text_color(gpui_kit::rgb(theme.text_primary()))
+                            .when_some(dimensions, |d, [width, height]| {
+                                d.child(
+                                    crate::Icon::new(crate::outline::Photo)
+                                        .size(gpui_kit::rems(1.))
+                                        .color(theme.text_secondary()),
+                                )
+                                .child(div().min_w_0().truncate().child(title))
+                                .child(
+                                    div()
+                                        .flex_shrink_0()
+                                        .text_color(gpui_kit::rgb(theme.text_secondary()))
+                                        .child(format!("{width} × {height}")),
+                                )
+                            }),
+                    )
+                    .child(
+                        div()
+                            .flex()
+                            .flex_shrink_0()
+                            .items_center()
+                            .gap_2()
+                            .children(modes)
+                            .child(chrome::information_button(&state, theme, w, cx))
+                            .child(
+                                YueButton::icon(
+                                    title_fullscreen_id,
+                                    theme,
+                                    crate::outline::ArrowsMaximize,
+                                    if w.is_fullscreen() {
+                                        "退出全屏"
+                                    } else {
+                                        "全屏"
+                                    },
+                                )
+                                .size(ButtonSize::Small)
+                                .variant(ButtonVariant::Ghost)
+                                .tooltip(if w.is_fullscreen() {
+                                    "退出全屏（Esc）"
+                                } else {
+                                    "全屏（F）"
+                                })
+                                .on_click(|_, w, _| w.toggle_fullscreen()),
+                            ),
+                    ),
             );
         }
         if self.toolbar_visible {
-            let toolbar = zoom_toolbar(
-                &state,
-                theme,
-                self.toolbar == ImagePreviewToolbar::Floating,
-                self.background_picker,
-                self.on_expand,
-                w,
-                cx,
-            );
+            let toolbar = if self.toolbar == ImagePreviewToolbar::Floating {
+                zoom_toolbar(
+                    &state,
+                    theme,
+                    true,
+                    self.background_picker,
+                    self.on_expand,
+                    w,
+                    cx,
+                )
+            } else {
+                chrome::footer_toolbar(&state, theme, self.background_picker, self.on_expand, w, cx)
+            };
             if self.toolbar == ImagePreviewToolbar::Floating {
                 viewport = viewport.child(div().absolute().bottom_3().right_3().child(toolbar));
             } else {
-                footer = footer.child(toolbar);
+                bottom_toolbar = Some(toolbar);
             }
         }
-        outer.child(viewport).child(footer)
+        if gallery.len() > 1 && bottom_toolbar.is_none() {
+            bottom_toolbar = Some(div().into_any_element());
+        }
+        if gallery.len() > 1 {
+            if let Some(strip) = super::gallery::filmstrip(&state, theme, w, cx) {
+                viewport = viewport.child(strip);
+            }
+            viewport = viewport.child(chrome::gallery_sides(&state, theme, cx));
+        }
+        viewport = viewport.child(chrome::information_panel(&state, theme, w, cx));
+        outer = outer.child(viewport);
+        if let Some(toolbar) = bottom_toolbar {
+            outer = outer.child(
+                div()
+                    .id(bottom_toolbar_id)
+                    .test_support()
+                    .role(Role::Toolbar)
+                    .aria_label("图片工具栏")
+                    .flex()
+                    .items_center()
+                    .justify_between()
+                    .w_full()
+                    .h(gpui_kit::rems(3.25))
+                    .flex_shrink_0()
+                    .gap_3()
+                    .px_3()
+                    .py_1()
+                    .border_t_1()
+                    .border_color(gpui_kit::rgb(theme.border_default()))
+                    .when(
+                        gallery.len() > 1 && self.toolbar == ImagePreviewToolbar::Floating,
+                        |d| {
+                            let prev = state.clone();
+                            let next = state.clone();
+                            d.child(
+                                div()
+                                    .flex()
+                                    .items_center()
+                                    .gap_1()
+                                    .child(
+                                        YueButton::icon(
+                                            gallery_previous_id,
+                                            theme,
+                                            crate::outline::ChevronLeft,
+                                            "上一张",
+                                        )
+                                        .size(ButtonSize::Small)
+                                        .variant(ButtonVariant::Ghost)
+                                        .disabled(disabled || gallery_index == 0)
+                                        .on_click(
+                                            move |_, w, cx| {
+                                                prev.update(cx, |s, cx| {
+                                                    let _ = s.select_gallery_item(
+                                                        s.gallery_index().saturating_sub(1),
+                                                        w,
+                                                        cx,
+                                                    );
+                                                });
+                                            },
+                                        ),
+                                    )
+                                    .child(
+                                        div()
+                                            .id(gallery_count_id)
+                                            .test_support()
+                                            .aria_label(format!(
+                                                "第 {} 张，共 {} 张",
+                                                gallery_index + 1,
+                                                gallery.len()
+                                            ))
+                                            .font_features(crate::tabular_nums())
+                                            .text_sm()
+                                            .child(format!(
+                                                "{} / {}",
+                                                gallery_index + 1,
+                                                gallery.len()
+                                            )),
+                                    )
+                                    .child(
+                                        YueButton::icon(
+                                            gallery_next_id,
+                                            theme,
+                                            crate::outline::ChevronRight,
+                                            "下一张",
+                                        )
+                                        .size(ButtonSize::Small)
+                                        .variant(ButtonVariant::Ghost)
+                                        .disabled(disabled || gallery_index + 1 >= gallery.len())
+                                        .on_click(
+                                            move |_, w, cx| {
+                                                next.update(cx, |s, cx| {
+                                                    let _ = s.select_gallery_item(
+                                                        (s.gallery_index() + 1)
+                                                            .min(s.gallery().len() - 1),
+                                                        w,
+                                                        cx,
+                                                    );
+                                                });
+                                            },
+                                        ),
+                                    ),
+                            )
+                        },
+                    )
+                    .child(footer)
+                    .child(div().flex_1().min_w_0().w_full().child(toolbar)),
+            );
+        } else {
+            outer = outer.child(footer);
+        }
+        let chrome = chrome::chrome_state(&state, w, cx);
+        outer
+            .key_context("YueImagePreview")
+            .on_key_down(move |event, window, cx| {
+                if event.keystroke.key == "escape"
+                    && chrome::dismiss_information(&chrome, window, cx)
+                {
+                    cx.stop_propagation();
+                    window.prevent_default();
+                } else if event.keystroke.key == "escape" && window.is_fullscreen() {
+                    window.toggle_fullscreen();
+                    cx.stop_propagation();
+                    window.prevent_default();
+                }
+            })
     }
 }
+
 fn bg_value(bg: ImagePreviewBackground) -> &'static str {
     match bg {
         ImagePreviewBackground::CheckerDark => "dark",

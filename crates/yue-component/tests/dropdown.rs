@@ -19,8 +19,8 @@ use gpui_kit::{
     prelude::FluentBuilder as _, rems,
 };
 use yue_component::{
-    Accent, DropdownIndicatorSide, ThemeMode, YueButton, YueContextMenu, YueDropdownMenu,
-    YueMenuItem, YueTheme,
+    Accent, DropdownIndicatorSide, DropdownPlacement, ThemeMode, YueButton, YueContextMenu,
+    YueDropdownMenu, YueMenuItem, YueTheme,
 };
 
 fn theme() -> YueTheme {
@@ -41,6 +41,8 @@ struct Fixture {
     grid: usize,
     context: bool,
     custom: bool,
+    placement: DropdownPlacement,
+    bottom_trigger: bool,
 }
 
 impl Fixture {
@@ -265,7 +267,7 @@ impl Probe {
 }
 
 impl Render for Probe {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let this = cx.entity();
         let items = self.items(&this);
         let menu = if self.fixture.context {
@@ -303,6 +305,7 @@ impl Render for Probe {
                 )
             };
             menu.label("选择操作")
+                .placement(self.fixture.placement)
                 .items(items)
                 .when(columns > 0, |menu| menu.columns(columns))
                 .when(self.fixture.trailing, |menu| {
@@ -315,6 +318,10 @@ impl Render for Probe {
             .flex()
             .flex_col()
             .gap(rems(2.0))
+            .when(self.fixture.bottom_trigger, |view| {
+                view.h(window.viewport_size().height - gpui_kit::px(24.))
+                    .justify_end()
+            })
             // Somewhere the pointer can land that is neither the trigger nor a row,
             // for the dismissal an outside press has to answer for. It sits above the
             // menu so a panel hanging below the trigger cannot cover it.
@@ -1123,6 +1130,60 @@ fn the_panel_holds_its_own_highlight_across_a_repaint(cx: &mut TestAppContext) {
         3,
         "and the rows are still the same three rows"
     );
+}
+
+#[gpui_kit::test]
+fn row_entrance_follows_the_resolved_side_and_reverses_above_the_trigger(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx, Fixture::default());
+    for (placement, bottom_trigger, above) in [
+        (DropdownPlacement::Below, false, false),
+        (DropdownPlacement::Above, true, true),
+        (DropdownPlacement::Auto, true, true),
+        // An explicit preference also flips when there is insufficient space.
+        (DropdownPlacement::Above, false, false),
+    ] {
+        view.update(cx, |view, cx| {
+            view.fixture.placement = placement;
+            view.fixture.bottom_trigger = bottom_trigger;
+            cx.notify();
+        });
+        draw(cx);
+        click(cx, "打开菜单");
+        let panel = only(cx, "选择操作", Role::Menu).bounds();
+        let trigger = only(cx, "打开菜单", Role::Button).bounds();
+        assert_eq!(panel.bottom() < trigger.top(), above, "{placement:?}");
+        let first_start = row(cx, "重命名").bounds().top() - panel.top();
+        let last_start = row(cx, "导出为 PDF").bounds().top() - panel.top();
+        tick(cx, 40);
+        let panel = only(cx, "选择操作", Role::Menu).bounds();
+        let first_mid = row(cx, "重命名").bounds().top() - panel.top();
+        let last_mid = row(cx, "导出为 PDF").bounds().top() - panel.top();
+        if above {
+            assert!(
+                last_mid < last_start,
+                "bottom row moves upward first: {placement:?}"
+            );
+            assert!(
+                last_start - last_mid > first_start - first_mid,
+                "stagger starts beside the trigger: {placement:?}"
+            );
+        } else {
+            assert!(
+                first_mid > first_start,
+                "top row moves downward first: {placement:?}"
+            );
+            assert!(
+                first_mid - first_start > last_mid - last_start,
+                "stagger starts beside the trigger: {placement:?}"
+            );
+        }
+        tick(cx, 500);
+        let panel = only(cx, "选择操作", Role::Menu).bounds();
+        let first_end = row(cx, "重命名").bounds().top() - panel.top();
+        assert_eq!((first_start - first_end).abs(), gpui_kit::px(4.));
+        press(cx, "escape");
+        tick(cx, 500);
+    }
 }
 
 #[gpui_kit::test]

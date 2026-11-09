@@ -50,6 +50,8 @@ impl ImagePreviewImage {
             return Err(ImagePreviewError::InvalidValue);
         }
         let corners = image_corners(viewport, image_bounds, radius);
+        let resource_ready = super::timing::first_paint(self.image.id);
+        let started = resource_ready.map(|_| Instant::now());
         let result = window.with_content_mask(Some(ContentMask { bounds: viewport }), |window| {
             if cfg!(target_os = "windows") {
                 if sampling == ImagePreviewSampling::Nearest && !self.is_proxy() {
@@ -82,6 +84,17 @@ impl ImagePreviewImage {
                 )
             }
         });
+        if let (Some(ready), Some(started)) = (resource_ready, started) {
+            eprintln!(
+                "[ImagePreview timing] layer=component operation=first_paint name={:?} source={:?} texture={:?} resource_age_ms={:.3} paint_submit_ms={:.3} ok={}",
+                self.description,
+                self.pixel_size(),
+                self.texture_size(),
+                started.duration_since(ready).as_secs_f64() * 1000.,
+                started.elapsed().as_secs_f64() * 1000.,
+                result.is_ok()
+            );
+        }
         result.map_err(|error| ImagePreviewError::Render(error.to_string()))
     }
 }
@@ -120,7 +133,11 @@ pub(super) fn viewport(
             if cx.reduce_motion() {
                 paint.update(cx, |s, _| s.finish_motion());
             }
+            let gallery_now = cx.background_executor().now();
+            let gallery_active = paint.update(cx, |s, _| s.advance_gallery(gallery_now));
             let s = paint.read(cx);
+            let gallery_layers = s.gallery_layers(gallery_now);
+            let gallery_shift = px(s.gallery_offset(gallery_now) * f32::from(b.size.width));
             let mut camera = s.display_camera(now);
             let compare = s.is_comparing(now);
             let split = s.display_split(now);
@@ -134,14 +151,16 @@ pub(super) fn viewport(
                 || (compare
                     && (source.as_ref().is_some_and(ImagePreviewImage::is_proxy)
                         || result.as_ref().is_some_and(ImagePreviewImage::is_proxy)));
-            let pixel_grid = s.pixel_grid
+            let pixel_grid = !gallery_active
+                && s.pixel_grid
                 && !proxy
                 && cfg!(target_os = "windows")
                 && reference
                     .as_ref()
                     .is_some_and(|i| camera.zoom(i.dimensions()) >= 4.);
             let moving = s.gesture.is_some();
-            let active = s.is_animating(now) && w.is_visible() && !cx.reduce_motion();
+            let active =
+                (s.is_animating(now) || gallery_active) && w.is_visible() && !cx.reduce_motion();
             if !moving
                 && !active
                 && let Some(image) = &reference
@@ -151,17 +170,26 @@ pub(super) fn viewport(
             let nearest = cfg!(target_os = "windows")
                 && !proxy
                 && (pixel_grid || s.sampling == ImagePreviewSampling::Nearest);
-            let radius =
-                px(pixels(theme, "--image-preview-radius") * f32::from(w.rem_size()) / 16.);
+            // The viewport is the middle band of one viewer surface. Only the
+            // outer shell owns rounded corners; the image/checker meet chrome flush.
+            let radius = px(0.);
             let mut errors = Vec::new();
+            let mut submitted = false;
             w.with_content_mask(Some(ContentMask { bounds: b }), |w| {
                 checker(b, background, theme, w);
+                for layer in gallery_layers {
+                    paint_gallery_layer(layer, b, vp, w);
+                }
                 if let Some(image) = reference {
                     let d = image.dimensions();
                     let o = camera.top_left(d, vp);
                     let sz = camera.display_size(d, vp.scale);
-                    let image_bounds =
-                        Bounds::new(point(px(o[0]), px(o[1])), size(px(sz[0]), px(sz[1])));
+                    let image_bounds = Bounds::new(
+                        point(px(o[0]) + gallery_shift, px(o[1])),
+                        size(px(sz[0]), px(sz[1])),
+                    );
+                    let page =
+                        Bounds::new(point(b.left() + gallery_shift, b.top()), b.size).intersect(&b);
                     let mut draw_image = |image: ImagePreviewImage, w: &mut Window| {
                         if paint.read(cx).render_failed(image.image.id) {
                             return;
@@ -172,16 +200,22 @@ pub(super) fn viewport(
                         } else {
                             ImagePreviewSampling::Smooth
                         };
-                        let painted = image.paint(b, image_bounds, radius, sampling, w);
+                        if page.size.width <= px(0.) {
+                            return;
+                        }
+                        let painted = image.paint(page, image_bounds, radius, sampling, w);
                         if let Err(error) = painted {
                             errors.push((id, error.to_string()));
+                        } else {
+                            submitted = true;
                         }
                     };
                     if compare {
-                        let edge = px((f32::from(b.left() + b.size.width * split)
+                        let edge = px((f32::from(b.left() + gallery_shift + b.size.width * split)
                             * w.scale_factor())
                         .round()
-                            / w.scale_factor());
+                            / w.scale_factor())
+                        .clamp(b.left(), b.right());
                         if let Some(source) = source {
                             let clip = Bounds::new(
                                 b.origin,
@@ -206,7 +240,7 @@ pub(super) fn viewport(
                     if pixel_grid && let Some(grid) = PixelGrid::new(camera, d, vp) {
                         paint_pixel_grid(grid, b, radius, theme, w);
                     }
-                    if compare && split > 0. && split < 1. {
+                    if !gallery_active && compare && split > 0. && split < 1. {
                         let edge = px((f32::from(b.left() + b.size.width * split)
                             * w.scale_factor())
                         .round()
@@ -234,6 +268,14 @@ pub(super) fn viewport(
                     }
                 }
             });
+            if submitted && super::timing::enabled() {
+                paint.update(cx, |s, _| {
+                    if let Some(started) = s.presentation_pending.take() {
+                        eprintln!("[ImagePreview timing] layer=component operation=document_to_paint document={:?} elapsed_ms={:.3}",
+                            s.document.as_ref().map(|document| &document.id), started.elapsed().as_secs_f64() * 1000.);
+                    }
+                });
+            }
             if !errors.is_empty() {
                 let weak = paint.downgrade();
                 cx.defer(move |cx| {
@@ -388,6 +430,62 @@ pub(super) fn viewport(
     .into_any_element()
 }
 
+fn paint_gallery_layer(
+    layer: super::state::GalleryLayer,
+    viewport: Bounds<gpui_kit::Pixels>,
+    vp: Viewport,
+    window: &mut Window,
+) {
+    let frame = layer.frame;
+    let dimensions = frame.image.dimensions();
+    let origin = frame.camera.top_left(dimensions, vp);
+    let extent = frame.camera.display_size(dimensions, vp.scale);
+    let shift = viewport.size.width * layer.offset;
+    let page = Bounds::new(
+        point(viewport.left() + shift, viewport.top()),
+        viewport.size,
+    )
+    .intersect(&viewport);
+    if page.size.width <= px(0.) {
+        return;
+    }
+    let bounds = Bounds::new(
+        point(px(origin[0]) + shift, px(origin[1])),
+        size(px(extent[0]), px(extent[1])),
+    );
+    if frame.compare {
+        let edge = (viewport.left() + shift + viewport.size.width * frame.split)
+            .clamp(viewport.left(), viewport.right());
+        for (image, clip) in [
+            (
+                frame.source,
+                Bounds::new(
+                    viewport.origin,
+                    size(edge - viewport.left(), viewport.size.height),
+                ),
+            ),
+            (
+                frame.result,
+                Bounds::new(
+                    point(edge, viewport.top()),
+                    size(viewport.right() - edge, viewport.size.height),
+                ),
+            ),
+        ] {
+            let clip = clip.intersect(&page);
+            if clip.size.width > px(0.)
+                && let Some(image) = image
+            {
+                let _ = image.paint(clip, bounds, px(0.), frame.sampling, window);
+            }
+        }
+    } else {
+        let _ = frame
+            .image
+            .paint(page, bounds, px(0.), frame.sampling, window);
+    }
+}
+
 fn paint_pixel_grid(
     grid: PixelGrid,
     viewport: Bounds<gpui_kit::Pixels>,
@@ -516,7 +614,7 @@ fn checker(
         ImagePreviewBackground::White => ("--image-preview-white", None),
         ImagePreviewBackground::Black => ("--image-preview-black", None),
     };
-    let radius = px(pixels(theme, "--image-preview-radius") * f32::from(w.rem_size()) / 16.);
+    let radius = px(0.);
     w.paint_quad(fill(b, rgba(theme, a)).corner_radii(radius));
     if let Some(c) = c
         && let Some(grid) = CheckerGrid::new(

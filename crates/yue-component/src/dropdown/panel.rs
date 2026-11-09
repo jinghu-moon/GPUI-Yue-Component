@@ -110,8 +110,14 @@ impl MenuPanel {
         let host = PopupHost::new(spec);
         let available = host.content_size(window);
         host.mount(
-            move |presentation, _, window, cx| {
-                self.into_panel(presentation.is_interactive(), available, window, cx)
+            move |presentation, snapshot, window, cx| {
+                self.into_panel(
+                    presentation.is_interactive(),
+                    available,
+                    snapshot,
+                    window,
+                    cx,
+                )
             },
             window,
             cx,
@@ -138,6 +144,7 @@ impl MenuPanel {
         self,
         present: bool,
         available: gpui_kit::Size<Pixels>,
+        snapshot: crate::popup::PopupSnapshotHandle,
         window: &mut Window,
         cx: &mut App,
     ) -> AnyElement {
@@ -204,6 +211,7 @@ impl MenuPanel {
                         generation,
                         column,
                     },
+                    &snapshot,
                     window,
                     cx,
                 )
@@ -485,13 +493,23 @@ impl MenuPanel {
         &self,
         item: &YueMenuItem,
         ctx: RowContext,
+        snapshot: &crate::popup::PopupSnapshotHandle,
         window: &mut Window,
         cx: &mut App,
     ) -> AnyElement {
         let theme = self.shape.theme;
         let row_id = self.row_key(item, ctx.index);
         let highlight = ctx.active || ctx.hovered;
-        let (enter, rise) = row_entrance(&row_id, ctx, theme, window, cx);
+        let mut entrance = ctx;
+        let side = snapshot
+            .read()
+            .position()
+            .and_then(|p| p.placement)
+            .unwrap_or_else(|| self.shape.placement.side());
+        if side == Placement::Top && self.kind == MenuKind::Trigger {
+            entrance.index = self.items.len() - 1 - ctx.index;
+        }
+        let (enter, rise) = row_entrance(&row_id, entrance, theme, window, cx);
         let tint = row_tint(&row_id, ctx, highlight, theme, window, cx);
         let shell = div()
             .id(row_id.clone())
@@ -512,14 +530,9 @@ impl MenuPanel {
                 tint,
             ))
             .text_color(row_color(item, theme))
-            // The rows' entrance is a 4px fall from the panel's top edge, which is
-            // the reference's `translateY(-4px)`. A relative offset is what gpui
-            // gives for free: its own `Style::position` defaults to relative, so
-            // `top` shifts the row without disturbing its siblings' layout.
-            .opacity(enter)
-            .top(rise);
+            .opacity(enter);
 
-        match item.kind {
+        let row = match item.kind {
             MenuRowKind::Info => shell
                 .when(ctx.interactive, |row| {
                     row.role(Role::Caption).aria_label(item.label.clone())
@@ -650,7 +663,8 @@ impl MenuPanel {
                     .a11y_disabled(ctx.interactive && item.disabled)
                     .into_any_element()
             }
-        }
+        };
+        super::entrance::RowEntrance::wrap(row, snapshot.clone(), rise)
     }
 
     /// Everything between the row's two edges: the mark slot, the icon, the

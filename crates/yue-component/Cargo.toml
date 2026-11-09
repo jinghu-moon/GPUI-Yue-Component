@@ -8,6 +8,7 @@ description = "Yue design system components for GPUI Kit"
 [dependencies]
 yue-color = { path = "../yue-color" }
 gpui-kit.workspace = true
+chrono = "=0.4.45"
 # Only for `LineCap` / `LineJoin`, which GPUI does not re-export from its own
 # path builder. Switch glyphs stroke their icon paths, so they need round caps.
 lyon.workspace = true

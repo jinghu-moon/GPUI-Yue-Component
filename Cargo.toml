@@ -26,3 +26,17 @@ debug = 0
 
 [profile.dev.package."*"]
 debug = 0
+
+# ImagePreview profiling: PNG inflate/unfilter dominates cold gallery loading.
+# Keep application/component code debuggable while optimizing these hot codecs.
+[profile.dev.package.png]
+opt-level = 3
+
+[profile.dev.package.fdeflate]
+opt-level = 3
+
+# The measured remaining cost is the component's exact linear-light area
+# filter and HDR conversion. Keep these CPU kernels optimized in development
+# too; Showcase/application orchestration retains the normal dev profile.
+[profile.dev.package.yue-component]
+opt-level = 2

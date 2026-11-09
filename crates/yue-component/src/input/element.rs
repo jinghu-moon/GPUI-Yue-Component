@@ -3,7 +3,7 @@
 use super::frame::*;
 use super::*;
 
-use gpui_kit::base::TestSupportExt as _;
+use gpui_kit::base::{StyledExt as _, TestSupportExt as _};
 
 use gpui_kit::{
     App, InteractiveElement as _, IntoElement, ParentElement as _, RenderOnce, Styled as _,
@@ -120,23 +120,14 @@ impl RenderOnce for YueInput {
             .h(height)
             .px(pad)
             .text_size(text_size)
-            .bg(color(
+            .refine_style(&surface_style(
                 self.theme,
-                if disabled {
-                    crate::theme::keys::INPUT_BACKGROUND_DISABLED
-                } else if self.readonly {
-                    crate::theme::keys::INPUT_BACKGROUND_READONLY
-                } else {
-                    crate::theme::keys::INPUT_BACKGROUND
-                },
+                self.status,
+                disabled,
+                self.readonly,
+                self.bordered,
+                focused,
             ))
-            .rounded(rems(self.theme, crate::theme::keys::INPUT_BORDER_RADIUS))
-            .border(if self.bordered {
-                rems(self.theme, crate::theme::keys::INPUT_BORDER_WIDTH)
-            } else {
-                gpui_kit::rems(0.0)
-            })
-            .border_color(color(self.theme, border))
             .when(self.block, |this| this.w_full())
             .when_some(self.width, |this, width| this.w(width))
             .when(disabled, |this| this.opacity(0.72))

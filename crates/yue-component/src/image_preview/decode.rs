@@ -9,6 +9,32 @@ enum Conversion {
     Pq2020,
     Icc(Arc<TransformF32Executor>),
 }
+
+// Every row reaching Conversion::row comes from normalized integer PNG/ICC
+// input (at most 16 bits). Match that f32 normalization exactly, then reuse the
+// expensive transfer evaluation across pixels, rows, images and workers.
+fn transfer_table(pq: bool) -> &'static [f64] {
+    static SDR: OnceLock<Vec<f64>> = OnceLock::new();
+    static PQ: OnceLock<Vec<f64>> = OnceLock::new();
+    let table = if pq { &PQ } else { &SDR };
+    table.get_or_init(|| {
+        (0..=u16::MAX)
+            .map(|code| {
+                let normalized = f64::from(f32::from(code) / 65535.0);
+                if pq {
+                    color::pq_to_nits(normalized) / 80.0
+                } else {
+                    color::srgb_to_linear(normalized)
+                }
+            })
+            .collect()
+    })
+}
+
+fn transfer_code(value: f32) -> usize {
+    (value * 65535.0).round() as usize
+}
+
 impl Conversion {
     fn from_cicp([primaries, transfer, matrix, full]: [u8; 4]) -> Result<Self, ImagePreviewError> {
         match [primaries, transfer, matrix, full] {
@@ -78,17 +104,18 @@ impl Conversion {
     fn row(&self, rgba: &mut [f32]) -> Result<(), ImagePreviewError> {
         match self {
             Self::Srgb => {
+                let table = transfer_table(false);
                 for pixel in rgba.as_chunks_mut::<4>().0 {
                     for channel in &mut pixel[..3] {
-                        *channel = color::srgb_to_linear(f64::from(*channel)) as f32;
+                        *channel = table[transfer_code(*channel)] as f32;
                     }
                 }
             }
             Self::Pq2020 => {
+                let table = transfer_table(true);
                 for pixel in rgba.as_chunks_mut::<4>().0 {
                     let rgb = color::rec2020_to_rec709(
-                        [pixel[0], pixel[1], pixel[2]]
-                            .map(|v| color::pq_to_nits(f64::from(v)) / 80.0),
+                        [pixel[0], pixel[1], pixel[2]].map(|v| table[transfer_code(v)]),
                     );
                     for (channel, value) in pixel[..3].iter_mut().zip(rgb) {
                         *channel = value as f32;
@@ -148,6 +175,7 @@ pub(super) fn png(
     reader: impl std::io::BufRead + std::io::Seek,
     limits: &ImagePreviewLimits,
 ) -> Result<ImagePreviewPixels<'static>, ImagePreviewError> {
+    let mut timing = super::super::timing::Timing::new("png_rows");
     let mut decoder = png::Decoder::new(reader);
     let decoder_budget = limits.decode_bytes.min(8 * 1024 * 1024) as usize;
     decoder.set_limits(png::Limits {
@@ -218,9 +246,34 @@ pub(super) fn png(
             "PNG conversion working set exceeds decoding budget".into(),
         ));
     }
+    timing.mark("header_profile");
     let mut output = Vec::with_capacity(length);
     let mut row = Vec::with_capacity(width as usize * 4);
     let mut convert = |source: &[u8]| -> Result<(), ImagePreviewError> {
+        // Eight-bit sRGB needs no transfer conversion. Preserve its original
+        // bytes instead of building and quantizing a full floating-point row.
+        if encoding == ImagePreviewColorSpace::Srgb {
+            match channels {
+                png::ColorType::Rgba => output.extend_from_slice(source),
+                png::ColorType::Rgb => {
+                    for pixel in source.as_chunks::<3>().0 {
+                        output.extend_from_slice(&[pixel[0], pixel[1], pixel[2], 255]);
+                    }
+                }
+                png::ColorType::Grayscale => {
+                    for &value in source {
+                        output.extend_from_slice(&[value, value, value, 255]);
+                    }
+                }
+                png::ColorType::GrayscaleAlpha => {
+                    for pixel in source.as_chunks::<2>().0 {
+                        output.extend_from_slice(&[pixel[0], pixel[0], pixel[0], pixel[1]]);
+                    }
+                }
+                png::ColorType::Indexed => return Err(decode_error("unexpanded PNG palette")),
+            }
+            return Ok(());
+        }
         if depth != png::BitDepth::Eight && depth != png::BitDepth::Sixteen {
             return Err(decode_error("unexpanded PNG bit depth"));
         }
@@ -261,25 +314,43 @@ pub(super) fn png(
     };
     if interlaced {
         let mut frame = vec![0; frame_bytes];
+        timing.mark("allocate");
         let result = reader.next_frame(&mut frame).map_err(decode_error)?;
+        timing.mark("decompress_unfilter");
         for source in frame[..result.buffer_size()].chunks_exact(result.line_size) {
             convert(source)?;
         }
+        timing.mark("expand_color");
     } else {
-        while let Some(source) = reader.next_row().map_err(decode_error)? {
+        timing.mark("allocate");
+        loop {
+            let source = reader.next_row().map_err(decode_error)?;
+            timing.mark("decompress_unfilter");
+            let Some(source) = source else {
+                break;
+            };
             convert(source.data())?;
+            timing.mark("expand_color");
         }
     }
     reader.finish().map_err(decode_error)?;
+    timing.mark("container_finish");
     if output.len() != length {
         return Err(decode_error("PNG row count does not match dimensions"));
     }
     let (size, output) = orient([width, height], output, bpp, orientation);
-    if encoding == ImagePreviewColorSpace::Srgb {
+    timing.mark("orientation");
+    let result = if encoding == ImagePreviewColorSpace::Srgb {
         ImagePreviewPixels::from_rgba8(size[0], size[1], output)
     } else {
         ImagePreviewPixels::from_rgba16f(size[0], size[1], size[0] as usize * 8, output, encoding)
-    }
+    };
+    timing.mark("validate_pixels");
+    timing.finish(format_args!(
+        "source={width}x{height} encoding={encoding:?} interlaced={interlaced} ok={}",
+        result.is_ok()
+    ));
+    result
 }
 
 fn orient(
@@ -323,6 +394,30 @@ fn orient(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn integer_transfer_lookup_matches_reference_for_every_u16_code() {
+        for conversion in [Conversion::Srgb, Conversion::Pq2020] {
+            for code in 0..=u16::MAX {
+                let rgb = [code, u16::MAX - code, code.wrapping_mul(17)]
+                    .map(|value| f32::from(value) / 65535.0);
+                let mut pixel = [rgb[0], rgb[1], rgb[2], 0.25];
+                conversion.row(&mut pixel).unwrap();
+                let expected = match conversion {
+                    Conversion::Srgb => {
+                        rgb.map(|value| color::srgb_to_linear(f64::from(value)) as f32)
+                    }
+                    Conversion::Pq2020 => color::rec2020_to_rec709(
+                        rgb.map(|value| color::pq_to_nits(f64::from(value)) / 80.0),
+                    )
+                    .map(|value| value as f32),
+                    _ => unreachable!(),
+                };
+                assert_eq!(pixel[..3], expected, "code={code}");
+                assert_eq!(pixel[3], 0.25);
+            }
+        }
+    }
 
     #[test]
     fn icc_rejects_a_missing_channel_curve_before_color_conversion() {

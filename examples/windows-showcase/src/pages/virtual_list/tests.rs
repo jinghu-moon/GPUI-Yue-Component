@@ -82,6 +82,8 @@ fn viewport(cx: &mut VisualTestContext, demo: Demo) -> Bounds<Pixels> {
     })
 }
 fn start_drag(cx: &mut VisualTestContext, demo: Demo) -> Bounds<Pixels> {
+    // A native drag requires an active window; deactivation now cancels it.
+    cx.update(|w, _| w.activate_window());
     // The production Scrolling mode reveals its thumb after actual scroll activity.
     wheel(cx, demo, 0., -36.);
     wheel(cx, demo, 0., 36.);

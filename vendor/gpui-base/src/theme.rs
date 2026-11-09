@@ -1,8 +1,12 @@
-use gpui::{App, Global};
+use gpui::{App, Global, Window};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use std::rc::Rc;
 
-use crate::{PlotMotion, ScrollbarMode, ScrollbarMotion, ScrollbarStyles, SemanticThemeTokens};
+use crate::{
+    PlotMotion, ScrollbarBehavior, ScrollbarMode, ScrollbarMotion, ScrollbarStyles,
+    SemanticThemeTokens,
+};
 
 /// Application-wide defaults for Base behavior modules.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
@@ -49,6 +53,8 @@ impl ActiveTheme for App {
     }
 }
 
+type ScrollbarResolver = Rc<dyn Fn(&Window, &App) -> ScrollbarTheme>;
+
 /// Global defaults used by [`crate::Scrollbar`].
 ///
 /// `motion` defaults to motionless. Styled layers project their own timing;
@@ -58,6 +64,8 @@ pub struct ScrollbarTheme {
     mode: ScrollbarMode,
     motion: ScrollbarMotion,
     styles: ScrollbarStyles,
+    behavior: ScrollbarBehavior,
+    resolver: Option<ScrollbarResolver>,
 }
 
 impl ScrollbarTheme {
@@ -78,6 +86,28 @@ impl ScrollbarTheme {
     pub fn with_styles(mut self, styles: ScrollbarStyles) -> Self {
         self.styles = styles;
         self
+    }
+
+    /// Resolve presentation for the actual window, including its rem size.
+    /// Called once per scrollbar frame; never mutates the application theme.
+    pub fn with_resolver(mut self, resolver: impl Fn(&Window, &App) -> Self + 'static) -> Self {
+        self.resolver = Some(Rc::new(resolver));
+        self
+    }
+
+    pub fn with_behavior(mut self, behavior: ScrollbarBehavior) -> Self {
+        self.behavior = behavior;
+        self
+    }
+
+    pub fn behavior(&self) -> ScrollbarBehavior {
+        self.behavior
+    }
+
+    pub(crate) fn resolve(&self, window: &Window, cx: &App) -> Self {
+        self.resolver
+            .as_ref()
+            .map_or_else(|| self.clone(), |resolve| resolve(window, cx))
     }
 
     pub fn mode(&self) -> ScrollbarMode {

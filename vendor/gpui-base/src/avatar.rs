@@ -1,6 +1,6 @@
 use gpui::{
-    AnyElement, App, Div, ImageSource, InteractiveElement, Interactivity, IntoElement,
-    ParentElement, RenderOnce, StyleRefinement, Styled, Window, div, img,
+    AnyElement, App, Div, ImageSource, InteractiveElement, Interactivity, IntoElement, ObjectFit,
+    ParentElement, RenderOnce, StyleRefinement, Styled, StyledImage as _, Window, div, img,
 };
 use smallvec::SmallVec;
 
@@ -77,6 +77,18 @@ impl AvatarImage {
             image: img(source),
             style: StyleRefinement::default(),
         }
+    }
+
+    /// Render a replacement element if the image fails to load or decode.
+    pub fn with_fallback(mut self, fallback: impl Fn() -> AnyElement + 'static) -> Self {
+        self.image = self.image.with_fallback(fallback);
+        self
+    }
+
+    /// Set how the source image is fitted into its avatar bounds.
+    pub fn object_fit(mut self, fit: ObjectFit) -> Self {
+        self.image = self.image.object_fit(fit);
+        self
     }
 }
 

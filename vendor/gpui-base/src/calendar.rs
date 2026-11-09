@@ -1,5 +1,9 @@
 use crate::TestSupportExt as _;
+use crate::a11y_disabled::A11yDisabledExt as _;
 use std::rc::Rc;
+
+mod interaction;
+pub use interaction::{CalendarGranularity, CalendarInteractionEvent, CalendarSelection};
 
 use crate::{h_flex, styled::StyledExt as _, v_flex};
 use chrono::{Datelike, Local, NaiveDate, Weekday};
@@ -169,7 +173,8 @@ pub enum CalendarEvent {
 pub struct CalendarState {
     pub focus_handle: FocusHandle,
     view: CalendarView,
-    date: Date,
+    selection: CalendarSelection,
+    interaction: interaction::CalendarInteraction,
     current_year: i32,
     current_month: u8,
     years: Vec<Vec<i32>>,
@@ -185,7 +190,8 @@ impl CalendarState {
         Self {
             focus_handle: cx.focus_handle(),
             view: CalendarView::Day,
-            date: Date::Single(None),
+            selection: CalendarSelection::Single(None),
+            interaction: Default::default(),
             current_year: today.year(),
             current_month: today.month() as u8,
             years: vec![],
@@ -227,7 +233,7 @@ impl CalendarState {
         {
             return false;
         }
-        self.date = date;
+        self.selection = date.into();
         if let Some(v) = date.start() {
             self.current_month = v.month() as u8;
             self.current_year = v.year();
@@ -242,7 +248,10 @@ impl CalendarState {
         {
             return false;
         }
-        let next = match self.date {
+        if self.interaction.enabled {
+            return self.select_enhanced(value);
+        }
+        let next = match self.date() {
             Date::Single(_) => Date::Single(Some(value)),
             Date::Range(None, None) | Date::Range(None, Some(_)) => Date::Range(Some(value), None),
             Date::Range(Some(start), None) if value >= start => {
@@ -253,12 +262,15 @@ impl CalendarState {
             }
         };
         self.apply_date(next);
-        self.date.is_complete()
+        self.date().is_complete()
     }
     /// Activates a day item and emits [`CalendarEvent::Selected`] once the
     /// controlled value is complete. This is the single pointer/keyboard
     /// activation path used by the calendar root.
     pub fn activate_date(&mut self, value: NaiveDate, cx: &mut Context<Self>) -> bool {
+        if self.interaction.enabled {
+            return self.activate_enhanced(value, cx);
+        }
         let complete = self.select_date(value);
         if complete {
             cx.emit(CalendarEvent::Selected(self.date()));
@@ -267,11 +279,18 @@ impl CalendarState {
         complete
     }
     pub fn date(&self) -> Date {
-        self.date
+        match self.selection {
+            CalendarSelection::Single(value) => Date::Single(value),
+            CalendarSelection::Range(start, end) => Date::Range(start, end),
+            // Legacy Date cannot represent multiple values. New consumers use selection().
+            CalendarSelection::Multiple(_) => Date::Single(None),
+        }
     }
     pub fn set_number_of_months(&mut self, n: usize, _: &mut Window, cx: &mut Context<Self>) {
-        self.number_of_months = n;
-        cx.notify();
+        if self.number_of_months != n.max(1) {
+            self.number_of_months = n.max(1);
+            cx.notify();
+        }
     }
     pub fn number_of_months(&self) -> usize {
         self.number_of_months
@@ -420,6 +439,10 @@ pub struct CalendarItemState {
     muted: bool,
     disabled: bool,
     today: bool,
+    date: Option<NaiveDate>,
+    focused: bool,
+    preview: bool,
+    navigation_months: i32,
 }
 
 impl CalendarItemState {
@@ -432,6 +455,10 @@ impl CalendarItemState {
             muted: false,
             disabled: false,
             today: false,
+            date: None,
+            focused: false,
+            preview: false,
+            navigation_months: 0,
         }
     }
 
@@ -485,6 +512,20 @@ impl CalendarItemState {
 
     pub fn is_today(&self) -> bool {
         self.today
+    }
+    /// Full date identity, including month/year units represented by their first day.
+    pub fn date(&self) -> Option<NaiveDate> {
+        self.date
+    }
+    pub fn is_focused(&self) -> bool {
+        self.focused
+    }
+    pub fn is_preview(&self) -> bool {
+        self.preview
+    }
+    /// Signed month offset for navigation controls (zero for other items).
+    pub fn navigation_months(&self) -> i32 {
+        self.navigation_months
     }
 }
 
@@ -545,7 +586,10 @@ impl InteractiveElement for CalendarItem {
 impl StatefulInteractiveElement for CalendarItem {}
 impl RenderOnce for CalendarItem {
     fn render(self, _: &mut Window, _: &mut App) -> impl IntoElement {
-        self.base.children(self.children).refine_style(&self.style)
+        self.base
+            .children(self.children)
+            .refine_style(&self.style)
+            .a11y_disabled(self.state.disabled)
     }
 }
 
@@ -566,6 +610,7 @@ pub struct Calendar {
     style: StyleRefinement,
     item: ItemRenderer,
     label: Labeler,
+    interactive: bool,
 }
 
 impl Calendar {
@@ -583,10 +628,16 @@ impl Calendar {
                 CalendarItemKind::Weekday => value.to_string().into(),
                 _ => value.to_string().into(),
             }),
+            interactive: true,
         }
     }
     pub fn number_of_months(mut self, count: usize) -> Self {
         self.number_of_months = count.max(1);
+        self
+    }
+    /// Suppresses all activation and focus while a popup is exiting.
+    pub fn interactive(mut self, interactive: bool) -> Self {
+        self.interactive = interactive;
         self
     }
     pub fn first_day_of_week(mut self, day: Weekday) -> Self {
@@ -633,6 +684,9 @@ impl Styled for Calendar {
 
 impl RenderOnce for Calendar {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
+        if self.state.read(cx).interaction.enabled {
+            return self.render_enhanced(window, cx);
+        }
         let count = self.number_of_months;
         self.state
             .update(cx, |s, cx| s.set_number_of_months(count, window, cx));
@@ -825,6 +879,7 @@ impl RenderOnce for Calendar {
             .child(header)
             .child(body)
             .refine_style(&self.style)
+            .into_any_element()
     }
 }
 
@@ -936,7 +991,7 @@ mod tests {
     fn state(cx: &mut gpui::TestAppContext, date: Date) -> gpui::Entity<CalendarState> {
         let (state, _) = cx.add_window_view(CalendarState::new);
         state.update(cx, |state, _| {
-            state.date = date;
+            state.selection = date.into();
         });
         state
     }
@@ -1049,7 +1104,7 @@ mod tests {
     fn activation_emits_only_for_complete_enabled_values(cx: &mut gpui::TestAppContext) {
         let (harness, _) = cx.add_window_view(EventHarness::new);
         let s = harness.read_with(cx, |h, _| h.calendar.clone());
-        s.update(cx, |s, _| s.date = Date::Range(None, None));
+        s.update(cx, |s, _| s.selection = Date::Range(None, None).into());
         let start = NaiveDate::from_ymd_opt(2025, 4, 4).unwrap();
         let end = NaiveDate::from_ymd_opt(2025, 4, 8).unwrap();
         s.update(cx, |s, cx| {
@@ -1066,7 +1121,7 @@ mod tests {
         );
 
         s.update(cx, |s, cx| {
-            s.date = Date::Single(None);
+            s.selection = Date::Single(None).into();
             assert!(s.activate_date(end, cx));
             assert_eq!(s.date(), Date::Single(Some(end)));
         });

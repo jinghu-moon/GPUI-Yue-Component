@@ -1,7 +1,7 @@
 use crate::ShortcutSpec;
 use gpui_kit::{
     App, Context, EventEmitter, FocusHandle, Focusable, Keystroke, Modifiers, SharedString,
-    Subscription, Window,
+    Subscription, Task, Window,
 };
 use std::rc::Rc;
 
@@ -37,6 +37,11 @@ pub struct YueShortcutRecorderState {
     pub(super) modifiers: Modifiers,
     pub(super) message: SharedString,
     pub(super) invalid: bool,
+    pub(super) error_flash: bool,
+    pub(super) feedback_revision: u64,
+    pub(super) success: bool,
+    pub(super) success_revision: u64,
+    pub(super) hovered: bool,
     pub(super) disabled: bool,
     pub(super) focus: FocusHandle,
     pub(super) region: FocusHandle,
@@ -45,6 +50,8 @@ pub struct YueShortcutRecorderState {
     validator: Option<Validator>,
     // Finishing on key-down must not let auto-repeat execute a real command.
     blocked_key: Option<String>,
+    error_task: Option<Task<()>>,
+    success_task: Option<Task<()>>,
     _subscriptions: Vec<Subscription>,
 }
 impl EventEmitter<ShortcutRecorderEvent> for YueShortcutRecorderState {}
@@ -66,6 +73,9 @@ impl YueShortcutRecorderState {
             if !w.is_window_active() {
                 s.cancel(cx);
                 s.blocked_key = None;
+                s.success = false;
+                s.success_task = None;
+                cx.notify();
             }
         });
         let owner = cx.weak_entity();
@@ -89,7 +99,7 @@ impl YueShortcutRecorderState {
                         s.focus.focus(w, cx);
                         cx.stop_propagation();
                     } else if field.is_focused(w) {
-                        s.capture(&e.keystroke, cx);
+                        s.capture(&e.keystroke, w, cx);
                     }
                 });
             }
@@ -101,6 +111,11 @@ impl YueShortcutRecorderState {
             modifiers: Modifiers::default(),
             message: "".into(),
             invalid: false,
+            error_flash: false,
+            feedback_revision: 0,
+            success: false,
+            success_revision: 0,
+            hovered: false,
             disabled: false,
             focus,
             region,
@@ -110,6 +125,8 @@ impl YueShortcutRecorderState {
                 .to_vec(),
             validator: None,
             blocked_key: None,
+            error_task: None,
+            success_task: None,
             _subscriptions: vec![blur, activation, intercept],
         }
     }
@@ -142,6 +159,8 @@ impl YueShortcutRecorderState {
             return Err("ShortcutRecorder requires one chord with exactly one primary key");
         }
         self.cancel(cx);
+        self.success = false;
+        self.success_task = None;
         self.value = value;
         cx.notify();
         Ok(())
@@ -151,6 +170,8 @@ impl YueShortcutRecorderState {
         if self.disabled != disabled {
             self.disabled = disabled;
             self.cancel(cx);
+            self.success = false;
+            self.success_task = None;
             cx.notify();
         }
     }
@@ -158,6 +179,8 @@ impl YueShortcutRecorderState {
     pub fn set_require_modifier(&mut self, required: bool, cx: &mut Context<Self>) {
         self.require_modifier = required;
         self.cancel(cx);
+        self.success = false;
+        self.success_task = None;
     }
     /// Additional reservations. The four reference Windows reservations always
     /// apply. This is application validation, not a guarantee of OS delivery.
@@ -190,6 +213,8 @@ impl YueShortcutRecorderState {
             return;
         }
         self.cancel(cx);
+        self.success = false;
+        self.success_task = None;
         self.recording = true;
         self.message = "按下快捷键 · Esc 取消 · Backspace 清除".into();
         self.focus.focus(window, cx);
@@ -202,6 +227,8 @@ impl YueShortcutRecorderState {
         self.modifiers = Modifiers::default();
         self.message = "".into();
         self.invalid = false;
+        self.error_flash = false;
+        self.error_task = None;
         if changed {
             cx.notify();
         }
@@ -219,7 +246,7 @@ impl YueShortcutRecorderState {
             cx.notify();
         }
     }
-    fn capture(&mut self, stroke: &Keystroke, cx: &mut Context<Self>) {
+    fn capture(&mut self, stroke: &Keystroke, window: &mut Window, cx: &mut Context<Self>) {
         if self.blocked_key.as_deref() == Some(key_identity(&stroke.key)) {
             cx.stop_propagation();
             return;
@@ -240,7 +267,7 @@ impl YueShortcutRecorderState {
         if bare(stroke, "escape") {
             self.cancel(cx);
         } else if bare(stroke, "backspace") {
-            self.commit(None, false, cx);
+            self.commit(None, false, window, cx);
         } else {
             let mut keys = modifier_names(stroke.modifiers);
             let key = match stroke.key.as_str() {
@@ -256,12 +283,8 @@ impl YueShortcutRecorderState {
             }
             keys.push(key);
             match ShortcutSpec::parse(&keys.join("+")) {
-                Ok(candidate) => self.attempt(candidate, false, cx),
-                Err(_) => {
-                    self.invalid = true;
-                    self.message = "暂不支持此按键，请使用英文键位或功能键".into();
-                    cx.notify();
-                }
+                Ok(candidate) => self.attempt(candidate, false, window, cx),
+                Err(_) => self.reject("暂不支持此按键，请使用英文键位或功能键".into(), window, cx),
             }
         }
         self.blocked_key = Some(key_identity(&stroke.key).to_owned());
@@ -276,16 +299,24 @@ impl YueShortcutRecorderState {
         }
         self.validator.as_ref().map_or(Accept, |v| v(candidate, cx))
     }
-    fn attempt(&mut self, candidate: ShortcutSpec, overwrite: bool, cx: &mut Context<Self>) {
+    fn attempt(
+        &mut self,
+        candidate: ShortcutSpec,
+        overwrite: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         match self.validate(&candidate, cx) {
-            ShortcutRecorderValidation::Accept => self.commit(Some(candidate), false, cx),
+            ShortcutRecorderValidation::Accept => self.commit(Some(candidate), false, window, cx),
             ShortcutRecorderValidation::Conflict(_) if overwrite => {
-                self.commit(Some(candidate), true, cx)
+                self.commit(Some(candidate), true, window, cx)
             }
             ShortcutRecorderValidation::Conflict(message) => {
                 self.pending = Some(candidate);
                 self.recording = false;
                 self.invalid = false;
+                self.error_flash = false;
+                self.error_task = None;
                 self.message = message;
                 self.modifiers = Modifiers::default();
                 cx.notify();
@@ -293,9 +324,7 @@ impl YueShortcutRecorderState {
             ShortcutRecorderValidation::Reject(message) => {
                 self.pending = None;
                 self.recording = true;
-                self.invalid = true;
-                self.message = message;
-                cx.notify();
+                self.reject(message, window, cx);
             }
         }
     }
@@ -304,12 +333,53 @@ impl YueShortcutRecorderState {
             return;
         }
         if let Some(candidate) = self.pending.take() {
-            self.attempt(candidate, true, cx);
+            self.attempt(candidate, true, window, cx);
         }
         self.focus.focus(window, cx);
     }
-    fn commit(&mut self, value: Option<ShortcutSpec>, overwrite: bool, cx: &mut Context<Self>) {
+    fn reject(&mut self, message: SharedString, window: &mut Window, cx: &mut Context<Self>) {
+        self.invalid = true;
+        self.error_flash = true;
+        self.feedback_revision = self.feedback_revision.wrapping_add(1);
+        self.message = message;
+        let revision = self.feedback_revision;
+        self.error_task = Some(cx.spawn_in(window, async move |weak, cx| {
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(300))
+                .await;
+            let _ = weak.update(cx, |s, cx| {
+                if s.feedback_revision == revision {
+                    s.error_flash = false;
+                    s.error_task = None;
+                    cx.notify();
+                }
+            });
+        }));
+        cx.notify();
+    }
+    fn commit(
+        &mut self,
+        value: Option<ShortcutSpec>,
+        overwrite: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.cancel(cx);
+        self.success = true;
+        self.success_revision = self.success_revision.wrapping_add(1);
+        let revision = self.success_revision;
+        self.success_task = Some(cx.spawn_in(window, async move |weak, cx| {
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(700))
+                .await;
+            let _ = weak.update(cx, |s, cx| {
+                if s.success_revision == revision {
+                    s.success = false;
+                    s.success_task = None;
+                    cx.notify();
+                }
+            });
+        }));
         if self.value != value || overwrite {
             self.value = value.clone();
             cx.emit(ShortcutRecorderEvent::Change { value, overwrite });

@@ -5,11 +5,11 @@
     "version": "0.1.0",
     "revision": "7a154f98aa63def6482ab105ce4ea757f77e1ea7",
     "dirty": true,
-    "contentSha256": "a9fce4fc9127093472641acc0bb52e2917cec0146a82bee845bb961d0fd5e8b8",
+    "contentSha256": "2cb75485056d3b061a76fe43a54b43891307e912e12284c4bfb423cc5aa39947",
     "files": [
       [
         "packages/tokens/README.md",
-        "af7e0c65886c60bef178b2657599e1d54cb8d7d59635ec48056ef94eb024e0f6"
+        "f19633431b02ba8317a84d2101d3f89fb8461ed71f2d4b28ac759532a9e461fc"
       ],
       [
         "packages/tokens/assets/FiraCode-Regular.woff2",
@@ -41,15 +41,15 @@
       ],
       [
         "packages/tokens/src/component-tokens/_index.css",
-        "928f2c14a3aff7eefe873f3aa73145900cc1227734e7e48e1dd22e5ca3df0911"
+        "fde0b61e6bc29df32deea8b2e3435f1d56332d757f73f2bcaa4e49cca0e82ac8"
       ],
       [
         "packages/tokens/src/component-tokens/avatar.css",
-        "5b44c8a346cda4c07d8907d7527bc2d44ae9330185a9e3b78f56959d94349eac"
+        "325374c561c819a13d18593f3f77413b7ba7e76789a2f5638deeb1ff16e7cf5e"
       ],
       [
         "packages/tokens/src/component-tokens/badge.css",
-        "4781c112353281bad3ab3189af36b7fd08d478ceda8e0f79e75a6d445d797294"
+        "0807b091f59d95382da5823d486308a87062586f615b3fb66149e53b61944f6b"
       ],
       [
         "packages/tokens/src/component-tokens/box.css",
@@ -64,6 +64,10 @@
         "65635c564b42610bbe221f605913b4bdfeda8de3f76ff2af2d45c7a0dd69b34a"
       ],
       [
+        "packages/tokens/src/component-tokens/calendar.css",
+        "ecad14cf1449c538974d6bc26d75f905cbf1eb9c260a1ef2547e600a5197d2fa"
+      ],
+      [
         "packages/tokens/src/component-tokens/checkbox.css",
         "061076846dfab5145b60779a95b616308d74da74b29a9b53414a5a457e528123"
       ],
@@ -76,12 +80,20 @@
         "f9c4d332349e5e8a011fe5c9ee5aa02b89e9d9271f8ae44f915ef45801a40a6b"
       ],
       [
+        "packages/tokens/src/component-tokens/date-picker.css",
+        "c95588fb0bb500d6d62410483935a6ecf60fbe3852aa9c1a9a1b36ebf12a6226"
+      ],
+      [
         "packages/tokens/src/component-tokens/dialog.css",
         "775a9b78dbf2b7f4f40777bf91726be2b541d329fc82a25bf1c968abc8aff2a6"
       ],
       [
         "packages/tokens/src/component-tokens/divider.css",
         "a0969d58b155bc8b17f695dfb4cf7085d3d3659185ac9dd038bbd12c0068e292"
+      ],
+      [
+        "packages/tokens/src/component-tokens/empty.css",
+        "8bfe11959253b5f466889aee9b44a129c84c13ab27885c06b5cd6a042fa7608c"
       ],
       [
         "packages/tokens/src/component-tokens/icon.css",
@@ -118,6 +130,14 @@
       [
         "packages/tokens/src/component-tokens/radio.css",
         "33d72ff56c69d0755e2e9099ae220a50e014d7ac52c244960d59f47ecb710267"
+      ],
+      [
+        "packages/tokens/src/component-tokens/resizable.css",
+        "7799e8792dc5f59f729d01a58d5e18728a67484beb632b5ac7691ee3fe702b6b"
+      ],
+      [
+        "packages/tokens/src/component-tokens/scrollbar.css",
+        "31b2ac8634874e46d9304ac1f69c00fd3d0ce41c2dc5e2b0a1cec99509f8b12e"
       ],
       [
         "packages/tokens/src/component-tokens/segmented.css",
@@ -164,12 +184,20 @@
         "0693a764c80b2f40416667d88b2959fde4b2c2c12fcde5b48ddcaff452e57dfa"
       ],
       [
+        "packages/tokens/src/component-tokens/time-picker.css",
+        "79b49c8d4f9bc9f32eaab64bb63877852cc8404e7a3d7b45d08ec22b4ce14387"
+      ],
+      [
         "packages/tokens/src/component-tokens/toast.css",
         "3519ebc20d49a3fb8f72ae6a69200a295f54c7660e077c39524593a0a1c4ff93"
       ],
       [
         "packages/tokens/src/component-tokens/tooltip.css",
         "3572a5c3c9c595d6476a3377da0ae61b5ab3a67ee7834e344bb9dd7d96543787"
+      ],
+      [
+        "packages/tokens/src/component-tokens/tree.css",
+        "ed679d5e603af83c01cf684bfef3a7d547b608cc2ddd7399e40ae3f819cc1a46"
       ],
       [
         "packages/tokens/src/implementations.css",
@@ -301,7 +329,7 @@
       ]
     ]
   },
-  "payloadSha256": "48768455f5758eb8275b963a8208c63dd7baa03df03f0980f54d4327e597b80c",
+  "payloadSha256": "00d02378ccc65cfeb29dd2396a6623a06eb2d352f642b876519d4ac3772dc82f",
   "inventory": {
     "generatedFrom": {
       "entry": "packages/tokens/src/index.css",
@@ -313,11 +341,14 @@
         "packages/tokens/src/component-tokens/box.css",
         "packages/tokens/src/component-tokens/breadcrumb.css",
         "packages/tokens/src/component-tokens/button.css",
+        "packages/tokens/src/component-tokens/calendar.css",
         "packages/tokens/src/component-tokens/checkbox.css",
         "packages/tokens/src/component-tokens/collapse.css",
         "packages/tokens/src/component-tokens/color-picker.css",
+        "packages/tokens/src/component-tokens/date-picker.css",
         "packages/tokens/src/component-tokens/dialog.css",
         "packages/tokens/src/component-tokens/divider.css",
+        "packages/tokens/src/component-tokens/empty.css",
         "packages/tokens/src/component-tokens/icon.css",
         "packages/tokens/src/component-tokens/image-preview.css",
         "packages/tokens/src/component-tokens/input.css",
@@ -327,6 +358,8 @@
         "packages/tokens/src/component-tokens/popover.css",
         "packages/tokens/src/component-tokens/progress.css",
         "packages/tokens/src/component-tokens/radio.css",
+        "packages/tokens/src/component-tokens/resizable.css",
+        "packages/tokens/src/component-tokens/scrollbar.css",
         "packages/tokens/src/component-tokens/segmented.css",
         "packages/tokens/src/component-tokens/select.css",
         "packages/tokens/src/component-tokens/skeleton.css",
@@ -338,8 +371,10 @@
         "packages/tokens/src/component-tokens/tabs.css",
         "packages/tokens/src/component-tokens/tag.css",
         "packages/tokens/src/component-tokens/textarea.css",
+        "packages/tokens/src/component-tokens/time-picker.css",
         "packages/tokens/src/component-tokens/toast.css",
         "packages/tokens/src/component-tokens/tooltip.css",
+        "packages/tokens/src/component-tokens/tree.css",
         "packages/tokens/src/index.css",
         "packages/tokens/src/primitives/_index.css",
         "packages/tokens/src/primitives/color.css",
@@ -363,7 +398,7 @@
         "packages/tokens/src/semantics/text.css",
         "packages/tokens/src/semantics/typography.css"
       ],
-      "catalogueGroups": 32
+      "catalogueGroups": 39
     },
     "profiles": [
       "light/azure",
@@ -372,33 +407,36 @@
       "dark/neutral"
     ],
     "counts": {
-      "tokens": 1400,
-      "declared": 1400,
+      "tokens": 1522,
+      "declared": 1522,
       "byNamespace": {
         "accent": 18,
         "action": 6,
         "amber": 11,
-        "avatar": 8,
+        "avatar": 9,
         "azure": 11,
-        "badge": 7,
+        "badge": 25,
         "blue": 11,
         "border": 10,
         "box": 60,
         "breadcrumb": 19,
         "breakpoint": 4,
         "button": 85,
+        "calendar": 21,
         "checkbox": 40,
         "collapse": 42,
         "color": 63,
         "container": 2,
         "control": 14,
         "cyan": 11,
+        "date": 4,
         "dialog": 34,
         "disabled": 2,
         "divider": 3,
         "duration": 10,
         "ease": 11,
         "elevation": 3,
+        "empty": 20,
         "error": 5,
         "focus": 3,
         "font": 10,
@@ -431,8 +469,10 @@
         "radio": 65,
         "radius": 8,
         "red": 11,
+        "resizable": 11,
         "rose": 11,
         "scrim": 2,
+        "scrollbar": 16,
         "segmented": 44,
         "select": 12,
         "selected": 4,
@@ -455,9 +495,11 @@
         "teal": 11,
         "text": 7,
         "textarea": 2,
+        "time": 13,
         "toast": 24,
         "tooltip": 13,
         "tracking": 2,
+        "tree": 18,
         "type": 12,
         "warning": 5,
         "weight": 4,
@@ -465,13 +507,13 @@
         "yellow": 11
       },
       "byLayer": {
-        "components": 944,
+        "components": 1066,
         "primitives": 331,
         "semantics": 125
       },
-      "publicOverride": 944,
+      "publicOverride": 1066,
       "internal": 0,
-      "unreferenced": 816
+      "unreferenced": 936
     },
     "oldTokenNames": [
       "--accent-100",
@@ -513,6 +555,7 @@
       "--avatar-border-radius",
       "--avatar-color",
       "--avatar-font-size",
+      "--avatar-shape-radius",
       "--avatar-size-lg",
       "--avatar-size-md",
       "--avatar-size-sm",
@@ -531,10 +574,28 @@
       "--badge-background",
       "--badge-border-radius",
       "--badge-color",
+      "--badge-count-padding-inline",
+      "--badge-danger-background",
+      "--badge-danger-foreground",
+      "--badge-dot-size",
+      "--badge-dot-size-sm",
       "--badge-font-size",
       "--badge-foreground",
       "--badge-height",
+      "--badge-height-sm",
+      "--badge-label-gap",
       "--badge-padding-inline",
+      "--badge-padding-inline-sm",
+      "--badge-primary-background",
+      "--badge-primary-foreground",
+      "--badge-separator-color",
+      "--badge-separator-width",
+      "--badge-shape-radius",
+      "--badge-success-background",
+      "--badge-success-foreground",
+      "--badge-text-max-width",
+      "--badge-warning-background",
+      "--badge-warning-foreground",
       "--blue-100",
       "--blue-200",
       "--blue-300",
@@ -724,6 +785,27 @@
       "--button-warning-background-pressed",
       "--button-warning-border-color",
       "--button-warning-color",
+      "--calendar-cell-height-lg",
+      "--calendar-cell-height-md",
+      "--calendar-cell-height-sm",
+      "--calendar-cell-radius",
+      "--calendar-cell-size-lg",
+      "--calendar-cell-size-md",
+      "--calendar-cell-size-sm",
+      "--calendar-color",
+      "--calendar-content-inset",
+      "--calendar-disabled-color",
+      "--calendar-focus-color",
+      "--calendar-font-size-lg",
+      "--calendar-font-size-md",
+      "--calendar-font-size-sm",
+      "--calendar-hover-background",
+      "--calendar-muted-color",
+      "--calendar-panel-gap",
+      "--calendar-range-background",
+      "--calendar-selected-background",
+      "--calendar-selected-color",
+      "--calendar-today-color",
       "--checkbox-accent-color",
       "--checkbox-background",
       "--checkbox-background-checked",
@@ -896,6 +978,10 @@
       "--cyan-800",
       "--cyan-900",
       "--cyan-950",
+      "--date-picker-footer-gap",
+      "--date-picker-popup-gap",
+      "--date-picker-tags-gap",
+      "--date-picker-window-margin",
       "--dialog-action-background",
       "--dialog-action-border-color",
       "--dialog-action-border-radius",
@@ -959,6 +1045,26 @@
       "--elevation-dialog",
       "--elevation-panel",
       "--elevation-popover",
+      "--empty-actions-gap-md",
+      "--empty-actions-gap-sm",
+      "--empty-content-max-width",
+      "--empty-description-color",
+      "--empty-font-size-md",
+      "--empty-font-size-sm",
+      "--empty-icon-color",
+      "--empty-icon-size-md",
+      "--empty-icon-size-sm",
+      "--empty-image-size-md",
+      "--empty-image-size-sm",
+      "--empty-line-height-md",
+      "--empty-line-height-sm",
+      "--empty-media-gap-md",
+      "--empty-media-gap-sm",
+      "--empty-padding-md",
+      "--empty-padding-sm",
+      "--empty-text-gap",
+      "--empty-title-color",
+      "--empty-title-weight",
       "--error",
       "--error-bg",
       "--error-border",
@@ -1365,6 +1471,17 @@
       "--red-800",
       "--red-900",
       "--red-950",
+      "--resizable-hit-width",
+      "--resizable-keyboard-step",
+      "--resizable-keyboard-step-large",
+      "--resizable-line-color",
+      "--resizable-line-color-active",
+      "--resizable-line-color-disabled",
+      "--resizable-line-color-hover",
+      "--resizable-line-width",
+      "--resizable-outline-color",
+      "--resizable-outline-width",
+      "--resizable-panel-min-size",
       "--rose-100",
       "--rose-200",
       "--rose-300",
@@ -1378,6 +1495,22 @@
       "--rose-950",
       "--scrim",
       "--scrim-modal",
+      "--scrollbar-duration-color",
+      "--scrollbar-duration-enter",
+      "--scrollbar-duration-exit",
+      "--scrollbar-duration-expand",
+      "--scrollbar-ease-expand",
+      "--scrollbar-ease-fade",
+      "--scrollbar-hit-width",
+      "--scrollbar-idle-delay",
+      "--scrollbar-thumb-color",
+      "--scrollbar-thumb-color-active",
+      "--scrollbar-thumb-color-hover",
+      "--scrollbar-thumb-inset",
+      "--scrollbar-thumb-min-length",
+      "--scrollbar-thumb-width",
+      "--scrollbar-thumb-width-active",
+      "--scrollbar-thumb-width-hover",
       "--segmented-accent-background",
       "--segmented-accent-color",
       "--segmented-accent-thumb-background",
@@ -1799,6 +1932,19 @@
       "--text-secondary",
       "--textarea-line-height",
       "--textarea-padding-block",
+      "--time-picker-column-width",
+      "--time-picker-disabled-color",
+      "--time-picker-focus-color",
+      "--time-picker-hover-background",
+      "--time-picker-item-height-lg",
+      "--time-picker-item-height-md",
+      "--time-picker-item-height-sm",
+      "--time-picker-item-radius",
+      "--time-picker-panel-gap",
+      "--time-picker-popup-gap",
+      "--time-picker-selected-background",
+      "--time-picker-selected-color",
+      "--time-picker-window-margin",
       "--toast-background",
       "--toast-border-color",
       "--toast-border-radius",
@@ -1838,6 +1984,24 @@
       "--tooltip-viewport-margin",
       "--tracking-normal",
       "--tracking-wide",
+      "--tree-background-hover",
+      "--tree-background-selected",
+      "--tree-color",
+      "--tree-color-disabled",
+      "--tree-color-selected",
+      "--tree-gap",
+      "--tree-indent-lg",
+      "--tree-indent-md",
+      "--tree-indent-sm",
+      "--tree-line-color",
+      "--tree-line-width",
+      "--tree-max-height",
+      "--tree-outline-color",
+      "--tree-padding-inline",
+      "--tree-row-height-lg",
+      "--tree-row-height-md",
+      "--tree-row-height-sm",
+      "--tree-row-radius",
       "--type-body",
       "--type-body-lg",
       "--type-caption",
@@ -1882,11 +2046,14 @@
       "packages/tokens/src/component-tokens/box.css",
       "packages/tokens/src/component-tokens/breadcrumb.css",
       "packages/tokens/src/component-tokens/button.css",
+      "packages/tokens/src/component-tokens/calendar.css",
       "packages/tokens/src/component-tokens/checkbox.css",
       "packages/tokens/src/component-tokens/collapse.css",
       "packages/tokens/src/component-tokens/color-picker.css",
+      "packages/tokens/src/component-tokens/date-picker.css",
       "packages/tokens/src/component-tokens/dialog.css",
       "packages/tokens/src/component-tokens/divider.css",
+      "packages/tokens/src/component-tokens/empty.css",
       "packages/tokens/src/component-tokens/icon.css",
       "packages/tokens/src/component-tokens/image-preview.css",
       "packages/tokens/src/component-tokens/input.css",
@@ -1896,6 +2063,8 @@
       "packages/tokens/src/component-tokens/popover.css",
       "packages/tokens/src/component-tokens/progress.css",
       "packages/tokens/src/component-tokens/radio.css",
+      "packages/tokens/src/component-tokens/resizable.css",
+      "packages/tokens/src/component-tokens/scrollbar.css",
       "packages/tokens/src/component-tokens/segmented.css",
       "packages/tokens/src/component-tokens/select.css",
       "packages/tokens/src/component-tokens/skeleton.css",
@@ -1907,8 +2076,10 @@
       "packages/tokens/src/component-tokens/tabs.css",
       "packages/tokens/src/component-tokens/tag.css",
       "packages/tokens/src/component-tokens/textarea.css",
+      "packages/tokens/src/component-tokens/time-picker.css",
       "packages/tokens/src/component-tokens/toast.css",
       "packages/tokens/src/component-tokens/tooltip.css",
+      "packages/tokens/src/component-tokens/tree.css",
       "packages/tokens/src/index.css",
       "packages/tokens/src/primitives/_index.css",
       "packages/tokens/src/primitives/color.css",
@@ -2152,12 +2323,15 @@
         "publicOverride": "semantics",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/spinner.css",
           "packages/tokens/src/component-tokens/swatch.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/semantics/interaction.css"
         ],
         "resolved": {
@@ -2212,9 +2386,12 @@
         "publicOverride": "semantics",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/select.css",
           "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/semantics/interaction.css"
         ],
         "resolved": {
@@ -2238,6 +2415,7 @@
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/select.css",
           "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/semantics/interaction.css"
         ],
         "resolved": {
@@ -2667,6 +2845,23 @@
         }
       },
       {
+        "name": "--avatar-shape-radius",
+        "namespace": "avatar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/avatar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
         "name": "--avatar-size-lg",
         "namespace": "avatar",
         "declaredIn": [
@@ -3003,6 +3198,91 @@
         }
       },
       {
+        "name": "--badge-count-padding-inline",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--badge-danger-background",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#a14138",
+          "dark/azure": "#ea7d73",
+          "light/neutral": "#a14138",
+          "dark/neutral": "#ea7d73"
+        }
+      },
+      {
+        "name": "--badge-danger-foreground",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--badge-dot-size",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--badge-dot-size-sm",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(4px + 2px)",
+          "dark/azure": "calc(4px + 2px)",
+          "light/neutral": "calc(4px + 2px)",
+          "dark/neutral": "calc(4px + 2px)"
+        }
+      },
+      {
         "name": "--badge-font-size",
         "namespace": "badge",
         "declaredIn": [
@@ -3054,6 +3334,40 @@
         }
       },
       {
+        "name": "--badge-height-sm",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--badge-label-gap",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
         "name": "--badge-padding-inline",
         "namespace": "badge",
         "declaredIn": [
@@ -3068,6 +3382,193 @@
           "dark/azure": "8px",
           "light/neutral": "8px",
           "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--badge-padding-inline-sm",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--badge-primary-background",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--badge-primary-foreground",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--badge-separator-color",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#181818",
+          "light/neutral": "#fff",
+          "dark/neutral": "#181818"
+        }
+      },
+      {
+        "name": "--badge-separator-width",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "1px",
+          "dark/azure": "1px",
+          "light/neutral": "1px",
+          "dark/neutral": "1px"
+        }
+      },
+      {
+        "name": "--badge-shape-radius",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(8px/4)",
+          "dark/azure": "calc(8px/4)",
+          "light/neutral": "calc(8px/4)",
+          "dark/neutral": "calc(8px/4)"
+        }
+      },
+      {
+        "name": "--badge-success-background",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#37674c",
+          "dark/azure": "#64ae82",
+          "light/neutral": "#37674c",
+          "dark/neutral": "#64ae82"
+        }
+      },
+      {
+        "name": "--badge-success-foreground",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--badge-text-max-width",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "64px",
+          "dark/azure": "64px",
+          "light/neutral": "64px",
+          "dark/neutral": "64px"
+        }
+      },
+      {
+        "name": "--badge-warning-background",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#905a1d",
+          "dark/azure": "#eaa923",
+          "light/neutral": "#905a1d",
+          "dark/neutral": "#eaa923"
+        }
+      },
+      {
+        "name": "--badge-warning-foreground",
+        "namespace": "badge",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/badge.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
         }
       },
       {
@@ -3301,6 +3802,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/checkbox.css",
@@ -3338,6 +3840,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/input.css",
@@ -3418,6 +3921,7 @@
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/radio.css",
+          "packages/tokens/src/component-tokens/scrollbar.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/swatch.css",
           "packages/tokens/src/component-tokens/switch.css"
@@ -3446,8 +3950,10 @@
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/input.css",
+          "packages/tokens/src/component-tokens/resizable.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/list.css",
           "packages/tokens/src/prototype/misc.css",
           "packages/tokens/src/semantics/surface.css"
@@ -5626,7 +6132,9 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/menu.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/prototype/button.css"
         ],
         "resolved": {
@@ -6675,6 +7183,363 @@
           "dark/azure": "#121212",
           "light/neutral": "#fff",
           "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--calendar-cell-height-lg",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "40px",
+          "dark/azure": "40px",
+          "light/neutral": "40px",
+          "dark/neutral": "40px"
+        }
+      },
+      {
+        "name": "--calendar-cell-height-md",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--calendar-cell-height-sm",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "28px",
+          "dark/azure": "28px",
+          "light/neutral": "28px",
+          "dark/neutral": "28px"
+        }
+      },
+      {
+        "name": "--calendar-cell-radius",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--calendar-cell-size-lg",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "40px",
+          "dark/azure": "40px",
+          "light/neutral": "40px",
+          "dark/neutral": "40px"
+        }
+      },
+      {
+        "name": "--calendar-cell-size-md",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--calendar-cell-size-sm",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "28px",
+          "dark/azure": "28px",
+          "light/neutral": "28px",
+          "dark/neutral": "28px"
+        }
+      },
+      {
+        "name": "--calendar-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--calendar-content-inset",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--calendar-disabled-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/azure": "#707070",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/neutral": "#707070"
+        }
+      },
+      {
+        "name": "--calendar-focus-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f75db",
+          "dark/azure": "#93c1ff",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--calendar-font-size-lg",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--calendar-font-size-md",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--calendar-font-size-sm",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--calendar-hover-background",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/azure": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/neutral": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        }
+      },
+      {
+        "name": "--calendar-muted-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--calendar-panel-gap",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--calendar-range-background",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e6f0ff",
+          "dark/azure": "#0f2644",
+          "light/neutral": "#eee",
+          "dark/neutral": "#333"
+        }
+      },
+      {
+        "name": "--calendar-selected-background",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--calendar-selected-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--calendar-today-color",
+        "namespace": "calendar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/calendar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
         }
       },
       {
@@ -9718,6 +10583,74 @@
         }
       },
       {
+        "name": "--date-picker-footer-gap",
+        "namespace": "date",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/date-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--date-picker-popup-gap",
+        "namespace": "date",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/date-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--date-picker-tags-gap",
+        "namespace": "date",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/date-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--date-picker-window-margin",
+        "namespace": "date",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/date-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
         "name": "--dialog-action-background",
         "namespace": "dialog",
         "declaredIn": [
@@ -10947,6 +11880,346 @@
         }
       },
       {
+        "name": "--empty-actions-gap-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--empty-actions-gap-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--empty-content-max-width",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(64px * 6)",
+          "dark/azure": "calc(64px * 6)",
+          "light/neutral": "calc(64px * 6)",
+          "dark/neutral": "calc(64px * 6)"
+        }
+      },
+      {
+        "name": "--empty-description-color",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--empty-font-size-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--empty-font-size-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--empty-icon-color",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--empty-icon-size-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--empty-icon-size-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--empty-image-size-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "64px",
+          "dark/azure": "64px",
+          "light/neutral": "64px",
+          "dark/neutral": "64px"
+        }
+      },
+      {
+        "name": "--empty-image-size-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "48px",
+          "dark/azure": "48px",
+          "light/neutral": "48px",
+          "dark/neutral": "48px"
+        }
+      },
+      {
+        "name": "--empty-line-height-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--empty-line-height-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--empty-media-gap-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--empty-media-gap-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--empty-padding-md",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--empty-padding-sm",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--empty-text-gap",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--empty-title-color",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--empty-title-weight",
+        "namespace": "empty",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "500",
+          "dark/azure": "500",
+          "light/neutral": "500",
+          "dark/neutral": "500"
+        }
+      },
+      {
         "name": "--error",
         "namespace": "error",
         "declaredIn": [
@@ -11040,6 +12313,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/action.css"
@@ -11064,17 +12338,21 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/radio.css",
+          "packages/tokens/src/component-tokens/resizable.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/swatch.css",
           "packages/tokens/src/component-tokens/tabs.css",
-          "packages/tokens/src/component-tokens/tag.css"
+          "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
+          "packages/tokens/src/component-tokens/tree.css"
         ],
         "resolved": {
           "light/azure": "#1f75db",
@@ -11275,6 +12553,7 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css",
@@ -11301,6 +12580,7 @@
           "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/primitives/control.css",
           "packages/tokens/src/prototype/form.css",
@@ -12715,6 +13995,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -12870,6 +14151,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -12987,6 +14269,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13007,6 +14290,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13027,6 +14311,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13067,6 +14352,7 @@
         "publicOverride": "public",
         "consumers": [
           "packages/tokens/src/component-tokens/select.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13088,6 +14374,7 @@
         "publicOverride": "public",
         "consumers": [
           "packages/tokens/src/component-tokens/select.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13109,6 +14396,7 @@
         "publicOverride": "public",
         "consumers": [
           "packages/tokens/src/component-tokens/select.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/form.css",
           "packages/vue/src/components/input/style.css"
         ],
@@ -13972,6 +15260,7 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
@@ -13995,6 +15284,7 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
@@ -14967,6 +16257,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/overlay.css"
         ],
         "resolved": {
@@ -15762,6 +17053,8 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
@@ -15787,6 +17080,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/action.css"
         ],
@@ -15807,6 +17101,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/tag.css"
         ],
@@ -15827,6 +17122,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/action.css"
         ],
@@ -18089,7 +19385,9 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
@@ -18097,6 +19395,7 @@
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/status.css",
           "packages/tokens/src/component-tokens/switch.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/prototype/button.css",
           "packages/tokens/src/prototype/list.css",
           "packages/tokens/src/prototype/misc.css",
@@ -18185,6 +19484,7 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
@@ -18394,6 +19694,193 @@
           "dark/azure": "#391512",
           "light/neutral": "#3c1714",
           "dark/neutral": "#391512"
+        }
+      },
+      {
+        "name": "--resizable-hit-width",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "9px",
+          "dark/azure": "9px",
+          "light/neutral": "9px",
+          "dark/neutral": "9px"
+        }
+      },
+      {
+        "name": "--resizable-keyboard-step",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--resizable-keyboard-step-large",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--resizable-line-color",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--resizable-line-color-active",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--resizable-line-color-disabled",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--resizable-line-color-hover",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--resizable-line-width",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "1px",
+          "dark/azure": "1px",
+          "light/neutral": "1px",
+          "dark/neutral": "1px"
+        }
+      },
+      {
+        "name": "--resizable-outline-color",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f75db",
+          "dark/azure": "#93c1ff",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--resizable-outline-width",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--resizable-panel-min-size",
+        "namespace": "resizable",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/resizable.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "100px",
+          "dark/azure": "100px",
+          "light/neutral": "100px",
+          "dark/neutral": "100px"
         }
       },
       {
@@ -18619,6 +20106,278 @@
           "dark/azure": "rgb(0 0 0/.5)",
           "light/neutral": "rgb(0 0 0/.5)",
           "dark/neutral": "rgb(0 0 0/.5)"
+        }
+      },
+      {
+        "name": "--scrollbar-duration-color",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "140ms",
+          "dark/azure": "140ms",
+          "light/neutral": "140ms",
+          "dark/neutral": "140ms"
+        }
+      },
+      {
+        "name": "--scrollbar-duration-enter",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "140ms",
+          "dark/azure": "140ms",
+          "light/neutral": "140ms",
+          "dark/neutral": "140ms"
+        }
+      },
+      {
+        "name": "--scrollbar-duration-exit",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "140ms",
+          "dark/azure": "140ms",
+          "light/neutral": "140ms",
+          "dark/neutral": "140ms"
+        }
+      },
+      {
+        "name": "--scrollbar-duration-expand",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "140ms",
+          "dark/azure": "140ms",
+          "light/neutral": "140ms",
+          "dark/neutral": "140ms"
+        }
+      },
+      {
+        "name": "--scrollbar-ease-expand",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "cubic-bezier(.2, 0, .2, 1)",
+          "dark/azure": "cubic-bezier(.2, 0, .2, 1)",
+          "light/neutral": "cubic-bezier(.2, 0, .2, 1)",
+          "dark/neutral": "cubic-bezier(.2, 0, .2, 1)"
+        }
+      },
+      {
+        "name": "--scrollbar-ease-fade",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "cubic-bezier(.2, 0, .2, 1)",
+          "dark/azure": "cubic-bezier(.2, 0, .2, 1)",
+          "light/neutral": "cubic-bezier(.2, 0, .2, 1)",
+          "dark/neutral": "cubic-bezier(.2, 0, .2, 1)"
+        }
+      },
+      {
+        "name": "--scrollbar-hit-width",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--scrollbar-idle-delay",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "800ms",
+          "dark/azure": "800ms",
+          "light/neutral": "800ms",
+          "dark/neutral": "800ms"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-color",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#737373",
+          "dark/azure": "#7a7a7a",
+          "light/neutral": "#737373",
+          "dark/neutral": "#7a7a7a"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-color-active",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-color-hover",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-inset",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "3px",
+          "dark/azure": "3px",
+          "light/neutral": "3px",
+          "dark/neutral": "3px"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-min-length",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-width",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-width-active",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--scrollbar-thumb-width-hover",
+        "namespace": "scrollbar",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/scrollbar.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
         }
       },
       {
@@ -19378,7 +21137,9 @@
         "layer": "components",
         "reachableFromEntry": true,
         "publicOverride": "public",
-        "consumers": [],
+        "consumers": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
         "resolved": {
           "light/azure": "288px",
           "dark/azure": "288px",
@@ -19787,6 +21548,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/icon.css",
           "packages/tokens/src/component-tokens/radio.css",
@@ -19863,7 +21625,9 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/switch.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/primitives/control.css"
         ],
         "resolved": {
@@ -19884,8 +21648,10 @@
         "publicOverride": "primitives",
         "consumers": [
           "packages/tokens/src/component-tokens/avatar.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/switch.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/primitives/control.css"
         ],
         "resolved": {
@@ -19906,8 +21672,10 @@
         "publicOverride": "primitives",
         "consumers": [
           "packages/tokens/src/component-tokens/avatar.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/switch.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/primitives/control.css"
         ],
         "resolved": {
@@ -21434,11 +23202,14 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/divider.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/status.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css"
         ],
@@ -21463,8 +23234,10 @@
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/toast.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/primitives/control.css"
         ],
         "resolved": {
@@ -21485,6 +23258,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/toast.css",
@@ -21511,9 +23285,11 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/checkbox.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/toast.css",
-          "packages/tokens/src/component-tokens/tooltip.css"
+          "packages/tokens/src/component-tokens/tooltip.css",
+          "packages/tokens/src/component-tokens/tree.css"
         ],
         "resolved": {
           "light/azure": "24px",
@@ -21531,7 +23307,9 @@
         "layer": "primitives",
         "reachableFromEntry": true,
         "publicOverride": "primitives",
-        "consumers": [],
+        "consumers": [
+          "packages/tokens/src/component-tokens/empty.css"
+        ],
         "resolved": {
           "light/azure": "32px",
           "dark/azure": "32px",
@@ -21550,10 +23328,13 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/checkbox.css",
+          "packages/tokens/src/component-tokens/date-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/progress.css",
@@ -21563,8 +23344,10 @@
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/component-tokens/tooltip.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/prototype/overlay.css"
         ],
         "resolved": {
@@ -21584,7 +23367,8 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
-          "packages/tokens/src/component-tokens/breadcrumb.css"
+          "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/empty.css"
         ],
         "resolved": {
           "light/azure": "48px",
@@ -21604,6 +23388,8 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/slider.css"
         ],
         "resolved": {
@@ -21630,7 +23416,9 @@
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/date-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
@@ -21639,7 +23427,9 @@
           "packages/tokens/src/component-tokens/status.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/textarea.css",
+          "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/component-tokens/tooltip.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/primitives/control.css",
           "packages/tokens/src/prototype/misc.css",
           "packages/tokens/src/prototype/overlay.css"
@@ -22293,6 +24083,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/tag.css"
@@ -22315,6 +24106,7 @@
         "publicOverride": "semantics",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/checkbox.css",
@@ -26082,12 +27874,14 @@
         "consumers": [
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
-          "packages/tokens/src/component-tokens/tabs.css"
+          "packages/tokens/src/component-tokens/tabs.css",
+          "packages/tokens/src/component-tokens/time-picker.css"
         ],
         "resolved": {
           "light/azure": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
@@ -26189,20 +27983,25 @@
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/dialog.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/link.css",
           "packages/tokens/src/component-tokens/menu.css",
           "packages/tokens/src/component-tokens/radio.css",
+          "packages/tokens/src/component-tokens/resizable.css",
+          "packages/tokens/src/component-tokens/scrollbar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/skeleton.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/toast.css",
+          "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/semantics/interaction.css",
           "packages/tokens/src/semantics/surface.css"
         ],
@@ -26227,12 +28026,16 @@
           "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/radio.css",
+          "packages/tokens/src/component-tokens/resizable.css",
+          "packages/tokens/src/component-tokens/scrollbar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/switch.css",
@@ -26280,6 +28083,227 @@
         "consumers": [
           "packages/tokens/src/prototype/form.css"
         ],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--time-picker-column-width",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "56px",
+          "dark/azure": "56px",
+          "light/neutral": "56px",
+          "dark/neutral": "56px"
+        }
+      },
+      {
+        "name": "--time-picker-disabled-color",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/azure": "#707070",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/neutral": "#707070"
+        }
+      },
+      {
+        "name": "--time-picker-focus-color",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f75db",
+          "dark/azure": "#93c1ff",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--time-picker-hover-background",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/azure": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/neutral": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        }
+      },
+      {
+        "name": "--time-picker-item-height-lg",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "40px",
+          "dark/azure": "40px",
+          "light/neutral": "40px",
+          "dark/neutral": "40px"
+        }
+      },
+      {
+        "name": "--time-picker-item-height-md",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--time-picker-item-height-sm",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "28px",
+          "dark/azure": "28px",
+          "light/neutral": "28px",
+          "dark/neutral": "28px"
+        }
+      },
+      {
+        "name": "--time-picker-item-radius",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--time-picker-panel-gap",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--time-picker-popup-gap",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--time-picker-selected-background",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e6f0ff",
+          "dark/azure": "#0f2644",
+          "light/neutral": "#eee",
+          "dark/neutral": "#333"
+        }
+      },
+      {
+        "name": "--time-picker-selected-color",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--time-picker-window-margin",
+        "namespace": "time",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/time-picker.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
         "resolved": {
           "light/azure": "8px",
           "dark/azure": "8px",
@@ -26951,6 +28975,312 @@
         }
       },
       {
+        "name": "--tree-background-hover",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/azure": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.08*100%), transparent)",
+          "dark/neutral": "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        }
+      },
+      {
+        "name": "--tree-background-selected",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e6f0ff",
+          "dark/azure": "#0f2644",
+          "light/neutral": "#eee",
+          "dark/neutral": "#333"
+        }
+      },
+      {
+        "name": "--tree-color",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--tree-color-disabled",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/azure": "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/neutral": "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)"
+        }
+      },
+      {
+        "name": "--tree-color-selected",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#0b4c97",
+          "dark/azure": "#bed9fe",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--tree-gap",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--tree-indent-lg",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--tree-indent-md",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--tree-indent-sm",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--tree-line-color",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--tree-line-width",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--tree-max-height",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "288px",
+          "dark/azure": "288px",
+          "light/neutral": "288px",
+          "dark/neutral": "288px"
+        }
+      },
+      {
+        "name": "--tree-outline-color",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f75db",
+          "dark/azure": "#93c1ff",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--tree-padding-inline",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--tree-row-height-lg",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "40px",
+          "dark/azure": "40px",
+          "light/neutral": "40px",
+          "dark/neutral": "40px"
+        }
+      },
+      {
+        "name": "--tree-row-height-md",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--tree-row-height-sm",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "28px",
+          "dark/azure": "28px",
+          "light/neutral": "28px",
+          "dark/neutral": "28px"
+        }
+      },
+      {
+        "name": "--tree-row-radius",
+        "namespace": "tree",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/tree.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(8px/2)",
+          "dark/azure": "calc(8px/2)",
+          "light/neutral": "calc(8px/2)",
+          "dark/neutral": "calc(8px/2)"
+        }
+      },
+      {
         "name": "--type-body",
         "namespace": "type",
         "declaredIn": [
@@ -27244,6 +29574,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/action.css"
         ],
@@ -27285,6 +29616,7 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/tag.css",
@@ -27746,12 +30078,66 @@
         ]
       ],
       [
+        "--badge-danger-foreground",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
+        ]
+      ],
+      [
         "--badge-foreground",
         [
           "#192029",
           "#f5f5f5",
           "#192029",
           "#f5f5f5"
+        ]
+      ],
+      [
+        "--badge-primary-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--badge-primary-foreground",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
+        ]
+      ],
+      [
+        "--badge-separator-color",
+        [
+          "#fff",
+          "#131920",
+          "#fff",
+          "#131920"
+        ]
+      ],
+      [
+        "--badge-success-foreground",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
+        ]
+      ],
+      [
+        "--badge-warning-foreground",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
         ]
       ],
       [
@@ -28412,6 +30798,87 @@
         ]
       ],
       [
+        "--calendar-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--calendar-disabled-color",
+        [
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--calendar-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--calendar-hover-background",
+        [
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--calendar-muted-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--calendar-range-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#e7effa",
+          "#2b343f"
+        ]
+      ],
+      [
+        "--calendar-selected-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--calendar-selected-color",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
+        ]
+      ],
+      [
+        "--calendar-today-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -28841,6 +31308,33 @@
           "#242c36",
           "#e7effa",
           "#242c36"
+        ]
+      ],
+      [
+        "--empty-description-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-icon-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-title-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
         ]
       ],
       [
@@ -29570,6 +32064,78 @@
           "#707070",
           "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
           "#707070"
+        ]
+      ],
+      [
+        "--resizable-line-color",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-active",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--resizable-line-color-disabled",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-hover",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--resizable-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color",
+        [
+          "#6a7481",
+          "#7a7a7a",
+          "#6a7481",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-active",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-hover",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -30563,6 +33129,51 @@
         ]
       ],
       [
+        "--time-picker-disabled-color",
+        [
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--time-picker-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--time-picker-hover-background",
+        [
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--time-picker-selected-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#e7effa",
+          "#2b343f"
+        ]
+      ],
+      [
+        "--time-picker-selected-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
         "--toast-background",
         [
           "#fff",
@@ -30596,6 +33207,69 @@
           "#b8b8b8",
           "#49535f",
           "#b8b8b8"
+        ]
+      ],
+      [
+        "--tree-background-hover",
+        [
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #192029 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#e7effa",
+          "#2b343f"
+        ]
+      ],
+      [
+        "--tree-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--tree-color-disabled",
+        [
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-color-selected",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--tree-line-color",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--tree-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#192029",
+          "#f0f6fd"
         ]
       ]
     ],
@@ -30736,12 +33410,66 @@
         ]
       ],
       [
+        "--badge-danger-foreground",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
+        ]
+      ],
+      [
         "--badge-foreground",
         [
           "#231e18",
           "#f5f5f5",
           "#231e18",
           "#f5f5f5"
+        ]
+      ],
+      [
+        "--badge-primary-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--badge-primary-foreground",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
+        ]
+      ],
+      [
+        "--badge-separator-color",
+        [
+          "#fff",
+          "#1c1712",
+          "#fff",
+          "#1c1712"
+        ]
+      ],
+      [
+        "--badge-success-foreground",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
+        ]
+      ],
+      [
+        "--badge-warning-foreground",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
         ]
       ],
       [
@@ -31402,6 +34130,87 @@
         ]
       ],
       [
+        "--calendar-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--calendar-disabled-color",
+        [
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--calendar-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--calendar-hover-background",
+        [
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--calendar-muted-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--calendar-range-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#f3ede6",
+          "#38322b"
+        ]
+      ],
+      [
+        "--calendar-selected-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--calendar-selected-color",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
+        ]
+      ],
+      [
+        "--calendar-today-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -31831,6 +34640,33 @@
           "#302a23",
           "#f3ede6",
           "#302a23"
+        ]
+      ],
+      [
+        "--empty-description-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-icon-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-title-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
         ]
       ],
       [
@@ -32560,6 +35396,78 @@
           "#707070",
           "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
           "#707070"
+        ]
+      ],
+      [
+        "--resizable-line-color",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-active",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--resizable-line-color-disabled",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-hover",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--resizable-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color",
+        [
+          "#797269",
+          "#7a7a7a",
+          "#797269",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-active",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-hover",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
         ]
       ],
       [
@@ -33553,6 +36461,51 @@
         ]
       ],
       [
+        "--time-picker-disabled-color",
+        [
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--time-picker-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--time-picker-hover-background",
+        [
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--time-picker-selected-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#f3ede6",
+          "#38322b"
+        ]
+      ],
+      [
+        "--time-picker-selected-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
         "--toast-background",
         [
           "#fff",
@@ -33586,6 +36539,69 @@
           "#b8b8b8",
           "#585149",
           "#b8b8b8"
+        ]
+      ],
+      [
+        "--tree-background-hover",
+        [
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #231e18 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#f3ede6",
+          "#38322b"
+        ]
+      ],
+      [
+        "--tree-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--tree-color-disabled",
+        [
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-color-selected",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--tree-line-color",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--tree-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#231e18",
+          "#f9f4ef"
         ]
       ]
     ],
@@ -33726,12 +36742,66 @@
         ]
       ],
       [
+        "--badge-danger-foreground",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
+        ]
+      ],
+      [
         "--badge-foreground",
         [
           "#1f1e28",
           "#f5f5f5",
           "#1f1e28",
           "#f5f5f5"
+        ]
+      ],
+      [
+        "--badge-primary-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--badge-primary-foreground",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
+        ]
+      ],
+      [
+        "--badge-separator-color",
+        [
+          "#fff",
+          "#181720",
+          "#fff",
+          "#181720"
+        ]
+      ],
+      [
+        "--badge-success-foreground",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
+        ]
+      ],
+      [
+        "--badge-warning-foreground",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
         ]
       ],
       [
@@ -34392,6 +37462,87 @@
         ]
       ],
       [
+        "--calendar-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--calendar-disabled-color",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--calendar-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--calendar-hover-background",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--calendar-muted-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--calendar-range-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#eeedf9",
+          "#33323e"
+        ]
+      ],
+      [
+        "--calendar-selected-background",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--calendar-selected-color",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
+        ]
+      ],
+      [
+        "--calendar-today-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -34821,6 +37972,33 @@
           "#2b2a35",
           "#eeedf9",
           "#2b2a35"
+        ]
+      ],
+      [
+        "--empty-description-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-icon-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--empty-title-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
         ]
       ],
       [
@@ -35550,6 +38728,78 @@
           "#707070",
           "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
           "#707070"
+        ]
+      ],
+      [
+        "--resizable-line-color",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-active",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--resizable-line-color-disabled",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--resizable-line-color-hover",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--resizable-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color",
+        [
+          "#737181",
+          "#7a7a7a",
+          "#737181",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-active",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--scrollbar-thumb-color-hover",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -36543,6 +39793,51 @@
         ]
       ],
       [
+        "--time-picker-disabled-color",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--time-picker-focus-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--time-picker-hover-background",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--time-picker-selected-background",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#eeedf9",
+          "#33323e"
+        ]
+      ],
+      [
+        "--time-picker-selected-color",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
         "--toast-background",
         [
           "#fff",
@@ -36576,6 +39871,69 @@
           "#b8b8b8",
           "#53505f",
           "#b8b8b8"
+        ]
+      ],
+      [
+        "--tree-background-hover",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)",
+          "color-mix(in srgb, #1f1e28 calc(.08*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.12*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#eeedf9",
+          "#33323e"
+        ]
+      ],
+      [
+        "--tree-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--tree-color-disabled",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "color-mix(in srgb, #f5f5f5 calc(.38*100%), transparent)"
+        ]
+      ],
+      [
+        "--tree-color-selected",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--tree-line-color",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--tree-outline-color",
+        [
+          "#1f75db",
+          "#93c1ff",
+          "#1f1e28",
+          "#f5f4fd"
         ]
       ]
     ]

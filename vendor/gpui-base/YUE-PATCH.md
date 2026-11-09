@@ -1,5 +1,152 @@
 # Yue Base patches
 
+## Opt-in bounded and keyboard resizable panels (2026-11-09)
+
+`ResizablePanelGroup::with_interaction(ResizableInteraction)` enables keyed panel
+identity, adjacent-pair constraints, keyboard steps/Home/End/Enter, double-click
+reset and Splitter accessibility semantics. `ResizableState` remains the sole
+size owner. `bounded.rs` fits flexible panels to container bounds while retaining
+fixed panels and explicit min/max constraints; impossible minima overflow and
+exhausted maxima leave surplus space. `set_sizes` silently restores a snapshot;
+`reset_layout` and `resize_panel` emit commits for changed sizes. User callbacks
+fire only for actual user commits. Panel ids are reconciled before measurement.
+
+Mouse drag samples retain the original grab offset and the final mouse-up
+position. Disabled, unmounted, inactive and structurally replaced groups cancel
+the session without a fabricated commit. A keyed lifetime holds an activation
+subscription and weak size owner; it creates no idle timer or frame loop.
+Bounded sizes are explicit: 100px is a legitimate retained size, not the legacy
+unmeasured sentinel. Unchanged measured bounds do not request another state update.
+
+`ResizeHandle` accepts optional focus, hit/line geometry and disabled state; its
+appearance context exposes focus. Painting remains in normal tree order beneath
+overlays. Yue supplies all sizes, colors and keyboard steps from its token layer.
+Existing groups retain legacy redistribution and mouse behavior by default;
+the cross-axis stretch fix also applies to legacy horizontal groups. Keep the
+19 original resizable tests when rebasing this patch. No GPUI core change is
+required for this component.
+
+## Opt-in floating scrollbar policy (2026-11-09)
+
+`ScrollbarBehavior` opts into edge reveal, whole-viewport hover, edge expansion,
+floating geometry and fractional page clicks. Defaults keep prior Base behavior.
+`with_frame_driven_drag(true)` opts into display-frame-coalesced owner
+invalidations for mouse and touch drags. Each pointer sample still writes the
+existing handle immediately; one pending callback presents the latest offset.
+Release/cancellation invalidates its generation, and callbacks retain only the
+lightweight state, not the drag lease. Legacy defaults retain timer throttling
+and `max_fps`; that limit does not apply to frame-driven dragging.
+Floating geometry separates transparent hit bounds from painted endpoint insets,
+interprets minimum length as visible length and reserves a corner only when both
+axes actually overflow. One instance owns both axes; offset writes preserve the
+other axis. Left presses retain content focus; right presses are ignored.
+
+`Scrollbar::theme` accepts an instance projection. `ScrollbarTheme::with_resolver`
+resolves internal consumers per Window before prepaint, avoiding global Pixels
+from a particular rem size. Optional `ScrollbarMotion::with_color` tweens solid thumb colors in sRGB, using
+the supplied expansion curve. Floating Fade keeps a fixed position on exit;
+legacy motion retains its original choreography. Gradients and default Base
+color durations still snap.
+Timing and optional cubic-bezier curves remain supplied
+by the styled layer. Production animation timestamps use the executor clock.
+No Yue color, size, idle duration or easing value is hardcoded into Base.
+
+Floating mouse drags renew opt-in GPUI `capture_pointer_for_frame`; loss of capture,
+window deactivation, missing overflow and release end the owner session. A drag
+lease calls `end_drag` on unmount; idle/throttle tasks do not keep this lease alive.
+Existing explicit `capture_pointer` users retain their prior lifecycle.
+
+Regression: original 45 scrollbar/editor tests; added lease cleanup test; Yue
+headless tests for geometry/rem, reveal, paging, dragging/cancellation/unmount,
+focus/wheel, controlled-clock reversal/idle, multiwindow projection and contrast.
+Showcase retains its rapid-drag virtualization budget test. See `docs/39-scrollbar.md`
+and `docs/research/2026-11-09-scrollbar-implementation.md`.
+
+Remove/adapt when upstream exposes equivalent per-window theme projection,
+geometry and lifecycle contracts and these tests pass without the patch. Keep
+policy opt-in if upstream still uses legacy jump-to-pointer and inset semantics.
+
+## Opt-in keyed Tree model and typed popup semantics (2026-11-09)
+
+`tree/keyed.rs` adds a presentation-free `KeyedTreeModel`, exported as
+`gpui_kit::base::keyed_tree`. YueTree and TreeSelect share this one owner for
+stable keys, independent active/selected/checked/expanded state, Strict/Cascade,
+locked boundaries, filtering and generation-bound lazy-load tickets. Import is
+iterative; stored nodes contain metadata, while children use the keyed index.
+Visible rows share a linear line-guide index, avoiding quadratic storage on deep
+chains. Ordinary navigation uses key-to-position lookup without cloning every row.
+The legacy Tree/TreeState remains on its original model and behavior; existing
+compatibility tests are retained. This is an opt-in companion, not a silent
+rewrite of legacy selection semantics.
+
+`tree_row` provides TreeItem metadata. `SelectionA11y::popup_kind` and
+`Select::popup_kind` add explicit native AccessKit HasPopup::Tree metadata without
+adding layout or accessibility nodes, and leave legacy defaults unchanged.
+No Windows COM provider, theme, popup runtime or business objects enter Base.
+
+Regression: `tree::keyed::tests`, legacy `tree::tests`, `a11y_disabled::tests`,
+and Yue Tree/TreeSelect headless tests. Remove this patch when upstream provides
+equivalent keyed selection/checking/filter/load contracts and the same behavior
+and legacy compatibility tests pass after migration. See `docs/37-tree.md`,
+`docs/38-tree-select.md` and `docs/research/2026-11-09-tree-implementation.md`.
+
+
+## Opt-in wall-clock rules and controlled time options (2026-11-08)
+
+`time_field/rules.rs` adds presentation-free `TimeSteps`, `TimeRules` and
+`TimeChoices`: precision, H23-based steps, inclusive bounds, dependent disabled
+units, bounded nearest-time search and one prepared proposal table per edit.
+`not_before` intersects a range endpoint with availability instead of relaxing
+the configured minimum. Predicates are synchronous availability rules; no dates,
+timezone, theme, popup or business scheduling state enters Base.
+
+`TimeFieldState::set_selection_rules` is opt-in. Native edits resolve or reject
+proposals before publishing a Change, while legacy clients retain their original
+defaults, segment wrap and event contract. `input_proposal` reuses the existing
+numeric buffer without replacing the candidate; the owner accepts it with
+`accept_time_proposal` only after its atomic range validation. Explicit owner
+resets may clear that buffer with `reset_pending_input`; `set_time` remains silent.
+`edit_segment` exposes existing segmented stepping to composed editors.
+
+`TimeOption` supplies controlled ListBoxOption semantics, selected/disabled and
+active-descendant metadata, click and accessibility activation. Styling and the
+surrounding columns remain caller-owned. Yue composes these with existing Input,
+Root traversal, ScrollHandle/Scrollbar, motion and Popup; no new Windows provider.
+
+Sources: local TimePicker demo behavior and the TimeField contract, documented in
+`docs/36-time-picker.md`. Regression coverage: `time_field::tests`,
+`time_field::rules::tests` and `crates/yue-component/src/time_picker/tests.rs`.
+Run the maintained source with `tools/test-gpui-base.ps1 -Offline -Filter time_field::`.
+Remove this patch when upstream provides equivalent opt-in proposal validation,
+bounded candidate queries, controlled option semantics and tests preserve the
+legacy defaults, silent setters and composed atomic range acceptance.
+
+## Opt-in calendar interaction and reverse focus traversal (2026-11-08)
+
+`calendar/interaction.rs` extends Base Calendar through explicit `enhanced(...)`
+configuration. Base owns fixed six-week grids, supported year boundaries, roving
+date focus, day/week/month/quarter/year navigation, range preview and sorted reverse
+ranges, locked range endpoints and multiple selection. The sole candidate is
+`CalendarSelection`; the existing Copy `Date` and `CalendarEvent::Selected` API
+remain available to legacy clients. `CalendarInteractionEvent` reports incomplete
+candidates and panel changes separately. Item metadata lets Yue decorate the
+pre-wired root while Base retains grid roles, names and activation.
+
+Legacy Calendar keeps its original defaults, including reverse range restart.
+`set_number_of_months` now notifies only on change, preventing a steady render
+loop in the legacy renderer. `root.rs` exposes `Root::focus_prev` using the same
+modal-aware traversal as `focus_next`; date popups use these shared methods
+when handling Tab, including propagated TimeField segment boundary actions.
+No theme tokens, date input parser, popup runtime or Windows provider is added
+to Base. `restore_selection` is exclusively for already accepted cancellation
+snapshots; new candidates use validation.
+
+Regression coverage: `crates/yue-component/src/date_picker/tests.rs`, plus the
+existing standalone Base Calendar tests. Remove this patch once upstream exposes
+equivalent opt-in contracts, complete keyboard/grid metadata, six-week boundaries,
+candidate validators and symmetric modal-aware focus traversal. Preserve old
+defaults until upstream callers explicitly migrate.
+
 ## Owned measured geometry and reading anchors (2026-11-06)
 
 `virtualization/state.rs` records the native offset after geometry changes.

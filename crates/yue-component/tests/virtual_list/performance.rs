@@ -744,3 +744,79 @@ fn refinements_masonry_append_evidence() {
         }
     }
 }
+
+#[test]
+#[ignore = "manual Grid snapshot allocation attribution; run release with --ignored --nocapture --test-threads=1"]
+fn grid_snapshot_allocation_evidence() {
+    use yue_component::VirtualGridSnapshot;
+
+    const ITERATIONS: usize = 500;
+    let binding = VirtualizerBinding::new();
+    let rows = VirtualizerState::new_attached(
+        Axis::Vertical,
+        source(0, 100_000),
+        VirtualizerSizing::fixed(px(20.)),
+        &binding,
+    )
+    .unwrap();
+    let columns = VirtualizerState::new_attached(
+        Axis::Horizontal,
+        source(0, 100_000),
+        VirtualizerSizing::fixed(px(50.)),
+        &binding,
+    )
+    .unwrap();
+    let row_viewport = VirtualizerViewport::new(&binding, 1, 0., px(400.), px(1_000.));
+    let column_viewport = VirtualizerViewport::new(&binding, 1, 0., px(1_000.), px(400.));
+    let grid = VirtualGridSnapshot::new(
+        rows.snapshot(&row_viewport).unwrap(),
+        columns.snapshot(&column_viewport).unwrap(),
+    )
+    .unwrap();
+    for path in [
+        "row_indices",
+        "column_indices",
+        "row_items",
+        "column_items",
+        "cell_iter_setup",
+        "cells",
+    ] {
+        ALLOCATIONS.with(|stats| stats.set(Some(Allocations::default())));
+        let started = Instant::now();
+        for _ in 0..ITERATIONS {
+            match path {
+                "row_indices" => {
+                    std::hint::black_box(grid.rows().working_indices());
+                }
+                "column_indices" => {
+                    std::hint::black_box(grid.columns().working_indices());
+                }
+                "row_items" => {
+                    for item in grid.rows().working_items() {
+                        std::hint::black_box(item.unwrap());
+                    }
+                }
+                "column_items" => {
+                    for item in grid.columns().working_items() {
+                        std::hint::black_box(item.unwrap());
+                    }
+                }
+                "cell_iter_setup" => {
+                    drop(std::hint::black_box(grid.cells()));
+                }
+                "cells" => {
+                    for cell in grid.cells() {
+                        std::hint::black_box(cell);
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+        let elapsed = started.elapsed().as_nanos();
+        let stats = ALLOCATIONS.with(|stats| stats.replace(None).unwrap());
+        println!(
+            "GRID_SNAPSHOT_ALLOC,path={path},iterations={ITERATIONS},ns={elapsed},allocations={},peak_bytes={}",
+            stats.allocations, stats.peak
+        );
+    }
+}

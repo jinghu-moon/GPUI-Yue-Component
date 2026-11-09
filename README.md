@@ -21,6 +21,17 @@ gpui-pre-windows = { path = "../Yue-GPUI-Component/vendor/gpui-pre-windows" }
 
 Cargo patches are not inherited from a path dependency. This workspace maintains Base 0.8.0 extensions for shared Popup positioning, Dialog, Toast lifecycle/stack/live semantics, Slider domain/drag/focus semantics, numeric input and Link caller-owned focus; a consuming framework must resolve the same patched Base. See [the patch record](vendor/gpui-base/YUE-PATCH.md). Remove the patch only after an upstream version provides equivalent APIs and the integration tests pass.
 
+## Resizable panels
+
+Retain one `Entity<YueResizableState>` per group and compose
+`YueResizable::horizontal(id, &state)` or `vertical` with stable
+`YueResizablePanel::new(id)` children. Panels expose relative initial/min/max
+sizes and fixed sidebars; pointer drags, keyboard steps, Home/End and double-click
+reset share Base's bounded adjacent sizing. Content keeps its own input and scroll
+owners. Browse **组件 → 可调整分栏 Resizable** for horizontal, vertical and nested
+workspaces; see [the Resizable guide](docs/40-resizable.md) for state restoration,
+callbacks and undersized-container behavior. This uses the maintained Base patch.
+
 The maintained GPUI core and Windows backend also provide reusable same-window
 Gaussian backdrop filtering through `Styled::backdrop_blur(rems(1.0))`. It samples
 only the local background on the GPU; the caller owns tint and other styling.
@@ -140,6 +151,16 @@ token-defined radius; free dragging, keyboard and numeric steps remain available
 `.snap_to_marks(false)` disables these local magnets. Pointer movement follows
 the snapped value immediately, including outside-track dragging and release. See the
 [Slider guide](docs/16-slider.md) for API, tokens, events and validation boundaries.
+
+## Badges
+
+`YueBadge::new("unread").count(128)` displays `99+` while preserving the actual count in its accessible name. Use `.child(host)` to attach it to an avatar, icon or button without changing the host's layout, or omit the child for an inline count. `.dot()` and `.text("NEW")` replace the count; `.dot().tone(BadgeTone::Success).label("已同步")` provides a standalone status indicator.
+
+Badges add no focus stop or click handler. Keep the focused host's description current and use `.semantics(false)` when that description already includes the count. Two sizes, pill/rounded shapes, theme colors, offsets and opt-in visibility transitions share Yue tokens. Browse **组件 → Badge** and see [the Badge guide](docs/33-badge.md).
+
+## Empty states
+
+`YueEmpty::new("results-empty")` displays an Inbox icon and “暂无数据”. Use `.description(...)` for accessible text, `.description_content(...)` for semantic rich content, and `.actions(...)` for existing buttons. `.image(...)` preserves a contained media frame with an icon fallback; `.media(...)` accepts intrinsic custom content. `EmptySize::Small`, `.layout(Axis::Horizontal)` and `.inset(false)` support compact panels and `YueList::empty(...)` without duplicate padding. The host owns loading, data, commands and focus recovery. Browse **组件 → Empty** and see [the Empty guide](docs/34-empty.md).
 
 ## Tags
 
@@ -319,3 +340,9 @@ See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先
 - [List design and implementation](docs/29-list.md) — linear layouts, item slots, grouping, states, responsive card grids and row-based virtualization.
 - [YueKbd and YueShortcut design](docs/30-shortcut.md) — Windows-only keycap and shortcut display, visual states, composition grammar and accessibility boundaries.
 - [ShortcutRecorder guide](docs/31-shortcut-recorder.md) — focused Windows shortcut recording, validation and explicit conflict replacement.
+- [YueEmpty guide](docs/34-empty.md) — empty-state media, descriptions, actions, layout and List composition.
+- [YueCalendar / YueDatePicker](docs/35-date-picker.md) — date inputs and inline calendars, typed units/ranges, time, multiple selection and validation.
+- [YueTimePicker / YueTimePanel](docs/36-time-picker.md) — time inputs and scrolling panels, same-day ranges, H12/H23, steps, constraints, confirmation and typed form validation.
+- [YueTree guide](docs/37-tree.md) — shared tree behavior, keyed selection, cascading checks, filtering, lazy loading and virtualized rows.
+- [YueTreeSelect guide](docs/38-tree-select.md) — tree fields reusing Tree, Select field parts, Input, Tag, Popup and typed form contracts.
+- [YueScrollbar guide](docs/39-scrollbar.md) — floating thumbs, Auto / Hover / Always, single-owner dual-axis geometry and unified Showcase / virtual-list / editor presentation; includes a native Showcase page and an HTML prototype.

@@ -1,4 +1,4 @@
-/target/
+**/target/
 /TEMP/
 /refer/
 /.spec-workflow/

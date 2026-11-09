@@ -53,6 +53,7 @@ pub struct Select {
     readonly: bool,
     required: bool,
     invalid: bool,
+    popup_kind: Option<gpui::accesskit::HasPopup>,
     tab_stop: bool,
     tab_index: isize,
     description: Option<SharedString>,
@@ -77,6 +78,7 @@ impl Select {
             readonly: false,
             required: false,
             invalid: false,
+            popup_kind: None,
             tab_stop: true,
             tab_index: 0,
             description: None,
@@ -116,6 +118,11 @@ impl Select {
     }
     pub fn invalid(mut self, invalid: bool) -> Self {
         self.invalid = invalid;
+        self
+    }
+    /// Advertise the real popup structure without prescribing its presentation.
+    pub fn popup_kind(mut self, kind: gpui::accesskit::HasPopup) -> Self {
+        self.popup_kind = Some(kind);
         self
     }
     pub fn tab_stop(mut self, stop: bool) -> Self {
@@ -246,6 +253,14 @@ impl RenderOnce for Select {
             }
         });
 
+        let mut semantics = crate::SelectionA11y::default()
+            .disabled(disabled)
+            .readonly(readonly)
+            .required(self.required)
+            .invalid(self.invalid);
+        if let Some(kind) = self.popup_kind {
+            semantics = semantics.popup_kind(kind);
+        }
         self.base
             .role(Role::ComboBox)
             .aria_expanded(open)
@@ -370,13 +385,7 @@ impl RenderOnce for Select {
             })
             .children(self.children)
             .refine_style(&self.style)
-            .a11y_selection(
-                crate::SelectionA11y::default()
-                    .disabled(disabled)
-                    .readonly(readonly)
-                    .required(self.required)
-                    .invalid(self.invalid),
-            )
+            .a11y_selection(semantics)
     }
 }
 

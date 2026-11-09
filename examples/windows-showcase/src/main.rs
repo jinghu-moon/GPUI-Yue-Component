@@ -46,6 +46,15 @@ fn main() {
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum ShowcasePage {
+    Scrollbar,
+    Resizable,
+    Tree,
+    TreeSelect,
+    DatePicker,
+    TimePicker,
+    Empty,
+    Avatar,
+    Badge,
     Breadcrumb,
     #[default]
     Button,
@@ -85,6 +94,14 @@ enum ShowcasePage {
 }
 
 struct Showcase {
+    scrollbar_demo: gpui_kit::Entity<pages::scrollbar::ScrollbarPage>,
+    resizable_demo: gpui_kit::Entity<pages::resizable::ResizablePage>,
+    tree_demo: gpui_kit::Entity<pages::tree::TreePage>,
+    tree_select_demo: gpui_kit::Entity<pages::tree_select::TreeSelectPage>,
+    time_picker_demo: gpui_kit::Entity<pages::time_picker::TimePickerPage>,
+    date_picker_demo: gpui_kit::Entity<pages::date_picker::DatePickerPage>,
+    empty_demo: gpui_kit::Entity<pages::empty::EmptyPage>,
+    badge_demo: gpui_kit::Entity<pages::badge::BadgePage>,
     shortcut_demo: Option<gpui_kit::Entity<pages::shortcut::ShortcutPage>>,
     breadcrumb_demo: gpui_kit::Entity<pages::breadcrumb::BreadcrumbPage>,
     slider_demo: gpui_kit::Entity<pages::slider::SliderPage>,
@@ -287,6 +304,14 @@ impl Showcase {
             select_demo: cx.new(|cx| pages::select::SelectPageView::new(window, cx)),
             breadcrumb_demo: cx.new(pages::breadcrumb::BreadcrumbPage::new),
             slider_demo: cx.new(|cx| pages::slider::SliderPage::new(window, cx)),
+            badge_demo: cx.new(|_| pages::badge::BadgePage::new()),
+            time_picker_demo: cx.new(|cx| pages::time_picker::TimePickerPage::new(window, cx)),
+            tree_demo: cx.new(|cx| pages::tree::TreePage::new(window, cx)),
+            tree_select_demo: cx.new(|cx| pages::tree_select::TreeSelectPage::new(window, cx)),
+            date_picker_demo: cx.new(|cx| pages::date_picker::DatePickerPage::new(window, cx)),
+            empty_demo: cx.new(pages::empty::EmptyPage::new),
+            scrollbar_demo: cx.new(pages::scrollbar::ScrollbarPage::new),
+            resizable_demo: cx.new(|cx| pages::resizable::ResizablePage::new(window, cx)),
             shortcut_demo: None,
             page: ShowcasePage::Button,
             sidebar_open: [true, true],
@@ -511,6 +536,17 @@ impl Render for Showcase {
                     .h_full()
                     .min_h_0()
                     .child(match self.page {
+                        ShowcasePage::Tree => self.tree_demo.clone().into_any_element(),
+                        ShowcasePage::TreeSelect => self.tree_select_demo.clone().into_any_element(),
+                        ShowcasePage::TimePicker => self.time_picker_demo.clone().into_any_element(),
+                        ShowcasePage::DatePicker => self.date_picker_demo.clone().into_any_element(),
+                        ShowcasePage::Empty => self.empty_demo.clone().into_any_element(),
+                        ShowcasePage::Scrollbar => self.scrollbar_demo.clone().into_any_element(),
+                        ShowcasePage::Resizable => self.resizable_demo.clone().into_any_element(),
+                        ShowcasePage::Badge => self.badge_demo.clone().into_any_element(),
+                        ShowcasePage::Avatar => {
+                            pages::avatar::avatar_content(theme).into_any_element()
+                        }
                         ShowcasePage::Button => content(theme).into_any_element(),
                         ShowcasePage::Icon => pages::icon::icon_content(theme).into_any_element(),
                         ShowcasePage::IconDesign => icon::icon_content(theme).into_any_element(),

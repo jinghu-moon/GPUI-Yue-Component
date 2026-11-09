@@ -4,15 +4,21 @@
 //! data and components while reusing the GPUI types pinned by `gpui-kit`.
 
 mod application;
+mod avatar;
+mod badge;
 mod breadcrumb;
 mod button;
 mod checkbox;
+mod choice_field;
 mod collapse;
 mod color_picker;
 mod control_layout;
+mod date_picker;
+mod time_picker;
 mod dialog;
 mod divider;
 mod dropdown;
+mod empty;
 mod field;
 mod form;
 pub mod icon;
@@ -26,6 +32,8 @@ mod loading;
 pub mod motion;
 mod popup;
 mod radio;
+mod resizable;
+mod scrollbar;
 mod segmented;
 mod select;
 mod shortcut_recorder;
@@ -36,6 +44,8 @@ mod tabs;
 mod tag;
 pub mod theme;
 mod toast;
+mod tree;
+mod tree_select;
 mod tokens;
 mod tooltip;
 pub mod typography;
@@ -55,6 +65,21 @@ pub use virtual_list::{
 };
 
 pub use application::{current_theme, init, set_theme};
+pub use scrollbar::{ScrollbarVisibility, YueScrollbar};
+pub use tree::{
+    TreeApply, TreeChange, TreeChangeSource, TreeCheckMode, TreeCheckProjection, TreeChildren,
+    TreeDataError, TreeEvent, TreeFilter, TreeLoadState, TreeLoadTicket, TreeMark, TreeMove,
+    TreeNode, TreeReconciliation, TreeRow, TreeRowAction, TreeSelectionMode, TreeSize, YueTree,
+    YueTreeState,
+};
+pub use tree_select::{
+    TreeSelectChange, TreeSelectChangeSource, TreeSelectEvent, TreeSelectItemSnapshot,
+    TreeSelectMode, TreeSelectQuery, TreeSelectResultState, TreeSelectSearch,
+    TreeSelectSearchTicket, TreeSelectValue, TreeSelectValueDisplay, YueTreeSelect,
+    YueTreeSelectState,
+};
+pub use avatar::{AvatarShape, AvatarSize, YueAvatar, YueAvatarGroup};
+pub use badge::{BadgeShape, BadgeSize, BadgeTone, YueBadge};
 pub use breadcrumb::{
     BreadcrumbCollapse, BreadcrumbEllipsis, BreadcrumbNavigate, BreadcrumbNavigateSource,
     BreadcrumbSeparator, YueBreadcrumb, YueBreadcrumbItem,
@@ -75,10 +100,19 @@ pub use dialog::{
     YueDialogState,
 };
 pub use divider::{DividerAlign, DividerLayout, DividerLineStyle, YueDivider};
+pub use date_picker::{
+    DateMonth, DateQuarter, DateWeek, DateYear, DatePickerChange, DatePickerChangeSource,
+    DatePickerCloseReason, DatePickerCommitMode, DatePickerConstraints, DatePickerEndpoint,
+    DatePickerError, DatePickerEvent, DatePickerGranularity, DatePickerInvalidInput,
+    DatePickerOpenChange, DatePickerOptions, DatePickerPreset, DatePickerSelection,
+    DatePickerUnit, DatePickerValue, HourCycle, TimePrecision, YueCalendar, YueCalendarState,
+    YueDatePicker, YueDatePickerState,
+};
 pub use dropdown::{
     DropdownAlign, DropdownIndicatorSide, DropdownPlacement, YueContextMenu, YueDropdownMenu,
     YueDropdownSplitButton, YueMenuItem,
 };
+pub use empty::{EmptySize, YueEmpty};
 pub use field::YueField;
 pub use form::YueForm;
 pub use gpui_kit;
@@ -110,6 +144,7 @@ pub use loading::{
 };
 pub use motion::{MotionDuration, MotionEase};
 pub use radio::{RadioAppearance, RadioSize, YueRadio, YueRadioGroup, YueRadioOption};
+pub use resizable::{YueResizable, YueResizablePanel, YueResizableState, ResizableEvent};
 pub use segmented::{
     SegmentedDistribution, SegmentedShape, SegmentedSize, SegmentedVariant, YueSegmented,
     YueSegmentedOption,
@@ -151,17 +186,25 @@ pub use typography::{FontStack, TextRole, TypeStyle, load_fonts, tabular_nums};
 /// Common component types and GPUI composition traits. Import less frequently
 /// used component options explicitly from the crate root.
 pub mod prelude {
+    pub use crate::{YueResizable, YueResizablePanel, YueResizableState, ResizableEvent};
+    pub use crate::{TimePickerOptions,TimePickerValue,TimePickerSelection,TimePickerCommitMode,TimePickerConstraints,TimePickerEvent,TimePickerSteps,YueTimePicker,YueTimePickerState,YueTimePanel};
+    pub use crate::{DatePickerOptions, DatePickerValue, DatePickerGranularity,
+        DatePickerSelection, DatePickerCommitMode, DatePickerConstraints, DatePickerEvent,
+        YueCalendar, YueCalendarState, YueDatePicker, YueDatePickerState};
     pub use crate::{
-        Accent, Icon, KbdSize, KbdState, KbdVariant, SelectMode, SelectOption, SelectValue,
-        ShortcutSeparator, ShortcutSpec, SliderControls, SliderDomain, SliderLayout, SliderMark,
-        SliderSize, SliderTooltip, SliderValue, ThemeMode, ThemePreference, YueBreadcrumb,
-        YueButton, YueCheckbox, YueColorPicker, YueColorPickerPanel, YueColorPickerState,
-        YueDivider, YueDropdownMenu, YueField, YueForm, YueInput, YueKbd, YueLink, YueMenuItem,
-        YueNumberInput, YueOverflowTooltip, YueRadio, YueRadioGroup, YueSegmented,
-        YueSegmentedOption, YueSelect, YueSelectState, YueShortcut, YueSlider, YueSliderEvent,
-        YueSliderState, YueSwatchGroup, YueSwatchOption, YueSwitch, YueTabItem, YueTabs,
-        YueTextarea, YueTheme, YueTooltip, YueTooltipGroup, current_theme, outline,
+        Accent, AvatarShape, AvatarSize, Icon, KbdSize, KbdState, KbdVariant, SelectMode,
+        SelectOption, SelectValue, ShortcutSeparator, ShortcutSpec, SliderControls, SliderDomain,
+        SliderLayout, SliderMark, SliderSize, SliderTooltip, SliderValue, ThemeMode,
+        ThemePreference, YueAvatar, YueAvatarGroup, YueBreadcrumb, YueButton, YueCheckbox,
+        YueColorPicker, YueColorPickerPanel, YueColorPickerState, YueDivider, YueDropdownMenu,
+        YueField, YueForm, YueInput, YueKbd, YueLink, YueMenuItem, YueNumberInput,
+        YueOverflowTooltip, YueRadio, YueRadioGroup, YueSegmented, YueSegmentedOption, YueSelect,
+        YueSelectState, YueShortcut, YueSlider, YueSliderEvent, YueSliderState, YueSwatchGroup,
+        YueSwatchOption, YueSwitch, YueTabItem, YueTabs, YueTextarea, YueTheme, YueTooltip,
+        YueTooltipGroup, current_theme, outline,
     };
+    pub use crate::{BadgeShape, BadgeSize, BadgeTone, YueBadge};
+    pub use crate::{EmptySize, YueEmpty};
     pub use crate::{
         ShortcutRecorderEvent, ShortcutRecorderValidation, YueShortcutRecorder,
         YueShortcutRecorderState,
@@ -189,3 +232,10 @@ pub enum GroupDirection {
     Vertical,
     Horizontal,
 }
+
+pub use time_picker::{
+    TimePickerChange, TimePickerChangeSource, TimePickerCloseReason, TimePickerCommitMode,
+    TimePickerConstraints, TimePickerDraft, TimePickerEndpoint, TimePickerError, TimePickerEvent,
+    TimePickerInvalidInput, TimePickerOpenChange, TimePickerOptions, TimePickerSelection,
+    TimePickerSteps, TimePickerValue, YueTimePanel, YueTimePicker, YueTimePickerState,
+};

@@ -4,6 +4,8 @@ use gpui_kit::base::{Button, Collapsible};
 use yue_component::{Icon, IconSize, MotionDuration, MotionEase};
 
 const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
+    ("avatar-page", "头像 Avatar", ShowcasePage::Avatar),
+    ("badge-page", "徽标 Badge", ShowcasePage::Badge),
     (
         "breadcrumb-page",
         "面包屑 Breadcrumb",
@@ -17,9 +19,11 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
         "颜色选择器 ColorPicker",
         ShowcasePage::ColorPicker,
     ),
+    ("date-picker-page", "日期选择 DatePicker", ShowcasePage::DatePicker),
     ("dialog-page", "对话框 Dialog", ShowcasePage::Dialog),
     ("divider-page", "分隔线 Divider", ShowcasePage::Divider),
     ("dropdown-page", "下拉菜单 Dropdown", ShowcasePage::Dropdown),
+    ("empty-page", "空状态 Empty", ShowcasePage::Empty),
     ("form-page", "表单 Form", ShowcasePage::Form),
     ("icon-page", "图标 Icon", ShowcasePage::Icon),
     (
@@ -32,20 +36,26 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("list-page", "列表 List", ShowcasePage::List),
     ("progress-page", "进度 Progress", ShowcasePage::Progress),
     ("radio-page", "单选框 Radio", ShowcasePage::Radio),
+    ("resizable-page", "可调整分栏 Resizable", ShowcasePage::Resizable),
+    ("scrollbar-page", "滚动条 Scrollbar", ShowcasePage::Scrollbar),
     (
         "segmented-page",
         "分段控制器 Segmented",
         ShowcasePage::Segmented,
     ),
     ("select-page", "下拉选择器 Select", ShowcasePage::Select),
+    ("shortcut-page", "快捷键 Shortcut", ShowcasePage::Shortcut),
     ("skeleton-page", "骨架屏 Skeleton", ShowcasePage::Skeleton),
     ("slider-page", "滑动条 Slider", ShowcasePage::Slider),
     ("spinner-page", "旋转指示器 Spinner", ShowcasePage::Spinner),
     ("switch-page", "开关 Switch", ShowcasePage::Switch),
     ("tabs-page", "标签页 Tabs", ShowcasePage::Tabs),
     ("tag-page", "标签 Tag", ShowcasePage::Tag),
+    ("time-picker-page", "时间选择 TimePicker", ShowcasePage::TimePicker),
     ("toast-page", "消息通知 Toast", ShowcasePage::Toast),
     ("tooltip-page", "文字提示 Tooltip", ShowcasePage::Tooltip),
+    ("tree-page", "树 Tree", ShowcasePage::Tree),
+    ("tree-select-page", "树选择器 TreeSelect", ShowcasePage::TreeSelect),
     (
         "virtual-layouts-page",
         "虚拟布局 Grid / Masonry",
@@ -411,6 +421,10 @@ mod tests {
                 "color-picker-content",
             ),
             ("icon-page", ShowcasePage::Icon, "icon-component-content"),
+            ("badge-page", ShowcasePage::Badge, "badge-content"),
+            ("date-picker-page", ShowcasePage::DatePicker, "date-picker-content"),
+            ("time-picker-page", ShowcasePage::TimePicker, "time-picker-content"),
+            ("empty-page", ShowcasePage::Empty, "empty-content"),
             ("tooltip-page", ShowcasePage::Tooltip, "tooltip-content"),
             ("link-page", ShowcasePage::Link, "link-content"),
             ("list-page", ShowcasePage::List, "list-content"),

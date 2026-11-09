@@ -24,6 +24,7 @@ pub struct SelectionA11y {
     required: bool,
     invalid: bool,
     multiple: bool,
+    popup_kind: Option<accesskit::HasPopup>,
 }
 impl SelectionA11y {
     pub fn disabled(mut self, value: bool) -> Self {
@@ -40,6 +41,11 @@ impl SelectionA11y {
     }
     pub fn invalid(mut self, value: bool) -> Self {
         self.invalid = value;
+        self
+    }
+    /// The actual popup content kind; absence preserves legacy semantics.
+    pub fn popup_kind(mut self, kind: accesskit::HasPopup) -> Self {
+        self.popup_kind = Some(kind);
         self
     }
     pub fn multiple(mut self, value: bool) -> Self {
@@ -219,6 +225,9 @@ impl<E: Element> Element for A11yDisabled<E> {
             if state.multiple {
                 node.set_multiselectable();
             }
+            if let Some(kind) = state.popup_kind {
+                node.set_has_popup(kind);
+            }
             if state.invalid {
                 node.set_invalid(accesskit::Invalid::True);
             }
@@ -282,6 +291,24 @@ mod tests {
         }
     }
 
+    #[gpui::test]
+    fn select_reports_actual_tree_popup_kind_without_changing_legacy_defaults(
+        cx: &mut TestAppContext,
+    ) {
+        cx.update(crate::init);
+        let cx = cx.add_empty_window();
+        cx.update(|window, cx| {
+            let legacy = node_of(Select::new("legacy").render(window, cx));
+            let tree = node_of(
+                Select::new("tree")
+                    .popup_kind(accesskit::HasPopup::Tree)
+                    .render(window, cx),
+            );
+            assert_eq!(legacy.has_popup(), None);
+            assert_eq!(tree.has_popup(), Some(accesskit::HasPopup::Tree));
+            assert_eq!(tree.role(), gpui::Role::ComboBox);
+        });
+    }
     struct Probe {
         captured: Captured,
     }

@@ -1,5 +1,5 @@
 use super::super::*;
-use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList};
+use gpui_kit::base::{TestSupportExt as _, virtualization::VirtualList};
 use gpui_kit::{AnyElement, App, Axis, ElementId, Entity, Focusable as _, Role, WeakEntity, px};
 use std::{cell::Cell, rc::Rc, time::Duration};
 use yue_component::{
@@ -634,7 +634,7 @@ impl VirtualListPage {
                         .accessibility_label(demo.label())
                         .test_support(),
                 )
-                .child(Scrollbar::horizontal(&handle))
+                .child(yue_component::YueScrollbar::horizontal(format!("virtual-scrollbar-{}", demo.ix()), &handle))
                 .into_any_element()
         } else if demo == Demo::Measured {
             let builds = self.builds[demo.ix()].clone();

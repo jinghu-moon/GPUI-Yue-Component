@@ -6,6 +6,7 @@ mod number_input;
 mod textarea;
 
 pub(crate) use frame::border_token;
+pub(crate) use frame::surface_style;
 pub use number_input::YueNumberInput;
 pub use textarea::YueTextarea;
 

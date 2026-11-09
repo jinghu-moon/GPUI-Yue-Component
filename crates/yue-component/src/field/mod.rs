@@ -47,6 +47,9 @@ fn announced(
 /// Keeping the builder, rather than a finished element, lets the field inject its
 /// label, description, and validation status into the control's accessibility node.
 enum FieldChild {
+    TreeSelect(Box<crate::YueTreeSelect>),
+    TimePicker(Box<crate::YueTimePicker>),
+    DatePicker(Box<crate::YueDatePicker>),
     Select(Box<crate::YueSelect>),
     Element(AnyElement),
     Input(YueInput),
@@ -79,6 +82,10 @@ pub struct YueField {
 }
 
 impl YueField {
+    pub fn tree_select(mut self, select: crate::YueTreeSelect) -> Self {
+        self.child = Some(FieldChild::TreeSelect(Box::new(select)));
+        self
+    }
     /// Resolve the application default at render time, including later theme changes.
     pub fn use_default_theme(mut self) -> Self {
         self.use_default_theme = true;
@@ -132,6 +139,14 @@ impl YueField {
     }
     pub fn input(mut self, input: YueInput) -> Self {
         self.child = Some(FieldChild::Input(input));
+        self
+    }
+    /// Names and validates the typed date control without turning its value into text.
+    pub fn date_picker(mut self, picker: crate::YueDatePicker) -> Self {
+        self.child = Some(FieldChild::DatePicker(Box::new(picker)));
+        self
+    }    pub fn time_picker(mut self, picker: crate::YueTimePicker) -> Self {
+        self.child = Some(FieldChild::TimePicker(Box::new(picker)));
         self
     }
     /// Preserve the Select's typed value and forward field semantics/status.

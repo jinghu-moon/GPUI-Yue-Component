@@ -1307,6 +1307,7 @@ pub struct Window {
     /// The hitbox that has captured the pointer, if any.
     /// While captured, mouse events route to this hitbox regardless of hit testing.
     captured_hitbox: Option<HitboxId>,
+    frame_bound_pointer_capture: bool,
     #[cfg(any(feature = "inspector", debug_assertions))]
     inspector: Option<Entity<Inspector>>,
     #[cfg(feature = "profiler")]
@@ -2214,6 +2215,7 @@ impl Window {
             client_inset: None,
             image_cache_stack: Vec::new(),
             captured_hitbox: None,
+            frame_bound_pointer_capture: false,
             #[cfg(any(feature = "inspector", debug_assertions))]
             inspector: None,
             #[cfg(feature = "profiler")]
@@ -3426,11 +3428,21 @@ impl Window {
     /// The capture is automatically released on mouse up.
     pub fn capture_pointer(&mut self, hitbox_id: HitboxId) {
         self.captured_hitbox = Some(hitbox_id);
+        self.frame_bound_pointer_capture = false;
+    }
+
+    /// Capture until release or until this hitbox is no longer painted.
+    /// Frame-local hitboxes must renew this capture during prepaint. Existing
+    /// `capture_pointer` consumers retain their explicit-release lifecycle.
+    pub fn capture_pointer_for_frame(&mut self, hitbox_id: HitboxId) {
+        self.captured_hitbox = Some(hitbox_id);
+        self.frame_bound_pointer_capture = true;
     }
 
     /// Releases any active pointer capture.
     pub fn release_pointer(&mut self) {
         self.captured_hitbox = None;
+        self.frame_bound_pointer_capture = false;
     }
 
     /// Returns the hitbox that has captured the pointer, if any.
@@ -3567,6 +3579,15 @@ impl Window {
         let previous_window_active = self.rendered_frame.window_active;
         mem::swap(&mut self.rendered_frame, &mut self.next_frame);
         self.next_frame.clear();
+        // An opted-in removed interaction must not retain capture. Live controls transfer
+        // capture to their new hitbox during prepaint; cached hitboxes keep IDs.
+        if self.frame_bound_pointer_capture
+            && self.captured_hitbox.is_some_and(|id| {
+                !self.rendered_frame.hitboxes.iter().any(|hitbox| hitbox.id == id)
+            })
+        {
+            self.release_pointer();
+        }
         let atlas = &self.sprite_atlas;
         self.image_uploads.retain(|params, image| {
             if image.strong_count() == 0 {

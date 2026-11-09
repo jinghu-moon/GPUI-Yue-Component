@@ -1,5 +1,5 @@
 //! Vertical showcase viewport composed only from GPUI and Base primitives.
-use gpui_kit::base::{InteractiveElementExt as _, Scrollbar, StyledExt as _};
+use gpui_kit::base::{InteractiveElementExt as _, StyledExt as _};
 use gpui_kit::{
     App, Element, ElementId, InteractiveElement, IntoElement, Overflow, ParentElement,
     PointRefinement, RenderOnce, ScrollHandle, StatefulInteractiveElement as _, StyleRefinement,
@@ -70,8 +70,7 @@ impl<E: InteractiveElement + Styled + ParentElement + Element + 'static> RenderO
             )
             .child(
                 div().absolute().inset_0().child(
-                    Scrollbar::vertical(&scroll)
-                        .id((self.id, "scrollbar"))
+                    yue_component::YueScrollbar::vertical((self.id, "scrollbar"), &scroll)
                         .viewport_from_layout(),
                 ),
             )

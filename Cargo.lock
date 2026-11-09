@@ -6696,6 +6696,7 @@ dependencies = [
 name = "windows-showcase"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "gpui-kit",
  "yue-component",
 ]
@@ -7104,6 +7105,7 @@ version = "0.1.0"
 name = "yue-component"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "gpui-base",
  "gpui-kit",
  "half",

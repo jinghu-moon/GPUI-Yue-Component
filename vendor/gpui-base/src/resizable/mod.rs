@@ -4,8 +4,10 @@ use gpui::{
     Along, App, Axis, Bounds, Context, ElementId, EventEmitter, IsZero, Pixels, Window, px,
 };
 
+mod bounded;
 mod panel;
 mod resize_handle;
+pub use bounded::ResizableInteraction;
 pub use panel::*;
 pub use resize_handle::{
     HandleEdge, ResizeHandle, ResizeHandleContext, ResizeHandleRenderer, ResizeHandleState,
@@ -39,6 +41,10 @@ pub struct ResizableState {
     sizes: Vec<Pixels>,
     resizing_panel_ix: Option<usize>,
     bounds: Bounds<Pixels>,
+    bounded: bool,
+    initial_fit_pending: bool,
+    drag_origin: Option<(Pixels, Pixels)>,
+    drag_changed: bool,
 }
 
 impl Default for ResizableState {
@@ -49,6 +55,10 @@ impl Default for ResizableState {
             sizes: vec![],
             resizing_panel_ix: None,
             bounds: Bounds::default(),
+            bounded: false,
+            initial_fit_pending: false,
+            drag_origin: None,
+            drag_changed: false,
         }
     }
 }
@@ -76,6 +86,19 @@ impl ResizableState {
         cx: &mut Context<Self>,
     ) {
         if ix >= self.sizes.len() {
+            return;
+        }
+        if self.bounded {
+            let changed = if ix + 1 < self.sizes.len() {
+                self.resize_bounded(ix, size, cx)
+            } else if ix > 0 {
+                self.resize_bounded(ix - 1, self.sizes[ix - 1] + self.sizes[ix] - size, cx)
+            } else {
+                false
+            };
+            if changed {
+                self.done_resizing(cx);
+            }
             return;
         }
         if ix + 1 < self.sizes.len() {
@@ -213,7 +236,8 @@ impl ResizableState {
         let Some(panel) = self.panels.get(panel_ix) else {
             return true;
         };
-        self.sizes.get(panel_ix).map(|size| size.as_f32()) == Some(PANEL_MIN_SIZE.as_f32())
+        (!self.bounded
+            && self.sizes.get(panel_ix).map(|size| size.as_f32()) == Some(PANEL_MIN_SIZE.as_f32()))
             || panel.bounds != bounds
             || panel.size_range != *size_range
             || panel.fixed != fixed
@@ -232,7 +256,7 @@ impl ResizableState {
         // This check is only necessary to stop the very first panel from resizing on its own
         // it needs to be passed when the panel is freshly created so we get the initial size,
         // but its also fine when it sometimes passes later.
-        if self.sizes[panel_ix].as_f32() == PANEL_MIN_SIZE.as_f32() {
+        if !self.bounded && self.sizes[panel_ix].as_f32() == PANEL_MIN_SIZE.as_f32() {
             self.sizes[panel_ix] = size;
             self.panels[panel_ix].size = Some(size);
         }
@@ -276,6 +300,8 @@ impl ResizableState {
 
     pub(crate) fn done_resizing(&mut self, cx: &mut Context<Self>) {
         self.resizing_panel_ix = None;
+        self.drag_origin = None;
+        self.drag_changed = false;
         cx.emit(ResizablePanelEvent::Resized);
     }
 
@@ -382,6 +408,10 @@ impl ResizableState {
     ///
     /// When the container size changes, the panels should take up the same percentage as they did before.
     fn adjust_to_container_size(&mut self, cx: &mut Context<Self>) {
+        if self.bounded {
+            self.fit_bounded(cx);
+            return;
+        }
         if self.container_size().is_zero() {
             return;
         }
@@ -439,6 +469,8 @@ impl EventEmitter<ResizablePanelEvent> for ResizableState {}
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct ResizablePanelState {
+    key: Option<ElementId>,
+    initial: Option<Pixels>,
     pub size: Option<Pixels>,
     pub size_range: Range<Pixels>,
     bounds: Bounds<Pixels>,

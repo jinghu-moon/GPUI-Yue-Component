@@ -6,7 +6,7 @@ use crate::tokens::{duration, easing, rems, rgba};
 
 use crate::{Icon, YueOverflowTooltip, outline};
 
-use gpui_kit::base::{Button, TestSupportExt as _, Transition, transition};
+use gpui_kit::base::{Button, StyledExt as _, TestSupportExt as _, Transition, transition};
 
 use gpui_kit::{
     Animation, AnimationExt as _, AnyElement, Context, InteractiveElement as _, ParentElement as _,
@@ -214,24 +214,9 @@ pub(super) fn render(
             selected.len()
         };
         if p.tag_layout != SelectTagLayout::Wrap {
-            while show > 0 {
-                let used = widths[..show].iter().copied().fold(px(0.), |a, b| a + b)
-                    + tag_gap * (show.saturating_sub(1) as f32);
-                let count = if show < selected.len() {
-                    measure(
-                        &format!("+{}", selected.len() - show).into(),
-                        tag_font,
-                        window,
-                    ) + 2. * tag_padding
-                        + tag_gap
-                } else {
-                    px(0.)
-                };
-                if used + count <= budget {
-                    break;
-                }
-                show -= 1;
-            }
+            show = crate::choice_field::visible_tags(&widths, show, budget, tag_gap, |count| {
+                measure(&format!("+{count}").into(), tag_font, window) + 2. * tag_padding
+            });
         }
         for (ix, option) in selected.iter().enumerate() {
             if ix >= show {
@@ -362,15 +347,8 @@ pub(super) fn render(
         .id((id.clone(), "frame"))
         .test_support()
         .key_context("YueSelectTrigger")
-        .relative()
-        .w_full()
+        .refine_style(&crate::choice_field::frame_geometry(height, padding, gap, font))
         .min_w(minimum)
-        .min_h(height)
-        .px(padding)
-        .flex()
-        .items_center()
-        .gap(gap)
-        .text_size(font)
         .text_color(foreground)
         .border(rems(theme, "--input-border-width"))
         .border_color(

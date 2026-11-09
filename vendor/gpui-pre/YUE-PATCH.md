@@ -1,5 +1,19 @@
 # Yue GPUI paint snapshot extension
 
+## Opt-in frame-bound pointer capture (2026-11-09)
+
+`Window::capture_pointer_for_frame` adds an explicit capture lifecycle for controls
+with frame-local hitboxes. A live scrollbar renews capture during prepaint; after
+frame swap, a captured hitbox missing from the painted frame releases capture.
+Cached hitboxes may keep their IDs. Ordinary `capture_pointer` remains on its
+existing explicit-release/mouse-up lifecycle, including ImagePreview callers.
+
+Only `src/window.rs` changes; no platform backend, COM provider or style enters
+GPUI. Yue headless scrollbar tests exercise continued capture over redraws,
+unmount release, explicit cancellation, overflow shrink and window deactivation;
+Base's drag lease separately checks exactly-once owner cleanup. Remove when
+upstream supplies equivalent opt-in capture cleanup and those regressions pass.
+
 ## Measured geometry cross-constraint reader (2026-11-04)
 
 `ListItemGeometry::cross_extent()` exposes the constraint already stored with

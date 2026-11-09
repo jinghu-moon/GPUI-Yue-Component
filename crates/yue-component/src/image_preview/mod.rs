@@ -36,13 +36,16 @@
 //!     Ok(state)
 //! }
 //! ```
+mod chrome;
 mod color;
 mod element;
+mod gallery;
 mod geometry;
 mod model;
 mod paint;
 mod resource;
 mod state;
+mod timing;
 pub use model::*;
 pub use resource::{
     ImagePreviewColorSpace, ImagePreviewImage, ImagePreviewLimits, ImagePreviewPixels,
@@ -103,7 +106,7 @@ impl YueImagePreview {
             disabled: false,
             modes: true,
             background_picker: true,
-            toolbar: ImagePreviewToolbar::Floating,
+            toolbar: ImagePreviewToolbar::Footer,
             toolbar_visible: true,
             result_label: "处理后".into(),
             footer: None,
@@ -140,7 +143,8 @@ impl YueImagePreview {
         self.on_expand = Some(Rc::new(handler));
         self
     }
-    /// Floating overlays the full viewport; Footer allocates a separate row.
+    /// Footer (default) shares the viewer shell with its title and viewport.
+    /// Floating explicitly overlays the viewport instead.
     pub fn toolbar(mut self, position: ImagePreviewToolbar) -> Self {
         self.toolbar = position;
         self
@@ -174,7 +178,17 @@ impl YueImagePreview {
 gpui_kit::actions!(
     yue_image_preview,
     [
-        ZoomIn, ZoomOut, ActualSize, FitAll, FitWidth, PanLeft, PanRight, PanUp, PanDown
+        ZoomIn,
+        ZoomOut,
+        ActualSize,
+        FitAll,
+        FitWidth,
+        Fullscreen,
+        ExitFullscreen,
+        PanLeft,
+        PanRight,
+        PanUp,
+        PanDown
     ]
 );
 pub(crate) fn init(cx: &mut App) {
@@ -186,6 +200,8 @@ pub(crate) fn init(cx: &mut App) {
         KeyBinding::new("0", FitAll, Some("YueImagePreview")),
         KeyBinding::new("1", ActualSize, Some("YueImagePreview")),
         KeyBinding::new("w", FitWidth, Some("YueImagePreview")),
+        KeyBinding::new("f", Fullscreen, Some("YueImagePreview")),
+        KeyBinding::new("escape", ExitFullscreen, Some("YueImagePreview")),
         KeyBinding::new("left", PanLeft, Some("YueImagePreview")),
         KeyBinding::new("right", PanRight, Some("YueImagePreview")),
         KeyBinding::new("up", PanUp, Some("YueImagePreview")),
@@ -201,3 +217,15 @@ pub(crate) fn init(cx: &mut App) {
 mod resource_tests;
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod layout_tests {
+    use super::*;
+
+    #[test]
+    fn image_preview_defaults_to_the_integrated_footer_toolbar() {
+        let toolbar = std::mem::discriminant(&ImagePreviewToolbar::Footer);
+        let default = std::mem::discriminant(&ImagePreviewToolbar::default());
+        assert_eq!(toolbar, default);
+    }
+}

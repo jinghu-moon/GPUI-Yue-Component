@@ -6,7 +6,7 @@ mod keyboard_tests;
 #[cfg(all(test, feature = "virtual-profile"))]
 mod native_profile;
 use super::super::*;
-use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList};
+use gpui_kit::base::{TestSupportExt as _, virtualization::VirtualList};
 use gpui_kit::{AnyElement, App, Axis, ElementId, Entity, Role, ScrollHandle, px};
 use std::{cell::Cell, rc::Rc};
 use yue_component::{
@@ -347,8 +347,7 @@ impl VirtualLayoutsPage {
                             let _ = owner.update(cx, |page, cx| page.grid_key(event, window, cx));
                         }),
                     )
-                    .child(Scrollbar::vertical(&self.scroll))
-                    .child(Scrollbar::horizontal(&self.scroll))
+                    .child(yue_component::YueScrollbar::both("virtual-grid-scrollbar", &self.scroll))
                     .into_any_element();
                 (
                     "Grid · 一百万行 × 一千列，支持冻结、合并与 RTL。Tab 进入／离开；方向键、Home/End、Ctrl+Home/End、PageUp/PageDown 移动当前单元格。",
@@ -426,7 +425,7 @@ impl VirtualLayoutsPage {
                         .role(Role::List)
                         .test_support(),
                     )
-                    .child(Scrollbar::vertical(&handle))
+                    .child(yue_component::YueScrollbar::vertical("masonry-scrollbar", &handle))
                     .into_any_element();
                 (
                     "Masonry · 一万张自然高度卡片，启用方向性缓冲。可缓存后销毁并重建控制器，恢复兼容测量、分栏和阅读位置。",
@@ -484,7 +483,7 @@ impl VirtualLayoutsPage {
                         .item_role(None)
                         .test_support(),
                     )
-                    .child(Scrollbar::horizontal(&handle))
+                    .child(yue_component::YueScrollbar::horizontal("horizontal-layout-scrollbar", &handle))
                     .into_any_element();
                 (
                     "Measured / Horizontal · 两千个不同宽度节点。复用原生测量、定位、尾部跟随和滚动条机制。",

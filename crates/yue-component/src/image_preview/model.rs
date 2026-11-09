@@ -28,6 +28,7 @@ pub struct ImagePreviewDocument {
     pub(super) revision: u64,
     pub(super) source: ImagePreviewLoad,
     pub(super) result: ImagePreviewLoad,
+    pub(super) thumbnail: Option<ImagePreviewImage>,
     pub(super) full_frame: bool,
 }
 impl ImagePreviewDocument {
@@ -37,6 +38,7 @@ impl ImagePreviewDocument {
             revision,
             source: ImagePreviewLoad::Empty,
             result: ImagePreviewLoad::Empty,
+            thumbnail: None,
             full_frame: false,
         }
     }
@@ -47,6 +49,14 @@ impl ImagePreviewDocument {
     pub fn with_result(mut self, result: ImagePreviewLoad) -> Self {
         self.result = result;
         self
+    }
+    /// Optional small preview resource for the filmstrip. Falls back to the source.
+    pub fn with_thumbnail(mut self, thumbnail: ImagePreviewImage) -> Self {
+        self.thumbnail = Some(thumbnail);
+        self
+    }
+    pub fn thumbnail(&self) -> Option<&ImagePreviewImage> {
+        self.thumbnail.as_ref()
     }
     /// Assert that both images represent the same complete, oriented frame.
     /// Aspect-ratio validation is also required; this does not stretch a crop.
@@ -112,8 +122,8 @@ impl ImagePreviewBackground {
 }
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ImagePreviewToolbar {
-    #[default]
     Floating,
+    #[default]
     Footer,
 }
 /// Smooth browsing is the default. Pixel inspection uses nearest sampling on
@@ -207,6 +217,8 @@ impl ImagePreviewSnapshot {
 pub struct ImagePreviewView {
     pub(super) document: Option<ImagePreviewDocument>,
     pub(super) result: Option<ImagePreviewImage>,
+    pub(super) gallery: Vec<ImagePreviewDocument>,
+    pub(super) gallery_index: usize,
     pub(super) snapshot: ImagePreviewSnapshot,
     pub(super) last_middle: f32,
 }
@@ -224,6 +236,7 @@ pub enum ImagePreviewEvent {
     BackgroundChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
     PixelGridChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
     SamplingChanged(ImagePreviewSnapshot, ImagePreviewChangeSource),
+    GalleryChanged(ImagePreviewSnapshot, usize, usize, ImagePreviewChangeSource),
     RetryRequested {
         document_id: SharedString,
         revision: u64,

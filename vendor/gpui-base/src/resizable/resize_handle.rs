@@ -1,13 +1,16 @@
 use std::{cell::Cell, rc::Rc};
 
 use gpui::{
-    AnyElement, App, Axis, Div, Element, ElementId, Entity, GlobalElementId, Hitbox,
+    AnyElement, App, Axis, Div, Element, ElementId, Entity, FocusHandle, GlobalElementId, Hitbox,
     HitboxBehavior, InteractiveElement, Interactivity, IntoElement, MouseDownEvent, MouseMoveEvent,
     MouseUpEvent, ParentElement as _, Pixels, Point, Render, StatefulInteractiveElement,
     Styled as _, Window, div, prelude::FluentBuilder as _, px,
 };
 
-use crate::{AxisExt as _, InteractiveElementExt, TestSupportExt as _, theme::ActiveTheme as _};
+use crate::{
+    AxisExt as _, InteractiveElementExt, TestSupportExt as _, a11y_disabled::A11yDisabledExt as _,
+    theme::ActiveTheme as _,
+};
 
 pub(crate) const HANDLE_PADDING: Pixels = px(4.);
 pub(crate) const HANDLE_SIZE: Pixels = px(1.);
@@ -62,6 +65,7 @@ pub struct ResizeHandleContext {
     axis: Axis,
     edge: Option<HandleEdge>,
     state: ResizeHandleState,
+    focused: bool,
 }
 
 impl ResizeHandleContext {
@@ -89,6 +93,9 @@ impl ResizeHandleContext {
     /// How far the pointer has gone with this handle.
     pub fn state(&self) -> ResizeHandleState {
         self.state
+    }
+    pub fn is_focused(&self) -> bool {
+        self.focused
     }
 }
 
@@ -162,6 +169,10 @@ pub struct ResizeHandle<T: 'static, E: 'static + Render> {
     /// element traits land here, on the element the pointer actually hits;
     /// base places and sizes it when it is laid out.
     base: Div,
+    focus: Option<FocusHandle>,
+    hit_width: Option<Pixels>,
+    line_width: Option<Pixels>,
+    disabled: bool,
 }
 
 impl<T: 'static, E: 'static + Render> ResizeHandle<T, E> {
@@ -174,6 +185,10 @@ impl<T: 'static, E: 'static + Render> ResizeHandle<T, E> {
             appearance: None,
             axis,
             base: div(),
+            focus: None,
+            hit_width: None,
+            line_width: None,
+            disabled: false,
         }
     }
 
@@ -204,6 +219,26 @@ impl<T: 'static, E: 'static + Render> ResizeHandle<T, E> {
     /// straddling the boundary it resizes.
     pub fn inside(mut self, edge: HandleEdge) -> Self {
         self.edge = Some(edge);
+        self
+    }
+    /// Associate the actual hit band with retained keyboard focus.
+    pub fn with_focus(mut self, focus: &FocusHandle) -> Self {
+        self.focus = Some(focus.clone());
+        self
+    }
+    /// Override the transparent band's full width (including its centre line).
+    pub fn hit_width(mut self, width: Pixels) -> Self {
+        assert!(width.as_f32().is_finite() && width > px(0.));
+        self.hit_width = Some(width);
+        self
+    }
+    pub fn line_width(mut self, width: Pixels) -> Self {
+        assert!(width.as_f32().is_finite() && width > px(0.));
+        self.line_width = Some(width);
+        self
+    }
+    pub fn disabled(mut self, disabled: bool) -> Self {
+        self.disabled = disabled;
         self
     }
 }
@@ -272,15 +307,20 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
         window: &mut Window,
         cx: &mut App,
     ) -> (gpui::LayoutId, Self::RequestLayoutState) {
-        let neg_offset = -HANDLE_PADDING;
+        let line_width = self.line_width.unwrap_or(HANDLE_SIZE);
+        let padding = self
+            .hit_width
+            .map(|w| (w - line_width).max(px(0.)) / 2.)
+            .unwrap_or(HANDLE_PADDING);
+        let neg_offset = -padding;
         let axis = self.axis;
         let edge = self.edge;
         // Sizes are border-box: the extent has to name the whole band, padding
         // included, or the content box resolves to zero and the hairline
         // overflows into the padding, landing wherever the padding happens to
         // push it.
-        let hug_extent = HANDLE_SIZE + HANDLE_PADDING;
-        let straddle_extent = HANDLE_SIZE + HANDLE_PADDING * 2.;
+        let hug_extent = line_width + padding;
+        let straddle_extent = line_width + padding * 2.;
         // The caller's listeners are already on it; what base adds is where the
         // band goes and what it holds.
         let base = std::mem::replace(&mut self.base, div());
@@ -294,11 +334,12 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
             let mut el = base
                 .id(self.id.clone())
                 .test_support()
+                .when_some(self.focus.clone(), |el, focus| el.track_focus(&focus))
                 .occlude()
                 .absolute()
                 .flex_shrink_0()
                 .group("handle")
-                .when_some(drag, |this, (value, on_drag)| {
+                .when_some(drag.filter(|_| !self.disabled), |this, (value, on_drag)| {
                     this.on_drag(value, move |value, position, window, cx| {
                         on_drag(value, &position, window, cx)
                     })
@@ -314,28 +355,28 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
                         .right_0()
                         .h_full()
                         .w(hug_extent)
-                        .pl(HANDLE_PADDING),
+                        .pl(padding),
                     (Some(HandleEdge::Leading), Axis::Horizontal) => this
                         .cursor_col_resize()
                         .top_0()
                         .left_0()
                         .h_full()
                         .w(hug_extent)
-                        .pr(HANDLE_PADDING),
+                        .pr(padding),
                     (Some(HandleEdge::Trailing), Axis::Vertical) => this
                         .cursor_row_resize()
                         .bottom_0()
                         .left_0()
                         .w_full()
                         .h(hug_extent)
-                        .pt(HANDLE_PADDING),
+                        .pt(padding),
                     (Some(HandleEdge::Leading), Axis::Vertical) => this
                         .cursor_row_resize()
                         .top_0()
                         .left_0()
                         .w_full()
                         .h(hug_extent)
-                        .pb(HANDLE_PADDING),
+                        .pb(padding),
                     // Straddling the boundary: half the band on either side.
                     (None, Axis::Horizontal) => this
                         .cursor_col_resize()
@@ -343,15 +384,16 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
                         .left(neg_offset)
                         .h_full()
                         .w(straddle_extent)
-                        .px(HANDLE_PADDING),
+                        .px(padding),
                     (None, Axis::Vertical) => this
                         .cursor_row_resize()
                         .top(neg_offset)
                         .left_0()
                         .w_full()
                         .h(straddle_extent)
-                        .py(HANDLE_PADDING),
+                        .py(padding),
                 })
+                .when(self.disabled, |this| this.cursor_default())
                 .child(
                     // A renderer that declines — or is absent — leaves the
                     // built-in line, so overriding one handle never obliges a
@@ -367,6 +409,10 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
                                     axis,
                                     edge,
                                     state: state.get(),
+                                    focused: self
+                                        .focus
+                                        .as_ref()
+                                        .is_some_and(|f| f.is_focused(window)),
                                 },
                                 window,
                                 cx,
@@ -380,11 +426,12 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
                                 .flex_none()
                                 .bg(bg_color)
                                 .group_hover("handle", |this| this.bg(bg_color))
-                                .when(axis.is_horizontal(), |this| this.h_full().w(HANDLE_SIZE))
-                                .when(axis.is_vertical(), |this| this.w_full().h(HANDLE_SIZE))
+                                .when(axis.is_horizontal(), |this| this.h_full().w(line_width))
+                                .when(axis.is_vertical(), |this| this.w_full().h(line_width))
                                 .into_any_element()
                         }),
                 )
+                .a11y_disabled(self.disabled)
                 .into_any_element();
 
             let layout_id = el.request_layout(window, cx);
@@ -423,6 +470,9 @@ impl<T: 'static, E: 'static + Render> Element for ResizeHandle<T, E> {
         cx: &mut App,
     ) {
         request_layout.paint(window, cx);
+        if self.disabled {
+            return;
+        }
 
         // Hovered and pressed are answered by the hitbox, not by the bounds.
         // Bounds containment reads true through anything painted over the

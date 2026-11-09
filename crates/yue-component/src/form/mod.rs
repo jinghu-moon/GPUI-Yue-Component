@@ -33,6 +33,106 @@ pub struct YueForm {
 }
 
 impl YueForm {
+    /// Require a committed tree value; search text is not a form value.
+    pub fn require_tree_select(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueTreeSelectState>,
+        message: impl Into<SharedString>,
+    ) -> &mut Self {
+        let message = message.into();
+        self.rule_tree_select(id, state, move |value, _| {
+            value.is_empty().then(|| message.clone())
+        })
+    }
+    pub fn rule_tree_select(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueTreeSelectState>,
+        rule: impl Fn(&crate::TreeSelectValue, &App) -> Option<SharedString> + 'static,
+    ) -> &mut Self {
+        let read = state.clone();
+        let focus = state.clone();
+        self.fields.push(FormField {
+            id: id.into(),
+            validate: Box::new(move |cx| rule(&read.read(cx).value(cx), cx)),
+            focus: Box::new(move |window, cx| {
+                let handle = focus.read(cx).focus_handle().clone();
+                handle.focus(window, cx);
+            }),
+        });
+        self
+    }
+    /// Require a committed typed date value. An unconfirmed calendar draft is not a form value.
+    pub fn require_date_picker(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueDatePickerState>,
+        message: impl Into<SharedString>,
+    ) -> &mut Self {
+        let message = message.into();
+        self.rule_date_picker(id, state, move |value, _| {
+            value.is_empty().then(|| message.clone())
+        })
+    }
+    pub fn rule_date_picker(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueDatePickerState>,
+        rule: impl Fn(&crate::DatePickerValue, &App) -> Option<SharedString> + 'static,
+    ) -> &mut Self {
+        let read = state.clone();
+        let focus = state.clone();
+        self.fields.push(FormField {
+            id: id.into(),
+            validate: Box::new(move |cx| {
+                let state = read.read(cx);
+                state
+                    .error()
+                    .map(|error| error.to_string().into())
+                    .or_else(|| rule(state.value(), cx))
+            }),
+            focus: Box::new(move |window, cx| {
+                focus.update(cx, |state, cx| state.focus(window, cx))
+            }),
+        });
+        self
+    }
+    /// Require a committed typed time value. An unconfirmed time draft is not a form value.
+    pub fn require_time_picker(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueTimePickerState>,
+        message: impl Into<SharedString>,
+    ) -> &mut Self {
+        let message = message.into();
+        self.rule_time_picker(id, state, move |value, _| {
+            value.is_empty().then(|| message.clone())
+        })
+    }
+    pub fn rule_time_picker(
+        &mut self,
+        id: impl Into<SharedString>,
+        state: &Entity<crate::YueTimePickerState>,
+        rule: impl Fn(&crate::TimePickerValue, &App) -> Option<SharedString> + 'static,
+    ) -> &mut Self {
+        let read = state.clone();
+        let focus = state.clone();
+        self.fields.push(FormField {
+            id: id.into(),
+            validate: Box::new(move |cx| {
+                let state = read.read(cx);
+                state
+                    .error()
+                    .map(|error| error.to_string().into())
+                    .or_else(|| rule(state.value(), cx))
+            }),
+            focus: Box::new(move |window, cx| {
+                focus.update(cx, |state, cx| state.focus(window, cx))
+            }),
+        });
+        self
+    }
     pub fn new() -> Self {
         Self::default()
     }

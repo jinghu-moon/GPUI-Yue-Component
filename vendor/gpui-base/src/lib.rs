@@ -106,6 +106,7 @@ pub use auto_scroll::AutoScroll;
 pub use avatar::{Avatar, AvatarFallback, AvatarImage};
 pub use button::{Button, ButtonStyles};
 pub use calendar::{
+    CalendarGranularity, CalendarInteractionEvent, CalendarSelection,
     Calendar, CalendarEvent, CalendarItem, CalendarItemKind, CalendarItemState, CalendarState,
     CalendarView, Date, IntervalMatcher, Matcher, RangeMatcher,
 };
@@ -173,7 +174,7 @@ pub use reduce_motion::apply_system_reduce_motion;
 #[doc(hidden)]
 pub use resizable::PANEL_MIN_SIZE;
 pub use resizable::{
-    HandleEdge, ResizablePanel, ResizablePanelEvent, ResizablePanelGroup, ResizableState,
+    HandleEdge, ResizablePanel, ResizablePanelEvent, ResizablePanelGroup, ResizableState, ResizableInteraction,
     ResizeHandle, ResizeHandleContext, ResizeHandleRenderer, ResizeHandleState, h_resizable,
     resizable_panel, resize_handle, v_resizable,
 };
@@ -181,7 +182,7 @@ pub use root::{Root, RootPlugin};
 pub use scroll_bounce::{ScrollBounce, ScrollBounceMotion};
 pub use scrollable_mask::{RoundedFrameCover, ScrollableMask};
 pub use scrollbar::{
-    Scrollbar, ScrollbarAxis, ScrollbarEntrance, ScrollbarHandle, ScrollbarMode, ScrollbarMotion,
+    Scrollbar, ScrollbarAxis, ScrollbarBehavior, ScrollbarEntrance, ScrollbarHandle, ScrollbarMode, ScrollbarMotion,
     ScrollbarStyles, ScrollbarThumbStyle, ScrollbarTrackStyle,
 };
 pub use select::Select;
@@ -216,7 +217,7 @@ pub use theme_tokens::{
 };
 pub use time_field::{
     HourCycle, TimeField, TimeFieldEvent, TimeFieldSegment, TimeFieldSegmentState, TimeFieldState,
-    TimePrecision, TimeSegment,
+    TimePrecision, TimeSegment, TimeChoices, TimeRules, TimeSteps, TimeOption,
 };
 pub use toast::{
     Toast, ToastAdvance, ToastManager, ToastMotion, ToastOptions, ToastStack, ToastStackState,
@@ -230,6 +231,7 @@ pub use tooltip::{
 };
 pub use touch_selection::{SelectionEdge, TouchHandle, TouchSelectionSnapshot};
 pub use tree::{Tree, TreeEntry, TreeEntryState, TreeEvent, TreeItem, TreeState};
+pub use tree::keyed as keyed_tree;
 #[doc(hidden)]
 pub use tree::{init as init_tree, key_context as tree_key_context};
 pub use undo_history::UndoHistory;

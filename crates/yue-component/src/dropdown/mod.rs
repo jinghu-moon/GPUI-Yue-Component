@@ -13,6 +13,7 @@
 //! and — unless the row asked to `.keep_open()` — dismisses the panel.
 
 mod element;
+mod entrance;
 mod host;
 
 use std::rc::Rc;

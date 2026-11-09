@@ -1,6 +1,6 @@
 //! Vertical Yue presentation; behavior and native state belong exclusively to Base.
 use crate::{YueTheme, tokens::rgba};
-use gpui_kit::base::{Scrollbar, TestSupportExt as _, virtualization::VirtualList};
+use gpui_kit::base::{TestSupportExt as _, virtualization::VirtualList};
 use gpui_kit::{
     AnyElement, App, ElementId, Entity, IntoElement, ParentElement, Refineable as _, RenderOnce,
     Role, SharedString, StyleRefinement, Styled, Window, div,
@@ -128,7 +128,7 @@ impl RenderOnce for YueVirtualList {
         if let Some(label) = self.label {
             list = list.accessibility_label(label);
         }
-        let mut container = gpui_kit::InteractiveElement::id(div(), self.id)
+        let mut container = gpui_kit::InteractiveElement::id(div(), self.id.clone())
             .relative()
             .size_full()
             .min_h_0()
@@ -143,7 +143,10 @@ impl RenderOnce for YueVirtualList {
                 .scrollbar_handle()
                 .expect("YueVirtualList owns its viewport");
             container
-                .child(Scrollbar::vertical(&handle))
+                .child(
+                    crate::YueScrollbar::vertical((self.id.clone(), "scrollbar"), &handle)
+                        .theme(theme),
+                )
                 .into_any_element()
         } else {
             container.into_any_element()

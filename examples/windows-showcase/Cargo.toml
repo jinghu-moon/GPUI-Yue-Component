@@ -11,4 +11,5 @@ virtual-profile = ["gpui-kit/profiler"]
 
 [dependencies]
 gpui-kit.workspace = true
+chrono = "=0.4.45"
 yue-component = { workspace = true, features = ["bundled-fonts"] }

@@ -127,6 +127,10 @@ impl Root {
     pub fn focus_next(window: &mut Window, cx: &mut App) {
         advance_focus(window, cx, Window::focus_next);
     }
+    /// Reverse traversal with the same active modal barrier as focus_next.
+    pub fn focus_prev(window: &mut Window, cx: &mut App) {
+        advance_focus(window, cx, Window::focus_prev);
+    }
     /// Register a presentation plugin once per application. Re-registering its
     /// type replaces the factory for future windows rather than mounting it twice.
     pub fn register_plugin<V: RootPlugin>(

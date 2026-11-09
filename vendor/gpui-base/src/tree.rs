@@ -1,3 +1,6 @@
+/// Opt-in keyed tree behavior. Legacy Tree/TreeState retain their original defaults.
+pub mod keyed;
+
 use crate::TestSupportExt as _;
 use gpui::StatefulInteractiveElement as _;
 use std::{cell::RefCell, ops::Range, rc::Rc};

@@ -3,7 +3,11 @@
 use super::{ImagePreviewError, color, geometry::aligned};
 use gpui_kit::{RenderImage, RenderImageFormat, SharedString};
 use image::ImageDecoder as _;
-use std::{borrow::Cow, io::Cursor, sync::Arc};
+use std::{
+    borrow::Cow,
+    io::Cursor,
+    sync::{Arc, OnceLock},
+};
 
 #[path = "decode.rs"]
 mod decode;
@@ -270,6 +274,7 @@ impl<'a> ImagePreviewPixels<'a> {
     /// scRGB; SDR ICC is converted to linear Rec.709. Unsupported color metadata
     /// is an error, never an unmanaged success relabeled as sRGB.
     pub fn decode(bytes: &[u8], limits: &ImagePreviewLimits) -> Result<Self, ImagePreviewError> {
+        let mut timing = super::timing::Timing::new("decode");
         limits.validate()?;
         if bytes.len() > limits.encoded_bytes {
             return Err(ImagePreviewError::ResourceLimit(
@@ -278,7 +283,10 @@ impl<'a> ImagePreviewPixels<'a> {
         }
         reject_animation(bytes)?;
         if bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
-            return decode::png(Cursor::new(bytes), limits);
+            let result = decode::png(Cursor::new(bytes), limits);
+            timing.mark("png");
+            timing.finish(format_args!("bytes={} ok={}", bytes.len(), result.is_ok()));
+            return result;
         }
         let mut reader = image::ImageReader::new(Cursor::new(bytes))
             .with_guessed_format()
@@ -312,8 +320,11 @@ impl<'a> ImagePreviewPixels<'a> {
         }
         let orientation = decoder.orientation().map_err(decode_error)?;
         let icc = decoder.icc_profile().map_err(decode_error)?;
+        timing.mark("header_metadata");
         let mut decoded = image::DynamicImage::from_decoder(decoder).map_err(decode_error)?;
+        timing.mark("raster_decode");
         decoded.apply_orientation(orientation);
+        timing.mark("orientation");
         if let Some(icc) = icc {
             // Decoder allocation and output coexist. Do not count only RGBA8.
             if u64::from(w)
@@ -325,12 +336,21 @@ impl<'a> ImagePreviewPixels<'a> {
                     "ICC conversion working set exceeds decoding budget".into(),
                 ));
             }
-            return decode::managed_image(decoded, &icc);
+            let result = decode::managed_image(decoded, &icc);
+            timing.mark("icc_conversion");
+            timing.finish(format_args!(
+                "bytes={} source={w}x{h} ok={}",
+                bytes.len(),
+                result.is_ok()
+            ));
+            return result;
         }
         if decoded.color_space() != image::metadata::Cicp::SRGB {
             return Err(decode_error("unsupported color metadata"));
         }
         let rgba = decoded.into_rgba8();
+        timing.mark("rgba_conversion");
+        timing.finish(format_args!("bytes={} source={w}x{h} ok=true", bytes.len()));
         Self::from_rgba8(rgba.width(), rgba.height(), rgba.into_raw())
     }
     pub fn pixel_size(&self) -> [u32; 2] {
@@ -425,12 +445,36 @@ impl<'a> ImagePreviewPixels<'a> {
         limits: &ImagePreviewLimits,
         description: impl Into<SharedString>,
     ) -> Result<ImagePreviewImage, ImagePreviewError> {
+        self.prepare_preview(limits, description.into(), false)
+    }
+    /// Approximate, bounded-work preview for thumbnails and initial display.
+    /// Samples at most sixteen source pixels per output pixel in associated
+    /// linear color. Retains orientation, HDR encoding and original dimensions;
+    /// use `into_preview` for the full area-filtered resource and fine details.
+    pub fn into_quick_preview(
+        self,
+        limits: &ImagePreviewLimits,
+        description: impl Into<SharedString>,
+    ) -> Result<ImagePreviewImage, ImagePreviewError> {
+        self.prepare_preview(limits, description.into(), true)
+    }
+    fn prepare_preview(
+        self,
+        limits: &ImagePreviewLimits,
+        description: SharedString,
+        quick: bool,
+    ) -> Result<ImagePreviewImage, ImagePreviewError> {
+        let mut timing = super::timing::Timing::new("prepare_texture");
         let target = limits.texture_size_for(self.size, self.color_space)?;
+        timing.mark("budget");
         let mut bytes = if target == self.size {
             self.bytes.into_owned()
+        } else if quick {
+            quick_thumbnail(&self.bytes, self.size, target, self.color_space)
         } else {
             thumbnail(&self.bytes, self.size, target, self.color_space)
         };
+        timing.mark("resize");
         if self.color_space != ImagePreviewColorSpace::Srgb {
             let image = RenderImage::from_rgba16f_with_source_peak(
                 gpui_kit::size(target[0].into(), target[1].into()),
@@ -439,19 +483,28 @@ impl<'a> ImagePreviewPixels<'a> {
                 self.peak_nits,
             )
             .map_err(decode_error)?;
+            timing.mark("float_resource");
+            timing.finish(format_args!(
+                "name={description:?} source={:?} texture={target:?} quick={quick}",
+                self.size
+            ));
             return ImagePreviewImage::new(Arc::new(image), description)?
                 .with_source_size(self.size);
         }
         if !self.bgra {
             swap_channels(&mut bytes);
         }
+        timing.mark("bgra_conversion");
         let buffer = image::RgbaImage::from_raw(target[0], target[1], bytes)
             .ok_or(ImagePreviewError::InvalidPixels)?;
-        let mut preview = ImagePreviewImage::new(
-            Arc::new(RenderImage::new(vec![image::Frame::new(buffer)])),
-            description,
-        )?
-        .with_source_size(self.size)?;
+        let resource = Arc::new(RenderImage::new(vec![image::Frame::new(buffer)]));
+        timing.mark("render_resource");
+        timing.finish(format_args!(
+            "name={description:?} source={:?} texture={target:?} quick={quick}",
+            self.size
+        ));
+        let mut preview =
+            ImagePreviewImage::new(resource, description)?.with_source_size(self.size)?;
         preview.color_space = self.color_space;
         Ok(preview)
     }
@@ -487,24 +540,7 @@ fn thumbnail(
                     let weight =
                         wy * (right.min(f64::from(sx + 1)) - left.max(f64::from(sx))).max(0.);
                     let ix = (sy as usize * w as usize + sx as usize) * bpp;
-                    let values = if bpp == 8 {
-                        std::array::from_fn(|c| {
-                            f64::from(
-                                half::f16::from_bits(u16::from_le_bytes([
-                                    source[ix + c * 2],
-                                    source[ix + c * 2 + 1],
-                                ]))
-                                .to_f32(),
-                            )
-                        })
-                    } else {
-                        [
-                            color::srgb_to_linear(f64::from(source[ix]) / 255.0),
-                            color::srgb_to_linear(f64::from(source[ix + 1]) / 255.0),
-                            color::srgb_to_linear(f64::from(source[ix + 2]) / 255.0),
-                            f64::from(source[ix + 3]) / 255.0,
-                        ]
-                    };
+                    let values = linear_pixel(source, ix, bpp);
                     let alpha = values[3] * weight;
                     for channel in 0..3 {
                         sum[channel] += values[channel] * alpha;
@@ -513,29 +549,99 @@ fn thumbnail(
                 }
             }
             let ix = (y as usize * width as usize + x as usize) * bpp;
-            if sum[3] > 0. {
-                let alpha = sum[3] / (step_x * step_y);
-                for channel in 0..3 {
-                    let linear = sum[channel] / sum[3];
-                    if bpp == 8 {
-                        output[ix + channel * 2..ix + channel * 2 + 2]
-                            .copy_from_slice(&half::f16::from_f64(linear).to_bits().to_le_bytes());
-                    } else {
-                        output[ix + channel] =
-                            (color::linear_to_srgb(linear).clamp(0.0, 1.0) * 255.0).round() as u8;
-                    }
-                }
-                if bpp == 8 {
-                    output[ix + 6..ix + 8]
-                        .copy_from_slice(&half::f16::from_f64(alpha).to_bits().to_le_bytes());
-                } else {
-                    output[ix + 3] = (alpha * 255.0).round() as u8;
-                }
-            }
+            write_filtered(&mut output[ix..ix + bpp], sum, step_x * step_y, bpp);
         }
     }
     output
 }
+// Shared lookup makes area filtering independent of per-source-pixel powf calls.
+fn linear_pixel(source: &[u8], ix: usize, bpp: usize) -> [f64; 4] {
+    if bpp == 8 {
+        std::array::from_fn(|c| {
+            f64::from(
+                half::f16::from_bits(u16::from_le_bytes([
+                    source[ix + c * 2],
+                    source[ix + c * 2 + 1],
+                ]))
+                .to_f32(),
+            )
+        })
+    } else {
+        static LINEAR: OnceLock<[f64; 256]> = OnceLock::new();
+        let linear = LINEAR.get_or_init(|| {
+            std::array::from_fn(|value| color::srgb_to_linear(value as f64 / 255.))
+        });
+        [
+            linear[source[ix] as usize],
+            linear[source[ix + 1] as usize],
+            linear[source[ix + 2] as usize],
+            f64::from(source[ix + 3]) / 255.,
+        ]
+    }
+}
+
+fn write_filtered(output: &mut [u8], sum: [f64; 4], coverage: f64, bpp: usize) {
+    if sum[3] <= 0. {
+        return;
+    }
+    for channel in 0..3 {
+        let linear = sum[channel] / sum[3];
+        if bpp == 8 {
+            output[channel * 2..channel * 2 + 2]
+                .copy_from_slice(&half::f16::from_f64(linear).to_bits().to_le_bytes());
+        } else {
+            output[channel] = (color::linear_to_srgb(linear).clamp(0., 1.) * 255.).round() as u8;
+        }
+    }
+    let alpha = sum[3] / coverage;
+    if bpp == 8 {
+        output[6..8].copy_from_slice(&half::f16::from_f64(alpha).to_bits().to_le_bytes());
+    } else {
+        output[3] = (alpha * 255.).round() as u8;
+    }
+}
+
+fn quick_thumbnail(
+    source: &[u8],
+    [w, h]: [u32; 2],
+    [width, height]: [u32; 2],
+    encoding: ImagePreviewColorSpace,
+) -> Vec<u8> {
+    let bpp = encoding.format().bytes_per_pixel();
+    let mut output = vec![0; width as usize * height as usize * bpp];
+    let step_x = f64::from(w) / f64::from(width);
+    let step_y = f64::from(h) / f64::from(height);
+    let samples_x = (step_x.ceil() as u32).clamp(1, 4);
+    let samples_y = (step_y.ceil() as u32).clamp(1, 4);
+    for y in 0..height {
+        for x in 0..width {
+            let mut sum = [0.; 4];
+            for gy in 0..samples_y {
+                let sy =
+                    ((f64::from(y) + (f64::from(gy) + 0.5) / f64::from(samples_y)) * step_y) as u32;
+                for gx in 0..samples_x {
+                    let sx = ((f64::from(x) + (f64::from(gx) + 0.5) / f64::from(samples_x))
+                        * step_x) as u32;
+                    let ix = (sy.min(h - 1) as usize * w as usize + sx.min(w - 1) as usize) * bpp;
+                    let value = linear_pixel(source, ix, bpp);
+                    for channel in 0..3 {
+                        sum[channel] += value[channel] * value[3];
+                    }
+                    sum[3] += value[3];
+                }
+            }
+            let ix = (y as usize * width as usize + x as usize) * bpp;
+            write_filtered(
+                &mut output[ix..ix + bpp],
+                sum,
+                f64::from(samples_x * samples_y),
+                bpp,
+            );
+        }
+    }
+    output
+}
+
 fn decode_error(error: impl std::fmt::Display) -> ImagePreviewError {
     ImagePreviewError::Decode(error.to_string())
 }
@@ -600,6 +706,7 @@ impl ImagePreviewImage {
             RenderImageFormat::Rgba16FloatLinearSrgb => ImagePreviewColorSpace::LinearSrgb,
             RenderImageFormat::Rgba16FloatScRgb => ImagePreviewColorSpace::ScRgb,
         };
+        super::timing::resource_ready(image.id);
         Ok(Self {
             source_size: [s.width.0 as u32, s.height.0 as u32],
             image,

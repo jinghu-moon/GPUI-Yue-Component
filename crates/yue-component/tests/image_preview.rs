@@ -155,6 +155,10 @@ fn draw(cx: &mut VisualTestContext) {
     });
     cx.run_until_parked();
 }
+fn tick(cx: &mut VisualTestContext, millis: u64) {
+    cx.executor().advance_clock(Duration::from_millis(millis));
+    draw(cx);
+}
 fn open(cx: &mut TestAppContext) -> (Entity<Probe>, &mut VisualTestContext) {
     cx.update(|cx| {
         yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap()
@@ -347,6 +351,614 @@ fn toolbar_fit_width_uses_the_command_and_keyboard_stays_local(cx: &mut TestAppC
 }
 
 #[gpui_kit::test]
+fn fullscreen_button_and_keyboard_shortcuts_toggle_the_window(cx: &mut TestAppContext) {
+    let (_, cx) = open(cx);
+    click(cx, "全屏");
+    assert!(cx.update(|w, _| w.is_fullscreen()));
+    press(cx, "escape");
+    assert!(!cx.update(|w, _| w.is_fullscreen()));
+    click(cx, "图片预览");
+    press(cx, "f");
+    assert!(cx.update(|w, _| w.is_fullscreen()));
+    click(cx, "退出全屏");
+    assert!(!cx.update(|w, _| w.is_fullscreen()));
+}
+
+#[gpui_kit::test]
+fn gallery_filmstrip_reveals_at_the_bottom_and_selects_documents(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    view.update(cx, |p, cx| {
+        p.toolbar = ImagePreviewToolbar::Footer;
+        cx.notify();
+    });
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                s.set_gallery(
+                    vec![
+                        document(&p.image, 1, ImagePreviewLoad::Ready(p.image.clone())),
+                        ImagePreviewDocument::new("second", 1)
+                            .with_source(ImagePreviewLoad::Ready(p.image.clone())),
+                    ],
+                    0,
+                    w,
+                    cx,
+                )
+                .unwrap();
+            });
+        });
+    });
+    draw(cx);
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片标题栏"))));
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("下一张"))));
+    let viewport = node(cx, "图片预览").bounds();
+    let side = node(cx, "下一张图片").bounds();
+    assert!((f32::from(side.center().y - viewport.center().y)).abs() <= 1.5);
+    click(cx, "下一张图片");
+    assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), "second");
+    click(cx, "上一张图片");
+    click(cx, "下一张");
+    assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), "second");
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state
+                .update(cx, |s, cx| s.select_gallery_item(0, w, cx).unwrap());
+        });
+    });
+    draw(cx);
+    let bounds = node(cx, "图片预览").bounds();
+    cx.simulate_mouse_move(
+        point(bounds.left() + px(20.), bounds.bottom() - px(8.)),
+        None,
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片胶片条"))));
+    assert!(cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("第 2 张：second"))
+    }));
+    click(cx, "第 2 张：second");
+    assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), "second");
+    cx.simulate_mouse_move(
+        point(bounds.left() + px(20.), bounds.top() + px(20.)),
+        None,
+        Modifiers::default(),
+    );
+    draw(cx);
+    tick(cx, 999);
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片胶片条"))));
+    tick(cx, 1);
+    assert!(!cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片胶片条"))));
+}
+
+fn install_gallery(view: &Entity<Probe>, cx: &mut VisualTestContext, count: usize, animated: bool) {
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.animated = animated;
+            p.toolbar = ImagePreviewToolbar::Footer;
+            let items = (0..count)
+                .map(|index| {
+                    ImagePreviewDocument::new(format!("gallery-{index}"), 1)
+                        .with_source(ImagePreviewLoad::Ready(p.image.clone()))
+                        .with_thumbnail(p.image.clone())
+                })
+                .collect();
+            p.state
+                .update(cx, |s, cx| s.set_gallery(items, 0, w, cx).unwrap());
+            cx.notify();
+        })
+    });
+    draw(cx);
+}
+
+fn raster_positions(cx: &mut VisualTestContext) -> Vec<f32> {
+    let mut positions = cx.update(|w, _| {
+        w.painted_primitives()
+            .into_iter()
+            .filter_map(|primitive| {
+                if let gpui_kit::Primitive::PolychromeSprite(image) = primitive {
+                    (image.bounds.size.width.0 > 100.).then_some(image.bounds.origin.x.0)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>()
+    });
+    positions.sort_by(f32::total_cmp);
+    positions
+}
+
+#[gpui_kit::test]
+fn gallery_buttons_slide_both_frames_and_reverse_without_jumping(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    install_gallery(&view, cx, 3, true);
+    let rest = raster_positions(cx);
+    assert_eq!(rest.len(), 1);
+    let viewport = node(cx, "图片预览").bounds();
+    click(cx, "下一张图片");
+    assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), "gallery-1");
+    tick(cx, 40);
+    let middle = raster_positions(cx);
+    assert_eq!(
+        middle.len(),
+        2,
+        "old and new frames must both be painted while sliding"
+    );
+    assert!(middle[0] < rest[0] && middle[1] > rest[0]);
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                let mut items = s.gallery().to_vec();
+                items[1] = ImagePreviewDocument::new("gallery-1", 2)
+                    .with_source(ImagePreviewLoad::Ready(p.image.clone()));
+                s.set_gallery(items, 1, w, cx).unwrap();
+            })
+        })
+    });
+    draw(cx);
+    assert_eq!(
+        raster_positions(cx),
+        middle,
+        "resource upgrades must not cancel an active slide"
+    );
+    click(cx, "上一张图片");
+    assert_eq!(
+        raster_positions(cx),
+        middle,
+        "reverse from the displayed positions"
+    );
+    tick(cx, 600);
+    assert_eq!(
+        raster_positions(cx),
+        rest,
+        "outgoing resources no longer paint after settling"
+    );
+    assert_eq!(node(cx, "图片预览").bounds(), viewport);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    click(cx, "下一张图片");
+    assert_eq!(
+        raster_positions(cx),
+        rest,
+        "reduced motion selects without sliding"
+    );
+}
+
+#[gpui_kit::test]
+fn rapid_gallery_navigation_shows_ready_proxies_without_returning_to_loading(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = open(cx);
+    install_gallery(&view, cx, 50, true);
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                let proxy = ImagePreviewImage::from_rgba8(
+                    16,
+                    10,
+                    [12, 34, 56, 255].repeat(160),
+                    "quick preview",
+                )
+                .unwrap()
+                .with_source_size(p.image.pixel_size())
+                .unwrap();
+                let items = (0..50)
+                    .map(|index| {
+                        ImagePreviewDocument::new(format!("proxy-{index}"), 1)
+                            .with_thumbnail(proxy.clone())
+                            .with_source(ImagePreviewLoad::Ready(proxy.clone()))
+                    })
+                    .collect();
+                s.set_gallery(items, 0, w, cx).unwrap();
+            })
+        })
+    });
+    draw(cx);
+    for index in 1..12 {
+        click(cx, "下一张");
+        assert_eq!(
+            snap(&view, cx).document_id().unwrap().as_ref(),
+            format!("proxy-{index}")
+        );
+        assert!(snap(&view, cx).reference_size().is_some());
+        assert!(!cx.update(|w, _| {
+            snapshots(w)
+                .iter()
+                .any(|node| node.label() == Some("正在加载图片"))
+        }));
+    }
+    for index in (0..11).rev() {
+        click(cx, "上一张");
+        assert_eq!(
+            snap(&view, cx).document_id().unwrap().as_ref(),
+            format!("proxy-{index}")
+        );
+        assert!(!cx.update(|w, _| {
+            snapshots(w)
+                .iter()
+                .any(|node| node.label() == Some("正在加载图片"))
+        }));
+    }
+}
+
+#[gpui_kit::test]
+fn filmstrip_wheel_moves_borderless_thumbnails_through_a_fixed_selection(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    install_gallery(&view, cx, 50, false);
+    let viewport = node(cx, "图片预览").bounds();
+    cx.simulate_mouse_move(
+        point(viewport.left() + px(30.), viewport.bottom() - px(8.)),
+        None,
+        Modifiers::default(),
+    );
+    draw(cx);
+    let frame = node(cx, "缩略图固定选中框").bounds();
+    let first_bounds = |cx: &mut VisualTestContext| {
+        cx.update(|w, _| {
+            snapshots(w)
+                .iter()
+                .find(|n| {
+                    n.label()
+                        .is_some_and(|label| label.starts_with("第 1 张："))
+                })
+                .unwrap()
+                .bounds()
+        })
+    };
+    let initial = first_bounds(cx);
+    assert!(
+        (f32::from(initial.center().x - frame.center().x)).abs() < 1.,
+        "first image must align with the fixed frame: image={initial:?}, frame={frame:?}"
+    );
+    let original_zoom = snap(&view, cx).zoom();
+    let wheel_position = frame.center();
+    cx.simulate_mouse_move(wheel_position, None, Modifiers::default());
+    for (delta, selected) in [
+        (point(px(0.), px(-80.)), "gallery-1"),
+        (point(px(-80.), px(0.)), "gallery-3"),
+    ] {
+        let before = first_bounds(cx);
+        cx.simulate_event(ScrollWheelEvent {
+            position: wheel_position,
+            delta: ScrollDelta::Pixels(delta),
+            ..Default::default()
+        });
+        draw(cx);
+        assert_eq!(node(cx, "缩略图固定选中框").bounds(), frame);
+        assert_eq!(first_bounds(cx).left(), before.left() - px(80.));
+        assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), selected);
+    }
+    // Overshoot either end, reverse, then reach the final thumbnail.
+    for (x, selected) in [
+        (100_000., "gallery-0"),
+        (-80., "gallery-1"),
+        (-100_000., "gallery-49"),
+    ] {
+        cx.simulate_event(ScrollWheelEvent {
+            position: wheel_position,
+            delta: ScrollDelta::Pixels(point(px(x), px(0.))),
+            ..Default::default()
+        });
+        draw(cx);
+        assert_eq!(node(cx, "缩略图固定选中框").bounds(), frame);
+        assert_eq!(snap(&view, cx).document_id().unwrap().as_ref(), selected);
+    }
+    let last = node(cx, "第 50 张：gallery-49，当前图片").bounds();
+    assert!(
+        (f32::from(last.center().x - frame.center().x)).abs() < 1.,
+        "last image must also align: {last:?}, frame={frame:?}"
+    );
+    click(cx, "第 49 张：gallery-48");
+    assert_eq!(
+        snap(&view, cx).document_id().unwrap().as_ref(),
+        "gallery-48"
+    );
+    assert_eq!(node(cx, "缩略图固定选中框").bounds(), frame);
+    let selected = node(cx, "第 49 张：gallery-48，当前图片").bounds();
+    assert!((f32::from(selected.center().x - frame.center().x)).abs() < 1.);
+    assert_eq!(snap(&view, cx).zoom(), original_zoom);
+    assert_eq!(node(cx, "图片预览").bounds(), viewport);
+    assert!(!cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("缩略图横向滚动条"))
+    }));
+    // Only the overlay owns an accent border; no thumbnail has a white/gray border.
+    let scale = cx.update(|w, _| w.scale_factor());
+    assert!(!cx.update(
+        |w, _| w.painted_quads().iter().any(|q| q.bounds.size.width.0
+            == f32::from(selected.size.width) * scale
+            && q.bounds.size.height.0 == f32::from(selected.size.height) * scale
+            && q.border_widths.top.0 > 0.
+            && q.bounds.origin.x.0 != f32::from(frame.left()) * scale)
+    ));
+    // Centering survives different physical scales and a narrower viewer.
+    for scale in [1.25, 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        cx.update(|_, cx| {
+            view.update(cx, |p, cx| {
+                p.preview_size[0] = 480.;
+                cx.notify();
+            })
+        });
+        draw(cx);
+        let frame = node(cx, "缩略图固定选中框").bounds();
+        let selected = node(cx, "第 49 张：gallery-48，当前图片").bounds();
+        assert!(
+            f32::from(selected.center().x - frame.center().x).abs() < 1.,
+            "scale={scale}: selected={selected:?}, frame={frame:?}"
+        );
+    }
+}
+
+#[gpui_kit::test]
+fn filmstrip_animates_reverses_and_keeps_the_active_thumbnail_visible(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    install_gallery(&view, cx, 50, true);
+    let viewport = node(cx, "图片预览").bounds();
+    let reveal = point(viewport.left() + px(30.), viewport.bottom() - px(8.));
+    cx.simulate_mouse_move(reveal, None, Modifiers::default());
+    draw(cx);
+    let initial = node(cx, "图片胶片条").bounds();
+    tick(cx, 50);
+    assert!(node(cx, "图片胶片条").bounds().top() < initial.top());
+    let opacity = toolbar_opacity(cx);
+    assert!(
+        opacity > 0. && opacity < 1.,
+        "filmstrip fades in as it rises"
+    );
+    tick(cx, 500);
+    let settled = node(cx, "图片胶片条").bounds();
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                let mut items = s.gallery().to_vec();
+                items[0] = ImagePreviewDocument::new("gallery-0", 2)
+                    .with_source(ImagePreviewLoad::Ready(p.image.clone()));
+                s.set_gallery(items, 0, w, cx).unwrap();
+            })
+        });
+    });
+    draw(cx);
+    assert_eq!(
+        node(cx, "图片胶片条").bounds(),
+        settled,
+        "progressive resource updates must not close the visible strip"
+    );
+    cx.update(|w, cx| {
+        view.update(cx, |p, cx| {
+            p.state.update(cx, |s, cx| {
+                s.select_gallery_item(40, w, cx).unwrap();
+            })
+        })
+    });
+    draw(cx);
+    let selected = node(cx, "第 41 张：gallery-40，当前图片").bounds();
+    assert!(
+        selected.left() >= settled.left() && selected.right() <= settled.right(),
+        "scroll the selected thumbnail into view: {selected:?}, strip={settled:?}"
+    );
+    assert_eq!(node(cx, "图片预览").bounds(), viewport);
+    let before_zoom = snap(&view, cx).zoom();
+    cx.simulate_mouse_move(settled.center(), None, Modifiers::default());
+    cx.simulate_event(ScrollWheelEvent {
+        position: settled.center(),
+        delta: ScrollDelta::Pixels(point(px(0.), px(-80.))),
+        ..Default::default()
+    });
+    draw(cx);
+    assert!(node(cx, "第 41 张：gallery-40").bounds().left() < selected.left());
+    assert_eq!(
+        snap(&view, cx).zoom(),
+        before_zoom,
+        "filmstrip wheel must not zoom the image"
+    );
+    cx.simulate_mouse_move(viewport.center(), None, Modifiers::default());
+    draw(cx);
+    tick(cx, 999);
+    assert_eq!(node(cx, "图片胶片条").bounds(), settled);
+    tick(cx, 1);
+    tick(cx, 40);
+    let exiting = node(cx, "图片胶片条").bounds();
+    let opacity = toolbar_opacity(cx);
+    assert!(
+        opacity > 0. && opacity < 1.,
+        "filmstrip fades out before unmounting"
+    );
+    assert!(
+        exiting.top() > settled.top(),
+        "exit slides down before unmounting"
+    );
+    cx.simulate_mouse_move(reveal, None, Modifiers::default());
+    draw(cx);
+    assert_eq!(
+        node(cx, "图片胶片条").bounds(),
+        exiting,
+        "interrupted exit has no jump"
+    );
+    tick(cx, 500);
+    assert_eq!(node(cx, "图片胶片条").bounds(), settled);
+    cx.simulate_mouse_move(viewport.center(), None, Modifiers::default());
+    draw(cx);
+    tick(cx, 1000);
+    tick(cx, 500);
+    assert!(!cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片胶片条"))));
+}
+
+#[gpui_kit::test]
+fn footer_layout_has_a_titlebar_and_a_dedicated_bottom_toolbar(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    view.update(cx, |p, cx| {
+        p.toolbar = ImagePreviewToolbar::Footer;
+        cx.notify();
+    });
+    draw(cx);
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片标题栏"))));
+    assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("图片工具栏"))));
+    let title = node(cx, "图片标题栏").bounds();
+    let viewport = node(cx, "图片预览").bounds();
+    let toolbar = node(cx, "图片工具栏").bounds();
+    let mode = node(cx, "预览模式").bounds();
+    assert_eq!(title.bottom(), viewport.top());
+    assert_eq!(viewport.bottom(), toolbar.top());
+    assert_eq!(title.left(), viewport.left());
+    assert_eq!(toolbar.left(), viewport.left());
+    assert_eq!(title.right(), viewport.right());
+    assert_eq!(toolbar.right(), viewport.right());
+    assert_eq!(
+        node(cx, "全屏").bounds().right(),
+        node(cx, "更多预览操作").bounds().right(),
+        "title and footer trailing actions share a right edge"
+    );
+    assert!(mode.top() >= title.top() && mode.bottom() <= title.bottom());
+    for label in [
+        "图片缩放倍率",
+        "缩放倍率预设",
+        "适应窗口",
+        "适应宽度",
+        "键盘操作",
+        "更多预览操作",
+    ] {
+        let bounds = node(cx, label).bounds();
+        assert!(
+            bounds.top() >= toolbar.top() && bounds.bottom() <= toolbar.bottom(),
+            "{label} belongs to the footer band"
+        );
+        assert!(
+            bounds.left() >= toolbar.left() && bounds.right() <= toolbar.right(),
+            "{label} must fit inside the shell"
+        );
+    }
+    let mut gap = |left: &str, right: &str| {
+        let left = node(cx, left).bounds();
+        let right = node(cx, right).bounds();
+        (right.left() - left.right()).abs()
+    };
+    for (left, right) in [
+        ("缩放倍率预设", "缩放分隔线"),
+        ("缩放分隔线", "适应窗口"),
+        ("适应窗口", "适应宽度"),
+        ("适应宽度", "键盘操作"),
+        ("键盘操作", "更多预览操作"),
+    ] {
+        assert_eq!(
+            gap(left, right),
+            px(4.),
+            "consistent toolbar gap: {left} / {right}"
+        );
+    }
+}
+
+#[gpui_kit::test]
+fn footer_zoom_slider_cannot_overlap_adjacent_buttons(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    view.update(cx, |p, cx| {
+        p.toolbar = ImagePreviewToolbar::Footer;
+        cx.notify();
+    });
+    for scale in [1., 1.5, 2.] {
+        cx.simulate_scale_factor_change(scale);
+        for width in [600., 1100.] {
+            view.update(cx, |p, cx| {
+                p.preview_size[0] = width;
+                cx.notify();
+            });
+            draw(cx);
+            let center = node(cx, "图片预览").bounds().center();
+            cx.update(|w, cx| {
+                view.update(cx, |p, cx| {
+                    p.state.update(cx, |s, cx| {
+                        // The thumb reaches both ends of the rail; inspecting only
+                        // the initial middle position misses the overflow.
+                        s.zoom_at(8., [center.x.into(), center.y.into()], false, w, cx)
+                            .unwrap();
+                    });
+                });
+            });
+            draw(cx);
+            let minus = node(cx, "缩小").bounds();
+            let plus = node(cx, "放大").bounds();
+            let thumb = node(cx, "图片缩放倍率").bounds();
+            let slider_id = view.read_with(cx, |p, cx| {
+                gpui_kit::ElementId::NamedChild(
+                    std::sync::Arc::new(p.state.read(cx).id().clone()),
+                    "zoom-slider".into(),
+                )
+            });
+            let slider = cx.update(|w, _| {
+                snapshots(w)
+                    .into_iter()
+                    .find(|n| n.path().last() == Some(&slider_id))
+                    .expect("zoom slider frame")
+                    .bounds()
+            });
+            assert!(
+                (minus.right() - slider.left()).abs() <= px(0.1),
+                "scale={scale}, width={width}: no added gap between minus and slider: {minus:?} / {slider:?}"
+            );
+            assert!(
+                (slider.right() - plus.left()).abs() <= px(0.1),
+                "scale={scale}, width={width}: no added gap between slider and plus: {slider:?} / {plus:?}"
+            );
+            assert!(
+                thumb.right() <= slider.right(),
+                "scale={scale}, width={width}: thumb overflows slider: {thumb:?}, frame: {slider:?}"
+            );
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn footer_controls_and_information_preserve_viewport_geometry(cx: &mut TestAppContext) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    view.update(cx, |p, cx| {
+        p.toolbar = ImagePreviewToolbar::Footer;
+        cx.notify();
+    });
+    draw(cx);
+    let viewport = node(cx, "图片预览").bounds();
+    click(cx, "缩放倍率预设");
+    click(cx, "200%");
+    tick(cx, 500);
+    assert!((snap(&view, cx).zoom() - 2.).abs() < 0.001);
+    click(cx, "适应窗口");
+    assert_eq!(snap(&view, cx).fit(), ImagePreviewFit::FitAll);
+    let slider = node(cx, "图片缩放倍率").bounds();
+    let target = slider.center() + point(px(40.), px(0.));
+    down(cx, slider.center());
+    cx.simulate_mouse_move(target, Some(MouseButton::Left), Modifiers::default());
+    up(cx, target);
+    assert!(
+        snap(&view, cx).zoom() > 2.,
+        "slider pointer input changes the image camera"
+    );
+    click(cx, "更多预览操作");
+    click(cx, "背景");
+    click(cx, "纯白");
+    assert_eq!(
+        snap(&view, cx).background(),
+        yue_component::ImagePreviewBackground::White
+    );
+    click(cx, "图片信息");
+    draw(cx);
+    assert!(node(cx, "图片信息面板").bounds().intersects(&viewport));
+    assert_eq!(node(cx, "图片预览").bounds(), viewport);
+    press(cx, "escape");
+    tick(cx, 500);
+    assert!(!cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("图片信息面板"))
+    }));
+    click(cx, "更多预览操作");
+    click(cx, "显示");
+    click(cx, "放大预览…");
+    assert_eq!(view.read_with(cx, |p, _| p.expansions), 1);
+}
+
+#[gpui_kit::test]
 fn more_menu_switches_background_and_centers_only_comparison(cx: &mut TestAppContext) {
     let (view, cx) = open(cx);
     cx.update(|_, cx| cx.set_reduce_motion(true));
@@ -424,7 +1036,7 @@ fn pixel_grid_menu_enforces_threshold_and_paints_native_nearest_sprites(cx: &mut
                 .iter()
                 .find_map(|p| match p {
                     gpui_kit::Primitive::Quad(q)
-                        if q.background == background && q.corner_radii.top_left.0 > 0. =>
+                        if q.background == background && q.corner_radii.top_left.0 == 0. =>
                     {
                         Some(q)
                     }
@@ -493,10 +1105,10 @@ fn pixel_grid_menu_enforces_threshold_and_paints_native_nearest_sprites(cx: &mut
                 .0
                 .total_cmp(&b.content_mask.bounds.left().0)
         });
-        assert!(images[0].corner_radii.top_left.0 > 0.);
+        assert_eq!(images[0].corner_radii.top_left.0, 0.);
         assert_eq!(images[0].corner_radii.top_right.0, 0.);
         assert_eq!(images[1].corner_radii.top_left.0, 0.);
-        assert!(images[1].corner_radii.top_right.0 > 0.);
+        assert_eq!(images[1].corner_radii.top_right.0, 0.);
         assert_eq!(
             images[0].bounds, images[1].bounds,
             "comparison shares full-image sampling geometry"
@@ -570,6 +1182,7 @@ fn expand_opens_independent_dialog_with_camera_and_retained_result(cx: &mut Test
     });
     cx.simulate_click(more, Modifiers::default());
     draw(cx);
+    click(cx, "背景");
     assert!(cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("深色棋盘格"))));
     press(cx, "escape");
     assert!(
@@ -825,7 +1438,7 @@ fn reduced_motion_and_disabled_preview_settle_toolbar_immediately(cx: &mut TestA
 fn floating_toolbar_visibility_preserves_viewport_and_fitted_camera(cx: &mut TestAppContext) {
     let (view, cx) = open(cx);
     view.update(cx, |p, cx| {
-        p.preview_size = [600., 280.];
+        p.preview_size = [600., p.image.pixel_size()[1] as f32 * 0.375 + 48.];
         cx.notify();
     });
     for scale in [1., 1.5, 2.] {

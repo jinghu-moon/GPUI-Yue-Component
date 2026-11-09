@@ -106,6 +106,9 @@ impl RenderOnce for YueSlider {
         let buttons = self.controls == SliderControls::Buttons;
         let button_gap = px(pixels(self.theme, K::SLIDER_STEPPER_GAP) * scale);
         let button_inset = if buttons { hit + button_gap } else { px(0.) };
+        let minimum_span = px(pixels(self.theme, K::SLIDER_MIN_TRACK_LENGTH) * scale)
+            + inset * 2.
+            + button_inset * 2.;
         let input_width = if self.controls == SliderControls::None {
             px(0.)
         } else {
@@ -287,20 +290,8 @@ impl RenderOnce for YueSlider {
             .min_h_0()
             .flex_1()
             .flex()
-            .when(!vertical, |b| {
-                b.flex_col().min_w(
-                    px(pixels(self.theme, K::SLIDER_MIN_TRACK_LENGTH) * scale)
-                        + inset * 2.
-                        + button_inset * 2.,
-                )
-            })
-            .when(vertical, |b| {
-                b.min_h(
-                    px(pixels(self.theme, K::SLIDER_MIN_TRACK_LENGTH) * scale)
-                        + inset * 2.
-                        + button_inset * 2.,
-                )
-            })
+            .when(!vertical, |b| b.flex_col().min_w(minimum_span))
+            .when(vertical, |b| b.min_h(minimum_span))
             .child(track);
         if marks_exist {
             main = main.child(self.labels(inset + button_inset, window, cx));
@@ -315,6 +306,9 @@ impl RenderOnce for YueSlider {
             .when(!vertical, |b| {
                 b.items_start()
                     .flex_wrap()
+                    // Reserve the same span as the track. A narrow width must
+                    // not place neighboring controls underneath the rail/thumb.
+                    .min_w(minimum_span)
                     .w(rems(self.theme, K::SLIDER_WIDTH))
             })
             .when(vertical, |b| {

@@ -189,6 +189,48 @@ fn cancel_clear_function_keys_and_validation(cx: &mut TestAppContext) {
 }
 
 #[gpui_kit::test]
+fn validation_and_success_feedback_follow_reference_timing(cx: &mut TestAppContext) {
+    let (page, cx) = open(cx);
+    let state = page.read_with(cx, |s, _| s.state.clone());
+    click(cx, "录入，");
+    key(cx, "a");
+    assert!(state.read_with(cx, |s, _| s.error_flash && s.invalid));
+
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(200));
+    draw(cx);
+    key(cx, "alt-f4");
+    assert!(state.read_with(cx, |s, _| s.error_flash));
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(299));
+    draw(cx);
+    assert!(state.read_with(cx, |s, _| s.error_flash));
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(1));
+    draw(cx);
+    assert!(state.read_with(cx, |s, _| !s.error_flash && s.invalid));
+    assert_eq!(
+        state.read_with(cx, |s, _| s.message().to_string()),
+        "系统保留，无法使用",
+        "the error message remains after the red feedback ends"
+    );
+
+    key(cx, "escape");
+    click(cx, "录入，");
+    key(cx, "ctrl-p");
+    assert!(state.read_with(cx, |s, _| s.success));
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(699));
+    draw(cx);
+    assert!(state.read_with(cx, |s, _| s.success));
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(1));
+    draw(cx);
+    assert!(!state.read_with(cx, |s, _| s.success));
+    assert_eq!(value(&state, cx).as_deref(), Some("Ctrl + P"));
+}
+
+#[gpui_kit::test]
 fn conflict_requires_explicit_overwrite_and_revalidates(cx: &mut TestAppContext) {
     let (page, cx) = open(cx);
     let state = page.read_with(cx, |s, _| s.state.clone());

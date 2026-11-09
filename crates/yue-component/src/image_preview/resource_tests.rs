@@ -515,3 +515,75 @@ fn proxy_resampling_does_not_mix_hidden_transparent_rgb_into_visible_edges() {
         .unwrap();
     assert_eq!(preview.image().as_bytes(0).unwrap(), [255, 0, 0, 128]);
 }
+
+#[test]
+fn quick_previews_preserve_dimensions_alpha_linear_color_and_hdr() {
+    let limits = ImagePreviewLimits::default().texture_budget(1, 8);
+    let rgba = vec![255, 0, 0, 0, 0, 0, 255, 255];
+    let quick = ImagePreviewPixels::from_rgba8(2, 1, rgba.clone())
+        .unwrap()
+        .into_quick_preview(&limits, "quick")
+        .unwrap();
+    let area = ImagePreviewPixels::from_rgba8(2, 1, rgba)
+        .unwrap()
+        .into_preview(&limits, "area")
+        .unwrap();
+    assert_eq!(quick.pixel_size(), [2, 1]);
+    assert!(quick.is_proxy());
+    assert_eq!(quick.image().as_bytes(0), area.image().as_bytes(0));
+    let monochrome = ImagePreviewPixels::from_rgba8(2, 1, vec![0, 0, 0, 255, 255, 255, 255, 255])
+        .unwrap()
+        .into_quick_preview(&limits, "linear")
+        .unwrap();
+    assert_eq!(
+        monochrome.image().as_bytes(0).unwrap(),
+        [188, 188, 188, 255]
+    );
+    let values = half_bytes(&[[100., 0., 0., 0.], [0., 0., 12.5, 1.]]);
+    let hdr = ImagePreviewPixels::from_rgba16f(2, 1, 16, values, ImagePreviewColorSpace::ScRgb)
+        .unwrap()
+        .into_quick_preview(&limits, "HDR")
+        .unwrap();
+    assert_eq!(hdr.color_space(), ImagePreviewColorSpace::ScRgb);
+    assert_eq!(hdr.image().peak_nits(), Some(1000.));
+    assert_eq!(
+        floats(hdr.image().as_bytes(0).unwrap()),
+        [[0., 0., 12.5, 0.5]]
+    );
+}
+
+#[test]
+fn eight_bit_png_fast_rows_preserve_exact_channel_bytes() {
+    for (color, source, expected) in [
+        (
+            png::ColorType::Rgba,
+            vec![1, 70, 201, 127],
+            vec![1, 70, 201, 127],
+        ),
+        (png::ColorType::Rgb, vec![1, 70, 201], vec![1, 70, 201, 255]),
+        (
+            png::ColorType::Grayscale,
+            vec![201],
+            vec![201, 201, 201, 255],
+        ),
+        (
+            png::ColorType::GrayscaleAlpha,
+            vec![201, 127],
+            vec![201, 201, 201, 127],
+        ),
+    ] {
+        let mut bytes = Vec::new();
+        {
+            let mut encoder = png::Encoder::new(&mut bytes, 1, 1);
+            encoder.set_depth(png::BitDepth::Eight);
+            encoder.set_color(color);
+            encoder
+                .write_header()
+                .unwrap()
+                .write_image_data(&source)
+                .unwrap();
+        }
+        let pixels = ImagePreviewPixels::decode(&bytes, &ImagePreviewLimits::default()).unwrap();
+        assert_eq!(pixels.as_bytes(), expected, "{color:?}");
+    }
+}

@@ -11,6 +11,20 @@ mod behavior;
 
 mod paint;
 
+/// Non-focusable visual for composite TreeItem semantics. The tree owns activation.
+pub(crate) fn embedded_mark(theme:crate::YueTheme,size:crate::tree::TreeSize,mark:crate::tree::TreeMark,disabled:bool)->gpui_kit::AnyElement {
+    use gpui_kit::{IntoElement as _,ParentElement as _,Styled as _,div};
+    use crate::tokens::{pixels,rems,rgba};
+    let size=match size {crate::tree::TreeSize::Small=>CheckboxSize::Small,crate::tree::TreeSize::Medium=>CheckboxSize::Medium,crate::tree::TreeSize::Large=>CheckboxSize::Large};
+    let (box_token,_,_,stroke_token)=element::size_tokens(size);
+    let extent=pixels(theme,box_token);let chosen=mark!=crate::tree::TreeMark::Unchecked;
+    let mut surface=div().relative().size(rems(theme,box_token)).border(rems(theme,"--checkbox-border-width")).rounded(rems(theme,"--checkbox-border-radius"))
+        .bg(rgba(theme,if disabled {"--checkbox-disabled-background"}else if chosen{"--checkbox-background-checked"}else{"--checkbox-background"}))
+        .border_color(rgba(theme,if disabled{"--checkbox-disabled-border-color"}else if chosen{"--checkbox-border-color-checked"}else{"--checkbox-border-color"}));
+    if chosen{surface=surface.child(paint::mark_layer(if mark==crate::tree::TreeMark::Mixed{&paint::DASH_LINE}else{&crate::icon::CHECK_LINE},1.,(extent-2.*pixels(theme,"--checkbox-border-width"))/16.,pixels(theme,stroke_token),rgba(theme,if disabled{"--checkbox-disabled-mark-color"}else{"--checkbox-mark-color"}).into()));}
+    surface.into_any_element()
+}
+
 use std::rc::Rc;
 
 use gpui_kit::{App, ClickEvent, ElementId, IntoElement, SharedString, Window};

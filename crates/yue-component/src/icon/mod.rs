@@ -37,10 +37,11 @@ pub enum YueIcon {
     Success,
     Warning,
     Error,
+    Empty,
 }
 
 impl YueIcon {
-    pub const ALL: [Self; 15] = [
+    pub const ALL: [Self; 16] = [
         Self::Close,
         Self::ChevronDown,
         Self::ChevronUp,
@@ -56,6 +57,7 @@ impl YueIcon {
         Self::Success,
         Self::Warning,
         Self::Error,
+        Self::Empty,
     ];
 
     /// The name both projects use for this meaning, as in the design docs.
@@ -76,6 +78,7 @@ impl YueIcon {
             Self::Success => "success",
             Self::Warning => "warning",
             Self::Error => "error",
+            Self::Empty => "empty",
         }
     }
 
@@ -96,6 +99,7 @@ impl YueIcon {
             Self::Success => &outline::CircleCheck,
             Self::Warning => &outline::AlertTriangle,
             Self::Error => &outline::AlertCircle,
+            Self::Empty => &outline::Inbox,
         }
     }
 }
@@ -184,9 +188,9 @@ mod tests {
     use crate::{Accent, ThemeMode, YueTheme};
     use yue_component_icons::IconDefinition;
 
-    /// Shared web meanings plus GPUI's numeric-step ChevronUp. Pin each glyph
+    /// Shared web meanings plus GPUI's numeric-step ChevronUp and Empty. Pin each glyph
     /// so an accidental semantic-to-asset substitution fails explicitly.
-    const CONTRACT: [(&str, &str); 15] = [
+    const CONTRACT: [(&str, &str); 16] = [
         ("close", "x"),
         ("chevron-down", "chevron-down"),
         ("chevron-up", "chevron-up"),
@@ -202,6 +206,7 @@ mod tests {
         ("success", "circle-check"),
         ("warning", "alert-triangle"),
         ("error", "alert-circle"),
+        ("empty", "inbox"),
     ];
 
     #[test]

@@ -3,13 +3,16 @@ use std::{ops::Range, rc::Rc};
 use gpui::{
     Along, AnyElement, App, AppContext, Axis, Bounds, Context, Element, ElementId, Empty, Entity,
     EventEmitter, InteractiveElement as _, IntoElement, IsZero as _, MouseMoveEvent, MouseUpEvent,
-    ParentElement, Pixels, Render, RenderOnce, Style, StyleRefinement, Styled, Window, div,
-    prelude::FluentBuilder,
+    ParentElement, Pixels, Render, RenderOnce, StatefulInteractiveElement, Style, StyleRefinement,
+    Styled, Window, div, prelude::FluentBuilder,
 };
 
 use crate::{AxisExt, ElementExt, StyledExt as _, h_flex, resizable::PANEL_MIN_SIZE, v_flex};
 
-use super::{ResizableState, ResizeHandleRenderer, resizable_panel, resize_handle};
+use super::{
+    ResizableInteraction, ResizableState, ResizeHandleRenderer, resizable_panel, resize_handle,
+};
+use crate::InteractiveElementExt as _;
 
 pub enum ResizablePanelEvent {
     Resized,
@@ -33,6 +36,9 @@ pub struct ResizablePanelGroup {
     children: Vec<ResizablePanel>,
     on_resize: Rc<dyn Fn(&Entity<ResizableState>, &mut Window, &mut App)>,
     handle_appearance: Option<ResizeHandleRenderer>,
+    interaction: Option<ResizableInteraction>,
+    hit_width: Option<Pixels>,
+    line_width: Option<Pixels>,
 }
 
 impl ResizablePanelGroup {
@@ -46,6 +52,9 @@ impl ResizablePanelGroup {
             size: None,
             on_resize: Rc::new(|_, _, _| {}),
             handle_appearance: None,
+            interaction: None,
+            hit_width: None,
+            line_width: None,
         }
     }
 
@@ -55,6 +64,22 @@ impl ResizablePanelGroup {
     /// returns `None` for a given handle leaves the built-in line on it.
     pub fn with_handle_appearance(mut self, appearance: ResizeHandleRenderer) -> Self {
         self.handle_appearance = Some(appearance);
+        self
+    }
+    /// Enable stable keyed panels and bounded adjacent resizing with keyboard support.
+    pub fn with_interaction(mut self, interaction: ResizableInteraction) -> Self {
+        self.interaction = Some(interaction);
+        self
+    }
+    pub fn with_handle_geometry(mut self, hit: Pixels, line: Pixels) -> Self {
+        assert!(
+            hit.as_f32().is_finite()
+                && line.as_f32().is_finite()
+                && line > gpui::px(0.)
+                && hit >= line
+        );
+        self.hit_width = Some(hit);
+        self.line_width = Some(line);
         self
     }
 
@@ -133,11 +158,11 @@ impl EventEmitter<ResizablePanelEvent> for ResizablePanelGroup {}
 
 impl RenderOnce for ResizablePanelGroup {
     fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
-        let state = self.state.unwrap_or(
-            window.use_keyed_state(self.id.clone(), cx, |_, _| ResizableState::default()),
-        );
+        let state = self.state.unwrap_or_else(|| {
+            window.use_keyed_state(self.id.clone(), cx, |_, _| ResizableState::default())
+        });
         let container = if self.axis.is_horizontal() {
-            h_flex()
+            h_flex().items_stretch()
         } else {
             v_flex()
         };
@@ -145,9 +170,60 @@ impl RenderOnce for ResizablePanelGroup {
         // Sync panels to the state
         let panels_count = self.children.len();
         state.update(cx, |state, cx| {
-            state.sync_panels_count(self.axis, panels_count, cx);
+            if self.interaction.is_some() {
+                let specs: Vec<_> = self
+                    .children
+                    .iter()
+                    .map(|panel| super::bounded::PanelSpec {
+                        key: panel
+                            .key
+                            .clone()
+                            .expect("bounded panels require stable ids"),
+                        initial: panel.initial_size,
+                        range: panel.size_range.clone(),
+                        fixed: panel.fixed && panel.initial_size.is_some(),
+                    })
+                    .collect();
+                state.sync_keyed_panels(self.axis, &specs, cx);
+            } else {
+                state.sync_panels_count(self.axis, panels_count, cx);
+            }
         });
 
+        if let Some(interaction) = self.interaction {
+            let weak = state.downgrade();
+            window.use_keyed_state((self.id.clone(), "bounded-lifetime"), cx, |window, cx| {
+                let released = weak.clone();
+                cx.on_release(move |_: &mut super::bounded::BoundedLifetime, cx| {
+                    let _ = released.update(cx, |s, _| {
+                        s.resizing_panel_ix = None;
+                        s.drag_origin = None;
+                        s.drag_changed = false;
+                    });
+                })
+                .detach();
+                super::bounded::BoundedLifetime {
+                    _activation: cx.observe_window_activation(window, move |_, window, cx| {
+                        if !window.is_window_active() {
+                            let _ = weak.update(cx, |s, cx| {
+                                if s.resizing_panel_ix.take().is_some() {
+                                    cx.notify();
+                                }
+                                s.drag_origin = None;
+                                s.drag_changed = false;
+                            });
+                        }
+                    }),
+                }
+            });
+            if interaction.disabled || !window.is_window_active() || !window.is_visible() {
+                state.update(cx, |s, _| {
+                    s.resizing_panel_ix = None;
+                    s.drag_origin = None;
+                    s.drag_changed = false;
+                });
+            }
+        }
         container
             .id(self.id)
             .size_full()
@@ -166,6 +242,13 @@ impl RenderOnce for ResizablePanelGroup {
                         panel.axis = self.axis;
                         panel.state = Some(state.clone());
                         panel.handle_appearance = self.handle_appearance.clone();
+                        panel.interaction = self.interaction;
+                        panel.hit_width = self.hit_width;
+                        panel.line_width = self.line_width;
+                        panel.on_resize = self.on_resize.clone();
+                        if ix > 0 && panel.boundary_label.is_none() {
+                            panel.boundary_label = panel.label.clone();
+                        }
                         panel
                     }),
             )
@@ -205,6 +288,7 @@ impl RenderOnce for ResizablePanelGroup {
                 state: state.clone(),
                 axis: self.axis,
                 on_resize: self.on_resize.clone(),
+                interaction: self.interaction,
             })
     }
 }
@@ -241,6 +325,13 @@ impl RenderOnce for ResizablePanelGroup {
 ///   absolute at `left: -4px` of each panel after the first.
 #[derive(IntoElement)]
 pub struct ResizablePanel {
+    key: Option<ElementId>,
+    label: Option<gpui::SharedString>,
+    boundary_label: Option<gpui::SharedString>,
+    interaction: Option<ResizableInteraction>,
+    hit_width: Option<Pixels>,
+    line_width: Option<Pixels>,
+    on_resize: Rc<dyn Fn(&Entity<ResizableState>, &mut Window, &mut App)>,
     axis: Axis,
     panel_ix: usize,
     state: Option<Entity<ResizableState>>,
@@ -259,6 +350,13 @@ impl ResizablePanel {
     /// Create a new resizable panel.
     pub(super) fn new() -> Self {
         Self {
+            key: None,
+            label: None,
+            boundary_label: None,
+            interaction: None,
+            hit_width: None,
+            line_width: None,
+            on_resize: Rc::new(|_, _, _| {}),
             panel_ix: 0,
             initial_size: None,
             state: None,
@@ -275,6 +373,14 @@ impl ResizablePanel {
     /// Set the visibility of the panel, default is true.
     pub fn visible(mut self, visible: bool) -> Self {
         self.visible = visible;
+        self
+    }
+    pub fn id(mut self, id: impl Into<ElementId>) -> Self {
+        self.key = Some(id.into());
+        self
+    }
+    pub fn label(mut self, label: impl Into<gpui::SharedString>) -> Self {
+        self.label = Some(label.into());
         self
     }
 
@@ -318,7 +424,7 @@ impl ParentElement for ResizablePanel {
 }
 
 impl RenderOnce for ResizablePanel {
-    fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
+    fn render(self, window: &mut Window, cx: &mut App) -> impl IntoElement {
         if !self.visible {
             return div().id(("resizable-panel", self.panel_ix));
         }
@@ -330,13 +436,39 @@ impl RenderOnce for ResizablePanel {
             .read(cx)
             .panels
             .get(self.panel_ix)
-            .expect("BUG: The `index` of ResizablePanel should be one of in `state`.");
+            .expect("BUG: The `index` of ResizablePanel should be one of in `state`.")
+            .clone();
         let size_range = self.size_range.clone();
         // A fixed panel needs a size to keep; without one it lays out as usual.
         let fixed = self.fixed && self.initial_size.is_some();
 
+        let panel_id = self
+            .key
+            .clone()
+            .unwrap_or_else(|| ("resizable-panel", self.panel_ix).into());
+        let focus = self
+            .interaction
+            .filter(|i| !i.disabled && self.panel_ix > 0)
+            .map(|_| {
+                window
+                    .use_keyed_state(
+                        (panel_id.clone(), gpui::SharedString::from("resize-focus")),
+                        cx,
+                        |_, cx| cx.focus_handle().tab_stop(true),
+                    )
+                    .read(cx)
+                    .clone()
+            });
+        let range = state
+            .read(cx)
+            .boundary_range(self.panel_ix.saturating_sub(1));
+        let sizes = state.read(cx).sizes();
+        let value = sizes
+            .get(self.panel_ix.saturating_sub(1))
+            .copied()
+            .unwrap_or_default();
         div()
-            .id(("resizable-panel", self.panel_ix))
+            .id(panel_id)
             .flex()
             .flex_grow_1()
             .size_full()
@@ -395,18 +527,167 @@ impl RenderOnce for ResizablePanel {
             .children(self.children)
             .when(self.panel_ix > 0, |this| {
                 let ix = self.panel_ix - 1;
+                let on_resize = self.on_resize.clone();
+                let keyboard_state = state.clone();
+                let reset_state = state.clone();
+                let reset_callback = on_resize.clone();
+                let press_state = state.clone();
+                let accessibility_state = state.clone();
+                let accessibility_callback = on_resize.clone();
+                let decrement_state = state.clone();
+                let decrement_callback = on_resize.clone();
                 this.child(
                     resize_handle(("resizable-handle", ix), self.axis)
+                        .when_some(self.hit_width, |h, width| h.hit_width(width))
+                        .when_some(self.line_width, |h, width| h.line_width(width))
                         .when_some(self.handle_appearance.clone(), |handle, appearance| {
                             handle.with_appearance(appearance)
                         })
-                        .on_drag(DragPanel, move |drag_panel, _, _, cx| {
-                            cx.stop_propagation();
-                            // Set current resizing panel ix
-                            state.update(cx, |state, _| {
-                                state.resizing_panel_ix = Some(ix);
-                            });
-                            cx.new(|_| drag_panel.clone())
+                        .when_some(self.interaction, |handle, interaction| {
+                            handle
+                                .disabled(interaction.disabled)
+                                .role(gpui::Role::Splitter)
+                                .aria_label(
+                                    self.boundary_label
+                                        .clone()
+                                        .unwrap_or_else(|| "Resize".into()),
+                                )
+                                .aria_orientation(if self.axis.is_horizontal() {
+                                    gpui::Orientation::Vertical
+                                } else {
+                                    gpui::Orientation::Horizontal
+                                })
+                                .aria_numeric_value(value.as_f32() as f64)
+                                .when_some(range.clone(), |h, range| {
+                                    h.aria_min_numeric_value(range.start.as_f32() as f64)
+                                        .aria_max_numeric_value(range.end.as_f32() as f64)
+                                })
+                                .when_some(focus.clone(), |h, f| {
+                                    h.with_focus(&f).on_mouse_down(
+                                        gpui::MouseButton::Left,
+                                        move |event, window, cx| {
+                                            f.focus(window, cx);
+                                            press_state.update(cx, |s, _| {
+                                                let pointer = if self.axis.is_horizontal() {
+                                                    event.position.x
+                                                } else {
+                                                    event.position.y
+                                                };
+                                                s.drag_origin = Some((pointer, s.sizes[ix]));
+                                                s.drag_changed = false;
+                                            });
+                                        },
+                                    )
+                                })
+                                .when(!interaction.disabled, |h| {
+                                    h.on_key_down(move |event, window, cx| {
+                                        let stroke = &event.keystroke;
+                                        if stroke.modifiers.control
+                                            || stroke.modifiers.alt
+                                            || stroke.modifiers.platform
+                                        {
+                                            return;
+                                        }
+                                        let step = if stroke.modifiers.shift {
+                                            interaction.large_step
+                                        } else {
+                                            interaction.step
+                                        };
+                                        let key = stroke.key.as_str();
+                                        let delta = match (self.axis, key) {
+                                            (Axis::Horizontal, "left") | (Axis::Vertical, "up") => {
+                                                Some(-step)
+                                            }
+                                            (Axis::Horizontal, "right")
+                                            | (Axis::Vertical, "down") => Some(step),
+                                            _ => None,
+                                        };
+                                        if delta.is_none()
+                                            && !matches!(key, "home" | "end" | "enter")
+                                        {
+                                            return;
+                                        }
+                                        window.prevent_default();
+                                        cx.stop_propagation();
+                                        let changed = keyboard_state.update(cx, |s, cx| {
+                                            if key == "enter" {
+                                                return s.reset_boundary(ix, cx);
+                                            }
+                                            let Some(range) = s.boundary_range(ix) else {
+                                                return false;
+                                            };
+                                            let value = if key == "home" {
+                                                range.start
+                                            } else if key == "end" {
+                                                range.end
+                                            } else {
+                                                s.sizes[ix] + delta.unwrap()
+                                            };
+                                            s.resize_bounded(ix, value, cx)
+                                        });
+                                        if changed {
+                                            keyboard_state.update(cx, |s, cx| s.done_resizing(cx));
+                                            on_resize(&keyboard_state, window, cx);
+                                        }
+                                    })
+                                    .on_double_click(move |_, window, cx| {
+                                        cx.stop_propagation();
+                                        if reset_state.update(cx, |s, cx| s.reset_boundary(ix, cx))
+                                        {
+                                            reset_state.update(cx, |s, cx| s.done_resizing(cx));
+                                            reset_callback(&reset_state, window, cx);
+                                        }
+                                    })
+                                    .on_a11y_action(
+                                        gpui::AccessibleAction::Increment,
+                                        move |_, window, cx| {
+                                            let changed =
+                                                accessibility_state.update(cx, |s, cx| {
+                                                    s.resize_bounded(
+                                                        ix,
+                                                        s.sizes[ix] + interaction.step,
+                                                        cx,
+                                                    )
+                                                });
+                                            if changed {
+                                                accessibility_state
+                                                    .update(cx, |s, cx| s.done_resizing(cx));
+                                                accessibility_callback(
+                                                    &accessibility_state,
+                                                    window,
+                                                    cx,
+                                                );
+                                            }
+                                        },
+                                    )
+                                    .on_a11y_action(
+                                        gpui::AccessibleAction::Decrement,
+                                        move |_, window, cx| {
+                                            let changed = decrement_state.update(cx, |s, cx| {
+                                                s.resize_bounded(
+                                                    ix,
+                                                    s.sizes[ix] - interaction.step,
+                                                    cx,
+                                                )
+                                            });
+                                            if changed {
+                                                decrement_state
+                                                    .update(cx, |s, cx| s.done_resizing(cx));
+                                                decrement_callback(&decrement_state, window, cx);
+                                            }
+                                        },
+                                    )
+                                })
+                        })
+                        .when(self.interaction.is_none_or(|i| !i.disabled), |handle| {
+                            handle.on_drag(DragPanel, move |drag_panel, _, _, cx| {
+                                cx.stop_propagation();
+                                // Set current resizing panel ix
+                                state.update(cx, |state, _| {
+                                    state.resizing_panel_ix = Some(ix);
+                                });
+                                cx.new(|_| drag_panel.clone())
+                            })
                         }),
                 )
             })
@@ -417,6 +698,7 @@ struct ResizePanelGroupElement {
     state: Entity<ResizableState>,
     on_resize: Rc<dyn Fn(&Entity<ResizableState>, &mut Window, &mut App)>,
     axis: Axis,
+    interaction: Option<ResizableInteraction>,
 }
 
 impl IntoElement for ResizePanelGroupElement {
@@ -475,15 +757,49 @@ impl Element for ResizePanelGroupElement {
             let state = self.state.clone();
             let axis = self.axis;
             let current_ix = state.read(cx).resizing_panel_ix;
+            let interaction = self.interaction;
             move |e: &MouseMoveEvent, phase, window, cx| {
                 if !phase.bubble() {
                     return;
                 }
+                let current_ix = if interaction.is_some() {
+                    state.read(cx).resizing_panel_ix
+                } else {
+                    current_ix
+                };
                 let Some(ix) = current_ix else { return };
+                if interaction.is_some()
+                    && (interaction.is_some_and(|i| i.disabled)
+                        || !window.is_window_active()
+                        || !e.dragging())
+                {
+                    state.update(cx, |s, _| s.resizing_panel_ix = None);
+                    return;
+                }
 
                 state.update(cx, |state, cx| {
                     let panel = state.panels.get(ix).expect("BUG: invalid panel index");
 
+                    if interaction.is_some() {
+                        let pointer = if axis.is_horizontal() {
+                            e.position.x
+                        } else {
+                            e.position.y
+                        };
+                        let size = state
+                            .drag_origin
+                            .map(|(at, size)| size + pointer - at)
+                            .unwrap_or_else(|| {
+                                pointer
+                                    - if axis.is_horizontal() {
+                                        panel.bounds.left()
+                                    } else {
+                                        panel.bounds.top()
+                                    }
+                            });
+                        state.resize_bounded(ix, size, cx);
+                        return;
+                    }
                     match axis {
                         Axis::Horizontal => state.resize_panel_at_handle(
                             ix,
@@ -507,12 +823,42 @@ impl Element for ResizePanelGroupElement {
         window.on_mouse_event({
             let state = self.state.clone();
             let current_ix = state.read(cx).resizing_panel_ix;
+            let interaction = self.interaction;
             let on_resize = self.on_resize.clone();
-            move |_: &MouseUpEvent, phase, window, cx| {
+            let axis = self.axis;
+            move |event: &MouseUpEvent, phase, window, cx| {
+                let current_ix = if interaction.is_some() {
+                    state.read(cx).resizing_panel_ix
+                } else {
+                    current_ix
+                };
                 if current_ix.is_none() {
                     return;
                 }
                 if phase.bubble() {
+                    if interaction.is_some() {
+                        if event.button != gpui::MouseButton::Left {
+                            return;
+                        }
+                        let changed = state.update(cx, |s, cx| {
+                            if let Some((at, size)) = s.drag_origin {
+                                let pointer = if axis.is_horizontal() {
+                                    event.position.x
+                                } else {
+                                    event.position.y
+                                };
+                                s.resize_bounded(current_ix.unwrap(), size + pointer - at, cx);
+                            }
+                            let changed = s.drag_changed;
+                            s.resizing_panel_ix = None;
+                            s.drag_origin = None;
+                            s.drag_changed = false;
+                            changed
+                        });
+                        if !changed {
+                            return;
+                        }
+                    }
                     state.update(cx, |state, cx| state.done_resizing(cx));
                     on_resize(&state, window, cx);
                 }
