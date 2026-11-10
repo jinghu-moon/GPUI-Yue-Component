@@ -1,3 +1,4 @@
+use super::TableRowSizing;
 use super::TableSize;
 use gpui_kit::{
     AnyElement, App, ElementId, IntoElement, ParentElement as _, Pixels, Rems, SharedString,
@@ -98,6 +99,19 @@ pub trait TableSource: 'static {
     /// sources may override this using a host-supplied selection domain.
     fn contains_key(&self, key: &TableRowKey) -> bool {
         self.row(key).is_some()
+    }
+    fn row_revision(&self, _key: &TableRowKey) -> u64 {
+        self.revision()
+    }
+    fn is_detail(&self, _key: &TableRowKey) -> bool {
+        false
+    }
+    /// Pagination units can be roots while visible rows include descendants/details.
+    fn page_len(&self) -> usize {
+        self.len()
+    }
+    fn record_len(&self) -> usize {
+        self.len()
     }
 }
 
@@ -213,6 +227,8 @@ pub struct TableCellContext {
     pub(super) disabled: bool,
     pub(super) readonly: bool,
     pub(super) busy: bool,
+    pub(super) editing: bool,
+    pub(super) edit_stage: Option<super::TableEditStage>,
 }
 impl TableCellContext {
     pub fn key(&self) -> &TableCellKey {
@@ -247,6 +263,12 @@ impl TableCellContext {
     pub fn is_busy(&self) -> bool {
         self.busy
     }
+    pub fn is_editing(&self) -> bool {
+        self.editing
+    }
+    pub fn edit_stage(&self) -> Option<&super::TableEditStage> {
+        self.edit_stage.as_ref()
+    }
 }
 type Renderer<R> = Rc<dyn Fn(&R, &TableCellContext, &mut Window, &mut App) -> AnyElement>;
 type Text<R> = Rc<dyn Fn(&R) -> SharedString>;
@@ -271,6 +293,8 @@ pub struct TableColumn<R: 'static> {
     pub(super) header: Option<super::Slot>,
     pub(super) footer: Option<SharedString>,
     pub(super) interactive: bool,
+    pub(super) editable: bool,
+    pub(super) edit_revision: u64,
     pub(super) query: Option<Rc<super::query::QueryRule<R>>>,
 }
 impl<R: 'static> Clone for TableColumn<R> {
@@ -296,6 +320,8 @@ impl<R: 'static> Clone for TableColumn<R> {
             header: self.header.clone(),
             footer: self.footer.clone(),
             interactive: self.interactive,
+            editable: self.editable,
+            edit_revision: self.edit_revision,
             query: self.query.clone(),
         }
     }
@@ -327,6 +353,8 @@ impl<R: 'static> TableColumn<R> {
             header: None,
             footer: None,
             interactive: false,
+            editable: false,
+            edit_revision: 0,
             query: None,
         }
     }
@@ -428,6 +456,14 @@ impl<R: 'static> TableColumn<R> {
         self.interactive = enabled;
         self
     }
+    pub fn editable(mut self, enabled: bool) -> Self {
+        self.editable = enabled;
+        self
+    }
+    pub fn edit_revision(mut self, revision: u64) -> Self {
+        self.edit_revision = revision;
+        self
+    }
     pub fn render(
         &self,
         row: &R,
@@ -464,6 +500,7 @@ pub struct TableView<S: TableSource> {
     pub(super) data_mode: super::TableDataMode,
     pub(super) total: super::TableTotal,
     pub(super) page_selection: (usize, usize),
+    pub(super) sizing: TableRowSizing,
 }
 impl<S: TableSource> Clone for TableView<S> {
     fn clone(&self) -> Self {
@@ -480,6 +517,7 @@ impl<S: TableSource> Clone for TableView<S> {
             data_mode: self.data_mode,
             total: self.total,
             page_selection: self.page_selection,
+            sizing: self.sizing.clone(),
         }
     }
 }
@@ -500,6 +538,7 @@ impl<S: TableSource> TableView<S> {
             data_mode: super::TableDataMode::Remote,
             total,
             page_selection: (len, 0),
+            sizing: TableRowSizing::default(),
         }
     }
     /// Replace a complete column configuration atomically, retaining stable keys.
@@ -509,6 +548,13 @@ impl<S: TableSource> TableView<S> {
     }
     pub fn source(&self) -> &Rc<S> {
         &self.source
+    }
+    pub fn with_row_sizing(mut self, sizing: TableRowSizing) -> Self {
+        self.sizing = sizing;
+        self
+    }
+    pub fn row_sizing(&self) -> &TableRowSizing {
+        &self.sizing
     }
     pub fn with_query(mut self, query: super::TableQuery) -> Self {
         self.query = query;
@@ -577,13 +623,15 @@ impl<S: TableSource> TableView<S> {
             && self.query == other.query
             && self.data_mode == other.data_mode
             && self.total == other.total
+            && self.sizing.same(&other.sizing)
     }
     pub(super) fn validate(&self, validate_source: bool) -> Result<(), TableError> {
         self.query.validate(&self.columns)?;
+        self.sizing.validate(self.source.as_ref())?;
         if self
             .query
             .page()
-            .is_some_and(|page| self.source.len() > page.size())
+            .is_some_and(|page| self.source.page_len() > page.size())
         {
             return Err(TableError::InvalidQuery(
                 "returned page exceeds page size".into(),
@@ -595,13 +643,13 @@ impl<S: TableSource> TableView<S> {
                     .checked_mul(page.size())
                     .ok_or_else(|| TableError::InvalidQuery("page overflow".into()))?;
                 if page.number() > total.div_ceil(page.size()).max(1)
-                    || self.source.len() != page.size().min(total.saturating_sub(start))
+                    || self.source.page_len() != page.size().min(total.saturating_sub(start))
                 {
                     return Err(TableError::InvalidQuery(
                         "total and page records disagree".into(),
                     ));
                 }
-            } else if total < self.source.len() {
+            } else if total < self.source.page_len() {
                 return Err(TableError::InvalidQuery(
                     "total smaller than displayed records".into(),
                 ));
@@ -723,7 +771,8 @@ impl TableSelectionRequest {
                         .source
                         .row_key(position)
                         .ok_or(TableError::InvalidSource)?;
-                    if *checked && !next.disabled_rows.contains(key) {
+                    if *checked && !next.disabled_rows.contains(key) && !next.source.is_detail(key)
+                    {
                         next.selection.insert(key.clone());
                     } else {
                         next.selection.remove(key);
@@ -734,6 +783,7 @@ impl TableSelectionRequest {
                 if next.selection_mode == TableSelectionMode::None
                     || next.source.position_of(key).is_none()
                     || next.disabled_rows.contains(key)
+                    || next.source.is_detail(key)
                 {
                     return Err(TableError::InvalidSelection);
                 }
@@ -759,7 +809,7 @@ impl TableSelectionRequest {
                         .source
                         .row_key(position)
                         .ok_or(TableError::InvalidSource)?;
-                    if !next.disabled_rows.contains(key) {
+                    if !next.disabled_rows.contains(key) && !next.source.is_detail(key) {
                         next.selection.insert(key.clone());
                     }
                 }
@@ -770,6 +820,12 @@ impl TableSelectionRequest {
 }
 #[derive(Clone, Debug)]
 pub enum TableEvent {
+    EditRequested {
+        key: TableCellKey,
+        mode: super::TableEditMode,
+    },
+    EditSaveRequested(super::TableEditToken),
+    EditEnded,
     SelectionRequested(TableSelectionRequest),
     ActiveChanged(Option<TableCellKey>),
     ColumnResizeRequested(super::TableColumnResizeRequest),

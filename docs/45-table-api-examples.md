@@ -476,4 +476,14 @@ fn main() {
 
 综合交互位于 [Showcase 查询示例](../examples/windows-showcase/src/pages/table/query.rs)：普通 Dropdown 筛选、TreeSelect 叶子筛选、自定义名称／数值范围草稿、跨页选择及批量核验、明确标注本页／筛选结果／已选范围的汇总。完整模拟服务端拥有 137 条数据，所以能显示完整汇总；只加载一页的实际 Remote 消费者不能据该页声称完整域汇总。
 
-有限视口表格由一个 Base owner 管正文滚动，Pagination 位于视口外；外层 flex 子项保持 min_w_0／min_h_0。查询与汇总在接受路径执行，render 只组合已有值和当前窗口记录。M4 编辑与树、M5 Cells／span、M6 重排另分阶段实现和验收。
+有限视口表格由一个 Base owner 管正文滚动，Pagination 位于视口外；外层 flex 子项保持 min_w_0／min_h_0。查询与汇总在接受路径执行，render 只组合已有值和当前窗口记录。M4 的实际接口与接线见 [复杂记录指南](45-table-m4.md)及生产 Showcase 的 [编辑示例](../examples/windows-showcase/src/pages/table/editing.rs)、[树与详情示例](../examples/windows-showcase/src/pages/table/structure.rs)。M5 Cells／span、M6 重排另分阶段实现和验收。
+
+## 7. M4 接入要点
+
+自然行高在 TableView 中声明 `with_row_sizing(TableRowSizing::measured(rems(2.5))?)`；Known 接受 `(TableRowKey, Rems)` 序列。正文选择、页根总数与显示行数使用不同合同，不将详情行包装成业务记录。
+
+`TableOutline<S>` 是宿主持有的结构适配器，Table 的 Source 改为 `TableOutlineSource<S>`，Row 是 `TableOutlineRow` 元数据；通过 `source.record(row)` 借用业务 Row。宿主每次接受树／详情变化后发布新的 `snapshot(revision, page)`。根分页时同步 TableQuery 页码及 root_total；折叠和分页不清除合法已选 key。级联默认关闭，opt-in 后调用 outline.apply_selection，而非应用普通 Toggle 再私自递归 children。
+
+`TableDelegate::render_detail(row, width, window, context)` 返回现有组件组合。详情中的 retained 控件／子表按业务 key 在宿主创建和释放；禁止将同一个 Entity 同时挂到多个打开的详情。
+
+编辑接线保持三种身份：宿主 retained 控件值、Table 编辑 token、业务 source row revision。控件事件比较实际值后使旧保存失效；保存入口先 flush 最新值。先 request_save，验证通过再 accept_edit_validation，只有 Saving 中的当前 token 可 commit_edit。示例实际复用 Form／Field；不要将包含真实输入的 row 变成每帧重建的临时 Entity。

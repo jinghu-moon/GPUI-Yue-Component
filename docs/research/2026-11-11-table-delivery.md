@@ -6,8 +6,8 @@
 | --- | --- | --- |
 | M1 基础表格 | 已提交／推送 `543fc6d` | [实施记录](2026-11-10-table-m1-implementation.md)、[规模基线](../performance/2026-11-10-table-m1-baseline.md)；计时噪声与原生验收边界保留 |
 | M2 共享布局与固定 | 已提交／推送 `20bbbf2`、`1d31808` | 列约束、响应式恢复、左右固定、首尾固定行、分组表头、伸缩与键盘取消；[实际 API](../45-table-m2.md)、[性能基线与限制](../performance/2026-11-11-table-m2-layout.md) |
-| M3 查询和数据流程 | 实现与自动化验收通过 | typed 查询、本地／远程、排序／筛选、Pagination、三种汇总范围、批量选择；[实际 API](../45-table-m3.md)、[TB04 基线](../performance/2026-11-11-table-m3-query.md) |
-| M4 复杂记录 | 待实现 | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
+| M3 查询和数据流程 | 已提交／推送 `f7651dd` | typed 查询、本地／远程、排序／筛选、Pagination、三种汇总范围、批量选择；[实际 API](../45-table-m3.md)、[TB04 基线](../performance/2026-11-11-table-m3-query.md) |
+| M4 复杂记录 | 实现与自动化／性能基线通过 | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
 | M5 双轴与高级结构 | 待实现 | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
 | M6 重排与交付 | 待实现 | 行列拖拽、键盘等价操作、列配置草稿、综合示例、完整合同核对 |
 
@@ -41,3 +41,15 @@ M3 扩展生产 Table 查询模块，复用现有 Dropdown、TreeSelect、DatePi
 TB04 为 250,000×8，11 条件×6 次×3 独立进程，共 198 个有效样本。完整 key 次序／total／页范围在每次计时外逐条核对，独立验证 CSV、日志哈希和总数 oracle。第二轮第一次尝试被运行中进程门禁整轮弃用，日志保留，不拼接。通过正确性、身份与零滚动重算预算；时序是新增功能基线，没有优化前后收益结论。宽结果两列排序 query 中位数约 407 ms，排序约 317 ms，是后续性能优化的真实入口，不隐藏这项成本。
 
 [原始证据归档](../performance/evidence/2026-11-11-table-m3-query.zip) SHA-256：`4fea9600f79f0492018acf1d9e567e150917dcf2466096647d16209839d59105`。包含完整样本、接受和弃用日志、源码／构建／可执行文件身份、功能检查与独立验证脚本；归档前交付 Rust 源码与采样 digest 一致。原生 IME、Narrator、GPU、跨屏 DPI 仍未验收，不由 headless 替代。
+
+## M4 自动化与证据
+
+Rows Known／Measured、TableOutline 树／详情／节点加载及真实 Input／Select 编辑会话已接入；复用 Base KeyedTreeModel、Grid Known 几何、Descriptions、Form／Field。Base 增加稳定同级排序和加载票据预检查，组件保持独立提交边界。
+
+Table dev／release 37 passed、5 opt-in ignored；VirtualList 193 passed、11 opt-in ignored；Showcase Table 10 passed。严格 Clippy 对组件、Showcase、最小消费者全目标、headless、-D warnings 通过。真实输入覆盖立即 Enter／Tab、失败重试、行多字段、离屏草稿、外部冲突与删除焦点；树 UI 覆盖根分页、父子级联、不完整节点拒绝、失败重试、两详情独立滚动及关闭释放。
+
+TB03／TB06 为新增能力的规模基线，非优化前后对照。采样保持三组 ABBA、120预热及每轮1000有效帧，线程内分配在计时结束后独立归因。TB03 明确持有512张64×64 RGBA本地生成资源，像素池8MiB；GPU纹理驻留尚未测量。采样期间观察到的其他 cargo 编译导致整轮弃样，原日志保留，不结束外部进程，也不以轮次拼接凑足样本。
+
+TB03和TB06各12000有效帧，逐帧工作集在规模与重复间完全一致，P50规模比1.0007／1.0019。冷挂载树索引成本随规模增长，分配成本与原生验收边界见 [M4性能报告](../performance/2026-11-11-table-m4-complex.md)。
+
+M4 [证据归档](../performance/evidence/2026-11-11-table-m4-complex.zip) SHA-256：`ddc6c1b26404a3a70545b3b6dfb2672e5610892230d11fb5794bd5ce521bc0e9`；交付源码与两组采样源码 digest 一致。

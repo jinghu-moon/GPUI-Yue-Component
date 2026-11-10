@@ -442,6 +442,9 @@ impl<S: TableSource> TableSource for TableProjection<S> {
     fn contains_key(&self, key: &TableRowKey) -> bool {
         self.source.contains_key(key)
     }
+    fn row_revision(&self, key: &TableRowKey) -> u64 {
+        self.source.row_revision(key)
+    }
 }
 
 /// A returned page plus explicit known selectable keys. Records from other pages
@@ -479,6 +482,9 @@ impl<S: TableSource> TableSource for TableRemotePage<S> {
     }
     fn contains_key(&self, key: &TableRowKey) -> bool {
         self.domain.contains(key)
+    }
+    fn row_revision(&self, key: &TableRowKey) -> u64 {
+        self.page.row_revision(key)
     }
 }
 pub struct TableLocalQuery;
@@ -703,6 +709,11 @@ impl<D: TableDelegate> YueTableState<D> {
         source: TableQuerySource,
         cx: &mut gpui_kit::Context<Self>,
     ) -> Result<TableRequestId, TableError> {
+        if self.edit.is_some() {
+            return Err(TableError::UnsupportedOperation(
+                "finish editing before changing the query",
+            ));
+        }
         let view = self.view().ok_or(TableError::Unbound)?;
         if self
             .presentation

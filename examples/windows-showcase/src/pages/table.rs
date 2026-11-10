@@ -1,6 +1,10 @@
 use crate::scroll::ScrollableElement as _;
+#[path = "table/editing.rs"]
+mod editing;
 #[path = "table/query.rs"]
 mod query;
+#[path = "table/structure.rs"]
+mod structure;
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, Subscription, Window, div, rems,
@@ -31,6 +35,8 @@ pub(crate) struct TablePage {
     layout: Entity<YueTableState<Orders>>,
     large: Option<Entity<YueTableState<Orders>>>,
     queries: Option<(Entity<query::QueryExample>, Entity<query::QueryExample>)>,
+    structure: Option<Entity<structure::StructureExample>>,
+    editing: Option<Entity<editing::EditingExample>>,
     size: TableSize,
     borders: TableBorders,
     striped: bool,
@@ -195,6 +201,8 @@ impl TablePage {
             layout,
             large: None,
             queries: None,
+            structure: None,
+            editing: None,
             size: TableSize::Medium,
             borders: TableBorders::Rows,
             striped: false,
@@ -612,6 +620,56 @@ impl Render for TablePage {
                 cx.notify();
             })),
         );
+        content = content.child(
+            YueButton::new(
+                "table-structure-examples",
+                if self.structure.is_some() {
+                    "收起结构示例"
+                } else {
+                    "树、详情与嵌套子表…"
+                },
+            )
+            .on_click(cx.listener(|s, _, w, cx| {
+                s.structure = if s.structure.is_some() {
+                    None
+                } else {
+                    Some(cx.new(|cx| structure::StructureExample::new(w, cx)))
+                };
+                cx.notify();
+            })),
+        );
+        if let Some(structure) = &self.structure {
+            content = content.child(
+                YueCard::new("table-structure-card")
+                    .header(YueCardHeader::new("树与展开详情"))
+                    .child(structure.clone()),
+            );
+        }
+        content = content.child(
+            YueButton::new(
+                "table-editing-examples",
+                if self.editing.is_some() {
+                    "收起编辑示例"
+                } else {
+                    "单元格与整行编辑…"
+                },
+            )
+            .on_click(cx.listener(|s, _, w, cx| {
+                s.editing = if s.editing.is_some() {
+                    None
+                } else {
+                    Some(cx.new(|cx| editing::EditingExample::new(w, cx)))
+                };
+                cx.notify();
+            })),
+        );
+        if let Some(editing) = &self.editing {
+            content = content.child(
+                YueCard::new("table-editing-card")
+                    .header(YueCardHeader::new("真实控件编辑与保存"))
+                    .child(editing.clone()),
+            );
+        }
         if let Some((local, remote)) = &self.queries {
             content = content
                 .child(

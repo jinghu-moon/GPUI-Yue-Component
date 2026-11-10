@@ -19,15 +19,29 @@ pub(super) fn render<D: TableDelegate>(
     };
     if state.repair_control_focus {
         state.repair_control_focus = false;
-        if state.control_focus.contains_focused(w, cx) {
+        if state.control_focus.contains_focused(w, cx)
+            || state
+                .editor_focuses
+                .iter()
+                .any(|focus| focus.contains_focused(w, cx))
+        {
             state.focus.focus(w, cx);
+        }
+        if state.edit.is_none() {
+            state.editor_focuses.clear();
         }
     }
     let weak = cx.weak_entity();
     w.use_keyed_state((p.id.clone(), "table-resize-lifetime"), cx, |w, cx| {
         let released = weak.clone();
         cx.on_release(move |_: &mut resize::ResizeLifetime, cx| {
-            let _ = released.update(cx, |s, cx| s.cancel_resize(cx));
+            let _ = released.update(cx, |s, cx| {
+                s.cancel_resize(cx);
+                if s.edit.take().is_some() {
+                    cx.emit(TableEvent::EditEnded);
+                    cx.notify();
+                }
+            });
         })
         .detach();
         resize::ResizeLifetime {
@@ -120,6 +134,8 @@ pub(super) fn render<D: TableDelegate>(
     }
     let observe_owner = cx.weak_entity();
     let border = if p.outer_border { px(2.) } else { px(0.) };
+    let edit = state.edit.clone();
+    let measurement_epoch = state.measurements.epoch;
     let mut table = div()
         .id("table-region")
         .on_prepaint(move |bounds, _, cx| {
@@ -160,6 +176,11 @@ pub(super) fn render<D: TableDelegate>(
         )
         .track_focus(&state.focus.clone().tab_stop(!p.disabled))
         .on_key_down(cx.listener(|s, event: &gpui_kit::KeyDownEvent, w, cx| {
+            if event.keystroke.key == "escape" && s.edit.is_some() {
+                s.cancel_edit(w, cx);
+                cx.stop_propagation();
+                return;
+            }
             if event.keystroke.key == "escape" && (s.resize.is_some() || s.resize_preview.is_some())
             {
                 s.cancel_resize(cx);
@@ -197,10 +218,14 @@ pub(super) fn render<D: TableDelegate>(
             let header = row(
                 &view,
                 0,
+                None,
                 &p,
                 &state.delegate,
                 &cx.weak_entity(),
                 None,
+                None,
+                measurement_epoch,
+                &state.scroll,
                 &state.focus,
                 &state.control_focus,
                 w,
@@ -239,6 +264,7 @@ pub(super) fn render<D: TableDelegate>(
         let focus = state.focus.clone();
         let control_focus = state.control_focus.clone();
         let render_view = view.clone();
+        let row_scroll = state.scroll.clone();
         if p.mode == TableRenderMode::Rows {
             let mut grid = VirtualGrid::new(
                 (p.id.clone(), "viewport"),
@@ -249,10 +275,14 @@ pub(super) fn render<D: TableDelegate>(
                     row(
                         &render_view,
                         item.row().index(),
+                        Some(item.row().extent()),
                         &render_p,
                         &delegate,
                         &owner,
                         active.as_ref(),
+                        edit.as_ref(),
+                        measurement_epoch,
+                        &row_scroll,
                         &focus,
                         &control_focus,
                         w,
@@ -281,6 +311,12 @@ pub(super) fn render<D: TableDelegate>(
                     )
                     .focus_fallback(state.focus.clone());
             }
+            if let Some(session) = &state.edit {
+                grid = grid.retained_cells(vec![crate::VirtualGridCellKey::new(
+                    state::row_id(view.source.scope(), session.key().row()),
+                    "table-row-track",
+                )]);
+            }
             table = table
                 .h(p.height)
                 .child(grid.test_support())
@@ -300,10 +336,14 @@ pub(super) fn render<D: TableDelegate>(
                 content = content.child(row(
                     &view,
                     index,
+                    None,
                     &p,
                     &delegate,
                     &owner,
                     active.as_ref(),
+                    edit.as_ref(),
+                    measurement_epoch,
+                    &row_scroll,
                     &focus,
                     &control_focus,
                     w,
@@ -344,10 +384,14 @@ pub(super) fn render<D: TableDelegate>(
 fn row<D: TableDelegate>(
     view: &Rc<TableView<D::Source>>,
     index: usize,
+    extent: Option<Pixels>,
     p: &Presentation,
     delegate: &gpui_kit::WeakEntity<D>,
     owner: &gpui_kit::WeakEntity<YueTableState<D>>,
     active: Option<&TableCellKey>,
+    edit: Option<&TableEditSession>,
+    measurement_epoch: u64,
+    scroll: &gpui_kit::ScrollHandle,
     focus: &gpui_kit::FocusHandle,
     control_focus: &gpui_kit::FocusHandle,
     w: &mut Window,
@@ -392,9 +436,71 @@ fn row<D: TableDelegate>(
         .w_full()
         .min_w_0()
         .items_stretch();
-    let height = p
+    let minimum_height = p
         .row_height
-        .unwrap_or_else(|| p.size.height(crate::current_theme(cx)));
+        .unwrap_or_else(|| p.size.height(crate::current_theme(cx)))
+        .to_pixels(w.rem_size());
+    let height = if let Some(height) = extent.filter(|_| !is_band) {
+        height
+    } else if !is_band && p.mode == TableRenderMode::Rows {
+        let key = key.as_ref().unwrap();
+        match &view.sizing.kind {
+            sizing::RowSizingKind::Fixed => minimum_height,
+            sizing::RowSizingKind::Known(heights) => heights[key].to_pixels(w.rem_size()),
+            sizing::RowSizingKind::Measured(estimate) => estimate.to_pixels(w.rem_size()),
+        }
+    } else {
+        minimum_height
+    };
+    if key.as_ref().is_some_and(|key| view.source.is_detail(key)) {
+        let key = key.as_ref().unwrap();
+        let record = view.source.row(key).expect("validated detail");
+        let content = delegate
+            .update(cx, |d, cx| d.render_detail(record, p.resolved.total, w, cx))
+            .unwrap_or_else(|_| div().into_any_element());
+        let mut content = div()
+            .id("detail-content")
+            .test_support()
+            .w_full()
+            .min_w_0()
+            .flex_shrink_0()
+            .child(content);
+        if view.sizing.is_measured() && p.mode == TableRenderMode::Rows {
+            let key = key.clone();
+            let revision = view.source.row_revision(&key);
+            let epoch = measurement_epoch;
+            let own = owner.clone();
+            content = content.on_prepaint(move |bounds, _, cx| {
+                let own = own.clone();
+                let key = key.clone();
+                let height = bounds.size.height.max(minimum_height);
+                cx.defer(move |cx| {
+                    let _ =
+                        own.update(cx, |s, cx| s.measure_cell(key, epoch, revision, height, cx));
+                });
+            });
+        }
+        let detail = div()
+            .id("detail-cell")
+            .test_support()
+            .role(Role::Cell)
+            .aria_column_index(0)
+            .aria_column_span(
+                p.resolved.indices.len()
+                    + usize::from(view.selection_mode != TableSelectionMode::None),
+            )
+            .w_full()
+            .overflow_hidden()
+            .child(content);
+        return if p.mode == TableRenderMode::Static {
+            row.child(detail).min_h(height).into_any_element()
+        } else {
+            row.child(detail.h(height))
+                .h(height)
+                .overflow_hidden()
+                .into_any_element()
+        };
+    }
     let bands = if is_header { p.resolved.depth + 1 } else { 1 };
     if is_header && bands > 1 {
         row = row.role(Role::RowGroup);
@@ -566,11 +672,13 @@ fn row<D: TableDelegate>(
             .flex()
             .flex_col()
             .px(token_rems(theme, p.size.padding()))
-            .py(if p.mode == TableRenderMode::Static {
-                token_rems(theme, crate::theme::keys::SPACE_4)
-            } else {
-                rems(0.)
-            })
+            .py(
+                if p.mode == TableRenderMode::Static || view.sizing.is_measured() && !is_band {
+                    token_rems(theme, crate::theme::keys::SPACE_4)
+                } else {
+                    rems(0.)
+                },
+            )
             .overflow_hidden();
         cell = match column.vertical {
             TableVerticalAlign::Start => cell.justify_start(),
@@ -663,7 +771,15 @@ fn row<D: TableDelegate>(
                 position,
                 selected,
                 active: cell_active,
-                control_focus: (cell_active && column.interactive).then(|| control_focus.clone()),
+                control_focus: (cell_active && (column.interactive || column.editable))
+                    .then(|| control_focus.clone()),
+                editing: edit
+                    .as_ref()
+                    .is_some_and(|session| session.includes(cell_key.as_ref().unwrap())),
+                edit_stage: edit
+                    .as_ref()
+                    .filter(|session| session.includes(cell_key.as_ref().unwrap()))
+                    .map(|session| session.stage().clone()),
                 size: p.size,
                 disabled: p.disabled,
                 readonly: p.readonly,
@@ -687,13 +803,20 @@ fn row<D: TableDelegate>(
                 .unwrap_or_else(|_| div().into_any_element())
         };
         // Plain text is navigable by click; custom controls own their own focus and commands.
-        if !is_band && column.text.is_some() && !p.disabled {
+        let editing = cell_key
+            .as_ref()
+            .is_some_and(|key| edit.as_ref().is_some_and(|session| session.includes(key)));
+        if !is_band && (column.text.is_some() || column.editable) && !p.disabled && !editing {
             let own = owner.clone();
             let key = cell_key.unwrap();
-            cell = cell.on_mouse_down(gpui_kit::MouseButton::Left, move |_, w, cx| {
+            let editable = column.editable;
+            cell = cell.on_mouse_down(gpui_kit::MouseButton::Left, move |event, w, cx| {
                 let _ = own.update(cx, |s, cx| {
                     s.anchor = Some(key.row().clone());
                     s.set_active(key.clone(), w, cx);
+                    if editable && event.click_count == 2 {
+                        let _ = s.request_edit(key.clone(), TableEditMode::Cell, cx);
+                    }
                 });
             });
         }
@@ -709,7 +832,30 @@ fn row<D: TableDelegate>(
             TableAlign::Center => content_box.justify_center(),
             TableAlign::End => content_box.justify_end(),
         };
-        cell = cell.child(content_box.child(content));
+        let mut content_box = content_box.child(content).flex_shrink_0();
+        if view.sizing.is_measured() && !is_band && p.mode == TableRenderMode::Rows {
+            let key = key.as_ref().unwrap().clone();
+            let revision = view.source.row_revision(&key);
+            let epoch = measurement_epoch;
+            let own = owner.clone();
+            let padding = token_rems(theme, crate::theme::keys::SPACE_4).to_pixels(w.rem_size())
+                * 2.
+                + if p.borders == TableBorders::None {
+                    px(0.)
+                } else {
+                    px(1.)
+                };
+            content_box = content_box.on_prepaint(move |bounds, _, cx| {
+                let height = (bounds.size.height + padding).max(minimum_height);
+                let own = own.clone();
+                let key = key.clone();
+                cx.defer(move |cx| {
+                    let _ =
+                        own.update(cx, |s, cx| s.measure_cell(key, epoch, revision, height, cx));
+                });
+            });
+        }
+        cell = cell.child(content_box);
         if is_header && column.resizable && !p.disabled && !p.readonly {
             let own = owner.clone();
             let blur_key = column.key().clone();
@@ -849,9 +995,7 @@ fn row<D: TableDelegate>(
     }
     if positioned {
         let offset = if p.mode == TableRenderMode::Rows {
-            owner
-                .read_with(cx, |s, _| -s.scroll.precise_offset().x)
-                .unwrap_or(0.)
+            -scroll.precise_offset().x
         } else {
             0.
         };
@@ -985,13 +1129,51 @@ fn navigate<D: TableDelegate>(
         })
         .unwrap_or(0);
     let key = event.keystroke.key.as_str();
-    let page = (p.height.0
-        / p.row_height
-            .unwrap_or_else(|| p.size.height(crate::current_theme(cx)))
-            .0)
-        .floor()
-        .max(1.) as usize;
+    let page_row = |forward: bool| -> usize {
+        let rows = state.rows.read(cx);
+        let Some(viewport) = rows.viewport() else {
+            return r;
+        };
+        let Ok(snapshot) = rows.snapshot(viewport) else {
+            return r;
+        };
+        let index = r + usize::from(p.header_visible);
+        let Ok(item) = snapshot.item(index) else {
+            return r;
+        };
+        let leading = usize::from(p.header_visible && (p.header_fixed || p.frozen.0 > 0))
+            + p.frozen.0.min(view.source.len());
+        let trailing = p.frozen.1.min(view.source.len().saturating_sub(p.frozen.0))
+            + usize::from(p.footer_fixed && view.columns.iter().any(|c| c.footer.is_some()));
+        let frozen = (0..leading)
+            .chain(snapshot.len().saturating_sub(trailing)..snapshot.len())
+            .filter_map(|ix| snapshot.item(ix).ok())
+            .fold(px(0.), |sum, item| sum + item.extent());
+        let extent = f64::from((viewport.extent() - frozen).max(px(0.)));
+        if extent <= 0. {
+            return r;
+        }
+        let target = item.start() + if forward { extent } else { -extent };
+        rows.snapshot(&viewport.clone().with_offset(target.max(0.)))
+            .ok()
+            .map(|s| {
+                s.visible_range()
+                    .start
+                    .saturating_sub(usize::from(p.header_visible))
+                    .min(view.source.len() - 1)
+            })
+            .unwrap_or(r)
+    };
     match key {
+        "enter" | "f2" if view.columns[p.resolved.indices[c]].editable => {
+            let key = TableCellKey::new(
+                view.source.row_key(r).unwrap().clone(),
+                view.columns[p.resolved.indices[c]].key().clone(),
+            );
+            let _ = state.request_edit(key, TableEditMode::Cell, cx);
+            cx.stop_propagation();
+            return;
+        }
         "enter" | "f2" if view.columns[p.resolved.indices[c]].interactive => {
             let active = TableCellKey::new(
                 view.source.row_key(r).unwrap().clone(),
@@ -1018,8 +1200,8 @@ fn navigate<D: TableDelegate>(
                 r = view.source.len() - 1;
             }
         }
-        "pageup" => r = r.saturating_sub(page),
-        "pagedown" => r = (r + page).min(view.source.len() - 1),
+        "pageup" => r = page_row(false),
+        "pagedown" => r = page_row(true),
         "space" => {
             let row = view.source.row_key(r).unwrap().clone();
             let _ = state.request_toggle(&row, event.keystroke.modifiers.shift, cx);
@@ -1034,6 +1216,25 @@ fn navigate<D: TableDelegate>(
             return;
         }
         _ => return,
+    }
+    if view
+        .source
+        .row_key(r)
+        .is_some_and(|key| view.source.is_detail(key))
+    {
+        let forward = matches!(key, "down" | "pagedown" | "end");
+        let replacement = if forward {
+            (r..view.source.len())
+                .find(|ix| !view.source.is_detail(view.source.row_key(*ix).unwrap()))
+        } else {
+            (0..=r)
+                .rev()
+                .find(|ix| !view.source.is_detail(view.source.row_key(*ix).unwrap()))
+        };
+        let Some(replacement) = replacement else {
+            return;
+        };
+        r = replacement;
     }
     let row = view.source.row_key(r).unwrap().clone();
     if !event.keystroke.modifiers.shift {

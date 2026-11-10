@@ -66,6 +66,11 @@ impl<D: TableDelegate> YueTableState<D> {
         w: &Window,
         cx: &mut Context<Self>,
     ) -> Result<(), TableError> {
+        if self.edit.is_some() {
+            return Err(TableError::UnsupportedOperation(
+                "finish editing before resizing",
+            ));
+        }
         if self.resize.as_ref().is_some_and(|s| &s.key == key) {
             return Ok(());
         }
