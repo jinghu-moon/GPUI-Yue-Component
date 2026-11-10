@@ -854,11 +854,16 @@ impl Layer {
                 return;
             }
         }
+        // A disabled trigger is synchronized on every render. Closing an already
+        // exiting display must not invalidate another frame indefinitely.
+        let changed = display.present || display.moving;
         display.present = false;
         display.moving = false;
         self.auto_task = None;
         self.grace_task = None;
-        cx.notify();
+        if changed {
+            cx.notify();
+        }
     }
     fn remove(&mut self, owner: EntityId, window: &mut Window, cx: &mut Context<Self>) {
         self.entries.remove(&owner);

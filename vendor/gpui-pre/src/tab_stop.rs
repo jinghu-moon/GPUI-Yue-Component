@@ -78,6 +78,12 @@ impl TabStopMap {
     pub fn insert(&mut self, focus_handle: &FocusHandle) {
         self.insertion_history
             .push(TabStopOperation::Insert(focus_handle.clone()));
+        // A semantic frame may track the same focus as its nested editor.
+        // Keep the first occurrence as the single stop; retain the operation
+        // above so cached subtree replay preserves the same registration order.
+        if self.by_id.contains_key(&focus_handle.id) {
+            return;
+        }
         let mut path = self.current_path.clone();
         path.0.push(focus_handle.tab_index);
         let order = TabStopNode {

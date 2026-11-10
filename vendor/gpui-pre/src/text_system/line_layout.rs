@@ -618,6 +618,7 @@ impl LineLayoutCache {
             runs,
             wrap_width,
             force_width: None,
+            max_lines,
         } as &dyn AsCacheKeyRef;
 
         let current_frame = self.current_frame.upgradable_read();
@@ -653,6 +654,7 @@ impl LineLayoutCache {
                 runs: SmallVec::from(runs),
                 wrap_width,
                 force_width: None,
+                max_lines,
             });
 
             let mut current_frame = self.current_frame.write();
@@ -683,6 +685,7 @@ impl LineLayoutCache {
             runs,
             wrap_width: None,
             force_width,
+            max_lines: None,
         } as &dyn AsCacheKeyRef;
 
         let current_frame = self.current_frame.upgradable_read();
@@ -711,6 +714,7 @@ impl LineLayoutCache {
                 runs: SmallVec::from(runs),
                 wrap_width: None,
                 force_width,
+                max_lines: None,
             });
             let layout = Arc::new(layout);
             current_frame.lines.insert(key.clone(), layout.clone());
@@ -940,6 +944,7 @@ struct CacheKey {
     runs: SmallVec<[FontRun; 1]>,
     wrap_width: Option<Pixels>,
     force_width: Option<Pixels>,
+    max_lines: Option<usize>,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
@@ -949,6 +954,7 @@ struct CacheKeyRef<'a> {
     runs: &'a [FontRun],
     wrap_width: Option<Pixels>,
     force_width: Option<Pixels>,
+    max_lines: Option<usize>,
 }
 
 #[derive(Clone, Debug)]
@@ -1041,6 +1047,7 @@ impl AsCacheKeyRef for CacheKey {
             runs: self.runs.as_slice(),
             wrap_width: self.wrap_width,
             force_width: self.force_width,
+            max_lines: self.max_lines,
         }
     }
 }

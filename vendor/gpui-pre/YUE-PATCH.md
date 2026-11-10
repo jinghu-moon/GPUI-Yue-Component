@@ -1,5 +1,19 @@
 # Yue GPUI paint snapshot extension
 
+## One Tab stop per focus identity (2026-11-09)
+
+`src/tab_stop.rs` retains the first registration of a FocusId in the current
+Tab order. A labelled semantic frame and its nested Base Input editor may
+legitimately track the same focus handle; two ordered entries previously made
+Shift+Tab return to that same editor indefinitely. All insertion operations
+remain in the replay history, so cached-subtree registration keeps its order.
+
+No new focus API or platform behavior is added. Yue Pagination's native headless
+interaction test enters its jump editor, tabs to the next external command,
+returns with Shift+Tab, then traverses backward to the preceding navigation
+button without indenting or committing the draft. Remove this patch when
+upstream deduplicates these registrations and that regression still passes.
+
 ## Opt-in frame-bound pointer capture (2026-11-09)
 
 `Window::capture_pointer_for_frame` adds an explicit capture lifecycle for controls
@@ -329,3 +343,20 @@ zero-based indices and logical counts. Ordinary Divs retain only an optional
 pointer; only explicit spans allocate the small payload. The native contract
 checks actual Node data without creating offscreen cells. AccessKit metadata
 does not imply that every platform bridge implements Grid/GridItem providers.
+
+
+### Wrapped text cache includes the line limit (2026-11-10)
+
+`text_system/line_layout.rs`: add `max_lines` to the ordinary owned and borrowed
+cache keys. The previous key distinguished text, font, runs and width but reused
+a two-line-clamped layout for an unlimited measurement at the same width. This
+made actual multiline overflow checks incorrectly report no overflow, and could
+also render a different clamp with stale wrap boundaries. Unwrapped entries use
+`None`; no public API, platform bridge or separate cache is added.
+
+Regression: `tooltip::tests::native_wrapped_text_cache_separates_clamped_and_full_layouts`
+and the one/N-line overflow keyboard, font/rem, width recovery and existing
+Tooltip consumer tests in yue-component. The regression failed before the patch
+(the two-line text never became a keyboard stop) and passes with distinct keys.
+Remove this patch when upstream includes the line limit in both cache identity
+forms and passes the same mixed clamped/unlimited sequence.

@@ -6,6 +6,186 @@ use gpui_kit::{
     px,
 };
 
+struct ClampedText {
+    text: SharedString,
+    width: f32,
+    lines: usize,
+    keyboard: bool,
+    visible: bool,
+    font: f32,
+}
+impl Render for ClampedText {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let theme = YueTheme::new(crate::ThemeMode::Light, crate::Accent::Azure);
+        let mut d = div()
+            .size_full()
+            .flex()
+            .flex_col()
+            .items_start()
+            .gap_4()
+            .child(crate::YueButton::new("overflow-before", "Before"));
+        if self.visible {
+            d = d.child(
+                div().text_size(gpui_kit::rems(self.font)).child(
+                    YueOverflowTooltip::new("clamped", theme, self.text.clone())
+                        .width(px(self.width))
+                        .lines(self.lines)
+                        .focusable_when_overflow(self.keyboard),
+                ),
+            );
+        }
+        d.child(crate::YueButton::new("overflow-after", "After"))
+    }
+}
+fn clamped(cx: &mut TestAppContext) -> (Entity<ClampedText>, &mut VisualTestContext) {
+    cx.update(|cx| {
+        crate::init(
+            cx,
+            YueTheme::new(crate::ThemeMode::Light, crate::Accent::Azure),
+        )
+        .unwrap();
+        cx.set_reduce_motion(true);
+    });
+    let mut saved = None;
+    let (_,cx)=cx.add_window_view(|w,cx| { let p=cx.new(|_|ClampedText { text:"第一行内容很长，第二行仍然放不完，完整内容需要提示；Please keep the complete original text.".into(),width:120.,lines:2,keyboard:true,visible:true,font:1. }); saved=Some(p.clone()); Root::new(p,w,cx) });
+    cx.update(|w, _| w.activate_window());
+    draw(cx);
+    (saved.unwrap(), cx)
+}
+fn set_clamped(
+    p: &Entity<ClampedText>,
+    cx: &mut VisualTestContext,
+    f: impl FnOnce(&mut ClampedText),
+) {
+    p.update(cx, |p, cx| {
+        f(p);
+        cx.notify();
+    });
+    draw(cx);
+}
+fn clamped_node(
+    cx: &mut VisualTestContext,
+    id: &str,
+) -> gpui_kit::base::test_support::ElementSnapshot {
+    cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .find(|n| n.path().last() == Some(&ElementId::from(id.to_owned())))
+            .unwrap()
+    })
+}
+#[gpui_kit::test]
+fn multiline_actual_overflow_keyboard_and_width_recovery(cx: &mut TestAppContext) {
+    let (p, cx) = clamped(cx);
+    cx.update(|w, cx| w.focus_next(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "overflow-before").focused(), Some(true));
+    cx.update(|w, cx| w.focus_next(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "clamped").focused(), Some(true));
+    assert!(shown(cx));
+    set_clamped(&p, cx, |p| p.width = 1000.);
+    assert!(!shown(cx));
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+    cx.update(|w, cx| w.focus_prev(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "overflow-before").focused(), Some(true));
+    set_clamped(&p, cx, |p| p.width = 120.);
+    cx.update(|w, cx| w.focus_next(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "clamped").focused(), Some(true));
+    assert!(shown(cx));
+    set_clamped(&p, cx, |p| p.text = "短文".into());
+    assert!(!shown(cx));
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+}
+#[gpui_kit::test]
+fn line_count_font_rem_and_external_focus_are_remeasured(cx: &mut TestAppContext) {
+    let (p, cx) = clamped(cx);
+    set_clamped(&p, cx, |p| {
+        p.text = "A\nB\nC".into();
+        p.width = 300.;
+        p.lines = 2;
+    });
+    cx.update(|w, cx| w.focus_next(cx));
+    cx.update(|w, cx| w.focus_next(cx));
+    draw(cx);
+    assert!(shown(cx));
+    set_clamped(&p, cx, |p| p.lines = 3);
+    assert!(!shown(cx));
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+    set_clamped(&p, cx, |p| {
+        p.text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".into();
+        p.width = 200.;
+        p.lines = 2;
+    });
+    // External focus is unaffected by overflow transitions.
+    set_clamped(&p, cx, |p| p.font = 2.);
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+    cx.update(|w, cx| w.focus_prev(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "clamped").focused(), Some(true));
+    cx.update(|w, _| w.set_rem_size(px(8.)));
+    draw(cx);
+    assert!(!shown(cx));
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+    set_clamped(&p, cx, |p| p.visible = false);
+    tick(cx, 1000);
+    assert!(!shown(cx));
+}
+#[gpui_kit::test]
+fn overflow_keyboard_is_opt_in_and_short_text_has_no_hover_help(cx: &mut TestAppContext) {
+    let (p, cx) = clamped(cx);
+    set_clamped(&p, cx, |p| p.keyboard = false);
+    cx.update(|w, cx| w.focus_next(cx));
+    cx.update(|w, cx| w.focus_next(cx));
+    draw(cx);
+    assert_eq!(clamped_node(cx, "overflow-after").focused(), Some(true));
+    set_clamped(&p, cx, |p| p.text = "短文".into());
+    let bounds = clamped_node(cx, "clamped").bounds();
+    cx.simulate_mouse_move(bounds.center(), None, Modifiers::default());
+    tick(cx, 600);
+    assert!(!shown(cx));
+    set_clamped(&p, cx, |p| {
+        p.text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".repeat(4).into();
+        p.lines = 1;
+    });
+    tick(cx, 600);
+    assert!(shown(cx));
+}
+
+#[gpui_kit::test]
+fn native_wrapped_text_cache_separates_clamped_and_full_layouts(cx: &mut TestAppContext) {
+    let (_, cx) = clamped(cx);
+    cx.update(|w, _| {
+        let text: SharedString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".repeat(5).into();
+        let run = gpui_kit::TextRun {
+            len: text.len(),
+            font: w.text_style().font(),
+            ..Default::default()
+        };
+        let shape = |n| {
+            w.text_system()
+                .shape_text(
+                    text.clone(),
+                    px(16.),
+                    std::slice::from_ref(&run),
+                    Some(px(80.)),
+                    n,
+                )
+                .unwrap()
+        };
+        let a = shape(Some(2));
+        let full = shape(None);
+        let one = shape(Some(1));
+        let again = shape(Some(2));
+        assert_eq!(a[0].wrap_boundaries().len(), 1);
+        assert_eq!(one[0].wrap_boundaries().len(), 0);
+        assert!(full[0].wrap_boundaries().len() > 2);
+        assert_eq!(again[0].wrap_boundaries(), a[0].wrap_boundaries());
+    });
+}
+
 struct Demo {
     text: SharedString,
     mode: TooltipTrigger,
@@ -475,6 +655,40 @@ fn controlled_open_sync_is_silent_and_cannot_override_disabled_or_empty(cx: &mut
     change(&v, cx, |v| v.text = " ".into());
     assert!(!shown(cx));
 }
+#[gpui_kit::test]
+fn disabling_an_exiting_tooltip_stops_notifying_without_waiting_for_animation(
+    cx: &mut TestAppContext,
+) {
+    let (view, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    let focus = view.read_with(cx, |v, _| v.focus.clone());
+    cx.update(|w, cx| focus.focus(w, cx));
+    draw(cx);
+    assert!(shown(cx));
+    tick(cx, 1100);
+
+    let notifications = Rc::new(Cell::new(0));
+    let observed = notifications.clone();
+    let subscription = cx.update(|w, cx| {
+        let layer = controller::layer(w, cx).unwrap();
+        cx.observe(&layer, move |_, _| {
+            observed.set(observed.get() + 1);
+            assert!(observed.get() < 32, "closing must reach a stable frame");
+        })
+    });
+    change(&view, cx, |v| v.disabled = true);
+    let settled = notifications.get();
+    for _ in 0..4 {
+        draw(cx);
+    }
+    assert_eq!(notifications.get(), settled);
+    assert_eq!(
+        view.read_with(cx, |v, _| v.changes.clone()),
+        vec![true, false]
+    );
+    drop(subscription);
+}
+
 #[gpui_kit::test]
 fn pending_unmount_does_not_show_later_and_auto_hide_does_not_loop(cx: &mut TestAppContext) {
     let (v, cx) = open(cx);
