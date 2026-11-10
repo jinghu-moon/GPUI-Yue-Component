@@ -1,4 +1,6 @@
 use crate::scroll::ScrollableElement as _;
+#[path = "table/query.rs"]
+mod query;
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, SharedString, Styled as _, Subscription, Window, div, rems,
@@ -28,6 +30,7 @@ pub(crate) struct TablePage {
     table: Entity<YueTableState<Orders>>,
     layout: Entity<YueTableState<Orders>>,
     large: Option<Entity<YueTableState<Orders>>>,
+    queries: Option<(Entity<query::QueryExample>, Entity<query::QueryExample>)>,
     size: TableSize,
     borders: TableBorders,
     striped: bool,
@@ -191,6 +194,7 @@ impl TablePage {
             table,
             layout,
             large: None,
+            queries: None,
             size: TableSize::Medium,
             borders: TableBorders::Rows,
             striped: false,
@@ -587,6 +591,40 @@ impl Render for TablePage {
                     ),
             );
         }
+        content = content.child(
+            YueButton::new(
+                "table-query-examples",
+                if self.queries.is_some() {
+                    "收起查询示例"
+                } else {
+                    "本地与远程查询示例"
+                },
+            )
+            .on_click(cx.listener(|s, _, w, cx| {
+                s.queries = if s.queries.is_some() {
+                    None
+                } else {
+                    Some((
+                        cx.new(|cx| query::QueryExample::new(false, w, cx)),
+                        cx.new(|cx| query::QueryExample::new(true, w, cx)),
+                    ))
+                };
+                cx.notify();
+            })),
+        );
+        if let Some((local, remote)) = &self.queries {
+            content = content
+                .child(
+                    YueCard::new("table-local-query-card")
+                        .header(YueCardHeader::new("本地查询与跨页选择"))
+                        .child(local.clone()),
+                )
+                .child(
+                    YueCard::new("table-remote-query-card")
+                        .header(YueCardHeader::new("远程查询与过期恢复"))
+                        .child(remote.clone()),
+                );
+        }
         div()
             .id("table-content")
             .debug_selector(|| "table-content".into())
@@ -604,7 +642,7 @@ mod tests {
     use gpui_kit::base::{Root, test_support::snapshots};
     use gpui_kit::{ElementId, TestAppContext, VisualTestContext, px, size};
     use yue_component::{Accent, ThemeMode, YueTheme};
-    fn draw(cx: &mut VisualTestContext) {
+    pub(super) fn draw(cx: &mut VisualTestContext) {
         cx.run_until_parked();
         cx.update(|w, cx| {
             w.refresh();
@@ -612,7 +650,7 @@ mod tests {
         });
         cx.run_until_parked();
     }
-    fn click(cx: &mut VisualTestContext, id: &str) {
+    pub(super) fn click(cx: &mut VisualTestContext, id: &str) {
         let point = cx.update(|w, _| {
             snapshots(w)
                 .into_iter()

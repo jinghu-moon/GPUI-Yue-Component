@@ -118,6 +118,7 @@ pub struct YueTableState<D: TableDelegate> {
     pub(super) resize: Option<resize::ResizeSession>,
     pub(super) resize_preview: Option<(TableColumnKey, gpui_kit::Rems)>,
     pub(super) resize_ticket: Option<TableRequestId>,
+    pub(super) query_draft: Option<(TableRequestId, TableQuery)>,
     pub(super) owner: EntityId,
     pub(super) sequence: u64,
     pub(super) pending: Option<TableRequestId>,
@@ -171,6 +172,7 @@ impl<D: TableDelegate> YueTableState<D> {
             resize: None,
             resize_preview: None,
             resize_ticket: None,
+            query_draft: None,
             owner: cx.entity().entity_id(),
             sequence: 0,
             pending: None,
@@ -239,6 +241,29 @@ impl<D: TableDelegate> YueTableState<D> {
             return Err(TableError::StaleSource);
         }
         candidate.validate(!same_source)?;
+        candidate.page_selection = (
+            candidate.source.len().saturating_sub(
+                candidate
+                    .disabled_rows
+                    .iter()
+                    .filter(|key| candidate.source.position_of(key).is_some())
+                    .count(),
+            ),
+            candidate
+                .selection
+                .iter()
+                .filter(|key| candidate.source.position_of(key).is_some())
+                .count(),
+        );
+        if let Some((id, target)) = &self.query_draft
+            && response_to == Some(*id)
+            && self
+                .accepted
+                .as_ref()
+                .is_some_and(|old| !target.same_rules(&old.columns, &candidate.columns))
+        {
+            return Err(TableError::StaleRequest);
+        }
         if self
             .accepted
             .as_ref()
@@ -285,7 +310,13 @@ impl<D: TableDelegate> YueTableState<D> {
                 || !Rc::ptr_eq(&old.columns, &candidate.columns)
                 || old.selection_mode != candidate.selection_mode
         });
-        if layout_changed || !same_source {
+        if layout_changed
+            || !same_source
+            || self
+                .accepted
+                .as_ref()
+                .is_some_and(|old| old.query != candidate.query)
+        {
             self.cancel_resize(cx);
         }
         self.revision += 1;
@@ -309,11 +340,21 @@ impl<D: TableDelegate> YueTableState<D> {
             self.anchor = None;
             self.scroll_target = None;
         }
+        if let Some((id, target)) = &self.query_draft
+            && self
+                .accepted
+                .as_ref()
+                .is_some_and(|old| !target.same_rules(&old.columns, &candidate.columns))
+        {
+            let id = *id;
+            self.settle(id);
+        }
         self.accepted = Some(Rc::new(candidate));
         // A full external publication invalidates requests prepared for the old source.
         if !same_source {
             self.pending = None;
             self.requests.clear();
+            self.query_draft = None;
         } else if let Some(ticket) = response_to {
             self.settle(ticket);
         }
@@ -337,6 +378,13 @@ impl<D: TableDelegate> YueTableState<D> {
     }
     fn settle(&mut self, id: TableRequestId) {
         self.requests.remove(&id);
+        if self
+            .query_draft
+            .as_ref()
+            .is_some_and(|(ticket, _)| *ticket == id)
+        {
+            self.query_draft = None;
+        }
         if self.resize_ticket == Some(id) {
             self.resize_ticket = None;
             self.resize_preview = None;

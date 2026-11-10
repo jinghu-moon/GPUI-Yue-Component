@@ -5,8 +5,8 @@
 | 阶段 | 状态 | 任务与证据 |
 | --- | --- | --- |
 | M1 基础表格 | 已提交／推送 `543fc6d` | [实施记录](2026-11-10-table-m1-implementation.md)、[规模基线](../performance/2026-11-10-table-m1-baseline.md)；计时噪声与原生验收边界保留 |
-| M2 共享布局与固定 | 功能与工作集验收通过 | 列约束、响应式恢复、左右固定、首尾固定行、分组表头、伸缩与键盘取消；[实际 API](../45-table-m2.md)、[性能基线与限制](../performance/2026-11-11-table-m2-layout.md) |
-| M3 查询和数据流程 | 待实现 | typed 查询、本地与远程适配、排序／筛选、Pagination、summary 与批量选择；TB04 完整结果 oracle |
+| M2 共享布局与固定 | 已提交／推送 `20bbbf2`、`1d31808` | 列约束、响应式恢复、左右固定、首尾固定行、分组表头、伸缩与键盘取消；[实际 API](../45-table-m2.md)、[性能基线与限制](../performance/2026-11-11-table-m2-layout.md) |
+| M3 查询和数据流程 | 实现与自动化验收通过 | typed 查询、本地／远程、排序／筛选、Pagination、三种汇总范围、批量选择；[实际 API](../45-table-m3.md)、[TB04 基线](../performance/2026-11-11-table-m3-query.md) |
 | M4 复杂记录 | 待实现 | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
 | M5 双轴与高级结构 | 待实现 | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
 | M6 重排与交付 | 待实现 | 行列拖拽、键盘等价操作、列配置草稿、综合示例、完整合同核对 |
@@ -28,3 +28,16 @@ Showcase 页面交互通过，release 下 23 项 Table 测试通过。两种构�
 [M2 原始证据](../performance/evidence/2026-11-11-table-m2-layout.zip) SHA-256：`345ba10135ee65488f755c661aa46a2437f6f2e18c7e4c7f5ec084b726097e0a`。归档包含逐帧 CSV、12 轮日志、构建身份、源码与 diff、功能检查和独立复核脚本；归档前确认交付源码与采样源码 SHA-256 完全一致。
 
 当前设备未进行 GPU／真实 IME／Narrator／跨屏 DPI 验收；这些不由 headless 结果替代。
+
+
+## M3 自动化与证据
+
+M3 扩展生产 Table 查询模块，复用现有 Dropdown、TreeSelect、DatePicker、Input 和 Pagination。两个独立最小消费者仅依赖 yue-component；API 附录改为实际可编译程序，不保留原草案中的伪签名。TableLocalQuery 在更新路径运行，TableRemotePage 只提供返回页和明确 known key 域。
+
+最终 dev 与 release Table 均 29 passed、3 opt-in ignored；Showcase Table 4 passed。VirtualList 193 passed、11 opt-in ignored；严格 Clippy（组件／Showcase／最小消费者 all-targets、headless、-D warnings）通过。主题生成、Python 语法和 diff-check 通过。滚动、选择、rem／主题更新不会重跑查询谓词；真实普通／树筛选、自定义草稿取消与确认、分页跳页草稿保留、批量核验及远程迟到／失败／重试通过。
+
+验收中修复多排序方向切换改变优先级、TreeSelect 遗漏名称、同名规则变更后旧票据、以及页外选择干扰表头三态。页内选择计数在接受时更新，绘制不扫描完整集合；汇总复用一次分页前查询，不为每个范围重复排序。源替换仍释放历史并使旧票据失效。
+
+TB04 为 250,000×8，11 条件×6 次×3 独立进程，共 198 个有效样本。完整 key 次序／total／页范围在每次计时外逐条核对，独立验证 CSV、日志哈希和总数 oracle。第二轮第一次尝试被运行中进程门禁整轮弃用，日志保留，不拼接。通过正确性、身份与零滚动重算预算；时序是新增功能基线，没有优化前后收益结论。宽结果两列排序 query 中位数约 407 ms，排序约 317 ms，是后续性能优化的真实入口，不隐藏这项成本。
+
+[原始证据归档](../performance/evidence/2026-11-11-table-m3-query.zip) SHA-256：`4fea9600f79f0492018acf1d9e567e150917dcf2466096647d16209839d59105`。包含完整样本、接受和弃用日志、源码／构建／可执行文件身份、功能检查与独立验证脚本；归档前交付 Rust 源码与采样 digest 一致。原生 IME、Narrator、GPU、跨屏 DPI 仍未验收，不由 headless 替代。

@@ -750,7 +750,7 @@ crates/yue-component/src/table/
 
 [API 附录](45-table-api-examples.md)固定来源读取、Row 借用、typed 异构列、请求重基及三个宿主接入流程。默认无选择、无分页、未开启排序／筛选／编辑；有限视口 Rows＋Fixed 是呈现默认，Static／Cells 显式选择。列的纯排序／筛选能力与当前 query 值分开，默认构造合法，页面不必实现不使用的 renderer。
 
-M1 的基础消费者已迁入 `examples/minimal/src/bin/table.rs` 并完成编译和 headless 挂载验证，实际签名见 [M1 使用指南](45-table-m1.md)；M3 再完成本地／远程例、分页与 typed 筛选的编译和交互验收。API 调整同步改附录，不允许长期保留 `...`、未定义业务 helper 或只能依赖内部模块的使用教程。API 附录第 3 节使用已编译基础程序；其余高级合同和本地／远程例仍为后续接线草案。真实 Windows 窗口挂载验收仍独立于 headless 测试。
+M1 的基础消费者位于 `examples/minimal/src/bin/table.rs`，M3 的本地／远程消费者位于同目录 `table-local.rs` 和 `table-remote.rs`；实际签名见 [API 附录](45-table-api-examples.md) 与 [M3 使用指南](45-table-m3.md)。独立消费者编译和 Showcase 的真实控件 headless 交互分别验收。API 调整同步改附录，不允许保留伪签名、未定义业务 helper 或依赖私有模块的教程。真实 Windows 窗口挂载验收仍独立于 headless 测试。
 
 ## 20. 实施顺序与每阶段出口
 

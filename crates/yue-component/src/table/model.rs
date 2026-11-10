@@ -16,6 +16,7 @@ pub enum TableError {
     InvalidSource,
     InvalidGeometry,
     InvalidSelection,
+    InvalidQuery(SharedString),
     UnsupportedCombination(&'static str),
     StaleView,
     StaleSource,
@@ -93,6 +94,11 @@ pub trait TableSource: 'static {
     fn row_key(&self, position: usize) -> Option<&TableRowKey>;
     fn position_of(&self, key: &TableRowKey) -> Option<usize>;
     fn row(&self, key: &TableRowKey) -> Option<&Self::Row>;
+    /// Domain membership can include keys outside the displayed page. Remote
+    /// sources may override this using a host-supplied selection domain.
+    fn contains_key(&self, key: &TableRowKey) -> bool {
+        self.row(key).is_some()
+    }
 }
 
 /// Optional slice adapter. Keeps the caller's allocation; Row need not implement Clone.
@@ -265,6 +271,7 @@ pub struct TableColumn<R: 'static> {
     pub(super) header: Option<super::Slot>,
     pub(super) footer: Option<SharedString>,
     pub(super) interactive: bool,
+    pub(super) query: Option<Rc<super::query::QueryRule<R>>>,
 }
 impl<R: 'static> Clone for TableColumn<R> {
     fn clone(&self) -> Self {
@@ -289,6 +296,7 @@ impl<R: 'static> Clone for TableColumn<R> {
             header: self.header.clone(),
             footer: self.footer.clone(),
             interactive: self.interactive,
+            query: self.query.clone(),
         }
     }
 }
@@ -319,6 +327,7 @@ impl<R: 'static> TableColumn<R> {
             header: None,
             footer: None,
             interactive: false,
+            query: None,
         }
     }
     pub fn custom<E: IntoElement>(
@@ -451,6 +460,10 @@ pub struct TableView<S: TableSource> {
     pub(super) load: TableLoadState,
     pub(super) revision: u64,
     pub(super) base_revision: Option<u64>,
+    pub(super) query: super::TableQuery,
+    pub(super) data_mode: super::TableDataMode,
+    pub(super) total: super::TableTotal,
+    pub(super) page_selection: (usize, usize),
 }
 impl<S: TableSource> Clone for TableView<S> {
     fn clone(&self) -> Self {
@@ -463,11 +476,17 @@ impl<S: TableSource> Clone for TableView<S> {
             load: self.load.clone(),
             revision: self.revision,
             base_revision: self.base_revision,
+            query: self.query.clone(),
+            data_mode: self.data_mode,
+            total: self.total,
+            page_selection: self.page_selection,
         }
     }
 }
 impl<S: TableSource> TableView<S> {
     pub fn new(source: Rc<S>, columns: impl Into<Rc<[TableColumn<S::Row>]>>) -> Self {
+        let len = source.len();
+        let total = super::TableTotal::Known(len);
         Self {
             source,
             columns: columns.into(),
@@ -477,6 +496,10 @@ impl<S: TableSource> TableView<S> {
             load: TableLoadState::Ready,
             revision: 0,
             base_revision: None,
+            query: super::TableQuery::default(),
+            data_mode: super::TableDataMode::Remote,
+            total,
+            page_selection: (len, 0),
         }
     }
     /// Replace a complete column configuration atomically, retaining stable keys.
@@ -486,6 +509,24 @@ impl<S: TableSource> TableView<S> {
     }
     pub fn source(&self) -> &Rc<S> {
         &self.source
+    }
+    pub fn with_query(mut self, query: super::TableQuery) -> Self {
+        self.query = query;
+        self
+    }
+    pub fn query(&self) -> &super::TableQuery {
+        &self.query
+    }
+    pub fn with_result(mut self, mode: super::TableDataMode, total: super::TableTotal) -> Self {
+        self.data_mode = mode;
+        self.total = total;
+        self
+    }
+    pub fn data_mode(&self) -> super::TableDataMode {
+        self.data_mode
+    }
+    pub fn total(&self) -> super::TableTotal {
+        self.total
     }
     pub fn shared_columns(&self) -> &Rc<[TableColumn<S::Row>]> {
         &self.columns
@@ -533,8 +574,39 @@ impl<S: TableSource> TableView<S> {
             && self.disabled_rows == other.disabled_rows
             && self.selection_mode == other.selection_mode
             && self.load == other.load
+            && self.query == other.query
+            && self.data_mode == other.data_mode
+            && self.total == other.total
     }
     pub(super) fn validate(&self, validate_source: bool) -> Result<(), TableError> {
+        self.query.validate(&self.columns)?;
+        if self
+            .query
+            .page()
+            .is_some_and(|page| self.source.len() > page.size())
+        {
+            return Err(TableError::InvalidQuery(
+                "returned page exceeds page size".into(),
+            ));
+        }
+        if let super::TableTotal::Known(total) = self.total {
+            if let Some(page) = self.query.page() {
+                let start = (page.number() - 1)
+                    .checked_mul(page.size())
+                    .ok_or_else(|| TableError::InvalidQuery("page overflow".into()))?;
+                if page.number() > total.div_ceil(page.size()).max(1)
+                    || self.source.len() != page.size().min(total.saturating_sub(start))
+                {
+                    return Err(TableError::InvalidQuery(
+                        "total and page records disagree".into(),
+                    ));
+                }
+            } else if total < self.source.len() {
+                return Err(TableError::InvalidQuery(
+                    "total smaller than displayed records".into(),
+                ));
+            }
+        }
         if validate_source {
             if self.source.scope().trim().is_empty() {
                 return Err(TableError::EmptyKey);
@@ -588,15 +660,16 @@ impl<S: TableSource> TableView<S> {
         if self
             .disabled_rows
             .iter()
-            .any(|key| self.source.position_of(key).is_none())
+            .any(|key| !self.source.contains_key(key))
         {
             return Err(TableError::InvalidSelection);
         }
         if (self.selection_mode == TableSelectionMode::None && !self.selection.is_empty())
             || (self.selection_mode == TableSelectionMode::Single && self.selection.len() > 1)
-            || self.selection.iter().any(|key| {
-                self.source.position_of(key).is_none() || self.disabled_rows.contains(key)
-            })
+            || self
+                .selection
+                .iter()
+                .any(|key| !self.source.contains_key(key) || self.disabled_rows.contains(key))
         {
             return Err(TableError::InvalidSelection);
         }
@@ -645,16 +718,15 @@ impl TableSelectionRequest {
                 if next.selection_mode != TableSelectionMode::Multiple {
                     return Err(TableError::InvalidSelection);
                 }
-                next.selection.clear();
-                if *checked {
-                    for position in 0..next.source.len() {
-                        let key = next
-                            .source
-                            .row_key(position)
-                            .ok_or(TableError::InvalidSource)?;
-                        if !next.disabled_rows.contains(key) {
-                            next.selection.insert(key.clone());
-                        }
+                for position in 0..next.source.len() {
+                    let key = next
+                        .source
+                        .row_key(position)
+                        .ok_or(TableError::InvalidSource)?;
+                    if *checked && !next.disabled_rows.contains(key) {
+                        next.selection.insert(key.clone());
+                    } else {
+                        next.selection.remove(key);
                     }
                 }
             }
@@ -701,4 +773,5 @@ pub enum TableEvent {
     SelectionRequested(TableSelectionRequest),
     ActiveChanged(Option<TableCellKey>),
     ColumnResizeRequested(super::TableColumnResizeRequest),
+    QueryRequested(super::TableQueryRequest),
 }

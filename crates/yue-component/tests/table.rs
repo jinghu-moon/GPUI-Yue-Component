@@ -1032,3 +1032,6 @@ fn replacing_source_releases_history_and_rejects_old_ticket(cx: &mut TestAppCont
         "old frame/source must be released after replacement"
     );
 }
+
+#[path = "table/query.rs"]
+mod query;

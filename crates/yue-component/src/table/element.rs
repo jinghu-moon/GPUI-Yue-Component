@@ -428,11 +428,11 @@ fn row<D: TableDelegate>(
         let own = owner.clone();
         let own_focus = focus.clone();
         let key = key.clone();
-        let selectable = view.source.len().saturating_sub(view.disabled_rows.len());
+        let (selectable, page_selected) = view.page_selection;
         let mark = if is_header {
-            if view.selection.is_empty() {
+            if page_selected == 0 {
                 CheckboxState::Unchecked
-            } else if view.selection.len() == selectable {
+            } else if page_selected == selectable {
                 CheckboxState::Checked
             } else {
                 CheckboxState::Indeterminate
@@ -443,6 +443,7 @@ fn row<D: TableDelegate>(
             CheckboxState::Unchecked
         };
         let disabled = p.disabled
+            || is_header && selectable == 0
             || matches!(
                 view.load,
                 TableLoadState::Loading | TableLoadState::Refreshing
@@ -481,7 +482,7 @@ fn row<D: TableDelegate>(
                     })
                     .tab_stop(false)
                     .accessibility_label(if is_header {
-                        "选择当前结果中的可选行".to_owned()
+                        "选择当前页的可选行".to_owned()
                     } else {
                         format!("选择 {}", key.as_ref().unwrap().as_str())
                     })
@@ -603,6 +604,52 @@ fn row<D: TableDelegate>(
         } else if is_header {
             if let Some(header) = &column.header {
                 header(w, cx)
+            } else if column.is_sortable() {
+                let sorted = view
+                    .query
+                    .sorts()
+                    .iter()
+                    .enumerate()
+                    .find(|(_, s)| s.column() == column.key());
+                let suffix = sorted.map_or(String::new(), |(ix, s)| {
+                    format!(
+                        " {}{}",
+                        if s.direction() == TableSortDirection::Ascending {
+                            "↑"
+                        } else {
+                            "↓"
+                        },
+                        if view.query.sorts().len() > 1 {
+                            (ix + 1).to_string()
+                        } else {
+                            String::new()
+                        }
+                    )
+                });
+                let own = owner.clone();
+                let key = column.key().clone();
+                crate::YueButton::new("table-sort", format!("{}{suffix}", column.title()))
+                    .variant(crate::ButtonVariant::Ghost)
+                    .size(crate::ButtonSize::Small)
+                    .tab_stop(false)
+                    .accessibility_label(format!("按{}排序{suffix}", column.title()))
+                    .accessibility_description(
+                        "点击切换排序；Shift 加入多列排序；表格导航时 Alt+S 排序当前列",
+                    )
+                    .disabled(
+                        p.disabled
+                            || p.readonly
+                            || matches!(
+                                view.load,
+                                TableLoadState::Loading | TableLoadState::Refreshing
+                            ),
+                    )
+                    .on_click(move |event, _, cx| {
+                        let _ = own.update(cx, |s, cx| {
+                            let _ = s.request_sort(&key, event.modifiers().shift, cx);
+                        });
+                    })
+                    .into_any_element()
             } else {
                 div().child(column.title.clone()).into_any_element()
             }
@@ -907,6 +954,13 @@ fn navigate<D: TableDelegate>(
     let Some(view) = state.accepted.clone() else {
         return;
     };
+    if event.keystroke.key == "s" && event.keystroke.modifiers.alt && !p.disabled {
+        if let Some(active) = state.active.clone() {
+            let _ = state.request_sort(active.column(), event.keystroke.modifiers.shift, cx);
+            cx.stop_propagation();
+        }
+        return;
+    }
     if p.disabled
         || view.source.is_empty()
         || p.resolved.indices.is_empty()

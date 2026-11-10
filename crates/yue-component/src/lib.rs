@@ -43,6 +43,8 @@ mod shortcut_recorder;
 mod slider;
 mod steps;
 mod table;
+pub use table::TableRemotePage;
+pub use table::{TableDataMode, TableTotal, TableSortDirection, TableSort, TablePage, TableFilterValue, TableFilterKey, TableQuery, TableValueColumn, TableProjection, TableLocalQuery, TableQuerySource, TableQueryRequest, sync_table_pagination};
 mod swatch;
 mod switch;
 mod tabs;
