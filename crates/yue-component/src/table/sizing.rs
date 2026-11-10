@@ -80,6 +80,7 @@ fn validate_height(height: Rems) -> Result<(), TableError> {
 
 #[derive(PartialEq)]
 pub(super) struct Geometry {
+    pub mode: TableRenderMode,
     pub source: u64,
     pub height: f32,
     pub width: f32,

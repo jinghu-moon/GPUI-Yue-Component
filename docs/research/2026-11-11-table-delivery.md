@@ -7,8 +7,8 @@
 | M1 基础表格 | 已提交／推送 `543fc6d` | [实施记录](2026-11-10-table-m1-implementation.md)、[规模基线](../performance/2026-11-10-table-m1-baseline.md)；计时噪声与原生验收边界保留 |
 | M2 共享布局与固定 | 已提交／推送 `20bbbf2`、`1d31808` | 列约束、响应式恢复、左右固定、首尾固定行、分组表头、伸缩与键盘取消；[实际 API](../45-table-m2.md)、[性能基线与限制](../performance/2026-11-11-table-m2-layout.md) |
 | M3 查询和数据流程 | 已提交／推送 `f7651dd` | typed 查询、本地／远程、排序／筛选、Pagination、三种汇总范围、批量选择；[实际 API](../45-table-m3.md)、[TB04 基线](../performance/2026-11-11-table-m3-query.md) |
-| M4 复杂记录 | 实现与自动化／性能基线通过 | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
-| M5 双轴与高级结构 | 待实现 | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
+| M4 复杂记录 | 已提交／推送 `14eceef`、`0fabce1` | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
+| M5 双轴与高级结构 | 自动化／性能验收通过 | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
 | M6 重排与交付 | 待实现 | 行列拖拽、键盘等价操作、列配置草稿、综合示例、完整合同核对 |
 
 ## M2 自动化
@@ -53,3 +53,7 @@ TB03／TB06 为新增能力的规模基线，非优化前后对照。采样保�
 TB03和TB06各12000有效帧，逐帧工作集在规模与重复间完全一致，P50规模比1.0007／1.0019。冷挂载树索引成本随规模增长，分配成本与原生验收边界见 [M4性能报告](../performance/2026-11-11-table-m4-complex.md)。
 
 M4 [证据归档](../performance/evidence/2026-11-11-table-m4-complex.zip) SHA-256：`ddc6c1b26404a3a70545b3b6dfb2672e5610892230d11fb5794bd5ce521bc0e9`；交付源码与两组采样源码 digest 一致。
+
+## M5 自动化与证据
+
+Cells双轴轨道、稀疏合并、跨pin分组表头、宿主单滚动owner与范围加载已实现。[实际API](../45-table-m5.md)，[TB02性能报告](../performance/2026-11-11-table-m5-cells.md)。Table dev／release43 passed、VirtualList193 passed、Showcase Table11 passed，严格Clippy通过。12000帧、逐帧工作集143–196且规模间完全一致；通过身份、正确性与工作集预算，时长是新增功能基线。全部接受／弃样证据归档，外部编译不被结束。未知尾游标自动追加在M6实现。

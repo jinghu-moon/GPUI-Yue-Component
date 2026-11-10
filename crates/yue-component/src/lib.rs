@@ -45,6 +45,7 @@ mod steps;
 mod table;
 pub use table::TableRemotePage;
 pub use table::TableRowSizing;
+pub use table::{TableSpan, TableSpanPlan, TableRangeRows, TableRangeRequest};
 pub use table::{TableOutline, TableOutlineRow, TableOutlineSource};
 pub use table::{TableEditMode, TableEditMove, TableEditStage, TableEditToken, TableEditSession};
 pub use table::{TableDataMode, TableTotal, TableSortDirection, TableSort, TablePage, TableFilterValue, TableFilterKey, TableQuery, TableValueColumn, TableProjection, TableLocalQuery, TableQuerySource, TableQueryRequest, sync_table_pagination};

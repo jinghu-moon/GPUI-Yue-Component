@@ -1,4 +1,6 @@
 use crate::scroll::ScrollableElement as _;
+#[path = "table/advanced.rs"]
+mod advanced;
 #[path = "table/editing.rs"]
 mod editing;
 #[path = "table/query.rs"]
@@ -37,6 +39,7 @@ pub(crate) struct TablePage {
     queries: Option<(Entity<query::QueryExample>, Entity<query::QueryExample>)>,
     structure: Option<Entity<structure::StructureExample>>,
     editing: Option<Entity<editing::EditingExample>>,
+    advanced: Option<Entity<advanced::AdvancedExample>>,
     size: TableSize,
     borders: TableBorders,
     striped: bool,
@@ -203,6 +206,7 @@ impl TablePage {
             queries: None,
             structure: None,
             editing: None,
+            advanced: None,
             size: TableSize::Medium,
             borders: TableBorders::Rows,
             striped: false,
@@ -668,6 +672,31 @@ impl Render for TablePage {
                 YueCard::new("table-editing-card")
                     .header(YueCardHeader::new("真实控件编辑与保存"))
                     .child(editing.clone()),
+            );
+        }
+        content = content.child(
+            YueButton::new(
+                "advanced-table-toggle",
+                if self.advanced.is_some() {
+                    "收起双轴、合并与范围加载示例"
+                } else {
+                    "双轴、合并、宿主吸顶与范围加载…"
+                },
+            )
+            .on_click(cx.listener(|s, _, _, cx| {
+                s.advanced = if s.advanced.is_some() {
+                    None
+                } else {
+                    Some(cx.new(advanced::AdvancedExample::new))
+                };
+                cx.notify();
+            })),
+        );
+        if let Some(advanced) = &self.advanced {
+            content = content.child(
+                YueCard::new("table-advanced-card")
+                    .header(YueCardHeader::new("高级布局与范围加载"))
+                    .child(advanced.clone()),
             );
         }
         if let Some((local, remote)) = &self.queries {

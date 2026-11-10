@@ -1,6 +1,6 @@
 # YueTable 表格组件设计
 
-- 日期：2026-11-11；状态：M1–M4 已实现并完成阶段自动化与性能基线，计时噪声和原生验收边界单列。当前可调用能力见 [M1 使用指南](45-table-m1.md)、[M2 布局指南](45-table-m2.md)、[M3 查询指南](45-table-m3.md)和 [M4 复杂记录指南](45-table-m4.md)，逐阶段证据见[实施进度](research/2026-11-11-table-delivery.md)；本文是 M1–M6 的完整目标，未落地阶段的类型和方法仍为拟定合同。
+- 日期：2026-11-11；状态：M1–M5 已实现并完成阶段自动化与性能基线，计时噪声和原生验收边界单列。当前可调用能力见 [M1 使用指南](45-table-m1.md)、[M2 布局指南](45-table-m2.md)、[M3 查询指南](45-table-m3.md)、[M4 复杂记录指南](45-table-m4.md)和 [M5 双轴指南](45-table-m5.md)，逐阶段证据见[实施进度](research/2026-11-11-table-delivery.md)；本文是 M1–M6 的完整目标，未落地阶段的类型和方法仍为拟定合同。
 - 平台：Windows GPUI；依赖与目录遵循[组件架构](24-component-architecture.md)。
 - 接入阅读顺序：本文第 1／4／17／19 节 → [API 与三个接入示例](45-table-api-examples.md) → 对应功能章节；性能实施使用[固定 workload 与门禁方案](performance/2026-11-10-table-benchmark-plan.md)。五项自评改进及三库复核见[完善记录](research/2026-11-10-table-design-hardening.md)。
 - 依据：通过浏览器阅读 `refer/table` 内 Ant Design Vue、Arco Design、TDesign 三份本地网页，示例、API、限制和源码复用核对见[参考调研记录](research/2026-11-10-table-reference-review.md)。

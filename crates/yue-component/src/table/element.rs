@@ -37,6 +37,10 @@ pub(super) fn render<D: TableDelegate>(
         cx.on_release(move |_: &mut resize::ResizeLifetime, cx| {
             let _ = released.update(cx, |s, cx| {
                 s.cancel_resize(cx);
+                if let Some(request) = s.range_pending.take() {
+                    s.requests.remove(&request.id);
+                }
+                s.range_failure = None;
                 if s.edit.take().is_some() {
                     cx.emit(TableEvent::EditEnded);
                     cx.notify();
@@ -133,13 +137,18 @@ pub(super) fn render<D: TableDelegate>(
         );
     }
     let observe_owner = cx.weak_entity();
+    let host_width = p.host.as_ref().map(|(host, _, _)| host.clone());
     let border = if p.outer_border { px(2.) } else { px(0.) };
     let edit = state.edit.clone();
     let measurement_epoch = state.measurements.epoch;
     let mut table = div()
         .id("table-region")
         .on_prepaint(move |bounds, _, cx| {
-            let width = (bounds.size.width - border).max(px(0.));
+            let width = (host_width
+                .as_ref()
+                .map_or(bounds.size.width, |h| h.bounds().size.width)
+                - border)
+                .max(px(0.));
             let weak = observe_owner.clone();
             if observe_owner
                 .read_with(cx, |s, _| s.available_width != width)
@@ -219,13 +228,14 @@ pub(super) fn render<D: TableDelegate>(
                 &view,
                 0,
                 None,
+                None,
                 &p,
                 &state.delegate,
                 &cx.weak_entity(),
                 None,
                 None,
                 measurement_epoch,
-                &state.scroll,
+                state.scroll_handle(),
                 &state.focus,
                 &state.control_focus,
                 w,
@@ -264,18 +274,19 @@ pub(super) fn render<D: TableDelegate>(
         let focus = state.focus.clone();
         let control_focus = state.control_focus.clone();
         let render_view = view.clone();
-        let row_scroll = state.scroll.clone();
+        let row_scroll = state.scroll_handle().clone();
         if p.mode == TableRenderMode::Rows {
             let mut grid = VirtualGrid::new(
                 (p.id.clone(), "viewport"),
                 &state.rows,
                 &state.columns,
-                &state.scroll,
+                state.scroll_handle(),
                 move |item, w, cx| {
                     row(
                         &render_view,
                         item.row().index(),
                         Some(item.row().extent()),
+                        None,
                         &render_p,
                         &delegate,
                         &owner,
@@ -317,13 +328,39 @@ pub(super) fn render<D: TableDelegate>(
                     "table-row-track",
                 )]);
             }
-            table = table
-                .h(p.height)
-                .child(grid.test_support())
-                .child(YueScrollbar::both(
-                    (p.id.clone(), "scrollbar"),
-                    &state.scroll,
-                ));
+            if let Some((_, top, bottom)) = &p.host {
+                grid = grid
+                    .in_scroll_host(top.to_pixels(w.rem_size()), bottom.to_pixels(w.rem_size()));
+            }
+            table = if p.host.is_some() {
+                table
+                    .h(gpui_kit::Pixels::from(state.rows.read(cx).total_extent()))
+                    .w(p.resolved.total)
+                    .child(grid.test_support())
+            } else {
+                table
+                    .h(p.height)
+                    .child(grid.test_support())
+                    .child(YueScrollbar::both(
+                        (p.id.clone(), "scrollbar"),
+                        &state.scroll,
+                    ))
+            };
+        } else if p.mode == TableRenderMode::Cells {
+            table = if p.host.is_some() {
+                table
+                    .h(gpui_kit::Pixels::from(state.rows.read(cx).total_extent()))
+                    .w(p.resolved.total)
+                    .child(cells::render(state, &view, &p, w, cx))
+            } else {
+                table
+                    .h(p.height)
+                    .child(cells::render(state, &view, &p, w, cx))
+                    .child(YueScrollbar::both(
+                        (p.id.clone(), "scrollbar"),
+                        &state.scroll,
+                    ))
+            };
         } else {
             // Static keeps all rows in one natural-height block; horizontal overflow
             // still has a single owner for header, body and column footer.
@@ -336,6 +373,7 @@ pub(super) fn render<D: TableDelegate>(
                 content = content.child(row(
                     &view,
                     index,
+                    None,
                     None,
                     &p,
                     &delegate,
@@ -381,10 +419,11 @@ pub(super) fn render<D: TableDelegate>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn row<D: TableDelegate>(
+pub(super) fn row<D: TableDelegate>(
     view: &Rc<TableView<D::Source>>,
     index: usize,
     extent: Option<Pixels>,
+    part: Option<&cells::CellPart>,
     p: &Presentation,
     delegate: &gpui_kit::WeakEntity<D>,
     owner: &gpui_kit::WeakEntity<YueTableState<D>>,
@@ -408,9 +447,11 @@ fn row<D: TableDelegate>(
             .expect("validated source")
             .clone()
     });
+    let placeholder = key.as_ref().is_some_and(|k| view.source.is_placeholder(k));
     let selected = key.as_ref().is_some_and(|k| view.selection.contains(k));
-    let positioned = p.resolved.has_pins() && p.mode == TableRenderMode::Rows
-        || is_header && p.resolved.depth > 0;
+    let positioned = part.is_none()
+        && (p.resolved.has_pins() && p.mode == TableRenderMode::Rows
+            || is_header && p.resolved.depth > 0);
     let mut cells = Vec::new();
     let mut row = div()
         .id(if let Some(key) = &key {
@@ -421,7 +462,6 @@ fn row<D: TableDelegate>(
             "table-footer".into()
         })
         .test_support()
-        .role(Role::Row)
         .aria_row_index(if is_header {
             0
         } else {
@@ -436,11 +476,14 @@ fn row<D: TableDelegate>(
         .w_full()
         .min_w_0()
         .items_stretch();
+    if part.is_none() {
+        row = row.role(Role::Row);
+    }
     let minimum_height = p
         .row_height
         .unwrap_or_else(|| p.size.height(crate::current_theme(cx)))
         .to_pixels(w.rem_size());
-    let height = if let Some(height) = extent.filter(|_| !is_band) {
+    let height = if let Some(height) = extent.filter(|_| !is_band || part.is_some()) {
         height
     } else if !is_band && p.mode == TableRenderMode::Rows {
         let key = key.as_ref().unwrap();
@@ -501,11 +544,15 @@ fn row<D: TableDelegate>(
                 .into_any_element()
         };
     }
-    let bands = if is_header { p.resolved.depth + 1 } else { 1 };
+    let bands = if is_header && part.is_none() {
+        p.resolved.depth + 1
+    } else {
+        1
+    };
     if is_header && bands > 1 {
         row = row.role(Role::RowGroup);
     }
-    if p.mode == TableRenderMode::Rows {
+    if p.mode == TableRenderMode::Rows || part.is_some() {
         row = row.h(height * bands as f32).overflow_hidden();
     } else {
         row = row.min_h(height);
@@ -530,7 +577,9 @@ fn row<D: TableDelegate>(
             .border_b_1()
             .border_color(rgba(theme, "--border-divider"));
     }
-    if view.selection_mode != TableSelectionMode::None {
+    if view.selection_mode != TableSelectionMode::None
+        && part.is_none_or(|part| part.column.is_none())
+    {
         let own = owner.clone();
         let own_focus = focus.clone();
         let key = key.clone();
@@ -548,7 +597,8 @@ fn row<D: TableDelegate>(
         } else {
             CheckboxState::Unchecked
         };
-        let disabled = p.disabled
+        let disabled = placeholder
+            || p.disabled
             || is_header && selectable == 0
             || matches!(
                 view.load,
@@ -638,9 +688,44 @@ fn row<D: TableDelegate>(
             row = row.child(selection_cell);
         }
     }
-    for (column_index, declared_index) in p.resolved.indices.iter().enumerate() {
+    let range = part.map_or(0..p.resolved.indices.len(), |part| {
+        part.column.map_or(0..0, |index| index..index + 1)
+    });
+    let row_spans: Vec<_> = key
+        .as_ref()
+        .filter(|_| part.is_none())
+        .into_iter()
+        .flat_map(|key| view.spans.row_spans(key))
+        .filter_map(|span| {
+            p.resolved
+                .indices
+                .iter()
+                .position(|i| view.columns[*i].key() == span.origin().column())
+                .map(|i| (i, span.column_span()))
+        })
+        .collect();
+    for (relative_index, declared_index) in p.resolved.indices[range.clone()].iter().enumerate() {
+        let column_index = range.start + relative_index;
+        if row_spans
+            .iter()
+            .any(|(start, len)| *start < column_index && column_index < start + len)
+        {
+            continue;
+        }
+        let colspan = row_spans
+            .iter()
+            .find(|(start, _)| *start == column_index)
+            .map_or(1, |(_, len)| *len);
         let column = &view.columns[*declared_index];
-        let width = p.resolved.widths[column_index];
+        let width = part.map_or_else(
+            || {
+                p.resolved.widths[column_index..column_index + colspan]
+                    .iter()
+                    .copied()
+                    .fold(px(0.), |a, b| a + b)
+            },
+            |part| part.width,
+        );
         let cell_key = key
             .as_ref()
             .map(|key| TableCellKey::new(key.clone(), column.key().clone()));
@@ -654,7 +739,7 @@ fn row<D: TableDelegate>(
                 Role::Cell
             })
             .aria_row_index(if is_header {
-                column.groups.len()
+                part.map_or(column.groups.len(), |part| part.header_level)
             } else {
                 index
                     + if p.header_visible {
@@ -666,6 +751,7 @@ fn row<D: TableDelegate>(
             .aria_column_index(
                 column_index + usize::from(view.selection_mode != TableSelectionMode::None),
             )
+            .aria_column_span(colspan)
             .w(width)
             .flex_shrink_0()
             .min_w_0()
@@ -709,6 +795,8 @@ fn row<D: TableDelegate>(
             div()
                 .child(column.footer.clone().unwrap_or_default())
                 .into_any_element()
+        } else if placeholder {
+            div().child("加载中…").into_any_element()
         } else if is_header {
             if let Some(header) = &column.header {
                 header(w, cx)
@@ -806,7 +894,12 @@ fn row<D: TableDelegate>(
         let editing = cell_key
             .as_ref()
             .is_some_and(|key| edit.as_ref().is_some_and(|session| session.includes(key)));
-        if !is_band && (column.text.is_some() || column.editable) && !p.disabled && !editing {
+        if !is_band
+            && !placeholder
+            && (column.text.is_some() || column.editable)
+            && !p.disabled
+            && !editing
+        {
             let own = owner.clone();
             let key = cell_key.unwrap();
             let editable = column.editable;
@@ -920,7 +1013,12 @@ fn row<D: TableDelegate>(
                     .border_color(rgba(theme, "--focus-ring-color")),
             );
         }
-        if is_header {
+        if let Some(part) = part {
+            cell = cell
+                .aria_row_span(part.rows)
+                .aria_column_span(part.columns)
+                .h_full();
+        } else if is_header {
             cell = cell
                 .aria_row_index(column.groups.len())
                 .aria_row_span(bands - column.groups.len());
@@ -953,6 +1051,7 @@ fn row<D: TableDelegate>(
                 };
                 let mut end = ix + 1;
                 while end < p.resolved.indices.len()
+                    && p.resolved.pins[end] == p.resolved.pins[ix]
                     && view.columns[p.resolved.indices[end]]
                         .groups
                         .get(level)
@@ -964,11 +1063,20 @@ fn row<D: TableDelegate>(
                     .iter()
                     .copied()
                     .fold(px(0.), |a, b| a + b);
-                let groupcell = div()
+                let first = (0..ix).all(|i| {
+                    !view.columns[p.resolved.indices[i]]
+                        .groups
+                        .get(level)
+                        .is_some_and(|g| g.key() == group.key())
+                });
+                let mut groupcell = div()
                     .id((ElementId::from("table-group"), group.key().clone()))
                     .test_support()
-                    .role(Role::ColumnHeader)
-                    .aria_label(group.title().clone())
+                    .aria_label(if first {
+                        group.title().clone()
+                    } else {
+                        "".into()
+                    })
                     .aria_row_index(level)
                     .aria_column_index(
                         ix + usize::from(view.selection_mode != TableSelectionMode::None),
@@ -981,6 +1089,9 @@ fn row<D: TableDelegate>(
                     .border_b_1()
                     .border_color(rgba(theme, "--border-divider"))
                     .child(group.title().clone());
+                if first {
+                    groupcell = groupcell.role(Role::ColumnHeader);
+                }
                 cells.push((
                     p.resolved.pins[ix],
                     p.resolved.offsets[ix],
@@ -1137,12 +1248,15 @@ fn navigate<D: TableDelegate>(
         let Ok(snapshot) = rows.snapshot(viewport) else {
             return r;
         };
-        let index = r + usize::from(p.header_visible);
+        let index = r + cells::header_count(&p);
         let Ok(item) = snapshot.item(index) else {
             return r;
         };
-        let leading = usize::from(p.header_visible && (p.header_fixed || p.frozen.0 > 0))
-            + p.frozen.0.min(view.source.len());
+        let leading = if p.header_fixed || p.frozen.0 > 0 {
+            cells::header_count(&p)
+        } else {
+            0
+        } + p.frozen.0.min(view.source.len());
         let trailing = p.frozen.1.min(view.source.len().saturating_sub(p.frozen.0))
             + usize::from(p.footer_fixed && view.columns.iter().any(|c| c.footer.is_some()));
         let frozen = (0..leading)
@@ -1159,11 +1273,16 @@ fn navigate<D: TableDelegate>(
             .map(|s| {
                 s.visible_range()
                     .start
-                    .saturating_sub(usize::from(p.header_visible))
+                    .saturating_sub(cells::header_count(&p))
                     .min(view.source.len() - 1)
             })
             .unwrap_or(r)
     };
+    let span = state
+        .active
+        .as_ref()
+        .and_then(|key| view.spans.row_spans(key.row()).find(|s| s.origin() == key));
+    let (row_step, col_step) = span.map_or((1, 1), |s| (s.row_span(), s.column_span()));
     match key {
         "enter" | "f2" if view.columns[p.resolved.indices[c]].editable => {
             let key = TableCellKey::new(
@@ -1185,9 +1304,11 @@ fn navigate<D: TableDelegate>(
             return;
         }
         "up" => r = r.saturating_sub(1),
-        "down" => r = (r + usize::from(state.active.is_some())).min(view.source.len() - 1),
+        "down" => {
+            r = (r + if state.active.is_some() { row_step } else { 0 }).min(view.source.len() - 1)
+        }
         "left" => c = c.saturating_sub(1),
-        "right" => c = (c + 1).min(p.resolved.indices.len() - 1),
+        "right" => c = (c + col_step).min(p.resolved.indices.len() - 1),
         "home" => {
             c = 0;
             if event.keystroke.modifiers.control {
@@ -1253,21 +1374,23 @@ fn navigate<D: TableDelegate>(
     state.set_active(key, w, cx);
     let left = p.resolved.offsets[c];
     let right = left + p.resolved.widths[c];
-    let offset = state.scroll.offset();
-    let width = state.scroll.bounds().size.width;
-    let x = if p.resolved.pins[c] != TablePin::None {
-        offset.x
-    } else if left < -offset.x + p.resolved.leading {
-        -left + p.resolved.leading
-    } else if right > -offset.x + width - p.resolved.trailing {
-        width - p.resolved.trailing - right
-    } else {
-        offset.x
-    };
-    state.scroll.set_offset(gpui_kit::point(
-        x.max(-state.scroll.max_offset().x).min(px(0.)),
-        offset.y,
-    ));
+    if p.mode == TableRenderMode::Rows {
+        let offset = state.scroll_handle().offset();
+        let width = state.scroll_handle().bounds().size.width;
+        let x = if p.resolved.pins[c] != TablePin::None {
+            offset.x
+        } else if left < -offset.x + p.resolved.leading {
+            -left + p.resolved.leading
+        } else if right > -offset.x + width - p.resolved.trailing {
+            width - p.resolved.trailing - right
+        } else {
+            offset.x
+        };
+        state.scroll_handle().set_offset(gpui_kit::point(
+            x.max(-state.scroll_handle().max_offset().x).min(px(0.)),
+            offset.y,
+        ));
+    }
     if event.keystroke.modifiers.shift && view.selection_mode == TableSelectionMode::Multiple {
         let _ = state.request_toggle(&row, true, cx);
     }

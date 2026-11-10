@@ -1,6 +1,11 @@
 //! Stateful comparison tables. Data is accepted as one immutable snapshot;
 //! scrolling, frozen-header geometry and scrollbar behavior belong to Base.
+mod cells;
 mod element;
+mod range;
+pub use range::{TableRangeRequest, TableRangeRows};
+mod spans;
+pub use spans::{TableSpan, TableSpanPlan};
 mod layout;
 mod resize;
 pub use resize::TableColumnResizeRequest;
@@ -71,6 +76,7 @@ pub enum TableRenderMode {
     Static,
     #[default]
     Rows,
+    Cells,
 }
 type Slot = Rc<dyn Fn(&mut Window, &mut App) -> AnyElement>;
 #[derive(Clone)]
@@ -96,6 +102,8 @@ pub(super) struct Presentation {
     resolved: Rc<layout::ResolvedColumns>,
     frozen: (usize, usize),
     footer_fixed: bool,
+    host: Option<(gpui_kit::ScrollHandle, Rems, Rems)>,
+    range_prefetch: Option<usize>,
 }
 /// Retain the state in the host. Rows mode always supplies its own finite
 /// viewport (20rem by default); Static grows naturally inside its parent.
@@ -130,11 +138,19 @@ impl<D: TableDelegate> YueTable<D> {
                 resolved: Rc::default(),
                 frozen: (0, 0),
                 footer_fixed: false,
+                host: None,
+                range_prefetch: None,
             },
         }
     }
     pub fn size(mut self, size: TableSize) -> Self {
         self.p.size = size;
+        self
+    }
+    /// Observe body demand from the actual virtual viewport. Network tasks and
+    /// cancellation belong to the host; duplicate/old completion is rejected.
+    pub fn range_loading(mut self, prefetch_rows: usize) -> Self {
+        self.p.range_prefetch = Some(prefetch_rows);
         self
     }
     pub fn borders(mut self, borders: TableBorders) -> Self {
@@ -168,6 +184,13 @@ impl<D: TableDelegate> YueTable<D> {
         self.p.mode = mode;
         self
     }
+    pub fn try_render_mode(mut self, mode: TableRenderMode, cx: &App) -> Result<Self, TableError> {
+        self.p.mode = mode;
+        if let Some(view) = self.state.read(cx).view() {
+            cells::validate_mode(view, &self.p)?;
+        }
+        Ok(self)
+    }
     pub fn accessibility_label(mut self, label: impl Into<SharedString>) -> Self {
         self.p.label = label.into();
         self
@@ -187,6 +210,13 @@ impl<D: TableDelegate> YueTable<D> {
     }
     pub fn footer_fixed(mut self, fixed: bool) -> Self {
         self.p.footer_fixed = fixed;
+        self
+    }
+    /// Borrow one page/panel scroll owner. The table occupies natural content
+    /// size; top/bottom reserve host chrome and constrain its frozen bands.
+    pub fn scroll_host(mut self, host: &gpui_kit::ScrollHandle, top: Rems, bottom: Rems) -> Self {
+        assert!(top.0.is_finite() && top.0 >= 0. && bottom.0.is_finite() && bottom.0 >= 0.);
+        self.p.host = Some((host.clone(), top, bottom));
         self
     }
     pub fn disabled(mut self, disabled: bool) -> Self {
@@ -227,7 +257,7 @@ impl<D: TableDelegate> YueTable<D> {
 impl<D: TableDelegate> RenderOnce for YueTable<D> {
     fn render(self, _: &mut Window, cx: &mut App) -> impl IntoElement {
         self.state
-            .update(cx, |state, _| state.presentation = Some(self.p));
+            .update(cx, |state, _| { if let Some(view) = state.view() { cells::validate_mode(view, &self.p).expect("unsupported Table configuration; use try_render_mode for fallible configuration"); } state.presentation = Some(self.p) });
         self.state
     }
 }

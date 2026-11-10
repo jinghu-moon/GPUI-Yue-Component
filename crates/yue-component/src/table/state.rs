@@ -33,13 +33,13 @@ pub trait TableDelegate: Sized + 'static {
 }
 struct RowSource<S: TableSource> {
     source: Option<Rc<S>>,
-    header: bool,
+    headers: usize,
     footer: bool,
 }
-fn footer_key() -> ElementId {
+pub(super) fn footer_key() -> ElementId {
     (ElementId::from("table-band"), "footer").into()
 }
-fn header_key() -> ElementId {
+pub(super) fn header_key() -> ElementId {
     (ElementId::from("table-band"), "header").into()
 }
 pub(super) fn row_id(scope: &SharedString, key: &TableRowKey) -> ElementId {
@@ -51,13 +51,11 @@ pub(super) fn row_id(scope: &SharedString, key: &TableRowKey) -> ElementId {
 }
 impl<S: TableSource> VirtualizerSource for RowSource<S> {
     fn len(&self) -> usize {
-        self.source.as_ref().map_or(0, |s| s.len())
-            + usize::from(self.header)
-            + usize::from(self.footer)
+        self.source.as_ref().map_or(0, |s| s.len()) + self.headers + usize::from(self.footer)
     }
     fn key_at(&self, index: usize) -> ElementId {
-        if self.header && index == 0 {
-            return header_key();
+        if index < self.headers {
+            return cells::header_id(index);
         }
         if self.footer && index + 1 == self.len() {
             return footer_key();
@@ -65,12 +63,12 @@ impl<S: TableSource> VirtualizerSource for RowSource<S> {
         let source = self.source.as_ref().unwrap();
         row_id(
             source.scope(),
-            source.row_key(index - usize::from(self.header)).unwrap(),
+            source.row_key(index - self.headers).unwrap(),
         )
     }
     fn index_of(&self, key: &ElementId) -> Option<usize> {
-        if self.header && *key == header_key() {
-            return Some(0);
+        if let Some(index) = (0..self.headers).find(|index| cells::header_id(*index) == *key) {
+            return Some(index);
         }
         if self.footer && *key == footer_key() {
             return Some(self.len() - 1);
@@ -86,14 +84,14 @@ impl<S: TableSource> VirtualizerSource for RowSource<S> {
                     .source
                     .as_ref()?
                     .position_of(&TableRowKey::try_new(child.clone()).ok()?)
-                    .map(|i| i + usize::from(self.header));
+                    .map(|i| i + self.headers);
             }
         }
         None
     }
     fn revision_at(&self, index: usize) -> u64 {
         self.source.as_ref().map_or(0, |s| {
-            s.row_key(index.saturating_sub(usize::from(self.header)))
+            s.row_key(index.saturating_sub(self.headers))
                 .map_or(s.revision(), |key| s.row_revision(key))
         })
     }
@@ -141,6 +139,12 @@ pub struct YueTableState<D: TableDelegate> {
     revision: u64,
     pub(super) requests: std::collections::HashSet<TableRequestId>,
     pub(super) repair_control_focus: bool,
+    pub(super) span_set: crate::VirtualGridSpanSet,
+    pub(super) span_signature: Option<(usize, usize, usize)>,
+    pub(super) column_target: Option<(TableColumnKey, VirtualizerScrollOptions)>,
+    pub(super) range_pending: Option<TableRangeRequest>,
+    pub(super) range_failure: Option<std::ops::Range<usize>>,
+    _range_subscription: gpui_kit::Subscription,
 }
 impl<D: TableDelegate> EventEmitter<TableEvent> for YueTableState<D> {}
 impl<D: TableDelegate> Focusable for YueTableState<D> {
@@ -155,7 +159,7 @@ impl<D: TableDelegate> YueTableState<D> {
             Axis::Vertical,
             Rc::new(RowSource::<D::Source> {
                 source: None,
-                header: false,
+                headers: 0,
                 footer: false,
             }),
             VirtualizerSizing::fixed(px(40.)),
@@ -169,6 +173,13 @@ impl<D: TableDelegate> YueTableState<D> {
             &binding,
         )
         .expect("valid table track");
+        let rows = cx.new(|_| row_state);
+        let range_subscription =
+            cx.subscribe(&rows, |s, _, event: &crate::VirtualizerEvent, cx| {
+                if let crate::VirtualizerEvent::RangeChanged { rendered, .. } = event {
+                    s.observe_range(rendered.clone(), cx);
+                }
+            });
         Self {
             delegate: delegate.downgrade(),
             accepted: None,
@@ -177,7 +188,7 @@ impl<D: TableDelegate> YueTableState<D> {
             control_focus: cx.focus_handle(),
             active: None,
             anchor: None,
-            rows: cx.new(|_| row_state),
+            rows,
             columns: cx.new(|_| column_state),
             scroll: ScrollHandle::new(),
             geometry: None,
@@ -199,6 +210,12 @@ impl<D: TableDelegate> YueTableState<D> {
             revision: 0,
             requests: Default::default(),
             repair_control_focus: false,
+            span_set: Default::default(),
+            span_signature: None,
+            column_target: None,
+            range_pending: None,
+            range_failure: None,
+            _range_subscription: range_subscription,
         }
     }
     pub fn view(&self) -> Option<&Rc<TableView<D::Source>>> {
@@ -211,7 +228,10 @@ impl<D: TableDelegate> YueTableState<D> {
         self.pending
     }
     pub fn scroll_handle(&self) -> &ScrollHandle {
-        &self.scroll
+        self.presentation
+            .as_ref()
+            .and_then(|p| p.host.as_ref())
+            .map_or(&self.scroll, |(host, _, _)| host)
     }
     pub fn column_width(&self, key: &TableColumnKey) -> Option<gpui_kit::Pixels> {
         let view = self.view()?;
@@ -261,6 +281,9 @@ impl<D: TableDelegate> YueTableState<D> {
             return Err(TableError::StaleSource);
         }
         candidate.validate(!same_source)?;
+        if let Some(p) = &self.presentation {
+            cells::validate_mode(&candidate, p)?;
+        }
         if let Some(session) = &self.edit {
             let old = self.view().unwrap();
             if candidate.source.scope() == old.source.scope()
@@ -390,9 +413,22 @@ impl<D: TableDelegate> YueTableState<D> {
             self.settle(id);
         }
         self.reconcile_edit(&candidate, cx);
+        if self.accepted.as_ref().is_some_and(|old| {
+            old.query != candidate.query || !Rc::ptr_eq(&old.columns, &candidate.columns)
+        }) {
+            if let Some(request) = self.range_pending.take() {
+                self.requests.remove(&request.id);
+            }
+            self.range_failure = None;
+        }
+        if !same_source {
+            self.span_signature = None;
+        }
         self.accepted = Some(Rc::new(candidate));
         // A full external publication invalidates requests prepared for the old source.
         if !same_source {
+            self.range_pending = None;
+            self.range_failure = None;
             self.pending = None;
             self.requests.clear();
             self.query_draft = None;
@@ -418,6 +454,9 @@ impl<D: TableDelegate> YueTableState<D> {
         Ok(())
     }
     fn settle(&mut self, id: TableRequestId) {
+        if self.range_pending.as_ref().is_some_and(|r| r.id == id) {
+            self.range_pending = None;
+        }
         self.requests.remove(&id);
         if self
             .query_draft
@@ -534,6 +573,32 @@ impl<D: TableDelegate> YueTableState<D> {
         cx.notify();
         Ok(())
     }
+    /// Locate both axes without revealing a covered cell as a second origin.
+    pub fn scroll_to_cell(
+        &mut self,
+        key: &TableCellKey,
+        options: VirtualizerScrollOptions,
+        cx: &mut Context<Self>,
+    ) -> Result<(), TableError> {
+        let view = self.accepted.as_ref().ok_or(TableError::Unbound)?;
+        let key = view.spans.origin_for(view, key);
+        if !view
+            .columns
+            .iter()
+            .any(|c| c.visible && c.key() == key.column())
+        {
+            return Err(TableError::MissingKey);
+        }
+        self.scroll_to_row(key.row(), options, cx)?;
+        if self
+            .presentation
+            .as_ref()
+            .is_some_and(|p| p.mode == TableRenderMode::Cells)
+        {
+            self.column_target = Some((key.column().clone(), options));
+        }
+        Ok(())
+    }
     pub(super) fn sync_layout(&mut self, p: &Presentation, w: &Window, cx: &mut Context<Self>) {
         let Some(view) = self.accepted.as_ref() else {
             return;
@@ -619,6 +684,7 @@ impl<D: TableDelegate> YueTableState<D> {
         }
         // Selection/load-only publications keep the source/axis geometry intact.
         let signature = sizing::Geometry {
+            mode: p.mode,
             source: view.source.revision(),
             height: f32::from(height),
             width: f32::from(width),
@@ -632,9 +698,18 @@ impl<D: TableDelegate> YueTableState<D> {
             self.measurements.sizes.retain(|key, (revision, _, _)| {
                 view.source.contains_key(key) && view.source.row_revision(key) == *revision
             });
+            let headers = if p.header_visible {
+                if p.mode == TableRenderMode::Cells {
+                    self.resolved.depth + 1
+                } else {
+                    1
+                }
+            } else {
+                0
+            };
             let source = Rc::new(RowSource {
                 source: Some(view.source.clone()),
-                header: p.header_visible,
+                headers,
                 footer: view.columns.iter().any(|c| c.footer.is_some()),
             });
             self.rows.update(cx, |s, cx| {
@@ -644,10 +719,14 @@ impl<D: TableDelegate> YueTableState<D> {
                 {
                     let sizes = (0..len)
                         .map(|ix| {
-                            if p.header_visible && ix == 0 {
-                                return height * (self.resolved.depth + 1) as f32;
+                            if ix < headers {
+                                return if p.mode == TableRenderMode::Cells {
+                                    height
+                                } else {
+                                    height * (self.resolved.depth + 1) as f32
+                                };
                             }
-                            let position = ix - usize::from(p.header_visible);
+                            let position = ix - headers;
                             let Some(key) = view.source.row_key(position) else {
                                 return height;
                             };
@@ -682,18 +761,31 @@ impl<D: TableDelegate> YueTableState<D> {
                 cx.notify();
             });
             self.columns.update(cx, |s, cx| {
-                s.replace_source(
-                    Rc::new(OneTrack),
-                    if view.sizing.is_measured() {
-                        VirtualizerSizing::known(vec![width.max(px(1.))])
+                let (source, sizing): (Rc<dyn VirtualizerSource>, VirtualizerSizing) =
+                    if p.mode == TableRenderMode::Cells {
+                        let source = cells::ColumnSource::new(view, &self.resolved);
+                        let sizes = source.sizes.clone();
+                        (Rc::new(source), VirtualizerSizing::known(sizes))
                     } else {
-                        VirtualizerSizing::fixed(width.max(px(1.)))
-                    },
+                        (
+                            Rc::new(OneTrack),
+                            if view.sizing.is_measured() {
+                                VirtualizerSizing::known(vec![width.max(px(1.))])
+                            } else {
+                                VirtualizerSizing::fixed(width.max(px(1.)))
+                            },
+                        )
+                    };
+                s.replace_source(
+                    source,
+                    sizing,
                     VirtualizerChange::Replace {
                         preserve_anchor: true,
                     },
                 )
-                .expect("validated table track");
+                .expect("validated table columns");
+                s.set_layout(VirtualizerLayout::default().overscan(height * 2.))
+                    .unwrap();
                 cx.notify();
             });
             self.geometry = Some(signature);
@@ -704,6 +796,12 @@ impl<D: TableDelegate> YueTableState<D> {
                 cx.notify();
             });
         }
+        if let Some((key, options)) = self.column_target.take() {
+            self.columns.update(cx, |s, cx| {
+                let _ = s.scroll_to_key(key.element_id(), options);
+                cx.notify();
+            });
+        }
     }
     pub(super) fn set_active(
         &mut self,
@@ -711,12 +809,23 @@ impl<D: TableDelegate> YueTableState<D> {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        let key = self
+            .accepted
+            .as_ref()
+            .map_or_else(|| key.clone(), |v| v.spans.origin_for(v, &key));
         if self.active.as_ref() != Some(&key) {
             self.active = Some(key.clone());
             cx.emit(TableEvent::ActiveChanged(Some(key.clone())));
         }
         self.focus.focus(window, cx);
         let _ = self.scroll_to_row(key.row(), VirtualizerScrollOptions::default(), cx);
+        if self
+            .presentation
+            .as_ref()
+            .is_some_and(|p| p.mode == TableRenderMode::Cells)
+        {
+            self.column_target = Some((key.column().clone(), VirtualizerScrollOptions::default()));
+        }
     }
 }
 impl<D: TableDelegate> Render for YueTableState<D> {

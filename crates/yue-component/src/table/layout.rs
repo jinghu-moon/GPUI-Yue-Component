@@ -194,12 +194,13 @@ pub(super) fn validate_groups<R: 'static>(columns: &[TableColumn<R>]) -> Result<
                 return Err(TableError::EmptyKey);
             }
             if let Some((title, parent, pin, last)) = groups.get_mut(&g.key) {
-                if *title != g.title || *parent != path || *pin != c.pin || *last + 1 != ix {
+                if *title != g.title || *parent != path || *last + 1 != ix {
                     return Err(TableError::UnsupportedCombination(
-                        "header groups must be contiguous and stay within one pin region",
+                        "header groups must be contiguous with consistent titles and ancestry",
                     ));
                 }
                 *last = ix;
+                *pin = c.pin;
             } else {
                 groups.insert(g.key.clone(), (g.title.clone(), path.clone(), c.pin, ix));
             }

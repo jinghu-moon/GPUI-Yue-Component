@@ -72,11 +72,14 @@ def main():
     parser.add_argument("--executable", type=Path, required=True, help="prebuilt table integration-test executable")
     parser.add_argument("--output", type=Path, required=True, help="new evidence directory (must not exist)")
     parser.add_argument("--profile", choices=["dev", "release"], required=True)
-    parser.add_argument("--workload", choices=["tb01", "m2-layout", "tb03", "tb06"], default="tb01")
+    parser.add_argument("--workload", choices=["tb01", "m2-layout", "tb03", "tb06", "tb02"], default="tb01")
+    parser.add_argument("--attempts", type=int, default=3, help="whole-run retries after interference; acceptance/quiet gates are unchanged")
     parser.add_argument("--build-record", type=Path, required=True, help="cargo --message-format=json output from the preceding no-run build")
     args = parser.parse_args()
-    case = {"tb01": CASE, "m2-layout": "benchmark::m2_headless_layout_frame_sample", "tb03": "complex::tb03_measured_frame_sample", "tb06": "complex::tb06_tree_frame_sample"}[args.workload]
-    large_count = {"tb03": 20_000, "tb06": 50_000}.get(args.workload, 100_000)
+    if args.attempts < 1:
+        parser.error("attempts must be positive")
+    case = {"tb02": "cells::tb02_cells_frame_sample", "tb01": CASE, "m2-layout": "benchmark::m2_headless_layout_frame_sample", "tb03": "complex::tb03_measured_frame_sample", "tb06": "complex::tb06_tree_frame_sample"}[args.workload]
+    large_count = {"tb03": 20_000, "tb06": 50_000, "tb02": 50_000}.get(args.workload, 100_000)
     order = [1000, large_count, large_count, 1000]
     executable = args.executable.resolve(strict=True)
     build_records = [json.loads(line) for line in args.build_record.read_text(encoding="utf-8-sig").splitlines() if line.startswith("{")]
@@ -95,7 +98,7 @@ def main():
         for slot, count in enumerate(order):
             label = f"block-{block}-slot-{slot}-rows-{count}"
             env = dict(os.environ, YUE_TABLE_BENCH_ROWS=str(count))
-            for attempt in range(1, 4):
+            for attempt in range(1, args.attempts + 1):
                 wait_quiet()
                 log = args.output / f"{label}-attempt-{attempt}.txt"
                 started = time.time()
@@ -115,7 +118,7 @@ def main():
                 discarded.append(log.name)
                 print(f"Discarding {log.name}: compilation/Showcase observed", flush=True)
             else:
-                raise RuntimeError("three interrupted attempts; raw logs retained, no acceptance")
+                raise RuntimeError(f"{args.attempts} interrupted attempts; raw logs retained, no acceptance")
             output = log.read_text(encoding="utf-8")
             check_native_output(output, case)  # Exactly one executed passing test; zero matches cannot pass.
             samples = re.findall(r"TABLE_FRAME,rows=(\d+),frame=(\d+),ns=(\d+),renders=(\d+)", output)
@@ -141,11 +144,19 @@ def main():
                     raise ValueError("raster bytes fixture missing")
                 if args.workload == "tb06" and f"TABLE_TREE,nodes={count},roots={count//100},visible={count//100+990}" not in output:
                     raise ValueError("tree projection counts wrong")
+            if args.workload == "tb02":
+                allocations = re.findall(r"TABLE_ALLOC,rows=(\d+),sample=(\d+),allocations=(\d+),bytes=(\d+)", output)
+                if len(allocations) != 10 or [int(a[1]) for a in allocations] != list(range(10)):
+                    raise ValueError("TB02 allocation attribution missing")
+                if max(int(s[3]) for s in samples) > 377:
+                    raise ValueError("TB02 exceeds (ceil((448+160)/40)+3)*(ceil((1024+160)/80)+4)+16")
+                if f"TABLE_MATRIX,rows={count},columns=256,sizing=Known,pins=2+2,frozen_rows=1+1,spans=16" not in output:
+                    raise ValueError("TB02 matrix fixture identity missing")
             runs.append(dict(block=block, slot=slot, rows=count, mount_ns=int(mount[0][1]), allocations=allocations, p50_ns=quantile(timings, .5), p95_ns=quantile(timings, .95), p99_ns=quantile(timings, .99), log_sha256=digest(log), wall_seconds=round(time.time()-started, 3)))
             print(f"{label}: p50={runs[-1]['p50_ns']}ns, p95={runs[-1]['p95_ns']}ns", flush=True)
     # Work must be identical at every point in the trace, across all repetitions.
     expected = [r["renders"] for r in rows[:1000]]
-    if args.workload in ["tb01", "m2-layout"] and any([r["renders"] for r in rows[start:start+1000]] != expected for start in range(0, len(rows), 1000)):
+    if args.workload in ["tb01", "m2-layout", "tb02"] and any([r["renders"] for r in rows[start:start+1000]] != expected for start in range(0, len(rows), 1000)):
         raise ValueError("different worksets across ABBA samples")
     if source_digest() != initial_sources or digest(executable) != executable_hash:
         raise ValueError("sources or executable changed during sampling")
@@ -155,8 +166,8 @@ def main():
     ratios = {name: statistics.median(run[name] for run in runs if run["rows"] == large_count) / statistics.median(run[name] for run in runs if run["rows"] == 1000) for name in ["p50_ns", "p95_ns", "p99_ns"]}
     identity = dict(kind=f"{args.workload}-headless-size-scaling", profile=args.profile, cargo_profile=artifact[0]["profile"], build_record_sha256=digest(args.build_record), head=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), dirty=bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
         source_sha256=initial_sources, executable_sha256=executable_hash, lock_sha256=digest(ROOT / "Cargo.lock"), os=platform.platform(), processor=platform.processor(), discarded=discarded,
-        case=case, order=order, independent_blocks=3, warmup_frames=120, frames_per_run=1000, total_frames=len(rows),
-        fixture=({"tb03": "64rem x 32rem; 28rem table; rem16 light/neutral; Rows Measured; 8 columns; 1/2/4 lines; Avatar/Tag/Button; fixed 512 64x64 raster pool 8388608 CPU bytes; GPU residency unmeasured", "tb06": "64rem x32rem; 28rem table; rem16 light/neutral; 100 nodes/root; first 10 expanded; 8 text columns; structure build included in mount"}.get(args.workload) or ("64rem x 32rem host; 28rem body; rem16; light/neutral; reduced motion; Rows Fixed; 12 text columns; repeated vertical trace" if args.workload == "tb01" else "48/64/80rem host every 10 frames; 28rem body; rem16; light/neutral; reduced motion; Rows Known grouped header; 12 text columns; start/end pinned column; start/end data row; fixed footer; deterministic XY trace; container feedback outside draw timing")), gate="two quiet observations; monitor compilation and Showcase throughout each sample; reject interference", ratios=ratios, runs=runs,
+        case=case, max_attempts=args.attempts, order=order, independent_blocks=3, warmup_frames=120, frames_per_run=1000, total_frames=len(rows),
+        fixture=({"tb02": "64rem host; 28rem table; 256 text columns; Known row heights 40/48/56px; widths 80/96/112px; two pinned columns each end; start/end data row; 16 sparse 3x2 body spans; deterministic XY trace", "tb03": "64rem x 32rem; 28rem table; rem16 light/neutral; Rows Measured; 8 columns; 1/2/4 lines; Avatar/Tag/Button; fixed 512 64x64 raster pool 8388608 CPU bytes; GPU residency unmeasured", "tb06": "64rem x32rem; 28rem table; rem16 light/neutral; 100 nodes/root; first 10 expanded; 8 text columns; structure build included in mount"}.get(args.workload) or ("64rem x 32rem host; 28rem body; rem16; light/neutral; reduced motion; Rows Fixed; 12 text columns; repeated vertical trace" if args.workload == "tb01" else "48/64/80rem host every 10 frames; 28rem body; rem16; light/neutral; reduced motion; Rows Known grouped header; 12 text columns; start/end pinned column; start/end data row; fixed footer; deterministic XY trace; container feedback outside draw timing")), gate="two quiet observations; monitor compilation and Showcase throughout each sample; reject interference", ratios=ratios, runs=runs,
         accepted="correctness and bounded working set only; timing is an initial baseline, no regression threshold or native FPS claim")
     (args.output / "identity.json").write_text(json.dumps(identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(ratios), flush=True)

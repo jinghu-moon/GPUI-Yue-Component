@@ -76,7 +76,10 @@ fn constraints_responsive_restore_and_atomic_group_rejection(cx: &mut TestAppCon
         .clone()
         .header_path(vec![group.clone()])
         .pin(TablePin::Start);
-    cols[1] = cols[1].clone().header_path(vec![group]);
+    cols[1] = cols[1].clone().header_path(vec![TableHeaderGroup::new(
+        "identity",
+        "Inconsistent title",
+    )]);
     assert!(
         state
             .update(cx, |s, cx| s.commit_view(

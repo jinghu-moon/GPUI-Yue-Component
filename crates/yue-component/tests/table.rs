@@ -1033,12 +1033,12 @@ fn replacing_source_releases_history_and_rejects_old_ticket(cx: &mut TestAppCont
     );
 }
 
+#[path = "table/outline.rs"]
+mod outline;
 #[path = "table/query.rs"]
 mod query;
 #[path = "table/sizing.rs"]
 mod sizing;
-#[path = "table/outline.rs"]
-mod outline;
 
 #[path = "table/edit.rs"]
 mod edit;
@@ -1048,3 +1048,6 @@ mod complex;
 
 #[path = "table/allocation.rs"]
 mod allocation;
+
+#[path = "table/cells.rs"]
+mod cells;

@@ -109,6 +109,7 @@ impl<D: TableDelegate> YueTableState<D> {
         }
         if view.source.position_of(key.row()).is_none()
             || view.source.is_detail(key.row())
+            || view.source.is_placeholder(key.row())
             || !view
                 .columns
                 .iter()

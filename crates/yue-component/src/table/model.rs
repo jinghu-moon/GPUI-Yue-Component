@@ -1,5 +1,6 @@
 use super::TableRowSizing;
 use super::TableSize;
+use super::TableSpanPlan;
 use gpui_kit::{
     AnyElement, App, ElementId, IntoElement, ParentElement as _, Pixels, Rems, SharedString,
     Styled as _, Window, div, rems,
@@ -104,6 +105,14 @@ pub trait TableSource: 'static {
         self.revision()
     }
     fn is_detail(&self, _key: &TableRowKey) -> bool {
+        false
+    }
+    /// An addressable, unloaded slot. It has no business row or selection membership.
+    fn is_placeholder(&self, _key: &TableRowKey) -> bool {
+        false
+    }
+    /// O(1) summary for sources with unloaded slots; override together with is_placeholder.
+    fn has_placeholders(&self) -> bool {
         false
     }
     /// Pagination units can be roots while visible rows include descendants/details.
@@ -501,6 +510,8 @@ pub struct TableView<S: TableSource> {
     pub(super) total: super::TableTotal,
     pub(super) page_selection: (usize, usize),
     pub(super) sizing: TableRowSizing,
+    pub(super) spans: TableSpanPlan,
+    pub(super) has_details: bool,
 }
 impl<S: TableSource> Clone for TableView<S> {
     fn clone(&self) -> Self {
@@ -518,6 +529,8 @@ impl<S: TableSource> Clone for TableView<S> {
             total: self.total,
             page_selection: self.page_selection,
             sizing: self.sizing.clone(),
+            spans: self.spans.clone(),
+            has_details: self.has_details,
         }
     }
 }
@@ -525,6 +538,9 @@ impl<S: TableSource> TableView<S> {
     pub fn new(source: Rc<S>, columns: impl Into<Rc<[TableColumn<S::Row>]>>) -> Self {
         let len = source.len();
         let total = super::TableTotal::Known(len);
+        let has_details = (0..len)
+            .filter_map(|i| source.row_key(i))
+            .any(|k| source.is_detail(k));
         Self {
             source,
             columns: columns.into(),
@@ -539,6 +555,8 @@ impl<S: TableSource> TableView<S> {
             total,
             page_selection: (len, 0),
             sizing: TableRowSizing::default(),
+            spans: TableSpanPlan::default(),
+            has_details,
         }
     }
     /// Replace a complete column configuration atomically, retaining stable keys.
@@ -552,6 +570,13 @@ impl<S: TableSource> TableView<S> {
     pub fn with_row_sizing(mut self, sizing: TableRowSizing) -> Self {
         self.sizing = sizing;
         self
+    }
+    pub fn with_spans(mut self, spans: TableSpanPlan) -> Self {
+        self.spans = spans;
+        self
+    }
+    pub fn spans(&self) -> &TableSpanPlan {
+        &self.spans
     }
     pub fn row_sizing(&self) -> &TableRowSizing {
         &self.sizing
@@ -624,8 +649,14 @@ impl<S: TableSource> TableView<S> {
             && self.data_mode == other.data_mode
             && self.total == other.total
             && self.sizing.same(&other.sizing)
+            && self.spans.same(&other.spans)
     }
     pub(super) fn validate(&self, validate_source: bool) -> Result<(), TableError> {
+        if self.data_mode == super::TableDataMode::Local && self.source.has_placeholders() {
+            return Err(TableError::UnsupportedCombination(
+                "local query requires fully loaded records",
+            ));
+        }
         self.query.validate(&self.columns)?;
         self.sizing.validate(self.source.as_ref())?;
         if self
@@ -671,7 +702,8 @@ impl<S: TableSource> TableView<S> {
                 if !keys.insert(key) {
                     return Err(TableError::DuplicateRowKey(key.clone()));
                 }
-                if self.source.position_of(key) != Some(position) || self.source.row(key).is_none()
+                if self.source.position_of(key) != Some(position)
+                    || (self.source.row(key).is_none() && !self.source.is_placeholder(key))
                 {
                     return Err(TableError::InvalidSource);
                 }
@@ -702,6 +734,7 @@ impl<S: TableSource> TableView<S> {
             width += extent;
         }
         super::layout::validate_groups(&self.columns)?;
+        self.spans.validate(self)?;
         if !width.is_finite() {
             return Err(TableError::InvalidGeometry);
         }
@@ -771,7 +804,10 @@ impl TableSelectionRequest {
                         .source
                         .row_key(position)
                         .ok_or(TableError::InvalidSource)?;
-                    if *checked && !next.disabled_rows.contains(key) && !next.source.is_detail(key)
+                    if *checked
+                        && !next.disabled_rows.contains(key)
+                        && !next.source.is_detail(key)
+                        && !next.source.is_placeholder(key)
                     {
                         next.selection.insert(key.clone());
                     } else {
@@ -784,6 +820,7 @@ impl TableSelectionRequest {
                     || next.source.position_of(key).is_none()
                     || next.disabled_rows.contains(key)
                     || next.source.is_detail(key)
+                    || next.source.is_placeholder(key)
                 {
                     return Err(TableError::InvalidSelection);
                 }
@@ -809,7 +846,10 @@ impl TableSelectionRequest {
                         .source
                         .row_key(position)
                         .ok_or(TableError::InvalidSource)?;
-                    if !next.disabled_rows.contains(key) && !next.source.is_detail(key) {
+                    if !next.disabled_rows.contains(key)
+                        && !next.source.is_detail(key)
+                        && !next.source.is_placeholder(key)
+                    {
                         next.selection.insert(key.clone());
                     }
                 }
@@ -820,6 +860,7 @@ impl TableSelectionRequest {
 }
 #[derive(Clone, Debug)]
 pub enum TableEvent {
+    RangeRequested(super::TableRangeRequest),
     EditRequested {
         key: TableCellKey,
         mode: super::TableEditMode,
