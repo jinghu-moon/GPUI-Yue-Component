@@ -1,5 +1,16 @@
 # Yue Base patches
 
+## Keyed tree sibling sorting and load preparation (2026-11-11)
+
+`KeyedTreeModel::sort_siblings` stably sorts each siblings index and rebuilds
+preorder, retaining expansion, focus, selection and pending node loads. The
+consumer supplies a pure comparator and domain lookup; Base keeps tree geometry.
+`is_current_load` allows applications to reject obsolete success payloads before
+conversion or validation. Existing apply/reject methods still recheck tickets.
+YueTable M4 covers subtree continuity and stale invalid payload isolation in
+`tests/table/outline.rs`. No new dependency or GPUI core change.
+
+
 ## Trailing frozen virtual-grid axes (2026-11-11)
 
 `VirtualGrid::frozen_end_rows/columns` extends the existing prefix contract with

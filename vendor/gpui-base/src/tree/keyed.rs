@@ -344,6 +344,33 @@ impl KeyedTreeModel {
     pub fn keys(&self) -> &[SharedString] {
         &self.order
     }
+    /// Stable sibling sorting keeps each subtree contiguous and all keyed state.
+    /// The comparator receives metadata; callers can look up domain values by key.
+    pub fn sort_siblings(
+        &mut self,
+        mut compare: impl FnMut(&TreeNode, &TreeNode) -> std::cmp::Ordering,
+    ) {
+        let mut roots = self.roots.clone();
+        roots.sort_by(|a, b| compare(&self.records[a].node, &self.records[b].node));
+        let mut children = HashMap::new();
+        for (key, record) in &self.records {
+            let mut keys = record.children.clone();
+            keys.sort_by(|a, b| compare(&self.records[a].node, &self.records[b].node));
+            children.insert(key.clone(), keys);
+        }
+        self.roots = roots;
+        for (key, keys) in children {
+            self.records.get_mut(&key).unwrap().children = keys;
+        }
+        let mut pending: Vec<_> = self.roots.iter().rev().cloned().collect();
+        self.order.clear();
+        while let Some(key) = pending.pop() {
+            pending.extend(self.records[&key].children.iter().rev().cloned());
+            self.order.push(key);
+        }
+        self.recompute();
+        self.rebuild();
+    }
     pub fn rows(&self) -> Rc<Vec<TreeRow>> {
         self.rows.clone()
     }
@@ -1130,6 +1157,10 @@ impl KeyedTreeModel {
         self.load
             .insert(ticket.target.clone(), TreeLoadState::Failed(error));
         TreeApply::Applied
+    }
+    /// Check before preparing a potentially expensive application result.
+    pub fn is_current_load(&self, ticket: &TreeLoadTicket) -> bool {
+        self.pending.get(&ticket.target) == Some(ticket)
     }
     pub fn apply_children(
         &mut self,
