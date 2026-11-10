@@ -112,10 +112,13 @@ impl TableSpanPlan {
             if columns[c..end_col]
                 .iter()
                 .any(|col| col.pin != columns[c].pin || col.responsive.is_some())
-                || (r..end_row).any(|ix| view.source.is_detail(view.source.row_key(ix).unwrap()))
+                || (r..end_row).any(|ix| {
+                    let key = view.source.row_key(ix).unwrap();
+                    view.source.is_detail(key) || view.source.is_placeholder(key)
+                })
             {
                 return Err(TableError::UnsupportedCombination(
-                    "spans cannot cross pin regions, responsive columns or details",
+                    "spans cannot cross pin regions, responsive columns, placeholders or details",
                 ));
             }
             rectangles.push((r..end_row, c..end_col));

@@ -144,7 +144,15 @@ pub struct YueTableState<D: TableDelegate> {
     pub(super) column_target: Option<(TableColumnKey, VirtualizerScrollOptions)>,
     pub(super) range_pending: Option<TableRangeRequest>,
     pub(super) range_failure: Option<std::ops::Range<usize>>,
+    pub(super) tail_seen: Option<SharedString>,
+    pub(super) tail_failed: Option<SharedString>,
     _range_subscription: gpui_kit::Subscription,
+    pub(super) drag: Option<reorder::DragSession>,
+    pub(super) drag_sequence: u64,
+    pub(super) static_row_bounds:
+        std::collections::HashMap<TableRowKey, gpui_kit::Bounds<gpui_kit::Pixels>>,
+    pub(super) table_bounds: Rc<std::cell::Cell<gpui_kit::Bounds<gpui_kit::Pixels>>>,
+    pub(super) layout_rem: gpui_kit::Pixels,
 }
 impl<D: TableDelegate> EventEmitter<TableEvent> for YueTableState<D> {}
 impl<D: TableDelegate> Focusable for YueTableState<D> {
@@ -215,7 +223,14 @@ impl<D: TableDelegate> YueTableState<D> {
             column_target: None,
             range_pending: None,
             range_failure: None,
+            tail_seen: None,
+            tail_failed: None,
             _range_subscription: range_subscription,
+            drag: None,
+            drag_sequence: 0,
+            static_row_bounds: Default::default(),
+            table_bounds: Rc::default(),
+            layout_rem: px(16.),
         }
     }
     pub fn view(&self) -> Option<&Rc<TableView<D::Source>>> {
@@ -381,6 +396,7 @@ impl<D: TableDelegate> YueTableState<D> {
                 .is_some_and(|old| old.query != candidate.query)
         {
             self.cancel_resize(cx);
+            self.cancel_drag(cx);
         }
         self.revision += 1;
         candidate.revision = self.revision;
@@ -412,11 +428,28 @@ impl<D: TableDelegate> YueTableState<D> {
             let id = *id;
             self.settle(id);
         }
+        let completing_tail = response_to.is_some_and(|id| {
+            self.range_pending
+                .as_ref()
+                .is_some_and(|r| r.id() == id && r.tail_cursor().is_some())
+        });
+        if (!same_source && !completing_tail)
+            || self.accepted.as_ref().is_some_and(|old| {
+                old.source.scope() != candidate.source.scope() || old.query != candidate.query
+            })
+        {
+            self.tail_seen = None;
+            self.tail_failed = None;
+        }
         self.reconcile_edit(&candidate, cx);
         if self.accepted.as_ref().is_some_and(|old| {
             old.query != candidate.query || !Rc::ptr_eq(&old.columns, &candidate.columns)
         }) {
             if let Some(request) = self.range_pending.take() {
+                if request.tail_cursor().is_some() && !completing_tail {
+                    self.tail_seen = None;
+                    self.tail_failed = None;
+                }
                 self.requests.remove(&request.id);
             }
             self.range_failure = None;
@@ -600,6 +633,7 @@ impl<D: TableDelegate> YueTableState<D> {
         Ok(())
     }
     pub(super) fn sync_layout(&mut self, p: &Presentation, w: &Window, cx: &mut Context<Self>) {
+        self.layout_rem = w.rem_size();
         let Some(view) = self.accepted.as_ref() else {
             return;
         };

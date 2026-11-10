@@ -1,3 +1,4 @@
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{AppContext as _, Entity, TestAppContext};
 use std::rc::Rc;
 use yue_component::{
@@ -189,6 +190,8 @@ struct Probe {
     host_width: gpui_kit::Rems,
     frozen: (usize, usize),
     footer_fixed: bool,
+    row_drag: yue_component::TableRowDrag,
+    tail: Option<(SharedString, gpui_kit::Rems, bool)>,
 }
 impl Probe {
     fn new(count: usize, twelve: bool, cx: &mut Context<Self>) -> Self {
@@ -262,6 +265,26 @@ impl Probe {
             .unwrap()
         });
         let subscription = cx.subscribe(&state, |p, state, event: &TableEvent, cx| {
+            if let TableEvent::RowMoveRequested(request) = event {
+                p.requests += 1;
+                let view = state.read(cx).view().unwrap().clone();
+                state.update(cx, |s, cx| {
+                    s.commit_view(
+                        request.apply_to_rows(&view).unwrap(),
+                        Some(request.id()),
+                        cx,
+                    )
+                    .unwrap();
+                });
+            }
+            if let TableEvent::ColumnMoveRequested(request) = event {
+                p.requests += 1;
+                let view = state.read(cx).view().unwrap().clone();
+                state.update(cx, |s, cx| {
+                    s.commit_view(request.apply_to(&view).unwrap(), Some(request.id()), cx)
+                        .unwrap();
+                });
+            }
             if let TableEvent::ColumnResizeRequested(request) = event {
                 p.requests += 1;
                 if p.defer_resize {
@@ -308,6 +331,8 @@ impl Probe {
             host_width: rems(64.),
             frozen: (0, 0),
             footer_fixed: false,
+            row_drag: yue_component::TableRowDrag::None,
+            tail: None,
         }
     }
 }
@@ -322,7 +347,11 @@ impl Render for Probe {
                 .render_mode(self.mode)
                 .disabled(self.disabled)
                 .frozen_rows(self.frozen.0, self.frozen.1)
-                .footer_fixed(self.footer_fixed),
+                .footer_fixed(self.footer_fixed)
+                .row_drag(self.row_drag)
+                .when_some(self.tail.clone(), |table, (cursor, distance, more)| {
+                    table.tail_loading(cursor, distance, more)
+                }),
         )
     }
 }
@@ -1051,3 +1080,9 @@ mod allocation;
 
 #[path = "table/cells.rs"]
 mod cells;
+
+#[path = "table/customization.rs"]
+mod customization;
+
+#[path = "table/churn.rs"]
+mod churn;

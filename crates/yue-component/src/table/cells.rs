@@ -72,11 +72,35 @@ pub(super) struct CellPart {
     pub rows: usize,
     pub columns: usize,
     pub header_level: usize,
+    pub natural: bool,
 }
 pub(super) fn validate_mode<S: TableSource>(
     view: &TableView<S>,
     p: &Presentation,
 ) -> Result<(), TableError> {
+    if (p.tail.is_some() && p.range_prefetch.is_some())
+        || ((p.tail.is_some() || p.range_prefetch.is_some()) && view.query.page().is_some())
+    {
+        return Err(TableError::UnsupportedCombination(
+            "choose one loading navigation protocol",
+        ));
+    }
+    if p.tail
+        .as_ref()
+        .is_some_and(|(cursor, _, _)| cursor.trim().is_empty())
+    {
+        return Err(TableError::EmptyKey);
+    }
+    if p.mode == TableRenderMode::Static && (p.tail.is_some() || p.range_prefetch.is_some()) {
+        return Err(TableError::UnsupportedCombination(
+            "range and tail loading require a virtual viewport",
+        ));
+    }
+    if p.mode == TableRenderMode::Static && (p.frozen != (0, 0) || p.footer_fixed) {
+        return Err(TableError::UnsupportedCombination(
+            "frozen data rows and fixed footer require a virtual viewport",
+        ));
+    }
     if p.mode == TableRenderMode::Cells && (view.sizing.is_measured() || view.has_details) {
         return Err(TableError::UnsupportedCombination(
             "Cells requires Fixed/Known and no full-width details",
@@ -88,9 +112,9 @@ pub(super) fn validate_mode<S: TableSource>(
         ));
     }
     for span in view.spans.descriptors() {
-        if p.mode != TableRenderMode::Cells && span.row_span() != 1 {
+        if p.mode == TableRenderMode::Rows && span.row_span() != 1 {
             return Err(TableError::UnsupportedCombination(
-                "rowspan requires Cells with Fixed/Known",
+                "rowspan requires Static or Cells with Fixed/Known",
             ));
         }
         let r = view
@@ -224,6 +248,7 @@ pub(super) fn render<D: TableDelegate>(
                 rows: item.row_span(),
                 columns: item.column_span(),
                 header_level: level,
+                natural: false,
             };
             if level < rows
                 && let Some(index) = index
@@ -247,7 +272,20 @@ pub(super) fn render<D: TableDelegate>(
                     })
                     .aria_row_index(level)
                     .aria_column_index(grid_column)
-                    .aria_column_span(item.column_span())
+                    .aria_column_span(if first {
+                        rp.resolved
+                            .indices
+                            .iter()
+                            .filter(|i| {
+                                render_view.columns[**i]
+                                    .groups
+                                    .get(level)
+                                    .is_some_and(|g| g.key() == group.key())
+                            })
+                            .count()
+                    } else {
+                        item.column_span()
+                    })
                     .size_full()
                     .flex()
                     .items_center()

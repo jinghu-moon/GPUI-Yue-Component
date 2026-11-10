@@ -164,6 +164,9 @@ impl TableQuery {
             .value
             .downcast_ref()
     }
+    pub fn has_filters(&self) -> bool {
+        !self.filters.is_empty()
+    }
     pub fn has_filter(&self, column: &TableColumnKey) -> bool {
         self.filters.contains_key(column)
     }
@@ -185,7 +188,9 @@ impl TableQuery {
         for sort in &self.sorts {
             if !seen.insert(&sort.column)
                 || !columns.iter().any(|c| {
-                    c.key() == &sort.column && c.query.as_ref().is_some_and(|r| r.compare.is_some())
+                    c.allowed
+                        && c.key() == &sort.column
+                        && c.query.as_ref().is_some_and(|r| r.compare.is_some())
                 })
             {
                 return Err(TableError::InvalidQuery(
@@ -196,7 +201,7 @@ impl TableQuery {
         for (key, filter) in &self.filters {
             let rule = columns
                 .iter()
-                .find(|c| c.key() == key)
+                .find(|c| c.allowed && c.key() == key)
                 .and_then(|c| c.query.as_ref())
                 .ok_or_else(|| TableError::InvalidQuery("filter column removed".into()))?;
             if rule.id != filter.rule || !(rule.validate)(filter.value.as_ref()) {

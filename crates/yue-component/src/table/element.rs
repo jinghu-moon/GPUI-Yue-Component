@@ -31,12 +31,18 @@ pub(super) fn render<D: TableDelegate>(
             state.editor_focuses.clear();
         }
     }
+    state.static_row_bounds.clear();
+    p.drag_preview = state.drag.as_ref().and_then(|d| d.target.clone());
     let weak = cx.weak_entity();
+    let region_focus = state.focus.clone();
     w.use_keyed_state((p.id.clone(), "table-resize-lifetime"), cx, |w, cx| {
         let released = weak.clone();
         cx.on_release(move |_: &mut resize::ResizeLifetime, cx| {
             let _ = released.update(cx, |s, cx| {
                 s.cancel_resize(cx);
+                s.cancel_drag(cx);
+                s.tail_seen = None;
+                s.tail_failed = None;
                 if let Some(request) = s.range_pending.take() {
                     s.requests.remove(&request.id);
                 }
@@ -48,10 +54,22 @@ pub(super) fn render<D: TableDelegate>(
             });
         })
         .detach();
+        let blur_owner = weak.clone();
+        let blur = cx.on_focus_out(&region_focus, w, move |_, _, _, cx| {
+            let _ = blur_owner.update(cx, |s, cx| {
+                if s.drag.as_ref().is_some_and(|d| d.pointer.is_none()) {
+                    s.cancel_drag(cx);
+                }
+            });
+        });
         resize::ResizeLifetime {
+            _blur: blur,
             _activation: cx.observe_window_activation(w, move |_, w, cx| {
                 if !w.is_window_active() {
-                    let _ = weak.update(cx, |s, cx| s.cancel_resize(cx));
+                    let _ = weak.update(cx, |s, cx| {
+                        s.cancel_resize(cx);
+                        s.cancel_drag(cx);
+                    });
                 }
             }),
         }
@@ -80,11 +98,18 @@ pub(super) fn render<D: TableDelegate>(
             |_, _, _| {},
             move |_, _, w, _| {
                 let moving = pointer_owner.clone();
-                w.on_mouse_event(move |event: &gpui_kit::MouseMoveEvent, phase, _, cx| {
+                w.on_mouse_event(move |event: &gpui_kit::MouseMoveEvent, phase, w, cx| {
                     if !phase.capture() {
                         return;
                     }
                     let _ = moving.update(cx, |s, cx| {
+                        if s.drag.as_ref().is_some_and(|d| d.pointer.is_some()) {
+                            if event.pressed_button == Some(gpui_kit::MouseButton::Left) {
+                                s.pointer_drag(event.position, w, cx);
+                            } else {
+                                s.cancel_drag(cx);
+                            }
+                        }
                         if s.has_pointer_resize() {
                             if event.pressed_button == Some(gpui_kit::MouseButton::Left) {
                                 s.pointer_resize(event.position.x, cx);
@@ -94,11 +119,15 @@ pub(super) fn render<D: TableDelegate>(
                         }
                     });
                 });
-                w.on_mouse_event(move |event: &gpui_kit::MouseUpEvent, phase, _, cx| {
+                w.on_mouse_event(move |event: &gpui_kit::MouseUpEvent, phase, w, cx| {
                     if !phase.capture() || event.button != gpui_kit::MouseButton::Left {
                         return;
                     }
                     let _ = pointer_owner.update(cx, |s, cx| {
+                        if s.drag.as_ref().is_some_and(|d| d.pointer.is_some()) {
+                            s.pointer_drag(event.position, w, cx);
+                            s.finish_drag(cx);
+                        }
                         if s.has_pointer_resize() {
                             s.pointer_resize(event.position.x, cx);
                             s.finish_resize(cx);
@@ -118,6 +147,7 @@ pub(super) fn render<D: TableDelegate>(
     };
     // Also release the previous axis source when entering empty/no-column states.
     state.sync_layout(&p, w, cx);
+    state.observe_tail(cx);
     p.resolved = state.resolved.clone();
     let busy = matches!(
         view.load,
@@ -137,6 +167,7 @@ pub(super) fn render<D: TableDelegate>(
         );
     }
     let observe_owner = cx.weak_entity();
+    let table_bounds = state.table_bounds.clone();
     let host_width = p.host.as_ref().map(|(host, _, _)| host.clone());
     let border = if p.outer_border { px(2.) } else { px(0.) };
     let edit = state.edit.clone();
@@ -144,6 +175,13 @@ pub(super) fn render<D: TableDelegate>(
     let mut table = div()
         .id("table-region")
         .on_prepaint(move |bounds, _, cx| {
+            table_bounds.set(gpui_kit::Bounds::new(
+                bounds.origin + gpui_kit::point(border / 2., border / 2.),
+                gpui_kit::size(
+                    (bounds.size.width - border).max(px(0.)),
+                    (bounds.size.height - border).max(px(0.)),
+                ),
+            ));
             let width = (host_width
                 .as_ref()
                 .map_or(bounds.size.width, |h| h.bounds().size.width)
@@ -185,6 +223,15 @@ pub(super) fn render<D: TableDelegate>(
         )
         .track_focus(&state.focus.clone().tab_stop(!p.disabled))
         .on_key_down(cx.listener(|s, event: &gpui_kit::KeyDownEvent, w, cx| {
+            if event.keystroke.key == "escape" && s.drag.is_some() {
+                s.cancel_drag(cx);
+                cx.stop_propagation();
+                return;
+            }
+            if s.keyboard_drag(event.keystroke.key.as_str(), cx) {
+                cx.stop_propagation();
+                return;
+            }
             if event.keystroke.key == "escape" && s.edit.is_some() {
                 s.cancel_edit(w, cx);
                 cx.stop_propagation();
@@ -366,27 +413,69 @@ pub(super) fn render<D: TableDelegate>(
             // still has a single owner for header, body and column footer.
             let total = p.resolved.total;
             let mut content = div().w(total).min_w_full().flex().flex_col();
-            for index in 0..view.source.len()
-                + usize::from(p.header_visible)
-                + usize::from(view.columns.iter().any(|c| c.footer.is_some()))
-            {
-                content = content.child(row(
-                    &view,
-                    index,
-                    None,
-                    None,
-                    &p,
-                    &delegate,
-                    &owner,
-                    active.as_ref(),
-                    edit.as_ref(),
-                    measurement_epoch,
-                    &row_scroll,
-                    &focus,
-                    &control_focus,
-                    w,
-                    cx,
-                ));
+            if view.spans.descriptors().iter().any(|s| s.row_span() > 1) {
+                if p.header_visible {
+                    content = content.child(row(
+                        &view,
+                        0,
+                        None,
+                        None,
+                        &p,
+                        &delegate,
+                        &owner,
+                        active.as_ref(),
+                        edit.as_ref(),
+                        measurement_epoch,
+                        &row_scroll,
+                        &focus,
+                        &control_focus,
+                        w,
+                        cx,
+                    ));
+                }
+                content = content.child(static_grid::render(state, &view, &p, w, cx));
+                if view.columns.iter().any(|c| c.footer.is_some()) {
+                    content = content.child(row(
+                        &view,
+                        view.source.len() + usize::from(p.header_visible),
+                        None,
+                        None,
+                        &p,
+                        &delegate,
+                        &owner,
+                        active.as_ref(),
+                        edit.as_ref(),
+                        measurement_epoch,
+                        &row_scroll,
+                        &focus,
+                        &control_focus,
+                        w,
+                        cx,
+                    ));
+                }
+            } else {
+                for index in 0..view.source.len()
+                    + usize::from(p.header_visible)
+                    + usize::from(view.columns.iter().any(|c| c.footer.is_some()))
+                {
+                    content = content.child(row(
+                        &view,
+                        index,
+                        None,
+                        None,
+                        &p,
+                        &delegate,
+                        &owner,
+                        active.as_ref(),
+                        edit.as_ref(),
+                        measurement_epoch,
+                        &row_scroll,
+                        &focus,
+                        &control_focus,
+                        w,
+                        cx,
+                    ));
+                }
             }
             table = table
                 .child(
@@ -476,6 +565,18 @@ pub(super) fn row<D: TableDelegate>(
         .w_full()
         .min_w_0()
         .items_stretch();
+    if p.mode == TableRenderMode::Static
+        && part.is_none()
+        && let Some(key) = &key
+    {
+        let key = key.clone();
+        let own = owner.clone();
+        row = row.on_prepaint(move |bounds, _, cx| {
+            let _ = own.update(cx, |s, _| {
+                s.static_row_bounds.insert(key.clone(), bounds);
+            });
+        });
+    }
     if part.is_none() {
         row = row.role(Role::Row);
     }
@@ -552,7 +653,9 @@ pub(super) fn row<D: TableDelegate>(
     if is_header && bands > 1 {
         row = row.role(Role::RowGroup);
     }
-    if p.mode == TableRenderMode::Rows || part.is_some() {
+    if part.is_some_and(|p| p.natural) {
+        row = row.h_full().min_h(height);
+    } else if p.mode == TableRenderMode::Rows || part.is_some() {
         row = row.h(height * bands as f32).overflow_hidden();
     } else {
         row = row.min_h(height);
@@ -795,6 +898,22 @@ pub(super) fn row<D: TableDelegate>(
             div()
                 .child(column.footer.clone().unwrap_or_default())
                 .into_any_element()
+        } else if column.row_handle && !is_band && !placeholder {
+            let enabled = p.row_drag != TableRowDrag::None
+                && !p.disabled
+                && !p.readonly
+                && !view.disabled_rows.contains(key.as_ref().unwrap())
+                && view.query.sorts().is_empty()
+                && view.source.can_move_rows();
+            reorder::handle(
+                "table-row-drag",
+                reorder::MoveKey::Row(key.as_ref().unwrap().clone()),
+                owner,
+                cell_active.then_some(control_focus),
+                cell_active,
+                !enabled,
+                cx,
+            )
         } else if placeholder {
             div().child("加载中…").into_any_element()
         } else if is_header {
@@ -899,14 +1018,23 @@ pub(super) fn row<D: TableDelegate>(
             && (column.text.is_some() || column.editable)
             && !p.disabled
             && !editing
+            && !column.row_handle
         {
             let own = owner.clone();
             let key = cell_key.unwrap();
             let editable = column.editable;
+            let p_row_drag = p.row_drag == TableRowDrag::Row;
             cell = cell.on_mouse_down(gpui_kit::MouseButton::Left, move |event, w, cx| {
                 let _ = own.update(cx, |s, cx| {
                     s.anchor = Some(key.row().clone());
                     s.set_active(key.clone(), w, cx);
+                    if p_row_drag && !editable {
+                        let _ = s.begin_drag(
+                            reorder::MoveKey::Row(key.row().clone()),
+                            Some(event.position),
+                            cx,
+                        );
+                    }
                     if editable && event.click_count == 2 {
                         let _ = s.request_edit(key.clone(), TableEditMode::Cell, cx);
                     }
@@ -949,6 +1077,46 @@ pub(super) fn row<D: TableDelegate>(
             });
         }
         cell = cell.child(content_box);
+        if is_header && column.reorderable {
+            let handle_state = w.use_keyed_state(
+                (
+                    (p.id.clone(), column.key().as_str().to_owned()).into(),
+                    "column-drag-focus",
+                ),
+                cx,
+                |w, cx| {
+                    let focus = cx.focus_handle();
+                    let own = owner.clone();
+                    let blur = cx.on_blur(&focus, w, move |_, _, cx| {
+                        let _ = own.update(cx, |s, cx| {
+                            if s.drag.as_ref().is_some_and(|d| d.pointer.is_none()) {
+                                s.cancel_drag(cx);
+                            }
+                        });
+                    });
+                    resize::HandleLifetime { focus, _blur: blur }
+                },
+            );
+            let handle_focus = handle_state.read(cx).focus.clone();
+            cell = cell
+                .pl(rems(2.5))
+                .child(
+                    div()
+                        .absolute()
+                        .left(px(2.))
+                        .top_0()
+                        .h_full()
+                        .child(reorder::handle(
+                            "table-column-drag",
+                            reorder::MoveKey::Column(column.key().clone()),
+                            owner,
+                            Some(&handle_focus),
+                            true,
+                            p.disabled || p.readonly || !column.allowed || !column.configurable,
+                            cx,
+                        )),
+                );
+        }
         if is_header && column.resizable && !p.disabled && !p.readonly {
             let own = owner.clone();
             let blur_key = column.key().clone();
@@ -1001,6 +1169,29 @@ pub(super) fn row<D: TableDelegate>(
             cell = cell.child(handle);
         }
 
+        if let Some(preview) = &p.drag_preview {
+            let row_target = key
+                .as_ref()
+                .is_some_and(|k| preview.target == reorder::MoveKey::Row(k.clone()));
+            let col_target =
+                is_header && preview.target == reorder::MoveKey::Column(column.key().clone());
+            if row_target {
+                cell = if preview.placement == TableMovePlacement::Before {
+                    cell.border_t_2()
+                } else {
+                    cell.border_b_2()
+                };
+                cell = cell.border_color(rgba(theme, "--focus-ring-color"));
+            }
+            if col_target {
+                cell = if preview.placement == TableMovePlacement::Before {
+                    cell.border_l_2()
+                } else {
+                    cell.border_r_2()
+                };
+                cell = cell.border_color(rgba(theme, "--focus-ring-color"));
+            }
+        }
         if cell_active {
             cell = cell.aria_active_descendant();
         }
@@ -1081,7 +1272,20 @@ pub(super) fn row<D: TableDelegate>(
                     .aria_column_index(
                         ix + usize::from(view.selection_mode != TableSelectionMode::None),
                     )
-                    .aria_column_span(end - ix)
+                    .aria_column_span(if first {
+                        p.resolved
+                            .indices
+                            .iter()
+                            .filter(|i| {
+                                view.columns[**i]
+                                    .groups
+                                    .get(level)
+                                    .is_some_and(|g| g.key() == group.key())
+                            })
+                            .count()
+                    } else {
+                        end - ix
+                    })
                     .flex()
                     .items_center()
                     .justify_center()

@@ -26,22 +26,25 @@ impl TableColumnResizeRequest {
         if self.scope != *accepted.source.scope() || self.revision != accepted.revision {
             return Err(TableError::StaleRequest);
         }
-        let mut columns = accepted.columns.to_vec();
-        let column = columns
-            .iter_mut()
+        let column = accepted
+            .columns
+            .iter()
             .find(|c| c.key() == &self.key)
             .ok_or(TableError::MissingKey)?;
-        if !column.resizable || !column.visible {
-            return Err(TableError::UnsupportedCombination(
-                "column is not resizable",
-            ));
+        if !column.resizable || !column.visible || !column.allowed || !column.configurable {
+            return Err(TableError::UnsupportedOperation("column is not resizable"));
         }
-        column.width = self.width;
-        column.flex = 0.;
-        Ok(accepted
+        let preference = accepted
+            .preferences
+            .values()
+            .get(&self.key)
+            .cloned()
+            .unwrap_or_else(|| TableColumnPreference::new(column.version))
+            .with_width(self.width);
+        (*accepted.preferences)
             .clone()
-            .with_columns(columns)
-            .based_on(accepted.revision))
+            .with_column(self.key.clone(), preference)
+            .apply_to(accepted)
     }
 }
 pub(super) struct ResizeSession {
@@ -56,6 +59,7 @@ pub(super) struct ResizeSession {
 }
 pub(super) struct ResizeLifetime {
     pub _activation: gpui_kit::Subscription,
+    pub _blur: gpui_kit::Subscription,
 }
 
 impl<D: TableDelegate> YueTableState<D> {
@@ -95,7 +99,7 @@ impl<D: TableDelegate> YueTableState<D> {
             .iter()
             .find(|c| c.key() == key)
             .ok_or(TableError::MissingKey)?;
-        if !column.visible || !column.resizable {
+        if !column.visible || !column.resizable || !column.allowed || !column.configurable {
             return Err(TableError::UnsupportedCombination(
                 "column is not resizable",
             ));

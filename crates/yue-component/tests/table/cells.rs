@@ -55,6 +55,55 @@ fn cells_builds_bounded_two_axis_workset_and_locates_both_axes(cx: &mut TestAppC
         assert!(right.bounds().right() <= px(1025.));
     }
 }
+
+#[gpui_kit::test]
+#[ignore = "opt-in complete W2 jump/reversal correctness trace, 200 groups"]
+fn w2_jump_reversal_trace(cx: &mut TestAppContext) {
+    let (p, cx) = open(cx, 50_000, true);
+    p.update(cx, |p, cx| {
+        p.mode = TableRenderMode::Cells;
+        cx.notify();
+    });
+    layout::configure(&p, cx, |_| {
+        (0..256)
+            .map(|c| {
+                TableColumn::text(
+                    format!("col-{c}"),
+                    format!("Column {c}"),
+                    move |r: &UiRow| format!("{}:{c}", r.key),
+                )
+                .width(rems(5. + (c % 3) as f32))
+            })
+            .collect()
+    });
+    let s = state(&p, cx);
+    let handle = s.read_with(cx, |s, _| s.scroll_handle().clone());
+    for group in 0..200 {
+        let middle = 1 + (group * 7919) % 49_997;
+        for (r, c) in [(0, 0), (middle, 128), (49_999, 255), (middle - 1, 127)] {
+            p.update(cx, |p, _| p.calls.set(0));
+            s.update(cx, |s, cx| {
+                s.scroll_to_cell(&key(r, c), Default::default(), cx)
+                    .unwrap()
+            });
+            draw(cx);
+            draw(cx);
+            let target = cell(cx, &format!("row-{r}"), &format!("col-{c}"));
+            assert!(target.bounds().top() >= px(39.) && target.bounds().bottom() <= px(449.));
+            assert!(target.bounds().left() >= -px(1.) && target.bounds().right() <= px(1025.));
+            assert!(p.read_with(cx, |p, _| p.calls.get()) < 1000);
+            let offset = handle.offset();
+            let max = handle.max_offset();
+            assert!(
+                offset.x <= px(0.)
+                    && offset.x >= -max.x
+                    && offset.y <= px(0.)
+                    && offset.y >= -max.y
+            );
+        }
+    }
+    println!("TABLE_TRACE,groups=200,operations=800,axes=2,coverage=ok");
+}
 #[gpui_kit::test]
 fn sparse_spans_reject_offscreen_overlap_and_render_one_origin(cx: &mut TestAppContext) {
     let (p, cx) = open(cx, 1000, true);
@@ -141,6 +190,69 @@ fn rows_colspan_uses_shared_tracks_without_duplicate_content(cx: &mut TestAppCon
             && n.path().last() == Some(&ElementId::from("col-2"))
             && n.role() == Some(Role::Cell))
     );
+}
+
+#[gpui_kit::test]
+fn static_rowspan_measures_natural_content_and_stretches_adjacent_cells(cx: &mut TestAppContext) {
+    let (p, cx) = open(cx, 6, true);
+    p.update(cx, |p, cx| {
+        p.mode = TableRenderMode::Static;
+        cx.notify();
+    });
+    layout::configure(&p, cx, |_| {
+        vec![
+            TableColumn::text("col-0", "Merged", |r: &UiRow| {
+                if r.amount == 0 {
+                    r.note.repeat(12).into()
+                } else {
+                    r.key.clone()
+                }
+            })
+            .width(rems(4.))
+            .overflow(TableTextOverflow::Wrap),
+            TableColumn::text("col-1", "Covered", |r: &UiRow| r.key.clone()).width(rems(6.)),
+            TableColumn::text("col-2", "Adjacent", |r: &UiRow| r.key.clone()).width(rems(6.)),
+        ]
+    });
+    let s = state(&p, cx);
+    s.update(cx, |s, cx| {
+        let v = s
+            .view()
+            .unwrap()
+            .as_ref()
+            .clone()
+            .with_spans(TableSpanPlan::new(vec![TableSpan::new(key(0, 0), 3, 2)]));
+        s.commit_view(v, None, cx).unwrap();
+    });
+    draw(cx);
+    draw(cx);
+    let origin = cell(cx, "row-0", "col-0");
+    let first = cell(cx, "row-0", "col-2");
+    let third = cell(cx, "row-2", "col-2");
+    assert_eq!(origin.row_span(), Some(3));
+    assert_eq!(origin.column_span(), Some(2));
+    close(origin.bounds().size.width, px(160.));
+    close(origin.bounds().top(), first.bounds().top());
+    close(origin.bounds().bottom(), third.bounds().bottom());
+    assert!(
+        origin.bounds().size.height > px(120.),
+        "natural content must grow its row tracks"
+    );
+    let all = nodes(cx);
+    assert!(!all.iter().any(|n| n.role() == Some(Role::Cell)
+        && n.path().contains(&row_id("row-1"))
+        && n.path().last() == Some(&ElementId::from("col-1"))));
+    let next = cell(cx, "row-3", "col-0");
+    close(next.bounds().top(), origin.bounds().bottom() + px(1.));
+    let content = all
+        .iter()
+        .find(|n| {
+            n.path().contains(&row_id("row-0"))
+                && n.path().contains(&ElementId::from("col-2"))
+                && n.path().last() == Some(&ElementId::from("cell-content"))
+        })
+        .unwrap();
+    close(content.bounds().center().y, first.bounds().center().y);
 }
 struct HostProbe {
     probes: Vec<Entity<Probe>>,
@@ -306,6 +418,13 @@ fn cross_pin_group_has_one_semantic_header_and_two_visual_fragments(cx: &mut Tes
             .filter(|n| n.label() == Some("Shared") && n.role() == Some(Role::ColumnHeader))
             .count(),
         1
+    );
+    assert_eq!(
+        ns.iter()
+            .find(|n| n.label() == Some("Shared") && n.role() == Some(Role::ColumnHeader))
+            .unwrap()
+            .column_span(),
+        Some(2)
     );
     let h = cell(cx, "table-header", "col-2");
     assert_eq!(h.row_span(), Some(2));

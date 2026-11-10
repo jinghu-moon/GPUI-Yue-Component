@@ -45,6 +45,11 @@ mod steps;
 mod table;
 pub use table::TableRemotePage;
 pub use table::TableRowSizing;
+pub use table::{
+    TableCapabilities, TableColumnConfigurationRequest, TableColumnDraft, TableColumnMoveRequest,
+    TableColumnPreference, TableColumnPreferences, TableMovePlacement, TableRowDrag,
+    TableRowMoveRequest, TableRowMoveScope,
+};
 pub use table::{TableSpan, TableSpanPlan, TableRangeRows, TableRangeRequest};
 pub use table::{TableOutline, TableOutlineRow, TableOutlineSource};
 pub use table::{TableEditMode, TableEditMove, TableEditStage, TableEditToken, TableEditSession};

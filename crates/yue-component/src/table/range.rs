@@ -104,8 +104,12 @@ pub struct TableRangeRequest {
     pub(super) source: u64,
     pub(super) query: TableQuery,
     pub(super) range: Range<usize>,
+    tail_cursor: Option<SharedString>,
 }
 impl TableRangeRequest {
+    pub fn tail_cursor(&self) -> Option<&SharedString> {
+        self.tail_cursor.as_ref()
+    }
     pub fn id(&self) -> TableRequestId {
         self.id
     }
@@ -124,6 +128,7 @@ impl TableRangeRequest {
 }
 impl<D: TableDelegate> YueTableState<D> {
     pub(super) fn observe_range(&mut self, range: Range<usize>, cx: &mut Context<Self>) {
+        self.observe_tail(cx);
         let Some(p) = &self.presentation else { return };
         let Some(prefetch) = p.range_prefetch else {
             return;
@@ -171,6 +176,9 @@ impl<D: TableDelegate> YueTableState<D> {
         {
             return Ok(None);
         }
+        if self.requests.len() >= 64 && self.range_pending.is_none() {
+            return Err(TableError::TooManyPendingRequests);
+        }
         let scope = view.source.scope().clone();
         let source = view.source.revision();
         let query = view.query.clone();
@@ -188,6 +196,7 @@ impl<D: TableDelegate> YueTableState<D> {
             source,
             query,
             range,
+            tail_cursor: None,
         };
         self.requests.insert(id);
         self.range_pending = Some(request.clone());
@@ -216,7 +225,13 @@ impl<D: TableDelegate> YueTableState<D> {
         }
         if candidate.source.scope() != &request.scope
             || candidate.query != request.query
-            || candidate.source.len() != old.source.len()
+            || if request.tail_cursor.is_some() {
+                candidate.source.len() <= old.source.len()
+                    || (0..old.source.len())
+                        .any(|i| old.source.row_key(i) != candidate.source.row_key(i))
+            } else {
+                candidate.source.len() != old.source.len()
+            }
             || request.range.clone().any(|i| {
                 candidate
                     .source
@@ -240,16 +255,114 @@ impl<D: TableDelegate> YueTableState<D> {
         {
             return Err(TableError::StaleRequest);
         }
-        self.range_failure = Some(request.range.clone());
+        if let Some(cursor) = &request.tail_cursor {
+            self.tail_failed = Some(cursor.clone());
+        } else {
+            self.range_failure = Some(request.range.clone());
+        }
         self.reject_request(request.id, cx)
     }
     pub fn retry_range(
         &mut self,
         cx: &mut Context<Self>,
     ) -> Result<Option<TableRangeRequest>, TableError> {
+        if let Some(cursor) = self.tail_failed.take() {
+            self.tail_seen = None;
+            return self.request_tail(cursor, cx);
+        }
         let Some(range) = self.range_failure.take() else {
             return Ok(None);
         };
         self.request_range(range, cx)
+    }
+}
+
+impl<D: TableDelegate> YueTableState<D> {
+    pub(super) fn observe_tail(&mut self, cx: &mut Context<Self>) {
+        let Some(p) = &self.presentation else { return };
+        let Some((cursor, distance, has_more)) = &p.tail else {
+            return;
+        };
+        if !has_more || self.tail_failed.is_some() {
+            return;
+        }
+        let Some(view) = self.view() else { return };
+        let near = if view.source.is_empty() {
+            true
+        } else {
+            let rows = self.rows.read(cx);
+            let Some(vp) = rows.viewport() else { return };
+            let Ok(snapshot) = rows.snapshot(vp) else {
+                return;
+            };
+            let headers = cells::header_count(&Presentation {
+                resolved: self.resolved.clone(),
+                ..p.clone()
+            });
+            let Ok(last) = snapshot.item(headers + view.source.len() - 1) else {
+                return;
+            };
+            let trailing = if p.footer_fixed && view.columns.iter().any(|c| c.footer.is_some()) {
+                snapshot
+                    .item(snapshot.len() - 1)
+                    .map_or(0., |i| f64::from(i.extent()))
+            } else {
+                0.
+            };
+            last.start() + f64::from(last.extent())
+                - (vp.offset() + f64::from(vp.extent()) - trailing)
+                <= f64::from(distance.to_pixels(self.layout_rem))
+        };
+        if near {
+            let cursor = cursor.clone();
+            let _ = self.request_tail(cursor, cx);
+        }
+    }
+    pub fn request_tail(
+        &mut self,
+        cursor: impl Into<SharedString>,
+        cx: &mut Context<Self>,
+    ) -> Result<Option<TableRangeRequest>, TableError> {
+        let cursor = cursor.into();
+        if cursor.trim().is_empty() {
+            return Err(TableError::EmptyKey);
+        }
+        let v = self.view().ok_or(TableError::Unbound)?;
+        if v.query.page().is_some() || v.source.has_placeholders() {
+            return Err(TableError::UnsupportedCombination(
+                "tail loading requires an unpaged loaded result",
+            ));
+        }
+        if self.tail_seen.as_ref() == Some(&cursor) || self.range_pending.is_some() {
+            return Ok(None);
+        }
+        if self.requests.len() >= 64 {
+            return Err(TableError::TooManyPendingRequests);
+        }
+        let (scope, source, query, len) = (
+            v.source.scope().clone(),
+            v.source.revision(),
+            v.query.clone(),
+            v.source.len(),
+        );
+        self.sequence += 1;
+        let id = TableRequestId {
+            owner: self.owner,
+            sequence: self.sequence,
+        };
+        let request = TableRangeRequest {
+            id,
+            scope,
+            source,
+            query,
+            range: len..len,
+            tail_cursor: Some(cursor.clone()),
+        };
+        self.tail_seen = Some(cursor);
+        self.tail_failed = None;
+        self.requests.insert(id);
+        self.range_pending = Some(request.clone());
+        cx.emit(TableEvent::RangeRequested(request.clone()));
+        Ok(Some(request))
     }
 }

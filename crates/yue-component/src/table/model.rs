@@ -108,6 +108,9 @@ pub trait TableSource: 'static {
         false
     }
     /// An addressable, unloaded slot. It has no business row or selection membership.
+    fn can_move_rows(&self) -> bool {
+        false
+    }
     fn is_placeholder(&self, _key: &TableRowKey) -> bool {
         false
     }
@@ -131,6 +134,7 @@ pub struct TableRows<R: 'static> {
     rows: Rc<[R]>,
     keys: Vec<TableRowKey>,
     positions: HashMap<TableRowKey, usize>,
+    storage: Option<Rc<HashMap<TableRowKey, usize>>>,
 }
 impl<R: 'static> TableRows<R> {
     pub fn try_new(
@@ -158,10 +162,42 @@ impl<R: 'static> TableRows<R> {
             rows,
             keys,
             positions,
+            storage: None,
+        })
+    }
+}
+impl<R: 'static> TableRows<R> {
+    pub fn reordered(&self, revision: u64, keys: &[TableRowKey]) -> Result<Self, TableError> {
+        if revision <= self.revision {
+            return Err(TableError::StaleSource);
+        }
+        if keys.len() != self.keys.len() {
+            return Err(TableError::InvalidSource);
+        }
+        let mut positions = HashMap::with_capacity(keys.len());
+        for (i, k) in keys.iter().enumerate() {
+            if !self.positions.contains_key(k) || positions.insert(k.clone(), i).is_some() {
+                return Err(TableError::InvalidSource);
+            }
+        }
+        Ok(Self {
+            scope: self.scope.clone(),
+            revision,
+            rows: self.rows.clone(),
+            keys: keys.to_vec(),
+            positions,
+            storage: Some(
+                self.storage
+                    .clone()
+                    .unwrap_or_else(|| Rc::new(self.positions.clone())),
+            ),
         })
     }
 }
 impl<R: 'static> TableSource for TableRows<R> {
+    fn can_move_rows(&self) -> bool {
+        true
+    }
     type Row = R;
     fn scope(&self) -> &SharedString {
         &self.scope
@@ -179,7 +215,11 @@ impl<R: 'static> TableSource for TableRows<R> {
         self.positions.get(key).copied()
     }
     fn row(&self, key: &TableRowKey) -> Option<&R> {
-        self.positions.get(key).map(|index| &self.rows[*index])
+        self.storage
+            .as_deref()
+            .unwrap_or(&self.positions)
+            .get(key)
+            .map(|index| &self.rows[*index])
     }
 }
 
@@ -292,6 +332,11 @@ pub struct TableColumn<R: 'static> {
     pub(super) pin: super::TablePin,
     pub(super) responsive: Option<u32>,
     pub(super) resizable: bool,
+    pub(super) version: u64,
+    pub(super) allowed: bool,
+    pub(super) configurable: bool,
+    pub(super) reorderable: bool,
+    pub(super) row_handle: bool,
     pub(super) groups: Rc<[super::TableHeaderGroup]>,
     pub(super) align: TableAlign,
     pub(super) header_align: Option<TableAlign>,
@@ -319,6 +364,11 @@ impl<R: 'static> Clone for TableColumn<R> {
             pin: self.pin,
             responsive: self.responsive,
             resizable: self.resizable,
+            version: self.version,
+            allowed: self.allowed,
+            configurable: self.configurable,
+            reorderable: self.reorderable,
+            row_handle: self.row_handle,
             groups: self.groups.clone(),
             align: self.align,
             header_align: self.header_align,
@@ -352,6 +402,11 @@ impl<R: 'static> TableColumn<R> {
             pin: super::TablePin::None,
             responsive: None,
             resizable: false,
+            version: 1,
+            allowed: true,
+            configurable: true,
+            reorderable: false,
+            row_handle: false,
             groups: Rc::from([]),
             align: TableAlign::Start,
             header_align: None,
@@ -414,6 +469,36 @@ impl<R: 'static> TableColumn<R> {
     pub fn responsive_priority(mut self, priority: u32) -> Self {
         self.responsive = Some(priority);
         self
+    }
+    pub fn semantic_version(mut self, version: u64) -> Self {
+        self.version = version;
+        self
+    }
+    pub fn allowed(mut self, allowed: bool) -> Self {
+        self.allowed = allowed;
+        self
+    }
+    pub fn configurable(mut self, allowed: bool) -> Self {
+        self.configurable = allowed;
+        self
+    }
+    pub fn reorderable(mut self, enabled: bool) -> Self {
+        self.reorderable = enabled;
+        self
+    }
+    pub fn row_drag_handle(mut self, enabled: bool) -> Self {
+        self.row_handle = enabled;
+        self.interactive |= enabled;
+        self
+    }
+    pub fn is_allowed(&self) -> bool {
+        self.allowed
+    }
+    pub fn is_configurable(&self) -> bool {
+        self.configurable
+    }
+    pub fn semantic_version_value(&self) -> u64 {
+        self.version
     }
     pub fn resizable(mut self, enabled: bool) -> Self {
         self.resizable = enabled;
@@ -512,6 +597,9 @@ pub struct TableView<S: TableSource> {
     pub(super) sizing: TableRowSizing,
     pub(super) spans: TableSpanPlan,
     pub(super) has_details: bool,
+    pub(super) declarations: Rc<[TableColumn<S::Row>]>,
+    pub(super) preferences: Rc<super::TableColumnPreferences>,
+    pub(super) schema: u64,
 }
 impl<S: TableSource> Clone for TableView<S> {
     fn clone(&self) -> Self {
@@ -531,6 +619,9 @@ impl<S: TableSource> Clone for TableView<S> {
             sizing: self.sizing.clone(),
             spans: self.spans.clone(),
             has_details: self.has_details,
+            declarations: self.declarations.clone(),
+            preferences: self.preferences.clone(),
+            schema: self.schema,
         }
     }
 }
@@ -538,12 +629,29 @@ impl<S: TableSource> TableView<S> {
     pub fn new(source: Rc<S>, columns: impl Into<Rc<[TableColumn<S::Row>]>>) -> Self {
         let len = source.len();
         let total = super::TableTotal::Known(len);
+        let declarations = columns.into();
+        let columns = if declarations.iter().all(|c| c.allowed) {
+            declarations.clone()
+        } else {
+            declarations
+                .iter()
+                .cloned()
+                .map(|mut c| {
+                    c.visible &= c.allowed;
+                    c
+                })
+                .collect::<Vec<_>>()
+                .into()
+        };
         let has_details = (0..len)
             .filter_map(|i| source.row_key(i))
             .any(|k| source.is_detail(k));
         Self {
             source,
-            columns: columns.into(),
+            columns,
+            declarations,
+            preferences: Rc::new(super::TableColumnPreferences::new(1)),
+            schema: 1,
             selection: BTreeSet::new(),
             disabled_rows: BTreeSet::new(),
             selection_mode: TableSelectionMode::None,
@@ -561,8 +669,27 @@ impl<S: TableSource> TableView<S> {
     }
     /// Replace a complete column configuration atomically, retaining stable keys.
     pub fn with_columns(mut self, columns: impl Into<Rc<[TableColumn<S::Row>]>>) -> Self {
-        self.columns = columns.into();
+        self.declarations = columns.into();
+        let prefs = self.preferences.reconcile(&self);
+        self.columns = prefs.resolve(&self);
+        self.preferences = Rc::new(prefs);
         self
+    }
+    pub fn column_schema(&self) -> u64 {
+        self.schema
+    }
+    pub fn with_column_schema(mut self, schema: u64) -> Self {
+        self.schema = schema;
+        let prefs = self.preferences.reconcile(&self);
+        self.columns = prefs.resolve(&self);
+        self.preferences = Rc::new(prefs);
+        self
+    }
+    pub fn declared_columns(&self) -> &[TableColumn<S::Row>] {
+        &self.declarations
+    }
+    pub fn column_preferences(&self) -> &super::TableColumnPreferences {
+        &self.preferences
     }
     pub fn source(&self) -> &Rc<S> {
         &self.source
@@ -641,6 +768,8 @@ impl<S: TableSource> TableView<S> {
     pub(super) fn same_inputs(&self, other: &Self) -> bool {
         Rc::ptr_eq(&self.source, &other.source)
             && Rc::ptr_eq(&self.columns, &other.columns)
+            && self.schema == other.schema
+            && self.preferences == other.preferences
             && self.selection == other.selection
             && self.disabled_rows == other.disabled_rows
             && self.selection_mode == other.selection_mode
@@ -860,6 +989,9 @@ impl TableSelectionRequest {
 }
 #[derive(Clone, Debug)]
 pub enum TableEvent {
+    RowMoveRequested(super::TableRowMoveRequest),
+    ColumnMoveRequested(super::TableColumnMoveRequest),
+    ColumnConfigurationRequested(super::TableColumnConfigurationRequest),
     RangeRequested(super::TableRangeRequest),
     EditRequested {
         key: TableCellKey,

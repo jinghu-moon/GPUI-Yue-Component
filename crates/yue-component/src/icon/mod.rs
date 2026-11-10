@@ -38,10 +38,11 @@ pub enum YueIcon {
     Warning,
     Error,
     Empty,
+    DragHandle,
 }
 
 impl YueIcon {
-    pub const ALL: [Self; 16] = [
+    pub const ALL: [Self; 17] = [
         Self::Close,
         Self::ChevronDown,
         Self::ChevronUp,
@@ -58,6 +59,7 @@ impl YueIcon {
         Self::Warning,
         Self::Error,
         Self::Empty,
+        Self::DragHandle,
     ];
 
     /// The name both projects use for this meaning, as in the design docs.
@@ -79,6 +81,7 @@ impl YueIcon {
             Self::Warning => "warning",
             Self::Error => "error",
             Self::Empty => "empty",
+            Self::DragHandle => "drag-handle",
         }
     }
 
@@ -100,6 +103,7 @@ impl YueIcon {
             Self::Warning => &outline::AlertTriangle,
             Self::Error => &outline::AlertCircle,
             Self::Empty => &outline::Inbox,
+            Self::DragHandle => &outline::GripVertical,
         }
     }
 }
