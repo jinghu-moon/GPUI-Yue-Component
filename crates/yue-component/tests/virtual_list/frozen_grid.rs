@@ -79,6 +79,7 @@ struct Harness {
     seen: Rc<RefCell<Vec<ObservedCell>>>,
     viewport: (f32, f32),
     rtl: bool,
+    trailing: (usize, usize),
 }
 impl Render for Harness {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
@@ -113,6 +114,8 @@ impl Render for Harness {
         )
         .frozen_rows(self.frozen.0)
         .frozen_columns(self.frozen.1)
+        .frozen_end_rows(self.trailing.0)
+        .frozen_end_columns(self.trailing.1)
         .right_to_left(self.rtl)
         .w(px(self.viewport.0))
         .h(px(self.viewport.1))
@@ -162,6 +165,7 @@ fn harness(cx: &mut Context<Harness>, count: usize, known: bool) -> Harness {
         focus,
         viewport: (240., 100.),
         rtl: false,
+        trailing: (0, 0),
     }
 }
 #[gpui_kit::test]
@@ -886,4 +890,146 @@ fn frozen_grid_repeated_feedback_resize_toggle_and_input_keep_one_coherent_owner
     for state in &axes {
         assert!(!state.read_with(cx, |s, _| s.has_scroll_command()));
     }
+}
+
+#[gpui_kit::test]
+fn frozen_grid_suffixes_share_owner_unique_hits_and_body_clearance(cx: &mut TestAppContext) {
+    for known in [false, true] {
+        let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100_000, known));
+        view.update(cx, |v, cx| {
+            v.trailing = (1, 1);
+            v.scroll.set_precise_offset(gpui_kit::point(-175., -130.));
+            cx.notify();
+        });
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let all = cx.update(|w, _| snapshots(w));
+        for label in ["0:0", "0:99999", "99999:0", "99999:99999"] {
+            assert_eq!(
+                all.iter().filter(|n| n.label() == Some(label)).count(),
+                1,
+                "unique {label}"
+            );
+        }
+        let corner = all
+            .iter()
+            .find(|n| n.label() == Some("99999:99999"))
+            .unwrap();
+        assert!(
+            (f32::from(corner.bounds().right()) - 237.).abs() <= 0.5,
+            "tail bounds {:?}, known={known}",
+            corner.bounds()
+        );
+        assert!((f32::from(corner.bounds().bottom()) - 97.).abs() <= 0.5);
+        let clicks = view.read_with(cx, |v, _| v.clicks.clone());
+        clicks.borrow_mut().clear();
+        cx.simulate_click(corner.bounds().center(), Default::default());
+        assert_eq!(&*clicks.borrow(), &[(99999, 99999)]);
+        let before = view.read_with(cx, |v, _| v.scroll.precise_offset());
+        for vertical in [true, false] {
+            let axis = view.read_with(cx, |v, _| {
+                if vertical {
+                    v.rows.clone()
+                } else {
+                    v.columns.clone()
+                }
+            });
+            axis.update(cx, |s, cx| {
+                s.scroll_to_key(99999usize.into(), VirtualizerScrollOptions::default())
+                    .unwrap();
+                cx.notify();
+            });
+        }
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        assert_eq!(
+            view.read_with(cx, |v, _| v.scroll.precise_offset()),
+            before,
+            "frozen target must not scroll"
+        );
+        for vertical in [true, false] {
+            let axis = view.read_with(cx, |v, _| {
+                if vertical {
+                    v.rows.clone()
+                } else {
+                    v.columns.clone()
+                }
+            });
+            axis.update(cx, |s, cx| {
+                s.scroll_to_key(
+                    99998usize.into(),
+                    VirtualizerScrollOptions::default().align(VirtualizerAlign::End),
+                )
+                .unwrap();
+                cx.notify();
+            });
+        }
+        cx.update(|w, cx| w.draw(cx).clear(cx));
+        let all = cx.update(|w, _| snapshots(w));
+        let body = all
+            .iter()
+            .find(|n| n.label() == Some("99998:99998"))
+            .unwrap();
+        let tail = all
+            .iter()
+            .find(|n| n.label() == Some("99999:99999"))
+            .unwrap();
+        assert!(body.bounds().right() <= tail.bounds().left() + px(0.01));
+        assert!(body.bounds().bottom() <= tail.bounds().top() + px(0.01));
+        let seen = view.read_with(cx, |v, _| v.seen.borrow().clone());
+        assert!(
+            seen.iter()
+                .map(|s| (s.0, s.1))
+                .collect::<HashSet<_>>()
+                .len()
+                < 150,
+            "tails must not fill the sparse gap"
+        );
+    }
+}
+
+#[gpui_kit::test]
+fn frozen_grid_suffix_rtl_clipping_overlap_and_inaccessible_commands(cx: &mut TestAppContext) {
+    let (view, cx) = cx.add_window_view(|_, cx| harness(cx, 100_000, false));
+    view.update(cx, |v, cx| {
+        v.rtl = true;
+        v.trailing = (1, 1);
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let all = cx.update(|w, _| snapshots(w));
+    let tail = all
+        .iter()
+        .find(|n| n.label() == Some("99999:99999"))
+        .unwrap();
+    assert!((f32::from(tail.bounds().left()) - 3.).abs() <= 0.5);
+    let clicks = view.read_with(cx, |v, _| v.clicks.clone());
+    cx.simulate_click(tail.bounds().center(), Default::default());
+    assert_eq!(&*clicks.borrow(), &[(99999, 99999)]);
+    view.update(cx, |v, cx| {
+        v.trailing = (usize::MAX, usize::MAX);
+        v.seen.borrow_mut().clear();
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let all = cx.update(|w, _| snapshots(w));
+    assert_eq!(all.iter().filter(|n| n.label() == Some("0:0")).count(), 1);
+    let axis = view.read_with(cx, |v, _| v.rows.clone());
+    axis.update(cx, |s, cx| {
+        s.scroll_to_key(50usize.into(), VirtualizerScrollOptions::default())
+            .unwrap();
+        cx.notify();
+    });
+    cx.update(|w, cx| w.draw(cx).clear(cx));
+    let events = axis.update(cx, |s, _| s.take_events());
+    // Grid emits command completion through its normal event channel; a settled
+    // inaccessible request must not remain armed and redraw indefinitely.
+    assert!(!axis.read_with(cx, |s, _| s.has_scroll_command()));
+    let _ = events;
+    let seen = view.read_with(cx, |v, _| v.seen.borrow().clone());
+    assert!(
+        seen.iter()
+            .map(|s| (s.0, s.1))
+            .collect::<HashSet<_>>()
+            .len()
+            < 100
+    );
 }

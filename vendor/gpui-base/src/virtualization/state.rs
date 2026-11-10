@@ -40,6 +40,9 @@ pub struct VirtualizerViewport {
     origin: f64,
     scroll_extent: Option<f64>,
     frozen_prefix: usize,
+    frozen_suffix_start: usize,
+    frozen_suffix_count: usize,
+    trailing_occlusion: Pixels,
     leading_occlusion: Pixels,
 }
 impl VirtualizerViewport {
@@ -60,6 +63,9 @@ impl VirtualizerViewport {
             origin: 0.0,
             scroll_extent: None,
             frozen_prefix: 0,
+            frozen_suffix_start: usize::MAX,
+            frozen_suffix_count: 0,
+            trailing_occlusion: px(0.),
             leading_occlusion: px(0.),
         }
     }
@@ -68,6 +74,18 @@ impl VirtualizerViewport {
         self.frozen_prefix = count;
         self.leading_occlusion = extent;
         self
+    }
+    pub(super) fn with_frozen_suffix(mut self, start: usize, count: usize, extent: Pixels) -> Self {
+        self.frozen_suffix_start = start;
+        self.frozen_suffix_count = count;
+        self.trailing_occlusion = extent;
+        self
+    }
+    fn is_frozen(&self, index: usize) -> bool {
+        index < self.frozen_prefix || index >= self.frozen_suffix_start
+    }
+    fn body_extent(&self) -> Pixels {
+        (self.extent - self.leading_occlusion - self.trailing_occlusion).max(px(0.))
     }
     pub fn with_revision(mut self, revision: u64) -> Self {
         self.revision = revision;
@@ -198,7 +216,7 @@ pub struct VirtualizerSnapshot {
 }
 impl VirtualizerSnapshot {
     pub(super) fn is_frozen(&self, index: usize) -> bool {
-        index < self.viewport.frozen_prefix
+        self.viewport.is_frozen(index)
     }
     pub fn axis(&self) -> Axis {
         self.axis
@@ -223,7 +241,10 @@ impl VirtualizerSnapshot {
     }
     /// Sorted, unique union. No intervening rows are materialized for retained items.
     pub fn working_indices(&self) -> Vec<usize> {
-        if self.retained.is_empty() && self.viewport.frozen_prefix == 0 {
+        if self.retained.is_empty()
+            && self.viewport.frozen_prefix == 0
+            && self.viewport.frozen_suffix_start >= self.len()
+        {
             return self.rendered.clone().collect();
         }
         let mut indices: Vec<_> = self.rendered.clone().collect();
@@ -232,6 +253,15 @@ impl VirtualizerSnapshot {
                 .geometry
                 .range(-self.padding, self.viewport.extent.into());
             indices.extend(range.start..range.end.min(self.viewport.frozen_prefix));
+        }
+        if self.viewport.frozen_suffix_start < self.len()
+            && self.viewport.trailing_occlusion > px(0.)
+        {
+            let range = self.geometry.range(
+                self.total - f64::from(self.viewport.trailing_occlusion) - self.padding,
+                f64::from(self.viewport.trailing_occlusion),
+            );
+            indices.extend(range.start.max(self.viewport.frozen_suffix_start)..range.end);
         }
         indices.extend(
             self.retained
@@ -315,7 +345,9 @@ impl VirtualizerSnapshot {
     ) -> impl Iterator<Item = Result<VirtualizerItem, VirtualizerError>> + '_ {
         // The ordinary contiguous window needs neither an index allocation nor
         // sorting. Sparse retained items keep the same sorted-union contract.
-        let contiguous = self.retained.is_empty() && self.viewport.frozen_prefix == 0;
+        let contiguous = self.retained.is_empty()
+            && self.viewport.frozen_prefix == 0
+            && self.viewport.frozen_suffix_start >= self.len();
         let mut indexes = if contiguous {
             Vec::new()
         } else {
@@ -795,7 +827,13 @@ impl VirtualizerState {
         sizing: VirtualizerSizing,
         change: VirtualizerChange,
     ) -> Result<(), VirtualizerError> {
-        if sizing.kind() != self.sizing.kind() {
+        // Attached explicit geometry has no native measured-list state to
+        // reconstruct. Fixed/Known transactions retain the same owner and keys.
+        if sizing.kind() != self.sizing.kind()
+            && (self.attachment != VirtualizerAttachment::Attached
+                || sizing.kind() == VirtualizerSizingKind::Measured
+                || self.sizing.kind() == VirtualizerSizingKind::Measured)
+        {
             return Err(VirtualizerError::Unsupported(
                 "reconstruct state to change sizing mode",
             ));
@@ -1287,14 +1325,15 @@ impl VirtualizerState {
         self.validate_viewport(viewport)?;
         let padding = viewport.origin + f64::from(self.layout.padding_start);
         let offset = viewport.offset - padding + f64::from(viewport.leading_occlusion);
-        let extent = f64::from(viewport.extent - viewport.leading_occlusion).max(0.);
+        let extent = f64::from(viewport.body_extent());
         let has_area = extent > 0.0 && viewport.cross > gpui::px(0.);
         let range = |offset: f64, extent: f64| {
             let mut range = self.geometry.range(offset, extent);
             range.start = range
                 .start
                 .max(viewport.frozen_prefix.min(self.source.len()));
-            range.end = range.end.max(range.start);
+            range.start = range.start.min(viewport.frozen_suffix_start);
+            range.end = range.end.min(viewport.frozen_suffix_start).max(range.start);
             // Native measured slots include the trailing gap; visibility is
             // about content, just as it is on the Fixed and Known paths.
             if matches!(self.geometry, Geometry::Measured(_))
@@ -1422,12 +1461,19 @@ impl VirtualizerState {
             ..
         }) = &self.command
             && let Ok(item) = snapshot.item_for_key(key)
-            && ((item.index < viewport.frozen_prefix
-                && (item.start >= f64::from(viewport.extent)
-                    || item.start + f64::from(item.extent) <= 0.))
-                || (item.index >= viewport.frozen_prefix
-                    && viewport.frozen_prefix > 0
-                    && viewport.leading_occlusion >= viewport.extent))
+            && ((viewport.is_frozen(item.index) && {
+                let start = if item.index >= viewport.frozen_suffix_start {
+                    item.start - self.total_extent() + f64::from(viewport.extent)
+                } else {
+                    item.start
+                };
+                let lower = if item.index >= viewport.frozen_suffix_start {
+                    f64::from(viewport.leading_occlusion)
+                } else {
+                    0.
+                };
+                start >= f64::from(viewport.extent) || start + f64::from(item.extent) <= lower
+            }) || (!viewport.is_frozen(item.index) && viewport.body_extent() <= px(0.)))
         {
             self.finish_command(VirtualizerCommandOutcome::NoProgress);
         }
@@ -1639,7 +1685,8 @@ impl VirtualizerState {
         // This tests the start edge, not item visibility: padding and gaps
         // inside this region remain valid reading positions.
         if self.source.is_empty()
-            || viewport.frozen_prefix > 0 && viewport.leading_occlusion >= viewport.extent
+            || (viewport.frozen_prefix > 0 || viewport.frozen_suffix_start < self.source.len())
+                && viewport.body_extent() <= px(0.)
             || self.attachment == VirtualizerAttachment::Attached
                 && (viewport.offset < viewport.origin
                     || viewport.offset >= viewport.origin + self.total_extent())
@@ -1661,6 +1708,11 @@ impl VirtualizerState {
             {
                 index += 1;
                 item = snapshot.item(index)?;
+            }
+            if viewport.is_frozen(item.index) {
+                self.anchor = None;
+                self.pending_anchor = None;
+                return Ok(());
             }
             let relative = reading_offset - item.start;
             let position = if relative < 0.0 {
@@ -1811,7 +1863,10 @@ impl VirtualizerState {
     fn changed_geometry(&mut self) {
         self.geometry_revision += 1;
         self.outstanding = None;
-        self.owned_geometry_offset = self.measured.as_ref().map(|list| -list.precise_scroll_offset().y);
+        self.owned_geometry_offset = self
+            .measured
+            .as_ref()
+            .map(|list| -list.precise_scroll_offset().y);
     }
     fn restore_anchor(&mut self) {
         self.pending_anchor = self.anchor.as_ref().and_then(|(key, position)| {
@@ -1820,13 +1875,21 @@ impl VirtualizerState {
                 // tracks moves the body edge as well as its content. A key
                 // reordered into the stationary prefix no longer anchors it.
                 let clearance = if let Some(viewport) = &self.viewport
-                    && viewport.frozen_prefix > 0
+                    && (viewport.frozen_prefix > 0
+                        || viewport.frozen_suffix_start < self.source.len())
                 {
-                    if index < viewport.frozen_prefix {
+                    let suffix_start = self
+                        .source
+                        .len()
+                        .saturating_sub(viewport.frozen_suffix_count)
+                        .max(viewport.frozen_prefix);
+                    if index < viewport.frozen_prefix || index >= suffix_start {
                         return None;
                     }
                     let clearance = self.frozen_extent(viewport.frozen_prefix);
-                    if clearance >= f64::from(viewport.extent) {
+                    if clearance + (self.total_extent() - self.frozen_extent(suffix_start)).max(0.)
+                        >= f64::from(viewport.extent)
+                    {
                         return None;
                     }
                     clearance
@@ -2013,8 +2076,11 @@ impl VirtualizerState {
             .map_or(1, |viewport| viewport.revision + 1);
         let input_revision = self.viewport.as_ref().map_or(0, |viewport| {
             viewport.input_revision
-                + u64::from(!self.is_following_tail()
-                    && (self.owned_geometry_offset.unwrap_or(viewport.offset) - offset).abs() > 0.01)
+                + u64::from(
+                    !self.is_following_tail()
+                        && (self.owned_geometry_offset.unwrap_or(viewport.offset) - offset).abs()
+                            > 0.01,
+                )
         });
         Ok(
             VirtualizerViewport::new(self.binding()?, revision, offset.max(0.0), extent, cross)
@@ -2171,10 +2237,11 @@ pub(super) fn alignment_offset(
     inset_start: f64,
     inset_end: f64,
 ) -> f64 {
-    if item.index < viewport.frozen_prefix {
+    if viewport.is_frozen(item.index) {
         return viewport.offset;
     }
     let inset_start = inset_start + f64::from(viewport.leading_occlusion);
+    let inset_end = inset_end + f64::from(viewport.trailing_occlusion);
     let extent = (f64::from(viewport.extent) - inset_start - inset_end).max(0.0);
     let start = viewport.offset + inset_start;
     let end = item.start + f64::from(item.extent);

@@ -1,5 +1,23 @@
 # Yue Base patches
 
+## Trailing frozen virtual-grid axes (2026-11-11)
+
+`VirtualGrid::frozen_end_rows/columns` extends the existing prefix contract with
+suffix bands. One axis snapshot owns both boundaries, body clearance, precise
+scroll targets and inaccessible-command settlement. Prefix wins when counts
+overlap; suffix tracks stay sparse rather than materializing the gap. Painting
+streams body, row-frozen, column-frozen and intersection regions in the existing
+stack order, using O(working rows + working columns) track storage. Hit testing
+and clipping share that geometry, including RTL and fractional viewport origins.
+
+Keep `frozen_grid_suffixes_share_owner_unique_hits_and_body_clearance` and
+`frozen_grid_suffix_rtl_clipping_overlap_and_inaccessible_commands` in the Yue
+VirtualList suite when rebasing. They cover Fixed/Known 100k axes, four unique
+corners, pointer hits, suffix scroll no-op, last body-item clearance, overlap and
+sparse work. Legacy prefix-only callers retain defaults of zero trailing items.
+The component consumer is YueTable M2; no GPUI core or dependency upgrade is
+required. See `docs/45-table-m2.md` and the M2 implementation evidence.
+
 ## Opt-in bounded and keyboard resizable panels (2026-11-09)
 
 `ResizablePanelGroup::with_interaction(ResizableInteraction)` enables keyed panel

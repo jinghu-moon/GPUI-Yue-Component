@@ -4,10 +4,10 @@ use super::element::ViewStamp;
 use super::*;
 use crate::TestSupportExt as _;
 use gpui::{
-    AnyElement, App, AppContext, AvailableSpace, Bounds, ContentMask, Div, Element, Entity, GlobalElementId,
-    Hitbox, InspectorElementId, InteractiveElement, IntoElement, LayoutId, ParentElement,
-    ScrollHandle, Stateful, StatefulInteractiveElement, StyleRefinement, Styled, Window, div,
-    point, px, size,
+    AnyElement, App, AppContext, AvailableSpace, Bounds, ContentMask, Div, Element, Entity,
+    GlobalElementId, Hitbox, InspectorElementId, InteractiveElement, IntoElement, LayoutId,
+    ParentElement, ScrollHandle, Stateful, StatefulInteractiveElement, StyleRefinement, Styled,
+    Window, div, point, px, size,
 };
 
 /// Stable sparse cell identity. Retaining two cells does not retain their
@@ -192,35 +192,51 @@ impl VirtualGridSnapshot {
     // and sort. Each sorted axis splits once at its frozen prefix. Materialize
     // O(R+C) tracks and stream the same region/row/column order as before.
     fn partitioned_cells(&self) -> impl Iterator<Item = VirtualGridCell> + '_ {
-        let rows: Vec<_> = self
+        let mut rows: Vec<_> = self
             .rows
             .working_items()
             .map(|r| r.expect("valid grid row"))
             .collect();
-        let columns: Vec<_> = self
+        let mut columns: Vec<_> = self
             .columns
             .working_items()
             .map(|c| c.expect("valid grid column"))
             .collect();
-        let row_split = rows.partition_point(|r| self.rows.is_frozen(r.index()));
-        let column_split = columns.partition_point(|c| self.columns.is_frozen(c.index()));
+        // Each sorted axis is prefix/body/suffix. Rotate into body/prefix/suffix
+        // in linear time; no per-cell buffer, comparison sort or sparse gap fill.
+        let reorder = |items: &mut Vec<VirtualizerItem>, axis: &VirtualizerSnapshot| {
+            let start = items
+                .iter()
+                .position(|r| !axis.is_frozen(r.index()))
+                .unwrap_or(items.len());
+            let end = items
+                .iter()
+                .rposition(|r| !axis.is_frozen(r.index()))
+                .map_or(start, |i| i + 1);
+            let body = end - start;
+            items.rotate_left(start);
+            items[body..].rotate_right(start);
+            body
+        };
+        let row_split = reorder(&mut rows, &self.rows);
+        let column_split = reorder(&mut columns, &self.columns);
         let mut region = 0;
-        let mut row = row_split;
-        let mut column = column_split;
+        let mut row = 0;
+        let mut column = 0;
         std::iter::from_fn(move || {
             loop {
                 if region == 4 {
                     return None;
                 }
                 let row_range = if region & 1 == 0 {
-                    row_split..rows.len()
-                } else {
                     0..row_split
+                } else {
+                    row_split..rows.len()
                 };
                 let column_range = if region & 2 == 0 {
-                    column_split..columns.len()
-                } else {
                     0..column_split
+                } else {
+                    column_split..columns.len()
                 };
                 if column >= column_range.end {
                     column = column_range.start;
@@ -228,8 +244,8 @@ impl VirtualGridSnapshot {
                 }
                 if row >= row_range.end || column_range.is_empty() {
                     region += 1;
-                    row = if region & 1 == 0 { row_split } else { 0 };
-                    column = if region & 2 == 0 { column_split } else { 0 };
+                    row = if region & 1 == 0 { 0 } else { row_split };
+                    column = if region & 2 == 0 { 0 } else { column_split };
                     continue;
                 }
                 let cell = VirtualGridCell {
@@ -281,6 +297,8 @@ pub struct VirtualGrid {
     content_revision: u64,
     frozen_rows: usize,
     frozen_columns: usize,
+    frozen_end_rows: usize,
+    frozen_end_columns: usize,
     options: Option<Box<GridOptions>>,
 }
 impl VirtualGrid {
@@ -402,6 +420,8 @@ impl VirtualGrid {
             content_revision: 0,
             frozen_rows: 0,
             frozen_columns: 0,
+            frozen_end_rows: 0,
+            frozen_end_columns: 0,
             options: None,
         }
     }
@@ -432,6 +452,17 @@ impl VirtualGrid {
     }
     pub fn content_revision(mut self, revision: u64) -> Self {
         self.content_revision = revision;
+        self
+    }
+    /// Stationary suffix at the bottom. Prefix counts take precedence when
+    /// counts overlap; only suffix tracks intersecting the clear viewport mount.
+    pub fn frozen_end_rows(mut self, count: usize) -> Self {
+        self.frozen_end_rows = count;
+        self
+    }
+    /// Stationary suffix at the logical end (right in LTR). Uses the same owner.
+    pub fn frozen_end_columns(mut self, count: usize) -> Self {
+        self.frozen_end_columns = count;
         self
     }
     /// Sparse union with visible/axis-retained/frozen cells, deduplicated by
@@ -472,6 +503,29 @@ impl VirtualGrid {
         }
         self
     }
+    fn validate_trailing_spans(
+        &self,
+        spans: &super::grid_span::GridSpans,
+        cx: &App,
+    ) -> Result<(), VirtualizerError> {
+        let rlen = self.rows.read(cx).source_for_render().len();
+        let clen = self.columns.read(cx).source_for_render().len();
+        let rstart = rlen
+            .saturating_sub(self.frozen_end_rows)
+            .max(self.frozen_rows.min(rlen));
+        let cstart = clen
+            .saturating_sub(self.frozen_end_columns)
+            .max(self.frozen_columns.min(clen));
+        if spans.entries.iter().any(|s| {
+            s.rows.start < rstart && s.rows.end > rstart
+                || s.columns.start < cstart && s.columns.end > cstart
+        }) {
+            return Err(VirtualizerError::Unsupported(
+                "span crosses trailing frozen boundary",
+            ));
+        }
+        Ok(())
+    }
     /// Validate sparse Fixed/Known spans before claiming a mount or mutating
     /// scroll state. Call after frozen_rows/columns, and rebuild each render
     /// from the current stable-key source transaction. Invalid input is atomic.
@@ -483,6 +537,7 @@ impl VirtualGrid {
                 spans,
                 (self.frozen_rows, self.frozen_columns),
             )?;
+            self.validate_trailing_spans(&resolved, cx)?;
             self.options.get_or_insert_with(Default::default).spans =
                 Some(super::grid_span::GridSpanStorage::Owned(resolved));
         } else if let Some(options) = &mut self.options {
@@ -504,6 +559,7 @@ impl VirtualGrid {
             (self.frozen_rows, self.frozen_columns),
             cx,
         )? {
+            self.validate_trailing_spans(&resolved, cx)?;
             self.options.get_or_insert_with(Default::default).spans =
                 Some(super::grid_span::GridSpanStorage::Shared(resolved));
         } else if let Some(options) = &mut self.options {
@@ -578,8 +634,12 @@ impl Element for VirtualGrid {
         let columns = self.columns.read(cx);
         Self::validate_axes(rows, columns).expect("invalid virtual grid configuration");
         let retain_masks = self.frozen_rows.min(rows.source_for_render().len()) > 0
-            || self.frozen_columns.min(columns.source_for_render().len()) > 0;
+            || self.frozen_columns.min(columns.source_for_render().len()) > 0
+            || self.frozen_end_rows > 0
+            || self.frozen_end_columns > 0;
         if let Some(spans) = self.options.as_ref().and_then(|o| o.spans.as_ref()) {
+            self.validate_trailing_spans(spans, cx)
+                .expect("configure freezing before spans");
             assert_eq!(
                 spans.generations,
                 (rows.generation(), columns.generation()),
@@ -862,12 +922,53 @@ impl Element for VirtualGrid {
                 .frozen_extent(column_count)
                 .min(f64::from(bounds.size.width)),
         );
+        let row_end_start = self
+            .rows
+            .read(cx)
+            .source_for_render()
+            .len()
+            .saturating_sub(self.frozen_end_rows)
+            .max(row_count);
+        let column_end_start = self
+            .columns
+            .read(cx)
+            .source_for_render()
+            .len()
+            .saturating_sub(self.frozen_end_columns)
+            .max(column_count);
+        let tail_extent = |s: &VirtualizerState, start, available: Pixels| {
+            Pixels::from(
+                (s.total_extent() - s.frozen_extent(start))
+                    .max(0.)
+                    .min(f64::from(available)),
+            )
+        };
+        let trailing_height = tail_extent(
+            self.rows.read(cx),
+            row_end_start,
+            (bounds.size.height - frozen_height).max(px(0.)),
+        );
+        let trailing_width = tail_extent(
+            self.columns.read(cx),
+            column_end_start,
+            (bounds.size.width - frozen_width).max(px(0.)),
+        );
         rv = rv
             .with_revision(revision)
-            .with_frozen_prefix(row_count, frozen_height);
+            .with_frozen_prefix(row_count, frozen_height)
+            .with_frozen_suffix(
+                row_end_start,
+                self.rows.read(cx).source_for_render().len() - row_end_start,
+                trailing_height,
+            );
         cv = cv
             .with_revision(revision)
-            .with_frozen_prefix(column_count, frozen_width);
+            .with_frozen_prefix(column_count, frozen_width)
+            .with_frozen_suffix(
+                column_end_start,
+                self.columns.read(cx).source_for_render().len() - column_end_start,
+                trailing_width,
+            );
         let (rs, rr) = self.rows.update(cx, |s, _| s.prepare(&rv, now)).unwrap();
         let (cs, cr) = self.columns.update(cx, |s, _| s.prepare(&cv, now)).unwrap();
         let y = rr
@@ -925,7 +1026,10 @@ impl Element for VirtualGrid {
             Pixels::from(rows.total_extent()),
         );
         let snapshot = VirtualGridSnapshot::new(rows, columns).unwrap();
-        let partitioned = row_count > 0 || column_count > 0;
+        let partitioned = row_count > 0
+            || column_count > 0
+            || trailing_height > px(0.)
+            || trailing_width > px(0.);
         if partitioned && frame.masks.is_none() {
             frame.masks = Some(Vec::new());
         }
@@ -940,41 +1044,14 @@ impl Element for VirtualGrid {
             w,
             cx,
             |_, _, hitbox, w, cx| {
-                let regions = [
-                    Bounds::new(
-                        bounds.origin
-                            + point(if rtl { px(0.) } else { frozen_width }, frozen_height),
-                        bounds.size - size(frozen_width, frozen_height),
-                    ),
-                    Bounds::new(
-                        bounds.origin + point(if rtl { px(0.) } else { frozen_width }, px(0.)),
-                        size(bounds.size.width - frozen_width, frozen_height),
-                    ),
-                    Bounds::new(
-                        bounds.origin
-                            + point(
-                                if rtl {
-                                    bounds.size.width - frozen_width
-                                } else {
-                                    px(0.)
-                                },
-                                frozen_height,
-                            ),
-                        size(frozen_width, bounds.size.height - frozen_height),
-                    ),
-                    Bounds::new(
-                        bounds.origin
-                            + point(
-                                if rtl {
-                                    bounds.size.width - frozen_width
-                                } else {
-                                    px(0.)
-                                },
-                                px(0.),
-                            ),
-                        size(frozen_width, frozen_height),
-                    ),
-                ];
+                // Regions are derived per cell: prefix/body/suffix on each axis.
+                // The clear middle excludes both strips before hit registration.
+                let axis_region =
+                    |part: usize, leading: Pixels, trailing: Pixels, extent: Pixels| match part {
+                        1 => (px(0.), leading),
+                        2 => (extent - trailing, trailing),
+                        _ => (leading, (extent - leading - trailing).max(px(0.))),
+                    };
                 let mut ordinary = (!partitioned).then(|| snapshot.cells());
                 let mut ordered = partitioned.then(|| snapshot.partitioned_cells());
                 let ordinary = std::iter::from_fn(|| {
@@ -1059,7 +1136,14 @@ impl Element for VirtualGrid {
                         let column_key = cell.column.key().clone();
                         let extent = cell.extent();
                         let column_offset = Pixels::from(
-                            cell.column.start() - if cell.frozen_column { 0. } else { x },
+                            cell.column.start()
+                                - if cell.column.index() >= column_end_start {
+                                    snapshot.columns.total_extent() - f64::from(bounds.size.width)
+                                } else if cell.frozen_column {
+                                    0.
+                                } else {
+                                    x
+                                },
                         );
                         let origin = bounds.origin
                             + point(
@@ -1069,12 +1153,56 @@ impl Element for VirtualGrid {
                                     column_offset
                                 },
                                 Pixels::from(
-                                    cell.row.start() - if cell.frozen_row { 0. } else { y },
+                                    cell.row.start()
+                                        - if cell.row.index() >= row_end_start {
+                                            snapshot.rows.total_extent()
+                                                - f64::from(bounds.size.height)
+                                        } else if cell.frozen_row {
+                                            0.
+                                        } else {
+                                            y
+                                        },
                                 ),
                             );
-                        let region =
-                            usize::from(cell.frozen_row) + 2 * usize::from(cell.frozen_column);
-                        let mask = regions[region].intersect(&clip);
+                        let column_part = if cell.column.index() >= column_end_start {
+                            2
+                        } else if cell.frozen_column {
+                            1
+                        } else {
+                            0
+                        };
+                        let row_part = if cell.row.index() >= row_end_start {
+                            2
+                        } else if cell.frozen_row {
+                            1
+                        } else {
+                            0
+                        };
+                        let (left, width) = axis_region(
+                            column_part,
+                            frozen_width,
+                            trailing_width,
+                            bounds.size.width,
+                        );
+                        let (top, height) = axis_region(
+                            row_part,
+                            frozen_height,
+                            trailing_height,
+                            bounds.size.height,
+                        );
+                        let mask = Bounds::new(
+                            bounds.origin
+                                + point(
+                                    if rtl {
+                                        bounds.size.width - left - width
+                                    } else {
+                                        left
+                                    },
+                                    top,
+                                ),
+                            size(width, height),
+                        )
+                        .intersect(&clip);
                         let build = |w: &mut Window, cx: &mut App| {
                             let mut element = div()
                                 .id(column_key)
@@ -1092,7 +1220,7 @@ impl Element for VirtualGrid {
                                 masks.push(mask);
                             }
                         };
-                        if row_count > 0 || column_count > 0 {
+                        if partitioned {
                             w.with_content_mask(Some(ContentMask { bounds: mask }), |w| {
                                 build(w, cx)
                             });
