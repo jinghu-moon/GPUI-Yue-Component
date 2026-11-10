@@ -1,6 +1,6 @@
 # YueTable：实际 API 与接入示例
 
-日期：2026-11-11。配套 [Table 主设计](45-table.md)、[M1](45-table-m1.md)、[M2](45-table-m2.md) 及 [M3](45-table-m3.md)。本页只列当前实现；后续阶段合同仍在主设计，不用伪签名冒充可用 API。
+日期：2026-11-11。配套 [Table 主设计](45-table.md)、[M1](45-table-m1.md)、[M2](45-table-m2.md) 、[M3](45-table-m3.md)、[M4](45-table-m4.md)、[M5](45-table-m5.md)及 [M6](45-table-m6.md)。本页只列当前实现。
 
 ## 1. 共享与受控合同
 
@@ -28,7 +28,7 @@
 
 ## 3. 例 A：最小有限视口表格（M1）
 
-本节完整程序已迁入 [examples/minimal/src/bin/table.rs](../examples/minimal/src/bin/table.rs)，使用实际公共 API，通过消费者编译。它只依赖 `yue-component`，从其 re-export 获取 GPUI；不开放尚未实现的查询 API。
+本节完整程序已迁入 [examples/minimal/src/bin/table.rs](../examples/minimal/src/bin/table.rs)，使用实际公共 API，通过消费者编译。它只依赖 `yue-component`，从其 re-export 获取 GPUI；最小例不要求接入查询／分页。
 
 ```rust
 //! Minimal consumer of the public Table API; no private modules or component layer.
@@ -476,7 +476,7 @@ fn main() {
 
 综合交互位于 [Showcase 查询示例](../examples/windows-showcase/src/pages/table/query.rs)：普通 Dropdown 筛选、TreeSelect 叶子筛选、自定义名称／数值范围草稿、跨页选择及批量核验、明确标注本页／筛选结果／已选范围的汇总。完整模拟服务端拥有 137 条数据，所以能显示完整汇总；只加载一页的实际 Remote 消费者不能据该页声称完整域汇总。
 
-有限视口表格由一个 Base owner 管正文滚动，Pagination 位于视口外；外层 flex 子项保持 min_w_0／min_h_0。查询与汇总在接受路径执行，render 只组合已有值和当前窗口记录。M4 的实际接口与接线见 [复杂记录指南](45-table-m4.md)及生产 Showcase 的 [编辑示例](../examples/windows-showcase/src/pages/table/editing.rs)、[树与详情示例](../examples/windows-showcase/src/pages/table/structure.rs)。M5 Cells／span、M6 重排另分阶段实现和验收。
+有限视口表格由一个 Base owner 管正文滚动，Pagination 位于视口外；外层 flex 子项保持 min_w_0／min_h_0。查询与汇总在接受路径执行，render 只组合已有值和当前窗口记录。M4 的实际接口与接线见 [复杂记录指南](45-table-m4.md)及生产 Showcase 的 [编辑示例](../examples/windows-showcase/src/pages/table/editing.rs)、[树与详情示例](../examples/windows-showcase/src/pages/table/structure.rs)。M5 Cells／span与M6重排已实现，入口和边界见下文。
 
 ## 7. M4 接入要点
 
@@ -487,3 +487,11 @@ fn main() {
 `TableDelegate::render_detail(row, width, window, context)` 返回现有组件组合。详情中的 retained 控件／子表按业务 key 在宿主创建和释放；禁止将同一个 Entity 同时挂到多个打开的详情。
 
 编辑接线保持三种身份：宿主 retained 控件值、Table 编辑 token、业务 source row revision。控件事件比较实际值后使旧保存失效；保存入口先 flush 最新值。先 request_save，验证通过再 accept_edit_validation，只有 Saving 中的当前 token 可 commit_edit。示例实际复用 Form／Field；不要将包含真实输入的 row 变成每帧重建的临时 Entity。
+
+## 8. M5／M6 接入要点
+
+[双轴指南](45-table-m5.md)覆盖Cells＋Fixed／Known、正文TableSpanPlan、跨pin表头、scroll_host和range_loading；[M6指南](45-table-m6.md)覆盖Static自然rowspan、row_drag、列配置、tail_loading及完整validate／capabilities。
+
+重排是单个稳定key对目标Before／After的请求，宿主apply后commit，不是直接修改上游slice。列配置保留declared_columns与column_preferences；刷新source或重新运行query时用reconcile恢复偏好，不把临时有效宽度写回声明。过滤／分页须显式映射行移动，激活排序拒绝行重排。
+
+实际可编译接线位于Showcase的[configuration.rs](../examples/windows-showcase/src/pages/table/configuration.rs)、[customization.rs](../examples/windows-showcase/src/pages/table/customization.rs)、[temporal.rs](../examples/windows-showcase/src/pages/table/temporal.rs)和[advanced.rs](../examples/windows-showcase/src/pages/table/advanced.rs)。综合工单在[query.rs](../examples/windows-showcase/src/pages/table/query.rs)。模块内测试实际操作这些控件，不依赖伪业务helper。完整功能／测试／示例编号见[最终核对](research/2026-11-11-table-completion.md)。

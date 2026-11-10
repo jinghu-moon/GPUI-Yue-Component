@@ -1,6 +1,6 @@
 # YueTable 表格组件设计
 
-- 日期：2026-11-11；状态：M1–M5 已实现并完成阶段自动化与性能基线，计时噪声和原生验收边界单列。当前可调用能力见 [M1 使用指南](45-table-m1.md)、[M2 布局指南](45-table-m2.md)、[M3 查询指南](45-table-m3.md)、[M4 复杂记录指南](45-table-m4.md)和 [M5 双轴指南](45-table-m5.md)，逐阶段证据见[实施进度](research/2026-11-11-table-delivery.md)；本文是 M1–M6 的完整目标，未落地阶段的类型和方法仍为拟定合同。
+- 日期：2026-11-11；状态：M1–M6 已实现；阶段自动化、性能基线和原生验收边界分别记录。当前可调用能力见 [M1 使用指南](45-table-m1.md)、[M2 布局指南](45-table-m2.md)、[M3 查询指南](45-table-m3.md)、[M4 复杂记录指南](45-table-m4.md)、[M5 双轴指南](45-table-m5.md)和 [M6 重排与交付](45-table-m6.md)，逐阶段证据见[实施进度](research/2026-11-11-table-delivery.md)；本文保留完整设计与验收合同；实际 API 见第19节和使用指南，交付映射见[最终核对](research/2026-11-11-table-completion.md)。
 - 平台：Windows GPUI；依赖与目录遵循[组件架构](24-component-architecture.md)。
 - 接入阅读顺序：本文第 1／4／17／19 节 → [API 与三个接入示例](45-table-api-examples.md) → 对应功能章节；性能实施使用[固定 workload 与门禁方案](performance/2026-11-10-table-benchmark-plan.md)。五项自评改进及三库复核见[完善记录](research/2026-11-10-table-design-hardening.md)。
 - 依据：通过浏览器阅读 `refer/table` 内 Ant Design Vue、Arco Design、TDesign 三份本地网页，示例、API、限制和源码复用核对见[参考调研记录](research/2026-11-10-table-reference-review.md)。
@@ -285,7 +285,7 @@ hover、排序指示、展开和拖动反馈复用共享 motion；滚动位置�
 
 宿主持久化采用带 schema／列语义版本的字段白名单，只存允许恢复的 key、顺序、显隐、宽度偏好和固定配置，不序列化整份 TableState、renderer／Entity、测量缓存、pending、编辑会话或临时响应式隐藏。恢复后仍受当前列声明和权限约束，旧记录不能恢复已删字段或覆盖新规则；缺省字段、显式清空和重置分别解释，空数组不能统一当作“不处理”。先解析并校验完整配置，再一次静默接受和合并失效，不逐列触发用户请求；无变化不额外测宽。若宿主另存 query，需显式选择其恢复范围，在协调合法 query／页码后至多发一次取数，不能在应用每个切片时制造请求风暴。此处限定宿主存取边界，不新增通用持久化服务或平行状态入口。
 
-列设置面板复用 Dialog／Dropdown、Checkbox 和 Button；草稿修改不即时覆盖提交值，确认一次发完整 `ColumnsRequested`，取消无请求。可选即时模式必须显式声明，不能同时存在两套提交语义。
+列设置面板复用 Dialog／Dropdown、Checkbox 和 Button；草稿修改不即时覆盖提交值，确认一次发完整 `ColumnConfigurationRequested`，取消无请求。可选即时模式必须显式声明，不能同时存在两套提交语义。
 
 列集合协调比较 key 与配置 revision，不只比较数量；同数量换 key、选择／展开等展示列增减也须识别。保留存续列的合法用户顺序，按声明规则合入新列，删除项不残留。列设置打开期间若外部列集合／权限变化，确认前按新规则重验草稿，有冲突提示并保留面板，不能复活已删或失权列；取消仍无回写。
 
@@ -317,7 +317,7 @@ hover、排序指示、展开和拖动反馈复用共享 motion；滚动位置�
 
 模式显式配置，不根据第 101 行自动换整套元素身份。切换模式需要显式会话协调，进行中的编辑／拖动未结束时拒绝切换。Static 不声称有界工作集，不能在大数据示例里使用 Static 后宣传虚拟化。
 
-有限高度来自宿主布局或 `height／max_height`；自然高度由内容决定，不能用百分比高度压缩内容后裁掉。Table 放在 Card 中必须回归自然高度、等高卡片、分页下缘和空状态包含关系。
+有限高度使用 `height`，外部最大高度约束由宿主布局提供（Table没有max_height builder）；自然高度由内容决定，不能用百分比高度压缩内容后裁掉。Table 放在 Card 中必须回归自然高度、等高卡片、分页下缘和空状态包含关系。
 
 滚动大跳、快速反向或超出已覆盖缓冲时，下一次提交的场景必须覆盖新有效视口，不能等用户停止输入才补内容或将旧 key 的窗口平移充数。合批读取最新 owner 与 revision，过期调度不回滚新工作集；沿 GPUI 更新／布局阶段验收，不要求每个 native 事件同步 paint，也不照搬参考整屏缓冲或固定延时。
 
@@ -339,7 +339,7 @@ hover、排序指示、展开和拖动反馈复用共享 motion；滚动位置�
 
 列固定使用 `Start／None／End`，Windows 默认对应左／中／右。各区域按已接受列配置形成连续区间，顺序解析为 Start → Center → End；所有区域使用同一叶列身份和宽度。
 
-当前 Base Grid 只支持前缀冻结，不能直接实现 End 列和尾部行。M2 须先补齐或提取经过测试的首尾冻结布局机制：共享原滚动 owner、工作集、裁剪、焦点、span 校验和命中。禁止倒置数据、切换 RTL、将右侧列改成左侧后改画坐标来假装原生尾端冻结。
+M2 已扩展 Base Grid 首尾冻结机制，End 列和尾部行保持原生轴几何：共享原滚动 owner、工作集、裁剪、焦点、span 校验和命中。禁止倒置数据、切换 RTL、将右侧列改成左侧后改画坐标来假装原生尾端冻结。
 
 固定区同样参与虚拟化与工作集预算，不因属于固定列就构建全部行。数据尾行在总内容不足正文视口时保持自然顺序、紧接前面的记录；内容超出视口才贴住尾边，不人为插入大空洞。它与独立 summary／affix 的定位合同分开，也不仿照 RevoGrid 的 pinned source 另建重复业务数据源。
 
@@ -391,7 +391,7 @@ Known 高度按 stable key 映射到当前投影，Measured 缓存按 key＋有�
 
 行高测量、同一行取最大值、尺寸批次接受与锚点修复分阶段完成，复用 Base 的 measurement budget、revision 与合批反馈。过期测量不得写回新列宽／新内容版本；初次隐藏或尚未布局的零测量不能覆盖有效高度。超预算的行沿用合法估计并继续有界推进，不同步遍历全部离屏内容。
 
-正文可见高度按容器扣除表头、summary 和 footer 后夹到非负；高度为零不退化成无约束全量渲染。行高反馈若影响容器尺寸，只登记下一次有界布局，不在正在进行的布局回调中递归重建整表。分别验收空表恢复、深处数据突然缩短、max_height 小于固定区域、尺寸收敛和稳定后不再调度。
+正文可见高度按容器扣除表头、summary 和 footer 后夹到非负；高度为零不退化成无约束全量渲染。行高反馈若影响容器尺寸，只登记下一次有界布局，不在正在进行的布局回调中递归重建整表。分别验收空表恢复、深处数据突然缩短、宿主最大高度小于固定区域、尺寸收敛和稳定后不再调度。
 
 ## 10. 分组表头、合并和表尾
 
@@ -568,7 +568,7 @@ Skeleton／加载提示有独立展示身份，不制造字段为 null 的伪业
 
 ## 16. 行拖拽与列拖拽
 
-默认手柄启动行拖动，避免与文本选择、编辑、行点击和 Checkbox 冲突；可选整行拖动但必须排除可交互内容。行移动请求表达 `source_keys + target_key + Before/After`，包含投影／数据 revision，不只给 from_index／to_index。
+默认关闭行拖动；启用时可选手柄或明确 opt-in 的整行拖动，并排除可交互内容。行移动请求表达单个稳定 `key + target + Before/After`，包含投影／数据 revision，不只给 from_index／to_index。
 
 拖动预览只保留拖动项、插入指示与附近工作集，不构建全部行。边缘自动滚动写同一 owner；目标检测基于最新模型坐标，离屏目标经滚动可达。Escape、失去捕获、目标删除、查询变化取消，原顺序不变。
 
@@ -582,25 +582,25 @@ Skeleton／加载提示有独立展示身份，不制造字段为 null 的伪业
 
 ## 17. 能力组合与失败合同
 
-下表是目标交付合同，非当前能力声明。阶段未完成的功能必须返回 `TableError::UnsupportedCombination` 或不开放入口，不能悄悄改成 Static、丢树节点或取消编辑。
+下表对应当前实现。用完整 builder 的 `validate(cx)`／`capabilities(cx)` 检查组合；非法组合返回 `TableError::UnsupportedCombination` 或明确配置错误，不悄悄改成 Static、丢树节点或取消编辑。
 
-| 组合 | 目标合同 |
+| 组合 | 当前合同 |
 | --- | --- |
-| Static＋自然多行＋colspan／rowspan | 支持；共享轨道和显式合并计划，集合必须确实有界 |
+| Static＋自然多行＋colspan／rowspan | 支持；集合必须确实有界；冻结数据行、固定列footer及range／tail预取明确拒绝 |
 | Rows＋Fixed／Known | 支持行虚拟化、选择、排序、筛选、编辑、树形投影 |
 | Rows＋Measured＋展开详情 | 支持；行高取所有显示列的实际最大值，保持阅读锚点 |
 | Rows＋单行 colspan | 支持；跨冻结区拒绝；跨行 rowspan 不走此路径 |
 | Cells＋Fixed／Known＋冻结＋span | 支持，但 span 不得跨冻结边界，唯一 origin 与焦点 |
 | Cells＋Measured | 不支持；明确选择 Rows 或提供 Known 高度，不估算离屏列最大值 |
-| Cells＋任意 full-width detail／嵌套表 | 首轮不支持；详情需要 Rows 路径，不以跨冻结 span 强行实现 |
+| Cells＋任意 full-width detail／嵌套表 | 不支持；详情需要 Rows 路径，不以跨冻结 span 强行实现 |
 | Cells＋树形投影 | 行尺寸已知时支持，前提是展开投影和 key 事务一致 |
-| Start／End 冻结＋表头／summary | M2 完成首尾冻结扩展后支持；当前 Base 前缀冻结不足以直接承诺 |
-| 多级表头跨 pin 区 | 需完成单一语义身份的分片呈现；之前类型化拒绝 |
+| Start／End 冻结＋表头／summary | 支持；Base 已扩展尾端冻结，表头与列 footer 共用轨道 |
+| 多级表头跨 pin 区 | 支持；视觉分片、单一语义身份，报告完整逻辑组跨度 |
 | rowspan 与排序／过滤／分页 | 要求新投影对应的新计划；跨页、非矩形、重叠拒绝 |
 | 编辑＋滚动／排序／删行 | 工作集保留、会话结束与焦点修复按第 14 节执行 |
 | 服务端数据＋本地自动处理 | 模式互斥，拒绝重复分页／排序配置 |
-| 页面 affix＋未绑定宿主 | 拒绝，不猜滚动所有者 |
-| 行重排＋激活排序 | 默认拒绝，除非宿主提供明确业务映射 |
+| 页面 affix | 显式绑定同一 ScrollHandle；拒绝 Static／Measured／RTL 组合，不猜滚动所有者 |
+| 行重排＋激活排序 | 拒绝；过滤／分页另须显式 MappedVisibleResult，宿主负责结果域映射 |
 
 `TableCapabilities` 是由当前模式／基础能力计算出的只读结果，供配置界面说明有效组合；不能靠一组可写 bool 把未实现的能力标成支持。
 
@@ -644,113 +644,63 @@ Skeleton／加载提示有独立展示身份，不制造字段为 null 的伪业
 
 现有 Windows AccessKit 桥仍缺完整 UIA Grid／GridItem／离屏 Realize 链路，见[provider 调查](research/2026-11-05-virtual-grid-uia-provider-investigation.md)。本设计不以 Table 元数据测试通过冒充 Narrator 表格导航通过，也不为完成 Table 自动扩展 COM provider。真机读屏结果和边界单列验收。
 
-## 19. 拟定 API 与模块组织
+## 19. 实际 API 与模块组织
 
-### 19.1 核心类型
+本节列当前公开入口；完整消费者见[API附录](45-table-api-examples.md)，M1–M6指南给出各能力合同。字段私有，宿主不依赖内部模块。
 
-以下名称为拟定公共入口；字段私有，使用 builder 和 reader，不要求宿主依赖内部文件。
+### 19.1 来源、列和视图
 
-| 类型 | 职责 |
+| 类型 | 实际职责 |
 | --- | --- |
-| `YueTable<D>` | RenderOnce 外观与组合入口，接收稳定 id 和 `Entity<YueTableState<D>>` |
-| `YueTableState<D>` | 保留 accepted view 引用、导航、布局接线与有界交互会话 |
-| `TableDelegate` | 关联 Row／Source 与内容 renderer；读取 accepted source，不把可变业务容器作为第二来源 |
-| `TableSource`／`TableRows<R>` | 不可变来源窄读取 trait；后者为可选的共享 slice＋key 索引适配，不深拷贝业务 Row |
-| `TableView<S>` | 共享不可变 source 与一致的 query、selection、expansion、columns、summary／load 及接受后的投影 |
-| `TableRowKey`／`TableColumnKey`／`TableCellKey` | 稳定业务身份；与当前页和屏幕索引分开 |
-| `TableRequestId` | 实例内请求身份，关联 pending、接受和拒绝，不替代数据 revision |
-| `TableColumn`／`TableColumnGroup` | 有序列树、具名操作列、宽度与呈现能力 |
-| `TableCellContext` | row／column key、投影位置、状态、实际可用宽度；不暴露可变私有 state |
-| `TableQuery`／`TableSort`／`TableFilterKey<V>`／`TableFilterValue<V>` | 有序排序、受列语义约束的 typed 筛选及分页；内部擦除不公开 Any／downcast |
-| `TableSelection`／`TableExpansion` | 选择域、稳定 key 与展开方式 |
-| `TableColumnState`／`TableSpan` | 可接受的列配置、带版本的合并描述 |
-| `TableRenderMode`／`TableRowSizing` | 显式 Static／Rows／Cells 与行尺寸合同 |
-| `TableEvent`／`TableError`／`TableCapabilities` | 唯一事件通道、失败原因、当前组合的只读能力 |
+| `TableSource`／`TableRows<R>` | 不可变快照窄读取；scope／revision／len／row_key／position_of／row／contains_key。TableRows建立key索引，复用Rc slice，不要求Row: Clone；重排共享原存储 |
+| `TableDelegate` | 关联Source；可覆写render_cell／render_detail；业务行从accepted source借用，不从delegate的第二份可变容器读取 |
+| `TableColumn<R>`／`TableHeaderGroup` | 异构typed列、纯文本／custom renderer、共享轨道、宽度／pin／responsive／header_path；typed query key不向宿主暴露Any |
+| `TableView<S>` | source、声明列／偏好／有效列、query、selection、load／total、尺寸和正文span构成一份候选快照 |
+| `TableColumnPreferences`／`TableColumnDraft` | schema＋语义版本协调的值模型与独立草稿；确认重验后一次请求 |
+| `TableSpanPlan`／`TableRowSizing` | 正文原子合并计划；Fixed／Known／Measured合同，不隐式切换虚拟模式 |
+| `TableOutline<S>`／`TableOutlineSource<S>` | 宿主树与详情模型、根分页、节点加载票据及不可变投影 |
+| `TableLocalQuery`／`TableRemotePage` | 本地过滤→稳定多排序→分页；远程仅借用实际返回页，不重复切片／排序 |
+| `TableEditSession`／`TableEditToken` | retained真实草稿、版本校验与异步保存身份；不替代Input／Form等控件 |
 
-### 19.2 来源、delegate 与原子接受协议
+### 19.2 原子接受和所有权
 
-`TableSource` 是宿主提供的不可变读取快照：关联 Row 类型，提供结果域、source revision、数据行数量、`row_key(position)`、`position_of(key)` 和按 key 借用 Row。key／反查应为 O(1) 或 O(log N)，不得每个 cell 从头扫描。快照发布后不经 Cell／RefCell／锁绕过 revision 修改记录；变化产生新快照，未变记录可继续共享，不要求全量深拷贝。
+构造 `YueTableState::new(&delegate, cx)`；`view()` 返回 `Option<&Rc<TableView<D::Source>>>`。`commit_view(candidate, response_to, cx)` 是唯一发布入口，返回 `Result<TableCommitOutcome, TableError>`；外部更新传None，用户请求响应传对应id。候选先核对来源key／反查、scope／revision、列与权限、typed query、尺寸／span及会话身份，再一次替换accepted引用；校验失败保留旧数据和presentation。Source回调不接收App／Context，不能在准备期间重入owner。
 
-`TableDelegate` 关联 Row 与 Source，负责 cell／可选 header／footer／detail／editor 呈现；State 持 `Entity<D>`，但不从 D 的可变业务容器读取当前记录。渲染按 accepted view 的 `Rc<D::Source>` 取得 Row，再交 delegate；Row 借用只活在本次调用，返回元素不得保留该借用。需要延续的控件由宿主按 cell key 保留 Entity。Row／Source 无全局 Send＋Sync 要求，后台计算只接收真正可发送的纯数据。
+克隆accepted view再派生候选，保留基础revision；旧候选不能覆盖新事实。`is_current_request(id)`隔离异步响应，最终commit仍重验；`reject_request(id, cx)`结算当前请求，不回发请求。远程成功、失败、finally都先检查票据。网络任务取消、业务权限、配置持久化归宿主，Table不内置网络／序列化框架。
 
-最小使用者可选 `TableRows<R>`：在宿主交入的 `Rc<[R]>` 上一次校验并建立 key 索引，不复制 Row；既有仓储可实现同一窄 trait。`TableView<S>` 包含共享 source、列声明／配置、query、选择及加载／summary 等输入；接受后再持有一致派生投影。宿主读取同一 accepted view 引用，不再独立维护第二份“Table 已接受值”。完整签名、typed 列与值合同见 [API 附录](45-table-api-examples.md)。
-
-一次接受按以下顺序完成，`commit_view` 是唯一发布入口，不公开成对 prepare／finish 锁：
-
-1. **准备**：宿主在已接受快照之外构造候选 source／view；解析和网络成功尚不等于发布。旧 view 继续拥有旧 source，不提前替换业务读取入口。
-2. **校验**：先核对实例、请求票据、基础 view revision、结果域与 source 身份；再校验新来源 key／反查、列树／权限、query typed 载荷、尺寸与 span。按模式生成候选投影、计数和失效计划。校验无 renderer／保存回调，无可观察发布。
-3. **重验**：可能延后或执行宿主代码的准备阶段结束后再查 owner／mount／请求代次；过期即拒绝。Source／列语义未变的配置提交复用已验证索引，不因选择变化重扫 N 行。
-4. **发布**：在一个不可重入的短更新内替换一个 accepted view 引用，结算其关联 pending，并登记合并失效。发布段不再调用可失败的业务解析、网络或 renderer；不能先公开新 total 后公开新 key。
-5. **通知**：完成发布后才让观察者读取新快照。外部 commit 静默，不产生 QueryRequested 等用户请求；必要完成确认保留。宿主收到 Applied／Unchanged 后可读取同一 view 引用，不将候选提前标作已接受。
-
-任一步在发布前失败，候选被丢弃，旧 source／view／滚动／编辑事实不变；关联等待由宿主明确拒绝并结算，不让失败悬挂。服务器操作已成功而本地校验拒绝时，保留旧有效视图并由宿主显式重新同步，不宣称回滚服务端。接受新视图后的正常布局／绘制不再回滚业务保存；资源失败走既有局部错误呈现。
-
-纯规则失败用例至少注入重复 key、错误 total、非法 span、过期票据和准备后卸载，断言 accepted view／source 引用、revision、key 顺序及未结束会话均未改变。无变化只结算请求、不重跑布局；实际源码参数和消费者编译在 M1 固定，不能把本设计签名称为已经可调用。
-
-### 19.2.1 既有控件的适配协议
-
-适配器只传播实际改变的领域，不在 render 或每次整表通知中无条件调用控件 setter。
-
-| 复用对象 | 请求与接受接线 | 必须保留／避免 |
-| --- | --- | --- |
-| YuePagination | 订阅 `PaginationChange`，把 page／page_size 合成一次 QueryRequested；接受后仅在 `state.value() != next` 时调用 `set_value(next, window, cx)`，loading 变化另走 `set_loading` | 当前源码 `set_value` 会重置跳页草稿；选择、hover、内容和无变化 view 更新不得取消它。拒绝请求保持旧值，不重建控件；未知 total 不转成 0 |
-| YueSelect／TreeSelect | 值变化用既有静默 set_value；候选变化用公开更新接口，loading 与错误按原有合同；Table 到 typed 业务值的 key 映射由列适配持有 | 不把候选标签当值，不丢 0／false；同值同步不关 Popup／重置 query／IME。Select 的 `set_options` 可更新同一 Entity，不能据此推断所有 TreeSelect 同名接口存在 |
-| Input／Textarea／Field／Form | 宿主保留 Entity 和真实草稿；显式保存读取控件并执行既有同步校验，异步保存另带会话票据 | 不在 renderer new、不以外点事件时序读旧值；跨重排和候选刷新保留选区／组词 |
-| KeyedTreeModel | 新 source／结构 revision 一次同步模型及合法展开状态，结构索引与显示投影区分 | 不把每次滚动／选择当重建树；不通过 YueTree 私有字段读取结构 |
-| ScrollHandle／YueScrollbar／ResizeHandle | 共享一个 owner 与一份解析几何；scrollbar 只消费 handle 和合法 viewport；伸缩会话单次结算 | 不双写滚轮、不借显隐修改列宽；失捕获／取消不提交；尾冻结扩展仍单独失败基线 |
-| Popup／Dialog／Tooltip | 使用现有 Root、anchor、焦点与事件消费顺序；同击键关闭不穿透 | 不在 Table 新建浮层根；不靠 descendant 检查猜控件类型；保留原控件语义和命名 |
-
-上下两个分页器共享一个 accepted 分页值；若各有跳页 Input Entity，只在分页事实真的变化时同步，不能因另一表的通知重置草稿。Table 的活动格、选择和分页草稿分别有 owner，拒绝／取消仅结算本次所属会话。示例与回归需证明“没有调用无关 setter”，而非只数最终 view 值。
+来源发布后不可通过内部可变性绕过revision修改业务行。Row借用只活在本次renderer调用；返回元素不保留该借用。renderer可保留以cell key标识的控件Entity，不能每帧重建输入草稿，也不能读正在update的Table owner。Row／Source不要求全局Send＋Sync；后台计算只传可发送的纯数据。完整source替换仍有O(N)索引／验证成本；虚拟化只承诺渲染工作集有界。
 
 ### 19.3 构造与操作
 
-| 入口 | 合同／默认 |
+| 入口 | 当前合同 |
 | --- | --- |
-| `YueTableState::new(&delegate, window, cx)` | 每表一个 retained state；初始为合法未绑定空状态，无请求；首次 commit 后提供 accepted view，绑定既有 Root |
-| `state.view()` | 返回 `Option<&Rc<TableView<D::Source>>>`；初始化前 None，读取不触发查询／布局 |
-| `state.commit_view(view, response_to, window, cx)` | 返回 `Result<TableCommitOutcome, TableError>`；Applied／Unchanged，失败不改旧有效 source／view；外部更新传 None |
-| `state.mark_pending(request_id, ...)`／`state.reject_request(request_id, reason, window, cx)` | 显式等待／拒绝，返回 Result；旧请求不能清除新会话，拒绝不回发用户请求 |
-| `state.request_query(query, source, window, cx)` | 显式程序命令，生成正常请求 id 和唯一 QueryRequested；区别于静默 commit，用于分页适配／重试／刷新 |
-| `YueTable::new(id, &state)` | 稳定实例身份；不在 render 新建 state |
-| `.size(TableSize)` | 默认 Medium；三档密度 |
-| `.borders(TableBorders)`／`.outer_border(bool)` | 默认 Rows、无额外外框 |
-| `.striped(bool)`／`.hoverable(bool)` | 默认 false／true；只改变状态绘制 |
-| `.header(...)`／`.toolbar(...)`／`.footer(...)` | 整表具名区域；不参与正文列轨道 |
-| `.empty(...)`／`.loading(...)` | 仅定制内容 renderer，复用已有状态组件；是否空／加载／失败仍由 accepted view 决定，不另传一份加载 bool |
-| `.height(...)`／`.max_height(...)` | 给有限视口；缺少有限约束的虚拟配置返回错误 |
-| `.render_mode(...)`／`.row_sizing(...)` | 默认有限视口 Rows＋Fixed；其他组合显式声明 |
-| `.header_visible(bool)`／`.header_fixed(bool)` | 默认 true／有限视口内 true；Static 默认自然表头 |
-| `.surface_background(token)` | 指定冻结／吸顶底板的宿主表面，普通格子仍透明 |
-| `.readonly(bool)`／`.disabled(bool)` | readonly 禁止编辑但保留浏览与允许的选择／查询；disabled 不发修改请求，仍可阅读滚动 |
-| `.accessibility_label(...)` | 必须提供有意义的实例名称；多个表不能都只叫“表格” |
-| `state.scroll_to_row／scroll_to_cell(...)` | 按 stable key 定位，复用 Base 对齐／smooth 能力；目标不在当前视图时返回结果，不暗中请求其他页 |
-| `state.active_cell()`／`state.capabilities()` | 只读查询，不启动布局或构建离屏元素 |
-| `TableEvent` 订阅 | 唯一通知通道；程序化 commit 不回发用户请求 |
+| `YueTable::new(id, &state)` | RenderOnce组合入口；state由宿主保留，默认Rows、20rem有限高度、Medium、Rows边框，无额外外框 |
+| `size`／`borders`／`outer_border`／`striped`／`hoverable` | 三档密度；默认无stripe、hover开启；普通格透明，固定底板用surface_background |
+| `height`／`row_height`／`render_mode` | 显式有限高度、Fixed覆盖与Static／Rows／Cells；Known／Measured使用view.with_row_sizing |
+| `header_visible`／`header_fixed`／`frozen_rows`／`footer_fixed` | 表头、首尾数据行、列footer；组通过列header_path声明 |
+| `toolbar`／`footer`／`empty` | 整表slot；列header／footer单独在TableColumn声明；无独立loading renderer builder |
+| `scroll_host`／`range_loading`／`tail_loading` | 单owner宿主affix、已知范围或未知尾游标；range／tail／分页互斥 |
+| `row_drag`／`row_move_scope` | 默认None；Handle／Row显式开启；排序拒绝，过滤／分页必须映射结果域 |
+| `readonly`／`disabled`／`accessibility_label` | 阻止对应修改请求、保持阅读滚动；实例提供有意义名称 |
+| `validate(cx)`／`capabilities(cx)` | 在完整builder上返回Result和只读能力，不由state维护第二份bool配置 |
+| `state.scroll_to_row`／`scroll_to_cell` | 按稳定key定位，使用Base对齐与smooth；目标不在当前view不暗中翻页 |
+| `state.active_cell`／`scroll_handle`／`column_width`／`effective_pin` | 只读当前导航与解析布局，不构建离屏内容 |
 
-列 builder 包含 key、title、width／flex、min／max、align／header_align、vertical_align、overflow、pin、resizable、sortable、filter、editable、footer、renderer；列组 builder 只管理组标题、子列与受限组配置。`TableView` 接受的配置是事实来源，不能再由本帧 root builder 传入另一份相同列顺序／宽度覆盖它。
+唯一 `TableEvent` 通道实际包括 `QueryRequested`、`SelectionRequested`、`ColumnResizeRequested`、`ColumnConfigurationRequested`、`RowMoveRequested`、`ColumnMoveRequested`、`RangeRequested`、`EditRequested`、`EditSaveRequested`、`EditEnded` 和 `ActiveChanged`。树展开和节点加载由 `TableOutline` 的宿主控件接线，不虚构ExpansionRequested；程序commit不回发用户请求。
 
-`TableEvent` 至少区分 QueryRequested、SelectionRequested、ExpansionRequested、ColumnsRequested、ColumnResizeRequested、RowMoveRequested、EditRequested／EditCommitRequested／EditCancelRequested、LoadRequested，以及 ActiveChanged／RangeChanged 等观察事件。请求包含 before、目标值、需要的类型化意图、来源和基础 revision；观察事件不要求宿主重新提交整份数据。仍保留一个事件通道与原子 `TableQuery`，不照搬多个 per-slice 回调导致排序、页码分别提交。
+### 19.4 既有组件适配
 
-### 19.4 内部目录
+- Pagination使用`sync_table_pagination`，仅分页值真变化才set_value，loading单独同步；无关选择／hover／内容更新不重置跳页草稿。Unknown不伪造total。
+- Select／TreeSelect保留Entity，仅同步变化值／候选；不把标签当typed值，不丢0／false，同值不关闭Popup或重置IME。
+- Input／Field／Form／DatePicker／TimePicker保留真实草稿，保存先flush输入，再创建版本token；日期／时间完整示例见M6指南。
+- ScrollHandle／YueScrollbar／ResizeHandle共用解析几何与owner。Popup／Dialog／Tooltip复用既有Root和输入消费顺序，不新建Table浮层根。
+- Avatar／Badge／Tag／Descriptions／Card／Empty／Skeleton／Button等直接组合；独立嵌套Table有自己的state及滚动owner，关闭详情释放。
 
-```text
-crates/yue-component/src/table/
-  mod.rs            # 公共入口、导出与 builder
-  model.rs          # 列、查询、视图、事件与错误
-  state.rs          # retained 会话、delegate 接线、提交与失效
-  element.rs        # 表头、正文、summary、状态及控件组合
-  layout.rs         # Table 到共享 Base 列轨道／冻结布局的适配
-  navigation.rs     # 逻辑格导航与真实子控件焦点协调
-  tests/            # 按合同组织的纯规则与 UI 集成测试
-```
+### 19.5 模块与消费者
 
-编辑、树形、拖拽代码复杂后再分出有明确职责的文件；不先创建所有未来模块。基础布局扩展进入 Base 对应模块，不能在 Yue 的 layout.rs 复制虚拟化引擎。
+生产目录 `crates/yue-component/src/table/` 按model／state、query、layout／resize、sizing、outline、edit、cells／spans、range、columns／reorder、static_grid及element分工；测试在 `crates/yue-component/tests/table/`。通用索引、Grid、冻结及滚动机制仍在Base，Yue不复制虚拟化引擎。
 
-### 19.5 API 可用性出口
-
-[API 附录](45-table-api-examples.md)固定来源读取、Row 借用、typed 异构列、请求重基及三个宿主接入流程。默认无选择、无分页、未开启排序／筛选／编辑；有限视口 Rows＋Fixed 是呈现默认，Static／Cells 显式选择。列的纯排序／筛选能力与当前 query 值分开，默认构造合法，页面不必实现不使用的 renderer。
-
-M1 的基础消费者位于 `examples/minimal/src/bin/table.rs`，M3 的本地／远程消费者位于同目录 `table-local.rs` 和 `table-remote.rs`；实际签名见 [API 附录](45-table-api-examples.md) 与 [M3 使用指南](45-table-m3.md)。独立消费者编译和 Showcase 的真实控件 headless 交互分别验收。API 调整同步改附录，不允许保留伪签名、未定义业务 helper 或依赖私有模块的教程。真实 Windows 窗口挂载验收仍独立于 headless 测试。
+三个独立消费者 `examples/minimal/src/bin/table.rs`、`table-local.rs`、`table-remote.rs` 只依赖yue-component。Showcase补齐真实控件、M5双轴／宿主、M6重排／列设置／尾加载和综合工单；消费者编译、headless交互与真实Windows体验分别验收。
 
 ## 20. 实施顺序与每阶段出口
 
@@ -842,7 +792,7 @@ M1 的基础消费者位于 `examples/minimal/src/bin/table.rs`，M3 的本地�
 
 ### 22.2 Showcase 场景
 
-示例按“单项易学 → 组合验证”组织，借鉴 refer/table 三库的基础用法、选择、查询、分页、固定、编辑与树形独立章节。每例说明值的所有者、真实请求次数、默认与非法组合、取消／失败后保留内容，并提供对应代码。当前完整接线草案见 [API 与示例附录](45-table-api-examples.md)；未实现前不写“复制即可运行”。
+示例按“单项易学 → 组合验证”组织，借鉴 refer/table 三库的基础用法、选择、查询、分页、固定、编辑与树形独立章节。每例说明值的所有者、真实请求次数、默认与非法组合、取消／失败后保留内容，并提供对应代码。当前可编译接线见 [API 与示例附录](45-table-api-examples.md)，实际Showcase入口见[最终核对](research/2026-11-11-table-completion.md)。
 
 | 示例组 | 独立示例与关键结果 | 复用与阶段 |
 | --- | --- | --- |

@@ -18,6 +18,10 @@ pub(super) struct QueryExample {
     _delegate: Entity<QueryOrders>,
     table: Entity<YueTableState<QueryOrders>>,
     pager: Entity<YuePaginationState>,
+    settings: Entity<super::configuration::ColumnSettings<QueryOrders>>,
+    detail_dialog: Entity<yue_component::YueDialogState>,
+    detail_name: Entity<InputState>,
+    detail_key: Option<TableRowKey>,
     source: Rc<TableRows<Order>>,
     columns: Rc<[TableColumn<Order>]>,
     name_key: TableFilterKey<SharedString>,
@@ -70,6 +74,7 @@ impl QueryExample {
         .sortable(true)
         .filterable(true);
         let date_key = date_col.filter_key();
+        let detail_owner = cx.weak_entity();
         let columns: Rc<[_]> = vec![
             TableColumn::text("number", "工单", |r: &Order| r.key.clone()).width(rems(9.)),
             name_col.build().unwrap().width(rems(12.)),
@@ -80,6 +85,24 @@ impl QueryExample {
                 .align(TableAlign::End),
             done_col.build().unwrap().width(rems(10.)),
             date_col.build().unwrap().width(rems(11.)),
+            TableColumn::custom("details", "工单详情", move |r: &Order, cell, _, _| {
+                let owner = detail_owner.clone();
+                let key = r.key.clone();
+                let button = YueButton::new("query-detail", "详情／编辑")
+                    .accessibility_label(format!("工单 {} 详情", r.key))
+                    .tab_stop(cell.is_active())
+                    .on_click(move |_, w, cx| {
+                        let _ =
+                            owner.update(cx, |s: &mut Self, cx| s.open_detail(key.clone(), w, cx));
+                    });
+                if let Some(focus) = cell.control_focus() {
+                    button.track_focus(focus)
+                } else {
+                    button
+                }
+            })
+            .width(rems(10.))
+            .interactive(true),
         ]
         .into();
         let delegate = cx.new(|_| QueryOrders);
@@ -107,6 +130,9 @@ impl QueryExample {
             )
             .unwrap()
         });
+        let detail_dialog = cx.new(yue_component::YueDialogState::new);
+        let detail_name = cx.new(|cx| InputState::new(w, cx));
+        let settings = cx.new(|cx| super::configuration::ColumnSettings::new(&table, cx));
         let pager =
             cx.new(|cx| YuePaginationState::new(PaginationValue::new(137, 1, 10).unwrap(), w, cx));
         let name = cx.new(|cx| InputState::new(w, cx).placeholder("负责人名称，按字面匹配"));
@@ -209,6 +235,10 @@ impl QueryExample {
             _delegate: delegate,
             table,
             pager,
+            settings,
+            detail_dialog,
+            detail_name,
+            detail_key: None,
             source,
             columns,
             name_key,
@@ -232,6 +262,90 @@ impl QueryExample {
         };
         result.update_summary(cx);
         result
+    }
+    fn open_detail(&mut self, key: SharedString, w: &mut Window, cx: &mut Context<Self>) {
+        let key = TableRowKey::try_new(key).unwrap();
+        if let Some(row) = self.source.row(&key) {
+            let name = row.name.clone();
+            self.detail_name
+                .update(cx, |s, cx| s.set_value(name, w, cx));
+            self.detail_key = Some(key);
+            let _ = self.detail_dialog.update(cx, |s, cx| s.open(w, cx));
+            cx.notify();
+        }
+    }
+    fn save_detail(
+        &mut self,
+        w: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> yue_component::DialogDecision {
+        let name = self.detail_name.read(cx).value();
+        if name.trim().is_empty() {
+            self.message = "负责人不能为空".into();
+            cx.notify();
+            return yue_component::DialogDecision::KeepOpen;
+        }
+        let Some(key) = self.detail_key.clone() else {
+            return yue_component::DialogDecision::KeepOpen;
+        };
+        let current = self.table.read(cx).view().unwrap().clone();
+        let rows = (0..self.source.len())
+            .map(|i| {
+                let k = self.source.row_key(i).unwrap();
+                let r = self.source.row(k).unwrap();
+                Order {
+                    key: r.key.clone(),
+                    name: if k == &key {
+                        name.clone()
+                    } else {
+                        r.name.clone()
+                    },
+                    note: r.note.clone(),
+                    amount: r.amount,
+                    done: r.done,
+                }
+            })
+            .collect::<Vec<_>>();
+        self.source = Rc::new(
+            TableRows::try_new(
+                self.source.scope().clone(),
+                self.source.revision() + 1,
+                rows.into(),
+                |r: &Order| r.key.clone(),
+            )
+            .unwrap(),
+        );
+        let (next, sum) = TableLocalQuery::execute_with_summary(
+            self.source.clone(),
+            self.columns.clone(),
+            current.query().clone(),
+            current.source().revision() + 1,
+            |source, keys| {
+                keys.iter()
+                    .filter_map(|k| source.row(k))
+                    .map(|r| r.amount)
+                    .sum::<i32>()
+            },
+        )
+        .unwrap();
+        self.filtered_sum = sum;
+        let total = next.total();
+        let next = next
+            .with_result(current.data_mode(), total)
+            .selection_mode(current.selection_kind())
+            .selection(current.selected_keys().iter().cloned());
+        let next = current
+            .column_preferences()
+            .reconcile(&next)
+            .apply_to(&next)
+            .unwrap();
+        self.table
+            .update(cx, |s, cx| s.commit_view(next, None, cx).unwrap());
+        self.message = "工单已保存；查询、分页、选择与列偏好已同步".into();
+        self.sync_pager(w, cx);
+        self.update_summary(cx);
+        cx.notify();
+        yue_component::DialogDecision::Close
     }
     fn sync_pager(&self, w: &mut Window, cx: &mut Context<Self>) {
         let view = self.table.read(cx).view().unwrap().clone();
@@ -291,6 +405,11 @@ impl QueryExample {
                     )
                     .selection_mode(current.selection_kind())
                     .selection(current.selected_keys().iter().cloned());
+                let next = current
+                    .column_preferences()
+                    .reconcile(&next)
+                    .apply_to(&next)
+                    .unwrap();
                 self.table.update(cx, |s, cx| {
                     s.commit_view(next, Some(request.id()), cx).unwrap()
                 });
@@ -536,6 +655,11 @@ impl Render for QueryExample {
                             .with_result(current.data_mode(), total)
                             .selection_mode(current.selection_kind())
                             .selection(current.selected_keys().iter().cloned());
+                        let next = current
+                            .column_preferences()
+                            .reconcile(&next)
+                            .apply_to(&next)
+                            .unwrap();
                         s.table
                             .update(cx, |state, cx| state.commit_view(next, None, cx).unwrap());
                         s.message =
@@ -588,7 +712,35 @@ impl Render for QueryExample {
                         })),
                 );
         }
-        let mut content = div().flex().flex_col().gap_3().min_w_0().child(controls);
+        let owner = cx.weak_entity();
+        let detail = self
+            .detail_key
+            .as_ref()
+            .and_then(|k| self.source.row(k))
+            .map(|r| format!("{} · 金额 {} 元 · {}", r.key, r.amount, r.note))
+            .unwrap_or_default();
+        let dialog =
+            yue_component::YueDialog::new("query-order-detail", theme, &self.detail_dialog)
+                .title("工单详情与编辑")
+                .child(detail)
+                .child(
+                    YueInput::new("query-detail-name", theme, &self.detail_name)
+                        .accessibility_label("负责人")
+                        .width(rems(20.)),
+                )
+                .on_confirm(move |_, w, cx| {
+                    owner
+                        .update(cx, |s, cx| s.save_detail(w, cx))
+                        .unwrap_or(yue_component::DialogDecision::KeepOpen)
+                });
+        let mut content = div()
+            .flex()
+            .flex_col()
+            .gap_3()
+            .min_w_0()
+            .child(controls)
+            .child(self.settings.clone())
+            .child(dialog);
         if self.filter_open {
             content = content.child(
                 div()
@@ -910,5 +1062,92 @@ mod tests {
             example.read_with(cx, |s, cx| s.table.read(cx).view().unwrap().load().clone()),
             TableLoadState::Ready
         );
+    }
+    #[gpui_kit::test]
+    fn combined_query_selection_configuration_and_detail_edit_keep_each_other(
+        cx: &mut TestAppContext,
+    ) {
+        let (p, cx) = open(cx, false);
+        let table = p.read_with(cx, |p, _| p.table.clone());
+        table.update(cx, |s, cx| {
+            let mut draft = yue_component::TableColumnDraft::new(s.view().unwrap());
+            draft
+                .set_visible(
+                    &yue_component::TableColumnKey::try_new("date").unwrap(),
+                    false,
+                )
+                .unwrap();
+            s.request_column_configuration(&draft, cx).unwrap();
+            let key = s.view().unwrap().source().row_key(0).unwrap().clone();
+            s.request_toggle(&key, false, cx).unwrap();
+        });
+        draw(cx);
+        table.update(cx, |s, cx| {
+            s.request_page(2, 10, cx).unwrap();
+        });
+        draw(cx);
+        assert_eq!(
+            table.read_with(cx, |s, _| s.view().unwrap().selected_keys().len()),
+            1
+        );
+        assert!(!table.read_with(cx, |s, _| {
+            s.view()
+                .unwrap()
+                .columns()
+                .iter()
+                .find(|c| c.key().as_str() == "date")
+                .unwrap()
+                .is_visible()
+        }));
+        let query = table.read_with(cx, |s, _| s.view().unwrap().query().clone());
+        let expected = table.read_with(cx, |s, _| {
+            s.view().unwrap().source().row_key(0).unwrap().clone()
+        });
+        table.update(cx, |s, cx| {
+            s.scroll_to_cell(
+                &yue_component::TableCellKey::new(
+                    expected.clone(),
+                    yue_component::TableColumnKey::try_new("details").unwrap(),
+                ),
+                Default::default(),
+                cx,
+            )
+            .unwrap();
+        });
+        draw(cx);
+        draw(cx);
+        click_label(cx, &format!("工单 {} 详情", expected.as_str()));
+        let key = p.read_with(cx, |p, _| p.detail_key.clone().unwrap());
+        assert_eq!(key, expected);
+        cx.update(|w, cx| {
+            p.update(cx, |p, cx| {
+                p.detail_name
+                    .update(cx, |s, cx| s.set_value("组合示例更新", w, cx))
+            })
+        });
+        click(cx, "dialog-confirm");
+        draw(cx);
+        assert_eq!(
+            p.read_with(cx, |p, _| p.source.row(&key).unwrap().name.to_string()),
+            "组合示例更新"
+        );
+        assert_eq!(
+            table.read_with(cx, |s, _| s.view().unwrap().query().clone()),
+            query
+        );
+        assert_eq!(
+            table.read_with(cx, |s, _| s.view().unwrap().selected_keys().len()),
+            1
+        );
+        assert!(!table.read_with(cx, |s, _| {
+            s.view()
+                .unwrap()
+                .columns()
+                .iter()
+                .find(|c| c.key().as_str() == "date")
+                .unwrap()
+                .is_visible()
+        }));
+        assert_eq!(p.read_with(cx, |p, _| p.requests), 1);
     }
 }

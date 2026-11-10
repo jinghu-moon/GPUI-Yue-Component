@@ -1,3 +1,9 @@
+#[path = "table/configuration.rs"]
+mod configuration;
+#[path = "table/customization.rs"]
+mod customization;
+#[path = "table/temporal.rs"]
+mod temporal;
 use crate::scroll::ScrollableElement as _;
 #[path = "table/advanced.rs"]
 mod advanced;
@@ -39,7 +45,9 @@ pub(crate) struct TablePage {
     queries: Option<(Entity<query::QueryExample>, Entity<query::QueryExample>)>,
     structure: Option<Entity<structure::StructureExample>>,
     editing: Option<Entity<editing::EditingExample>>,
+    temporal: Option<Entity<temporal::TemporalExample>>,
     advanced: Option<Entity<advanced::AdvancedExample>>,
+    customization: Option<Entity<customization::CustomizationExample>>,
     size: TableSize,
     borders: TableBorders,
     striped: bool,
@@ -206,7 +214,9 @@ impl TablePage {
             queries: None,
             structure: None,
             editing: None,
+            temporal: None,
             advanced: None,
+            customization: None,
             size: TableSize::Medium,
             borders: TableBorders::Rows,
             striped: false,
@@ -664,6 +674,11 @@ impl Render for TablePage {
                 } else {
                     Some(cx.new(|cx| editing::EditingExample::new(w, cx)))
                 };
+                s.temporal = if s.editing.is_some() {
+                    Some(cx.new(|cx| temporal::TemporalExample::new(w, cx)))
+                } else {
+                    None
+                };
                 cx.notify();
             })),
         );
@@ -672,6 +687,13 @@ impl Render for TablePage {
                 YueCard::new("table-editing-card")
                     .header(YueCardHeader::new("真实控件编辑与保存"))
                     .child(editing.clone()),
+            );
+        }
+        if let Some(temporal) = &self.temporal {
+            content = content.child(
+                YueCard::new("table-temporal-card")
+                    .header(YueCardHeader::new("日期与时间编辑"))
+                    .child(temporal.clone()),
             );
         }
         content = content.child(
@@ -697,6 +719,31 @@ impl Render for TablePage {
                 YueCard::new("table-advanced-card")
                     .header(YueCardHeader::new("高级布局与范围加载"))
                     .child(advanced.clone()),
+            );
+        }
+        content = content.child(
+            YueButton::new(
+                "table-customization-toggle",
+                if self.customization.is_some() {
+                    "收起重排和列配置"
+                } else {
+                    "重排、列配置与尾游标加载…"
+                },
+            )
+            .on_click(cx.listener(|s, _, _, cx| {
+                s.customization = if s.customization.is_some() {
+                    None
+                } else {
+                    Some(cx.new(customization::CustomizationExample::new))
+                };
+                cx.notify();
+            })),
+        );
+        if let Some(example) = &self.customization {
+            content = content.child(
+                YueCard::new("table-customization-card")
+                    .header(YueCardHeader::new("重排、列设置与尾部追加"))
+                    .child(example.clone()),
             );
         }
         if let Some((local, remote)) = &self.queries {

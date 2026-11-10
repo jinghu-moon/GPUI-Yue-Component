@@ -1,12 +1,12 @@
 # YueTable 固定 workload 与性能门禁方案
 
-日期：2026-11-10；对应 [Table 主设计第 21 节](../45-table.md#21-性能合同与验证方案)。本文是完整采样协议；M1 已增加 TB01 headless 工作集对照、CPU 探针和最小 runner，实际证据与进程门禁状态见 [M1 实施记录](../research/2026-11-10-table-m1-implementation.md)。其余 fixture 与 native／GPU／输入延迟仍待实施，不将参考库数字换算成 GPUI 分数。
+日期：2026-11-10；对应 [Table 主设计第 21 节](../45-table.md#21-性能合同与验证方案)。本文是完整采样协议；M1 已增加 TB01 headless 工作集对照、CPU 探针和最小 runner，实际证据与进程门禁状态见 [M1 实施记录](../research/2026-11-10-table-m1-implementation.md)。M2布局、M3 TB04、M4 TB03／TB06、M5 TB02与M6 TB05均已增加headless基线（见各阶段报告）；完整native／GPU／输入延迟仍未验收，不将参考库数字换算成 GPUI 分数。
 
 ## 1. 比较对象与不变量
 
 每个候选只比较一个明确变更；记录 baseline commit、candidate commit／工作区 diff、源码和 workload 哈希、lock／features／二进制身份。两版本使用相同数据、列定义、操作轨迹、随机种子、构建类型、窗口和缩放；修改 workload 后双方重跑，不能把不同版本日志合并。
 
-优先复用 [compare-virtualization.py](../../tools/compare-virtualization.py)、[既有证据解析](../../tools/virtualization_evidence.py)和[门禁合同清单](../../tools/virtualization-contracts.json)的构建隔离、进程干扰检测和身份记录。原脚本继续服务虚拟化实验。新增的 [sample-table.py](../../tools/sample-table.py)复用既有严格测试输出核验，并沿用先构建后采样、ABBA、进程干扰和身份门禁；只提供 TB01 的 headless CPU 与工作集基线，不假定现有 FRAME CSV 已包含 GPU、输入延迟或原生呈现 p99。
+优先复用 [compare-virtualization.py](../../tools/compare-virtualization.py)、[既有证据解析](../../tools/virtualization_evidence.py)和[门禁合同清单](../../tools/virtualization-contracts.json)的构建隔离、进程干扰检测和身份记录。原脚本继续服务虚拟化实验。新增的 [sample-table.py](../../tools/sample-table.py)复用既有严格测试输出核验，并沿用先构建后采样、ABBA、进程干扰和身份门禁；提供 TB01／布局／TB02／TB03／TB06 的 headless CPU 与工作集基线，TB04查询和TB05快照替换分别使用独立runner，不假定现有 FRAME CSV 已包含 GPU、输入延迟或原生呈现 p99。
 
 所有 fixture 是确定生成，不读取网络；数据准备和朴素结果 oracle 在查询计时外。初次 source 建索引、冷缓存、首次挂载和持续滚动分别报告，不能预先建立缓存却称作冷启动。性能优化前先通过同一行为正确性验收。
 
@@ -28,6 +28,10 @@
 M1 的首份 headless 探针是 **TB01 的简化文本变体**：12 个文本列，逐帧偏移为 `-((frame * 37) % 8000)`。它验证规模变化下的工作集与 CPU draw 基线，不覆盖上表 8 文本／2 数值／1 状态／1 展示的完整列形状。runner 身份中的 `W2 repeated vertical trace` 为早期标签；实际是重复纵向轨迹，不能当作下表 W2 的 200 组首／中／尾跳转及活动格回窗验收。后续补完整 fixture 时推进版本、双方重采。
 
 TB03 的图片数量与尺寸是测试输入，非缓存容量默认值；实际使用者、热缓存和纹理字节分别报告。TB06 显示行数不含 header／summary；测试另校验语义总量，不能把数据行数直接写入全部语义坐标。
+
+M6新增的TB05是完整快照替换变体：每次同时更新row0、row9000和rows128..191，数值变化并交替短／长换行文字；Fixed／Measured各三独立进程、每进程100次。分开计准备、接受、draw＋effects，直接检查可见新值、所有旧source释放及空闲零构建。它不提供逐cell damage或排序字段变更收益证明；typed查询依赖另由TB04和查询正确性测试覆盖。主性能方案的原生输入与GPU完整协议仍保持独立。
+
+M6另执行50k×256 Cells的200组／800次双轴首／中／尾／反向程序定位，逐次核对实际目标bounds、clamp和工作集；这是W2的headless定位子集，不代替原生输入、活动编辑器回窗或完整W1浏览测量。
 
 ## 3. 固定操作轨迹
 

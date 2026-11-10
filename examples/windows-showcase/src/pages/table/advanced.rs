@@ -21,6 +21,7 @@ pub(super) struct AdvancedExample {
     _matrix: Entity<Matrix>,
     _range: Entity<Range>,
     grid: Entity<YueTableState<Matrix>>,
+    static_spans: Entity<YueTableState<Matrix>>,
     host_tables: Vec<Entity<YueTableState<Matrix>>>,
     range: Entity<YueTableState<Range>>,
     host: ScrollHandle,
@@ -75,6 +76,39 @@ impl AdvancedExample {
                         3,
                     )]),
                 ),
+                None,
+                cx,
+            )
+            .unwrap()
+        });
+        let static_spans = cx.new(|cx| YueTableState::new(&matrix, cx));
+        static_spans.update(cx, |s, cx| {
+            s.commit_view(
+                TableView::new(
+                    matrix_rows("static-spans", 6),
+                    vec![
+                        TableColumn::text("c-0", "自然高度合并", |r: &usize| {
+                            if *r == 0 {
+                                "长内容参与自然行高，覆盖区域只保留一个内容与交互。".repeat(8)
+                            } else {
+                                r.to_string()
+                            }
+                        })
+                        .width(rems(8.))
+                        .overflow(yue_component::TableTextOverflow::Wrap),
+                        TableColumn::text("c-1", "次列", |r: &usize| r.to_string()).width(rems(8.)),
+                        TableColumn::text("c-2", "邻列居中", |r: &usize| format!("记录 {r}"))
+                            .width(rems(10.)),
+                    ],
+                )
+                .with_spans(TableSpanPlan::new(vec![TableSpan::new(
+                    TableCellKey::new(
+                        TableRowKey::try_new("r-0").unwrap(),
+                        TableColumnKey::try_new("c-0").unwrap(),
+                    ),
+                    3,
+                    2,
+                )])),
                 None,
                 cx,
             )
@@ -137,6 +171,7 @@ impl AdvancedExample {
             _matrix: matrix,
             _range: range,
             grid,
+            static_spans,
             host_tables,
             range: ranges,
             host: ScrollHandle::new(),
@@ -169,6 +204,11 @@ impl Render for AdvancedExample {
                     .render_mode(TableRenderMode::Cells)
                     .height(rems(24.))
                     .frozen_rows(1, 1),
+            )
+            .child("短表自然高度 rowspan：长内容撑开被跨行，邻列仍居中")
+            .child(
+                YueTable::new("static-spans", &self.static_spans)
+                    .render_mode(TableRenderMode::Static),
             )
             .child("同一面板内两张表：滚动表头吸顶，离开自身范围解除")
             .child(

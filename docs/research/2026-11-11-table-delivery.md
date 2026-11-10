@@ -8,8 +8,8 @@
 | M2 共享布局与固定 | 已提交／推送 `20bbbf2`、`1d31808` | 列约束、响应式恢复、左右固定、首尾固定行、分组表头、伸缩与键盘取消；[实际 API](../45-table-m2.md)、[性能基线与限制](../performance/2026-11-11-table-m2-layout.md) |
 | M3 查询和数据流程 | 已提交／推送 `f7651dd` | typed 查询、本地／远程、排序／筛选、Pagination、三种汇总范围、批量选择；[实际 API](../45-table-m3.md)、[TB04 基线](../performance/2026-11-11-table-m3-query.md) |
 | M4 复杂记录 | 已提交／推送 `14eceef`、`0fabce1` | Measured、详情／树／节点加载、真实控件编辑与版本会话；TB03／TB06 |
-| M5 双轴与高级结构 | 自动化／性能验收通过 | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
-| M6 重排与交付 | 待实现 | 行列拖拽、键盘等价操作、列配置草稿、综合示例、完整合同核对 |
+| M5 双轴与高级结构 | 已提交／推送 `4835feb`、`017125a` | Cells、Known、span、跨区表头、宿主 affix、范围加载；TB02 |
+| M6 重排与交付 | 已提交／推送；核心 `d60e44f` | 行列拖拽、键盘等价操作、列配置草稿、tail、Static自然rowspan、综合示例；[实际API](../45-table-m6.md)、[最终核对](2026-11-11-table-completion.md) |
 
 ## M2 自动化
 
@@ -57,3 +57,23 @@ M4 [证据归档](../performance/evidence/2026-11-11-table-m4-complex.zip) SHA-2
 ## M5 自动化与证据
 
 Cells双轴轨道、稀疏合并、跨pin分组表头、宿主单滚动owner与范围加载已实现。[实际API](../45-table-m5.md)，[TB02性能报告](../performance/2026-11-11-table-m5-cells.md)。Table dev／release43 passed、VirtualList193 passed、Showcase Table11 passed，严格Clippy通过。12000帧、逐帧工作集143–196且规模间完全一致；通过身份、正确性与工作集预算，时长是新增功能基线。全部接受／弃样证据归档，外部编译不被结束。未知尾游标自动追加在M6实现。
+
+## M6 自动化与完整交付
+
+实现行手柄／整行opt-in／列手柄、键盘key-up一次确认、末次坐标命中及同owner边缘滚动；排序拒绝重排，过滤／分页须宿主显式映射。完整列配置保留声明、版本偏好与独立草稿，确认一次请求，权限／schema变化重验。尾游标按真实viewport距离追加，同cursor去重，失败停止并显式重试。Static自然rowspan复用共享列轨道，不以Cells估算自然内容。
+
+Showcase加入列设置Dialog、综合工单、真实DatePicker／TimePicker编辑与尾加载；继续复用既有Form／Field／Input／Select／Dialog／Button／Checkbox、Base Grid与ScrollHandle。日期保存先flush输入，等picker事件结算后创建token；指针／键盘结算、旧来源释放及异步过期隔离均有直接断言。
+
+最终Table dev／release各55 passed、8 opt-in ignored；VirtualList193 passed、11 ignored；Showcase Table15 passed，Checkbox／Radio／List／ListGrid合计41 passed。严格Clippy覆盖组件、Showcase和最小消费者all-targets；主题生成、改动文件格式及Python语法检查通过。opt-in W2 dev／release各完成200组／800次双轴定位，逐次检查目标覆盖、合法clamp和有界工作集。开发探针Fixed／Measured各100次快照替换均读到最新业务值，历史source全部释放；正式计时以release采样为准。
+
+Showcase综合测试初次全量运行选中了预渲染区同名按钮；修复为具名工单按钮、先定位目标并按唯一名称点击，随后全量15项通过。Clippy发现的测试未使用参数也已修复。没有通过增加重试次数或削弱行为断言掩盖失败。
+
+主设计第17／19节、API附录、M6指南与E01–E11映射已按实际能力同步。完整source替换仍有O(N)接受成本，Cells不支持Measured／全宽详情，宿主affix拒绝Static／Measured／RTL。现有AccessKit Windows不提供完整UIA Grid／离屏Realize；真实IME、Narrator、GPU、当前显示器体验和跨屏DPI未由headless代验。
+
+最终合同复核补齐range与分页互斥、空白tail cursor、Static预取／冻结数据行／固定footer的拒绝；此前未完成TB02批次整体弃用，保留原日志和构建记录，源码更新后重新构建和完整采样，不混入最终证据。
+
+键盘移动补齐超出视口的目标定位：行走原轴command，列按当前轨道／固定区余量写同一ScrollHandle。真实按键覆盖连续30次下移、12次右移后目标可见，Escape零额外提交；第二批未完成计时也整批弃用，第三批使用最终源码重新采样。
+
+M6最终TB02共12000帧，逐轨迹点143–196格且各规模完全一致，P50规模比1.0134／P95比0.9999；TB05六进程600次完整source替换，历史source零保活。第三批无干扰弃样，前两批因合同修复整批拒绝，日志与旧构建记录保留。历史M5相比本批P95约高26%，尚无同时间窗版本ABBA及冻结阈值，因此不能宣称计时无回归；具体耗时、分配和限制见[M6性能报告](../performance/2026-11-11-table-m6-completion.md)。
+
+M6[原始证据归档](../performance/evidence/2026-11-11-table-m6-completion.zip) SHA-256 `7bb3c4c50f00fd9703c27e4b2eff47c1f0e2a18b665dc9f401c2f79c64e68934`；独立验证已核对归档源码digest、CSV／原始日志、分配、每点工作集与600次旧来源释放。阶段可自动完成的M1–M6任务全部交付；人工／系统验收边界沿用各报告，不标成通过。
