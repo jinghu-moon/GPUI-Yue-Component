@@ -7,6 +7,8 @@ use yue_component::{
 
 #[path = "table/benchmark.rs"]
 mod benchmark;
+#[path = "table/layout.rs"]
+mod layout;
 
 // Deliberately not Clone: accepting a snapshot must not clone business rows.
 struct Record {
@@ -176,12 +178,17 @@ struct Probe {
     _subscription: Subscription,
     calls: Rc<Cell<usize>>,
     requests: usize,
+    defer_resize: bool,
+    deferred_resize: Option<yue_component::TableColumnResizeRequest>,
     size: TableSize,
     borders: TableBorders,
     mode: TableRenderMode,
     disabled: bool,
     accept: bool,
     actions: Rc<Cell<usize>>,
+    host_width: gpui_kit::Rems,
+    frozen: (usize, usize),
+    footer_fixed: bool,
 }
 impl Probe {
     fn new(count: usize, twelve: bool, cx: &mut Context<Self>) -> Self {
@@ -255,6 +262,22 @@ impl Probe {
             .unwrap()
         });
         let subscription = cx.subscribe(&state, |p, state, event: &TableEvent, cx| {
+            if let TableEvent::ColumnResizeRequested(request) = event {
+                p.requests += 1;
+                if p.defer_resize {
+                    p.deferred_resize = Some(request.clone());
+                    return;
+                }
+                let view = state.read(cx).view().unwrap().clone();
+                state.update(cx, |s, cx| {
+                    if p.accept {
+                        s.commit_view(request.apply_to(&view).unwrap(), Some(request.id()), cx)
+                            .unwrap();
+                    } else {
+                        s.reject_request(request.id(), cx).unwrap();
+                    }
+                });
+            }
             if let TableEvent::SelectionRequested(request) = event {
                 p.requests += 1;
                 let view = state.read(cx).view().unwrap().clone();
@@ -274,25 +297,32 @@ impl Probe {
             _subscription: subscription,
             calls,
             requests: 0,
+            defer_resize: false,
+            deferred_resize: None,
             size: TableSize::Medium,
             borders: TableBorders::Grid,
             mode: TableRenderMode::Rows,
             disabled: false,
             accept: true,
             actions,
+            host_width: rems(64.),
+            frozen: (0, 0),
+            footer_fixed: false,
         }
     }
 }
 impl Render for Probe {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        div().w(rems(64.)).h(rems(32.)).child(
+        div().w(self.host_width).h(rems(32.)).child(
             YueTable::new("probe-table", &self.state)
                 .accessibility_label("测试工单")
                 .height(rems(28.))
                 .size(self.size)
                 .borders(self.borders)
                 .render_mode(self.mode)
-                .disabled(self.disabled),
+                .disabled(self.disabled)
+                .frozen_rows(self.frozen.0, self.frozen.1)
+                .footer_fixed(self.footer_fixed),
         )
     }
 }

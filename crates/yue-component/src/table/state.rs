@@ -110,13 +110,19 @@ pub struct YueTableState<D: TableDelegate> {
     pub(super) rows: Entity<VirtualizerState>,
     pub(super) columns: Entity<VirtualizerState>,
     pub(super) scroll: ScrollHandle,
-    pub(super) geometry: Option<(u64, f32, f32, bool)>,
+    pub(super) geometry: Option<(u64, f32, f32, bool, usize)>,
+    pub(super) resolved: Rc<layout::ResolvedColumns>,
+    pub(super) available_width: gpui_kit::Pixels,
+    pub(super) resolved_signature: Option<(usize, f32, f32, bool)>,
     pub(super) scroll_target: Option<(TableRowKey, VirtualizerScrollOptions)>,
-    owner: EntityId,
-    sequence: u64,
-    pending: Option<TableRequestId>,
+    pub(super) resize: Option<resize::ResizeSession>,
+    pub(super) resize_preview: Option<(TableColumnKey, gpui_kit::Rems)>,
+    pub(super) resize_ticket: Option<TableRequestId>,
+    pub(super) owner: EntityId,
+    pub(super) sequence: u64,
+    pub(super) pending: Option<TableRequestId>,
     revision: u64,
-    requests: std::collections::HashSet<TableRequestId>,
+    pub(super) requests: std::collections::HashSet<TableRequestId>,
     pub(super) repair_control_focus: bool,
 }
 impl<D: TableDelegate> EventEmitter<TableEvent> for YueTableState<D> {}
@@ -158,7 +164,13 @@ impl<D: TableDelegate> YueTableState<D> {
             columns: cx.new(|_| column_state),
             scroll: ScrollHandle::new(),
             geometry: None,
+            resolved: Rc::default(),
+            available_width: px(1024.),
+            resolved_signature: None,
             scroll_target: None,
+            resize: None,
+            resize_preview: None,
+            resize_ticket: None,
             owner: cx.entity().entity_id(),
             sequence: 0,
             pending: None,
@@ -178,6 +190,22 @@ impl<D: TableDelegate> YueTableState<D> {
     }
     pub fn scroll_handle(&self) -> &ScrollHandle {
         &self.scroll
+    }
+    pub fn column_width(&self, key: &TableColumnKey) -> Option<gpui_kit::Pixels> {
+        let view = self.view()?;
+        self.resolved
+            .indices
+            .iter()
+            .position(|i| view.columns[*i].key() == key)
+            .map(|i| self.resolved.widths[i])
+    }
+    pub fn effective_pin(&self, key: &TableColumnKey) -> Option<TablePin> {
+        let view = self.view()?;
+        self.resolved
+            .indices
+            .iter()
+            .position(|i| view.columns[*i].key() == key)
+            .map(|i| self.resolved.pins[i])
     }
     /// The only publication entry. All fallible validation precedes mutation;
     /// source callbacks cannot reenter the owner (they receive no App/Context).
@@ -226,7 +254,10 @@ impl<D: TableDelegate> YueTableState<D> {
                 .accepted
                 .as_ref()
                 .is_some_and(|old| old.source.scope() == candidate.source.scope());
-            if !same_scope || candidate.columns.is_empty() || candidate.source.is_empty() {
+            if !same_scope
+                || !candidate.columns.iter().any(|c| c.visible)
+                || candidate.source.is_empty()
+            {
                 return None;
             }
             let key = if candidate.source.position_of(active.row()).is_some() {
@@ -243,8 +274,8 @@ impl<D: TableDelegate> YueTableState<D> {
             let column = candidate
                 .columns
                 .iter()
-                .find(|c| c.key() == active.column())
-                .unwrap_or(&candidate.columns[0])
+                .find(|c| c.visible && c.key() == active.column())
+                .unwrap_or_else(|| candidate.columns.iter().find(|c| c.visible).unwrap())
                 .key()
                 .clone();
             Some(TableCellKey::new(key, column))
@@ -254,6 +285,9 @@ impl<D: TableDelegate> YueTableState<D> {
                 || !Rc::ptr_eq(&old.columns, &candidate.columns)
                 || old.selection_mode != candidate.selection_mode
         });
+        if layout_changed || !same_source {
+            self.cancel_resize(cx);
+        }
         self.revision += 1;
         candidate.revision = self.revision;
         candidate.base_revision = Some(self.revision);
@@ -303,6 +337,11 @@ impl<D: TableDelegate> YueTableState<D> {
     }
     fn settle(&mut self, id: TableRequestId) {
         self.requests.remove(&id);
+        if self.resize_ticket == Some(id) {
+            self.resize_ticket = None;
+            self.resize_preview = None;
+            self.resolved_signature = None;
+        }
         self.pending = self.requests.iter().max_by_key(|id| id.sequence).copied();
     }
     pub fn request_toggle(
@@ -414,23 +453,48 @@ impl<D: TableDelegate> YueTableState<D> {
             .row_height
             .unwrap_or_else(|| p.size.height(crate::current_theme(cx)))
             .to_pixels(w.rem_size());
-        let width = view
-            .columns
-            .iter()
-            .map(|c| c.width.to_pixels(w.rem_size()))
-            .fold(px(0.), |a, b| a + b)
-            + if view.selection_mode != TableSelectionMode::None {
+        let signature = (
+            Rc::as_ptr(&view.columns) as *const () as usize,
+            f32::from(w.rem_size()),
+            f32::from(self.available_width),
+            view.selection_mode != TableSelectionMode::None,
+        );
+        if self.resolved_signature != Some(signature) {
+            let selection = if signature.3 {
                 crate::tokens::rems(crate::current_theme(cx), crate::theme::keys::SIZE_48)
                     .to_pixels(w.rem_size())
             } else {
                 px(0.)
             };
+            let preview = self.resize_preview.as_ref().map(|(key, width)| {
+                view.columns
+                    .iter()
+                    .map(|c| {
+                        let mut c = c.clone();
+                        if c.key() == key {
+                            c.width = *width;
+                            c.flex = 0.;
+                        }
+                        c
+                    })
+                    .collect::<Vec<_>>()
+            });
+            self.resolved = Rc::new(layout::ResolvedColumns::resolve(
+                preview.as_deref().unwrap_or(&view.columns),
+                self.available_width,
+                w.rem_size(),
+                selection,
+            ));
+            self.resolved_signature = Some(signature);
+        }
+        let width = self.resolved.total;
         // Selection/load-only publications keep the source/axis geometry intact.
         let signature = (
             view.source.revision(),
             f32::from(height),
             f32::from(width),
             p.header_visible,
+            self.resolved.depth,
         );
         if self.geometry != Some(signature) {
             let source = Rc::new(RowSource {
@@ -439,9 +503,16 @@ impl<D: TableDelegate> YueTableState<D> {
                 footer: view.columns.iter().any(|c| c.footer.is_some()),
             });
             self.rows.update(cx, |s, cx| {
+                let len = source.len();
                 s.replace_source(
                     source,
-                    VirtualizerSizing::fixed(height),
+                    if p.header_visible && self.resolved.depth > 0 {
+                        let mut sizes = vec![height; len];
+                        sizes[0] = height * (self.resolved.depth + 1) as f32;
+                        VirtualizerSizing::known(sizes)
+                    } else {
+                        VirtualizerSizing::fixed(height)
+                    },
                     VirtualizerChange::Replace {
                         preserve_anchor: true,
                     },

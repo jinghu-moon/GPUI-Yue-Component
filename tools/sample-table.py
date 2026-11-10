@@ -72,8 +72,10 @@ def main():
     parser.add_argument("--executable", type=Path, required=True, help="prebuilt table integration-test executable")
     parser.add_argument("--output", type=Path, required=True, help="new evidence directory (must not exist)")
     parser.add_argument("--profile", choices=["dev", "release"], required=True)
+    parser.add_argument("--workload", choices=["tb01", "m2-layout"], default="tb01")
     parser.add_argument("--build-record", type=Path, required=True, help="cargo --message-format=json output from the preceding no-run build")
     args = parser.parse_args()
+    case = CASE if args.workload == "tb01" else "benchmark::m2_headless_layout_frame_sample"
     executable = args.executable.resolve(strict=True)
     build_records = [json.loads(line) for line in args.build_record.read_text(encoding="utf-8-sig").splitlines() if line.startswith("{")]
     artifact = [record for record in build_records if record.get("executable") and Path(record["executable"]).resolve() == executable]
@@ -96,7 +98,7 @@ def main():
                 log = args.output / f"{label}-attempt-{attempt}.txt"
                 started = time.time()
                 with log.open("w", encoding="utf-8") as stream:
-                    process = subprocess.Popen([str(executable), CASE, "--exact", "--ignored", "--nocapture", "--test-threads=1"], cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
+                    process = subprocess.Popen([str(executable), case, "--exact", "--ignored", "--nocapture", "--test-threads=1"], cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
                     interfered = False
                     while process.poll() is None:
                         try:
@@ -113,7 +115,7 @@ def main():
             else:
                 raise RuntimeError("three interrupted attempts; raw logs retained, no acceptance")
             output = log.read_text(encoding="utf-8")
-            check_native_output(output, CASE)  # Exactly one executed passing test; zero matches cannot pass.
+            check_native_output(output, case)  # Exactly one executed passing test; zero matches cannot pass.
             samples = re.findall(r"TABLE_FRAME,rows=(\d+),frame=(\d+),ns=(\d+),renders=(\d+)", output)
             if len(samples) != 1000 or [int(s[1]) for s in samples] != list(range(1000)):
                 raise ValueError("missing, duplicate or reordered frames")
@@ -138,10 +140,10 @@ def main():
         writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
         writer.writeheader(); writer.writerows(rows)
     ratios = {name: statistics.median(run[name] for run in runs if run["rows"] == 100_000) / statistics.median(run[name] for run in runs if run["rows"] == 1000) for name in ["p50_ns", "p95_ns", "p99_ns"]}
-    identity = dict(kind="TB01-headless-size-scaling", profile=args.profile, cargo_profile=artifact[0]["profile"], build_record_sha256=digest(args.build_record), head=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), dirty=bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
+    identity = dict(kind=f"{args.workload}-headless-size-scaling", profile=args.profile, cargo_profile=artifact[0]["profile"], build_record_sha256=digest(args.build_record), head=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(), dirty=bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT)),
         source_sha256=initial_sources, executable_sha256=executable_hash, lock_sha256=digest(ROOT / "Cargo.lock"), os=platform.platform(), processor=platform.processor(), discarded=discarded,
-        case=CASE, order=[1000, 100_000, 100_000, 1000], independent_blocks=3, warmup_frames=120, frames_per_run=1000, total_frames=len(rows),
-        fixture="64rem x 32rem host; 28rem body; rem16; light/neutral; reduced motion; Rows Fixed; 12 text columns; W2 repeated vertical trace", gate="two quiet observations; monitor compilation and Showcase throughout each sample; reject interference", ratios=ratios, runs=runs,
+        case=case, order=[1000, 100_000, 100_000, 1000], independent_blocks=3, warmup_frames=120, frames_per_run=1000, total_frames=len(rows),
+        fixture=("64rem x 32rem host; 28rem body; rem16; light/neutral; reduced motion; Rows Fixed; 12 text columns; repeated vertical trace" if args.workload == "tb01" else "48/64/80rem host every 10 frames; 28rem body; rem16; light/neutral; reduced motion; Rows Known grouped header; 12 text columns; start/end pinned column; start/end data row; fixed footer; deterministic XY trace; container feedback outside draw timing"), gate="two quiet observations; monitor compilation and Showcase throughout each sample; reject interference", ratios=ratios, runs=runs,
         accepted="correctness and bounded working set only; timing is an initial baseline, no regression threshold or native FPS claim")
     (args.output / "identity.json").write_text(json.dumps(identity, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(ratios), flush=True)

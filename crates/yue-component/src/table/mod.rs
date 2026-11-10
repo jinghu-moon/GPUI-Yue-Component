@@ -1,7 +1,11 @@
 //! Stateful comparison tables. Data is accepted as one immutable snapshot;
 //! scrolling, frozen-header geometry and scrollbar behavior belong to Base.
 mod element;
+mod layout;
+mod resize;
+pub use resize::TableColumnResizeRequest;
 mod model;
+pub use layout::*;
 mod state;
 pub use model::*;
 pub use state::*;
@@ -81,6 +85,9 @@ pub(super) struct Presentation {
     footer: Option<Slot>,
     empty: Option<Slot>,
     surface: crate::theme::TokenKey,
+    resolved: Rc<layout::ResolvedColumns>,
+    frozen: (usize, usize),
+    footer_fixed: bool,
 }
 /// Retain the state in the host. Rows mode always supplies its own finite
 /// viewport (20rem by default); Static grows naturally inside its parent.
@@ -112,6 +119,9 @@ impl<D: TableDelegate> YueTable<D> {
                 footer: None,
                 empty: None,
                 surface: crate::theme::keys::SURFACE,
+                resolved: Rc::default(),
+                frozen: (0, 0),
+                footer_fixed: false,
             },
         }
     }
@@ -160,6 +170,15 @@ impl<D: TableDelegate> YueTable<D> {
     }
     pub fn header_fixed(mut self, fixed: bool) -> Self {
         self.p.header_fixed = fixed;
+        self
+    }
+    /// Counts refer to data rows, independently of the header and column footer.
+    pub fn frozen_rows(mut self, start: usize, end: usize) -> Self {
+        self.p.frozen = (start, end);
+        self
+    }
+    pub fn footer_fixed(mut self, fixed: bool) -> Self {
+        self.p.footer_fixed = fixed;
         self
     }
     pub fn disabled(mut self, disabled: bool) -> Self {

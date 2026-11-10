@@ -31,6 +31,9 @@ pub(crate) struct TablePage {
     size: TableSize,
     borders: TableBorders,
     striped: bool,
+    advanced_layout: bool,
+    grouped: bool,
+    show_done: bool,
     static_mode: bool,
     narrow: bool,
     reversed: bool,
@@ -151,6 +154,19 @@ impl TablePage {
             .unwrap()
         });
         let subscription = cx.subscribe(&table, |page, table, event: &TableEvent, cx| {
+            if let TableEvent::ColumnResizeRequested(request) = event {
+                let view = table.read(cx).view().unwrap().clone();
+                table.update(cx, |s, cx| {
+                    if let Err(error) = request
+                        .apply_to(&view)
+                        .and_then(|v| s.commit_view(v, Some(request.id()), cx))
+                    {
+                        let _ = s.reject_request(request.id(), cx);
+                        page.message = format!("列宽未修改：{error}").into();
+                    }
+                });
+                cx.notify();
+            }
             if let TableEvent::SelectionRequested(request) = event {
                 let accepted = table.read(cx).view().unwrap().clone();
                 let next = request.apply_to(&accepted);
@@ -178,6 +194,9 @@ impl TablePage {
             size: TableSize::Medium,
             borders: TableBorders::Rows,
             striped: false,
+            advanced_layout: false,
+            grouped: false,
+            show_done: true,
             static_mode: false,
             narrow: false,
             reversed: false,
@@ -221,6 +240,60 @@ impl TablePage {
             .unwrap()
         });
         self.large = Some(state);
+        cx.notify();
+    }
+}
+impl TablePage {
+    fn sync_layout_columns(&mut self, reset: bool, cx: &mut Context<Self>) {
+        let current = self.table.read(cx).view().unwrap().clone();
+        let mut next = if reset {
+            columns(false).to_vec()
+        } else {
+            current.columns().to_vec()
+        };
+        for c in &mut next {
+            let key = c.key().as_str().to_owned();
+            let pin = if self.advanced_layout {
+                match key.as_str() {
+                    "number" => yue_component::TablePin::Start,
+                    "action" => yue_component::TablePin::End,
+                    _ => yue_component::TablePin::None,
+                }
+            } else {
+                yue_component::TablePin::None
+            };
+            *c = c
+                .clone()
+                .pin(pin)
+                .resizable(self.advanced_layout)
+                .min_width(rems(5.))
+                .max_width(rems(30.));
+            if reset && self.advanced_layout && key == "note" {
+                *c = c.clone().min_width(rems(12.)).flex(1.);
+            }
+            if key == "done" {
+                *c = c.clone().visible(self.show_done).responsive_priority(10);
+            }
+            let path = if self.grouped {
+                match key.as_str() {
+                    "owner" | "note" => {
+                        vec![yue_component::TableHeaderGroup::new("details", "工单信息")]
+                    }
+                    "amount" | "status" | "done" => vec![yue_component::TableHeaderGroup::new(
+                        "progress",
+                        "金额与进度",
+                    )],
+                    _ => vec![],
+                }
+            } else {
+                vec![]
+            };
+            *c = c.clone().header_path(path);
+        }
+        self.table.update(cx, |s, cx| {
+            s.commit_view(current.as_ref().clone().with_columns(next), None, cx)
+                .unwrap()
+        });
         cx.notify();
     }
 }
@@ -413,6 +486,55 @@ impl Render for TablePage {
             .child("同类记录的字段比较；滚动、选择与数据更新保留稳定身份。")
             .child(controls)
             .child(states)
+            .child(
+                div()
+                    .flex()
+                    .flex_wrap()
+                    .gap_2()
+                    .child(
+                        YueButton::new(
+                            "table-advanced-layout",
+                            if self.advanced_layout {
+                                "还原默认布局"
+                            } else {
+                                "演示固定与伸缩布局"
+                            },
+                        )
+                        .on_click(cx.listener(|s, _, _, cx| {
+                            s.advanced_layout = !s.advanced_layout;
+                            s.static_mode = false;
+                            s.sync_layout_columns(true, cx);
+                        })),
+                    )
+                    .child(
+                        YueButton::new(
+                            "table-grouped",
+                            if self.grouped {
+                                "取消分组表头"
+                            } else {
+                                "分组表头"
+                            },
+                        )
+                        .on_click(cx.listener(|s, _, _, cx| {
+                            s.grouped = !s.grouped;
+                            s.sync_layout_columns(false, cx);
+                        })),
+                    )
+                    .child(
+                        YueButton::new(
+                            "table-column-visibility",
+                            if self.show_done {
+                                "隐藏核验列"
+                            } else {
+                                "显示核验列"
+                            },
+                        )
+                        .on_click(cx.listener(|s, _, _, cx| {
+                            s.show_done = !s.show_done;
+                            s.sync_layout_columns(false, cx);
+                        })),
+                    ),
+            )
             .child(div().id("table-message").child(self.message.clone()))
             .child(
                 div()
@@ -429,7 +551,12 @@ impl Render for TablePage {
                                     .borders(self.borders)
                                     .striped(self.striped)
                                     .height(rems(22.))
-                                    .render_mode(if self.static_mode {
+                                    .frozen_rows(
+                                        usize::from(self.advanced_layout),
+                                        usize::from(self.advanced_layout),
+                                    )
+                                    .footer_fixed(self.advanced_layout)
+                                    .render_mode(if self.static_mode && !self.advanced_layout {
                                         TableRenderMode::Static
                                     } else {
                                         TableRenderMode::Rows

@@ -3,7 +3,7 @@ use crate::{
     CheckboxState, VirtualGrid, YueCheckbox, YueEmpty, YueScrollbar, YueSpinner,
     tokens::{rems as token_rems, rgba},
 };
-use gpui_kit::base::{A11ySelectionExt as _, SelectionA11y, TestSupportExt as _};
+use gpui_kit::base::{A11ySelectionExt as _, ElementExt as _, SelectionA11y, TestSupportExt as _};
 use gpui_kit::{
     Context, InteractiveElement as _, ParentElement as _, Pixels, Role,
     StatefulInteractiveElement as _, Styled as _, div, px,
@@ -14,7 +14,7 @@ pub(super) fn render<D: TableDelegate>(
     w: &mut Window,
     cx: &mut Context<YueTableState<D>>,
 ) -> AnyElement {
-    let Some(p) = state.presentation.clone() else {
+    let Some(mut p) = state.presentation.clone() else {
         return div().into_any_element();
     };
     if state.repair_control_focus {
@@ -23,6 +23,21 @@ pub(super) fn render<D: TableDelegate>(
             state.focus.focus(w, cx);
         }
     }
+    let weak = cx.weak_entity();
+    w.use_keyed_state((p.id.clone(), "table-resize-lifetime"), cx, |w, cx| {
+        let released = weak.clone();
+        cx.on_release(move |_: &mut resize::ResizeLifetime, cx| {
+            let _ = released.update(cx, |s, cx| s.cancel_resize(cx));
+        })
+        .detach();
+        resize::ResizeLifetime {
+            _activation: cx.observe_window_activation(w, move |_, w, cx| {
+                if !w.is_window_active() {
+                    let _ = weak.update(cx, |s, cx| s.cancel_resize(cx));
+                }
+            }),
+        }
+    });
     let theme = crate::current_theme(cx);
     let mut root = div()
         .id(p.id.clone())
@@ -41,6 +56,42 @@ pub(super) fn render<D: TableDelegate>(
                 TableSize::Large => crate::theme::keys::LINE_HEIGHT_LG,
             },
         ));
+    let pointer_owner = cx.weak_entity();
+    root = root.child(
+        gpui_kit::canvas(
+            |_, _, _| {},
+            move |_, _, w, _| {
+                let moving = pointer_owner.clone();
+                w.on_mouse_event(move |event: &gpui_kit::MouseMoveEvent, phase, _, cx| {
+                    if !phase.capture() {
+                        return;
+                    }
+                    let _ = moving.update(cx, |s, cx| {
+                        if s.has_pointer_resize() {
+                            if event.pressed_button == Some(gpui_kit::MouseButton::Left) {
+                                s.pointer_resize(event.position.x, cx);
+                            } else {
+                                s.cancel_resize(cx);
+                            }
+                        }
+                    });
+                });
+                w.on_mouse_event(move |event: &gpui_kit::MouseUpEvent, phase, _, cx| {
+                    if !phase.capture() || event.button != gpui_kit::MouseButton::Left {
+                        return;
+                    }
+                    let _ = pointer_owner.update(cx, |s, cx| {
+                        if s.has_pointer_resize() {
+                            s.pointer_resize(event.position.x, cx);
+                            s.finish_resize(cx);
+                        }
+                    });
+                });
+            },
+        )
+        .absolute()
+        .size_full(),
+    );
     if let Some(toolbar) = &p.toolbar {
         root = root.child(toolbar(w, cx));
     }
@@ -49,6 +100,7 @@ pub(super) fn render<D: TableDelegate>(
     };
     // Also release the previous axis source when entering empty/no-column states.
     state.sync_layout(&p, w, cx);
+    p.resolved = state.resolved.clone();
     let busy = matches!(
         view.load,
         TableLoadState::Loading | TableLoadState::Refreshing
@@ -66,8 +118,27 @@ pub(super) fn render<D: TableDelegate>(
                 .child(message.clone()),
         );
     }
+    let observe_owner = cx.weak_entity();
+    let border = if p.outer_border { px(2.) } else { px(0.) };
     let mut table = div()
         .id("table-region")
+        .on_prepaint(move |bounds, _, cx| {
+            let width = (bounds.size.width - border).max(px(0.));
+            let weak = observe_owner.clone();
+            if observe_owner
+                .read_with(cx, |s, _| s.available_width != width)
+                .unwrap_or(false)
+            {
+                cx.defer(move |cx| {
+                    let _ = weak.update(cx, |s, cx| {
+                        if s.available_width != width {
+                            s.available_width = width;
+                            cx.notify();
+                        }
+                    });
+                });
+            }
+        })
         .test_support()
         .relative()
         .w_full()
@@ -77,14 +148,24 @@ pub(super) fn render<D: TableDelegate>(
         .aria_label(p.label.clone())
         .aria_row_count(
             view.source.len()
-                + usize::from(p.header_visible)
+                + if p.header_visible {
+                    p.resolved.depth + 1
+                } else {
+                    0
+                }
                 + usize::from(view.columns.iter().any(|c| c.footer.is_some())),
         )
         .aria_column_count(
-            view.columns.len() + usize::from(view.selection_mode != TableSelectionMode::None),
+            p.resolved.indices.len() + usize::from(view.selection_mode != TableSelectionMode::None),
         )
         .track_focus(&state.focus.clone().tab_stop(!p.disabled))
         .on_key_down(cx.listener(|s, event: &gpui_kit::KeyDownEvent, w, cx| {
+            if event.keystroke.key == "escape" && (s.resize.is_some() || s.resize_preview.is_some())
+            {
+                s.cancel_resize(cx);
+                cx.stop_propagation();
+                return;
+            }
             if !s.focus.is_focused(w) && event.keystroke.key == "escape" {
                 // Bubbled only after the actual editor/popup has declined Escape.
                 s.focus.focus(w, cx);
@@ -102,8 +183,8 @@ pub(super) fn render<D: TableDelegate>(
             .border_1()
             .border_color(rgba(theme, "--border-default"));
     }
-    if view.columns.is_empty() || view.source.is_empty() {
-        let message = if view.columns.is_empty() {
+    if p.resolved.indices.is_empty() || view.source.is_empty() {
+        let message = if p.resolved.indices.is_empty() {
             "暂无可见列"
         } else {
             "暂无数据"
@@ -112,16 +193,7 @@ pub(super) fn render<D: TableDelegate>(
             table = table.h(p.height);
         }
         if p.header_visible && !view.columns.is_empty() {
-            let width = view
-                .columns
-                .iter()
-                .map(|c| c.width.to_pixels(w.rem_size()))
-                .fold(px(0.), |a, b| a + b)
-                + if view.selection_mode != TableSelectionMode::None {
-                    token_rems(theme, crate::theme::keys::SIZE_48).to_pixels(w.rem_size())
-                } else {
-                    px(0.)
-                };
+            let width = p.resolved.total;
             let header = row(
                 &view,
                 0,
@@ -188,7 +260,16 @@ pub(super) fn render<D: TableDelegate>(
                     )
                 },
             )
-            .frozen_rows(usize::from(p.header_visible && p.header_fixed));
+            .frozen_rows(
+                usize::from(p.header_visible && (p.header_fixed || p.frozen.0 > 0))
+                    + p.frozen.0.min(view.source.len()),
+            )
+            .frozen_end_rows(
+                p.frozen.1.min(view.source.len().saturating_sub(p.frozen.0))
+                    + usize::from(
+                        p.footer_fixed && view.columns.iter().any(|c| c.footer.is_some()),
+                    ),
+            );
             if let Some(active) = &state.active {
                 grid = grid
                     .cell_focus_handle(
@@ -210,16 +291,7 @@ pub(super) fn render<D: TableDelegate>(
         } else {
             // Static keeps all rows in one natural-height block; horizontal overflow
             // still has a single owner for header, body and column footer.
-            let total = view
-                .columns
-                .iter()
-                .map(|c| c.width.to_pixels(w.rem_size()))
-                .fold(px(0.), |a, b| a + b)
-                + if view.selection_mode != TableSelectionMode::None {
-                    token_rems(theme, crate::theme::keys::SIZE_48).to_pixels(w.rem_size())
-                } else {
-                    px(0.)
-                };
+            let total = p.resolved.total;
             let mut content = div().w(total).min_w_full().flex().flex_col();
             for index in 0..view.source.len()
                 + usize::from(p.header_visible)
@@ -293,6 +365,9 @@ fn row<D: TableDelegate>(
             .clone()
     });
     let selected = key.as_ref().is_some_and(|k| view.selection.contains(k));
+    let positioned = p.resolved.has_pins() && p.mode == TableRenderMode::Rows
+        || is_header && p.resolved.depth > 0;
+    let mut cells = Vec::new();
     let mut row = div()
         .id(if let Some(key) = &key {
             state::row_id(view.source.scope(), key)
@@ -303,7 +378,16 @@ fn row<D: TableDelegate>(
         })
         .test_support()
         .role(Role::Row)
-        .aria_row_index(index)
+        .aria_row_index(if is_header {
+            0
+        } else {
+            index
+                + if p.header_visible {
+                    p.resolved.depth
+                } else {
+                    0
+                }
+        })
         .flex()
         .w_full()
         .min_w_0()
@@ -311,8 +395,12 @@ fn row<D: TableDelegate>(
     let height = p
         .row_height
         .unwrap_or_else(|| p.size.height(crate::current_theme(cx)));
+    let bands = if is_header { p.resolved.depth + 1 } else { 1 };
+    if is_header && bands > 1 {
+        row = row.role(Role::RowGroup);
+    }
     if p.mode == TableRenderMode::Rows {
-        row = row.h(height).overflow_hidden();
+        row = row.h(height * bands as f32).overflow_hidden();
     } else {
         row = row.min_h(height);
     }
@@ -413,25 +501,39 @@ fn row<D: TableDelegate>(
                     })
                     .into_any_element()
             };
-        row = row.child(
-            div()
-                .id("selection-cell")
-                .test_support()
-                .role(if is_header {
-                    Role::ColumnHeader
-                } else {
-                    Role::Cell
-                })
-                .aria_column_index(0)
-                .w(token_rems(theme, crate::theme::keys::SIZE_48))
-                .flex_shrink_0()
-                .flex()
-                .items_center()
-                .justify_center()
-                .child(select),
-        );
+        let selection_cell = div()
+            .id("selection-cell")
+            .test_support()
+            .role(if is_header {
+                Role::ColumnHeader
+            } else {
+                Role::Cell
+            })
+            .aria_column_index(0)
+            .aria_row_span(bands)
+            .w(token_rems(theme, crate::theme::keys::SIZE_48))
+            .flex_shrink_0()
+            .flex()
+            .items_center()
+            .justify_center()
+            .child(select)
+            .into_any_element();
+        if positioned {
+            cells.push((
+                TablePin::Start,
+                px(0.),
+                p.resolved.selection,
+                0usize,
+                bands,
+                selection_cell,
+            ));
+        } else {
+            row = row.child(selection_cell);
+        }
     }
-    for (column_index, column) in view.columns.iter().enumerate() {
+    for (column_index, declared_index) in p.resolved.indices.iter().enumerate() {
+        let column = &view.columns[*declared_index];
+        let width = p.resolved.widths[column_index];
         let cell_key = key
             .as_ref()
             .map(|key| TableCellKey::new(key.clone(), column.key().clone()));
@@ -444,10 +546,20 @@ fn row<D: TableDelegate>(
             } else {
                 Role::Cell
             })
+            .aria_row_index(if is_header {
+                column.groups.len()
+            } else {
+                index
+                    + if p.header_visible {
+                        p.resolved.depth
+                    } else {
+                        0
+                    }
+            })
             .aria_column_index(
                 column_index + usize::from(view.selection_mode != TableSelectionMode::None),
             )
-            .w(column.width)
+            .w(width)
             .flex_shrink_0()
             .min_w_0()
             .flex()
@@ -474,13 +586,16 @@ fn row<D: TableDelegate>(
             TableAlign::Center => cell.text_align(gpui_kit::TextAlign::Center),
             TableAlign::End => cell.text_align(gpui_kit::TextAlign::Right),
         };
-        if p.borders == TableBorders::Grid && column_index + 1 < view.columns.len() {
+        if p.borders == TableBorders::Grid && column_index + 1 < p.resolved.indices.len() {
             cell = cell
                 .border_r_1()
                 .border_color(rgba(theme, "--border-divider"));
         }
         // The overlay does not change text width or wrapping when focus moves.
         cell = cell.relative();
+        if p.resolved.has_pins() && p.mode == TableRenderMode::Rows || bands > 1 {
+            cell = cell.h_full();
+        }
         let content = if is_footer {
             div()
                 .child(column.footer.clone().unwrap_or_default())
@@ -509,9 +624,11 @@ fn row<D: TableDelegate>(
                     view.load,
                     TableLoadState::Loading | TableLoadState::Refreshing
                 ),
-                width: (column.width.to_pixels(w.rem_size())
+                width: (width
                     - token_rems(theme, p.size.padding()).to_pixels(w.rem_size()) * 2.
-                    - if p.borders == TableBorders::Grid && column_index + 1 < view.columns.len() {
+                    - if p.borders == TableBorders::Grid
+                        && column_index + 1 < p.resolved.indices.len()
+                    {
                         token_rems(theme, crate::theme::keys::BORDER_1).to_pixels(w.rem_size())
                     } else {
                         px(0.)
@@ -546,6 +663,58 @@ fn row<D: TableDelegate>(
             TableAlign::End => content_box.justify_end(),
         };
         cell = cell.child(content_box.child(content));
+        if is_header && column.resizable && !p.disabled && !p.readonly {
+            let own = owner.clone();
+            let blur_key = column.key().clone();
+            let handle_state = w.use_keyed_state(
+                (
+                    (p.id.clone(), column.key().as_str().to_owned()).into(),
+                    "resize-focus",
+                ),
+                cx,
+                |w, cx| {
+                    let focus = cx.focus_handle().tab_stop(true);
+                    let blur = cx.on_blur(&focus, w, move |_, _, cx| {
+                        let _ = own.update(cx, |s, cx| s.resize_blur(&blur_key, cx));
+                    });
+                    resize::HandleLifetime { focus, _blur: blur }
+                },
+            );
+            let handle_focus = handle_state.read(cx).focus.clone();
+            let down_focus = handle_focus.clone();
+            let down_owner = owner.clone();
+            let down_key = column.key().clone();
+            let key_owner = owner.clone();
+            let key = column.key().clone();
+            let up_owner = owner.clone();
+            let handle = gpui_kit::base::resize_handle::<(), resize::DragMarker>(
+                "column-resize",
+                gpui_kit::Axis::Horizontal,
+            )
+            .inside(gpui_kit::base::HandleEdge::Trailing)
+            .with_focus(&handle_focus)
+            .hit_width(token_rems(theme, "--resizable-hit-width").to_pixels(w.rem_size()))
+            .line_width(token_rems(theme, "--resizable-line-width").to_pixels(w.rem_size()))
+            .role(Role::Splitter)
+            .aria_label(format!("调整{}列宽", column.title()))
+            .on_mouse_down(gpui_kit::MouseButton::Left, move |event, w, cx| {
+                cx.stop_propagation();
+                down_focus.focus(w, cx);
+                let _ = down_owner.update(cx, |s, cx| {
+                    let _ = s.begin_resize(&down_key, Some(event.position.x), w, cx);
+                });
+            })
+            .on_key_down(move |event, w, cx| {
+                let _ = key_owner.update(cx, |s, cx| s.keyboard_resize(&key, event, w, cx));
+            })
+            .on_key_up(move |event, _, cx| {
+                let _ = up_owner.update(cx, |s, cx| {
+                    s.resize_key_up(event.keystroke.key.as_str(), cx)
+                });
+            });
+            cell = cell.child(handle);
+        }
+
         if cell_active {
             cell = cell.aria_active_descendant();
         }
@@ -558,7 +727,169 @@ fn row<D: TableDelegate>(
                     .border_color(rgba(theme, "--focus-ring-color")),
             );
         }
-        row = row.child(cell);
+        if is_header {
+            cell = cell
+                .aria_row_index(column.groups.len())
+                .aria_row_span(bands - column.groups.len());
+        }
+        if positioned {
+            cells.push((
+                p.resolved.pins[column_index],
+                p.resolved.offsets[column_index],
+                width,
+                if is_header { column.groups.len() } else { 0 },
+                if is_header {
+                    bands - column.groups.len()
+                } else {
+                    1
+                },
+                cell.into_any_element(),
+            ));
+        } else {
+            row = row.child(cell);
+        }
+    }
+    if is_header && bands > 1 {
+        for level in 0..p.resolved.depth {
+            let mut ix = 0;
+            while ix < p.resolved.indices.len() {
+                let column = &view.columns[p.resolved.indices[ix]];
+                let Some(group) = column.groups.get(level) else {
+                    ix += 1;
+                    continue;
+                };
+                let mut end = ix + 1;
+                while end < p.resolved.indices.len()
+                    && view.columns[p.resolved.indices[end]]
+                        .groups
+                        .get(level)
+                        .is_some_and(|g| g.key() == group.key())
+                {
+                    end += 1;
+                }
+                let width = p.resolved.widths[ix..end]
+                    .iter()
+                    .copied()
+                    .fold(px(0.), |a, b| a + b);
+                let groupcell = div()
+                    .id((ElementId::from("table-group"), group.key().clone()))
+                    .test_support()
+                    .role(Role::ColumnHeader)
+                    .aria_label(group.title().clone())
+                    .aria_row_index(level)
+                    .aria_column_index(
+                        ix + usize::from(view.selection_mode != TableSelectionMode::None),
+                    )
+                    .aria_column_span(end - ix)
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .size_full()
+                    .border_b_1()
+                    .border_color(rgba(theme, "--border-divider"))
+                    .child(group.title().clone());
+                cells.push((
+                    p.resolved.pins[ix],
+                    p.resolved.offsets[ix],
+                    width,
+                    level,
+                    1,
+                    groupcell.into_any_element(),
+                ));
+                ix = end;
+            }
+        }
+    }
+    if positioned {
+        let offset = if p.mode == TableRenderMode::Rows {
+            owner
+                .read_with(cx, |s, _| -s.scroll.precise_offset().x)
+                .unwrap_or(0.)
+        } else {
+            0.
+        };
+        let offset = Pixels::from(offset);
+        let pins = p.resolved.has_pins() && p.mode == TableRenderMode::Rows;
+        let leading = if pins { p.resolved.leading } else { px(0.) };
+        let trailing = if pins { p.resolved.trailing } else { px(0.) };
+        let available = if pins {
+            p.resolved.available
+        } else {
+            p.resolved.total
+        };
+        let background = if selected {
+            rgba(theme, "--list-row-background-selected")
+        } else if !is_band && p.striped && position % 2 == 1 {
+            rgba(theme, "--surface-subtle")
+        } else {
+            rgba(theme, p.surface)
+        };
+        for level in 0..bands {
+            let mut lanes = [Vec::new(), Vec::new(), Vec::new()];
+            let remaining = height * (bands - level) as f32;
+            for (pin, start, width, celllevel, span, cell) in
+                cells.iter_mut().filter(|c| c.3 == level)
+            {
+                let part = match pin {
+                    TablePin::Start if leading > px(0.) => 1,
+                    TablePin::End if pins => 2,
+                    _ => 0,
+                };
+                let left = match part {
+                    1 => *start,
+                    2 => *start - (p.resolved.total - trailing),
+                    _ => *start - offset - leading,
+                };
+                let content = std::mem::replace(cell, div().into_any_element());
+                lanes[part].push(
+                    div()
+                        .absolute()
+                        .left(left)
+                        .top_0()
+                        .w(*width)
+                        .h(height * (*span) as f32)
+                        .child(div().size_full().child(content))
+                        .into_any_element(),
+                );
+                let _ = celllevel;
+            }
+            let mut band = div()
+                .id(("table-band-level", level))
+                .absolute()
+                .left_0()
+                .top(height * level as f32)
+                .w_full()
+                .h(remaining);
+            if is_header && bands > 1 {
+                band = band.role(Role::Row).aria_row_index(level);
+            }
+            for (part, children) in lanes.into_iter().enumerate() {
+                let (left, width) = match part {
+                    1 => (offset, leading),
+                    2 => (offset + available - trailing, trailing),
+                    _ => (
+                        offset + leading,
+                        (available - leading - trailing).max(px(0.)),
+                    ),
+                };
+                let lane = div()
+                    .absolute()
+                    .left(left)
+                    .top_0()
+                    .h_full()
+                    .w(width)
+                    .overflow_hidden()
+                    .children(children);
+                band = band.child(if part > 0 { lane.bg(background) } else { lane });
+            }
+            row = row.child(band);
+        }
+        row = row.relative();
+        if p.mode == TableRenderMode::Static {
+            row = row.h(height * bands as f32);
+        }
+    } else {
+        row = row.children(cells.into_iter().map(|(_, _, _, _, _, cell)| cell));
     }
     row.into_any_element()
 }
@@ -569,16 +900,16 @@ fn navigate<D: TableDelegate>(
     w: &mut Window,
     cx: &mut Context<YueTableState<D>>,
 ) {
-    let Some(p) = state.presentation.clone() else {
+    let Some(mut p) = state.presentation.clone() else {
         return;
     };
-    let theme = crate::current_theme(cx);
+    p.resolved = state.resolved.clone();
     let Some(view) = state.accepted.clone() else {
         return;
     };
     if p.disabled
         || view.source.is_empty()
-        || view.columns.is_empty()
+        || p.resolved.indices.is_empty()
         || event.keystroke.modifiers.alt
         || event.keystroke.modifiers.platform
     {
@@ -593,9 +924,10 @@ fn navigate<D: TableDelegate>(
         .active
         .as_ref()
         .and_then(|key| {
-            view.columns
+            p.resolved
+                .indices
                 .iter()
-                .position(|col| col.key() == key.column())
+                .position(|i| view.columns[*i].key() == key.column())
         })
         .unwrap_or(0);
     let key = event.keystroke.key.as_str();
@@ -606,10 +938,10 @@ fn navigate<D: TableDelegate>(
         .floor()
         .max(1.) as usize;
     match key {
-        "enter" | "f2" if view.columns[c].interactive => {
+        "enter" | "f2" if view.columns[p.resolved.indices[c]].interactive => {
             let active = TableCellKey::new(
                 view.source.row_key(r).unwrap().clone(),
-                view.columns[c].key().clone(),
+                view.columns[p.resolved.indices[c]].key().clone(),
             );
             state.set_active(active.clone(), w, cx);
             state.control_focus.focus(w, cx);
@@ -619,7 +951,7 @@ fn navigate<D: TableDelegate>(
         "up" => r = r.saturating_sub(1),
         "down" => r = (r + usize::from(state.active.is_some())).min(view.source.len() - 1),
         "left" => c = c.saturating_sub(1),
-        "right" => c = (c + 1).min(view.columns.len() - 1),
+        "right" => c = (c + 1).min(p.resolved.indices.len() - 1),
         "home" => {
             c = 0;
             if event.keystroke.modifiers.control {
@@ -627,7 +959,7 @@ fn navigate<D: TableDelegate>(
             }
         }
         "end" => {
-            c = view.columns.len() - 1;
+            c = p.resolved.indices.len() - 1;
             if event.keystroke.modifiers.control {
                 r = view.source.len() - 1;
             }
@@ -659,24 +991,21 @@ fn navigate<D: TableDelegate>(
             .map(|k| k.row().clone())
             .or_else(|| view.source.row_key(0).cloned());
     }
-    let key = TableCellKey::new(row.clone(), view.columns[c].key().clone());
+    let key = TableCellKey::new(
+        row.clone(),
+        view.columns[p.resolved.indices[c]].key().clone(),
+    );
     state.set_active(key, w, cx);
-    let prefix = if view.selection_mode != TableSelectionMode::None {
-        token_rems(theme, crate::theme::keys::SIZE_48).to_pixels(w.rem_size())
-    } else {
-        px(0.)
-    };
-    let left: Pixels = view.columns[..c]
-        .iter()
-        .map(|col| col.width.to_pixels(w.rem_size()))
-        .fold(prefix, |a, b| a + b);
-    let right = left + view.columns[c].width.to_pixels(w.rem_size());
+    let left = p.resolved.offsets[c];
+    let right = left + p.resolved.widths[c];
     let offset = state.scroll.offset();
     let width = state.scroll.bounds().size.width;
-    let x = if left < -offset.x {
-        -left
-    } else if right > -offset.x + width {
-        width - right
+    let x = if p.resolved.pins[c] != TablePin::None {
+        offset.x
+    } else if left < -offset.x + p.resolved.leading {
+        -left + p.resolved.leading
+    } else if right > -offset.x + width - p.resolved.trailing {
+        width - p.resolved.trailing - right
     } else {
         offset.x
     };

@@ -55,7 +55,7 @@ mod tokens;
 mod tooltip;
 pub mod typography;
 mod virtual_list;
-pub use table::{TableAlign, TableBorders, TableCellContext, TableCellKey, TableColumn, TableColumnKey, TableCommitOutcome,
+pub use table::{TableColumnResizeRequest, TablePin, TableHeaderGroup, TableAlign, TableBorders, TableCellContext, TableCellKey, TableColumn, TableColumnKey, TableCommitOutcome,
     TableDelegate, TableError, TableEvent, TableLoadState, TableRenderMode, TableRequestId, TableRowKey,
     TableRows, TableSelectionMode, TableSelectionRequest, TableSize, TableSource, TableTextOverflow,
     TableVerticalAlign, TableView, YueTable, YueTableState};

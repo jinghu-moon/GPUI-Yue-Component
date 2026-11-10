@@ -16,6 +16,7 @@ pub enum TableError {
     InvalidSource,
     InvalidGeometry,
     InvalidSelection,
+    UnsupportedCombination(&'static str),
     StaleView,
     StaleSource,
     StaleRequest,
@@ -247,6 +248,14 @@ pub struct TableColumn<R: 'static> {
     pub(super) key: TableColumnKey,
     pub(super) title: SharedString,
     pub(super) width: Rems,
+    pub(super) minimum: Rems,
+    pub(super) maximum: Rems,
+    pub(super) flex: f32,
+    pub(super) visible: bool,
+    pub(super) pin: super::TablePin,
+    pub(super) responsive: Option<u32>,
+    pub(super) resizable: bool,
+    pub(super) groups: Rc<[super::TableHeaderGroup]>,
     pub(super) align: TableAlign,
     pub(super) header_align: Option<TableAlign>,
     pub(super) vertical: TableVerticalAlign,
@@ -256,6 +265,32 @@ pub struct TableColumn<R: 'static> {
     pub(super) header: Option<super::Slot>,
     pub(super) footer: Option<SharedString>,
     pub(super) interactive: bool,
+}
+impl<R: 'static> Clone for TableColumn<R> {
+    fn clone(&self) -> Self {
+        Self {
+            key: self.key.clone(),
+            title: self.title.clone(),
+            width: self.width,
+            minimum: self.minimum,
+            maximum: self.maximum,
+            flex: self.flex,
+            visible: self.visible,
+            pin: self.pin,
+            responsive: self.responsive,
+            resizable: self.resizable,
+            groups: self.groups.clone(),
+            align: self.align,
+            header_align: self.header_align,
+            vertical: self.vertical,
+            overflow: self.overflow,
+            text: self.text.clone(),
+            renderer: self.renderer.clone(),
+            header: self.header.clone(),
+            footer: self.footer.clone(),
+            interactive: self.interactive,
+        }
+    }
 }
 impl<R: 'static> TableColumn<R> {
     pub fn text<T: Into<SharedString>>(
@@ -267,6 +302,14 @@ impl<R: 'static> TableColumn<R> {
             key: TableColumnKey(key.into()),
             title: title.into(),
             width: rems(12.),
+            minimum: rems(1.),
+            maximum: rems(65536.),
+            flex: 0.,
+            visible: true,
+            pin: super::TablePin::None,
+            responsive: None,
+            resizable: false,
+            groups: Rc::from([]),
             align: TableAlign::Start,
             header_align: None,
             vertical: TableVerticalAlign::Center,
@@ -299,6 +342,49 @@ impl<R: 'static> TableColumn<R> {
     pub fn width(mut self, width: Rems) -> Self {
         self.width = width;
         self
+    }
+    pub fn min_width(mut self, width: Rems) -> Self {
+        self.minimum = width;
+        self
+    }
+    pub fn max_width(mut self, width: Rems) -> Self {
+        self.maximum = width;
+        self
+    }
+    /// Positive weights share remaining container space, subject to min/max.
+    pub fn flex(mut self, weight: f32) -> Self {
+        self.flex = weight;
+        self
+    }
+    pub fn visible(mut self, visible: bool) -> Self {
+        self.visible = visible;
+        self
+    }
+    pub fn pin(mut self, pin: super::TablePin) -> Self {
+        self.pin = pin;
+        self
+    }
+    /// Larger priorities disappear first when declared widths do not fit.
+    pub fn responsive_priority(mut self, priority: u32) -> Self {
+        self.responsive = Some(priority);
+        self
+    }
+    pub fn resizable(mut self, enabled: bool) -> Self {
+        self.resizable = enabled;
+        self
+    }
+    pub fn header_path(mut self, groups: impl Into<Rc<[super::TableHeaderGroup]>>) -> Self {
+        self.groups = groups.into();
+        self
+    }
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
+    pub fn pin_kind(&self) -> super::TablePin {
+        self.pin
+    }
+    pub fn preferred_width(&self) -> Rems {
+        self.width
     }
     pub fn align(mut self, align: TableAlign) -> Self {
         self.align = align;
@@ -393,6 +479,11 @@ impl<S: TableSource> TableView<S> {
             base_revision: None,
         }
     }
+    /// Replace a complete column configuration atomically, retaining stable keys.
+    pub fn with_columns(mut self, columns: impl Into<Rc<[TableColumn<S::Row>]>>) -> Self {
+        self.columns = columns.into();
+        self
+    }
     pub fn source(&self) -> &Rc<S> {
         &self.source
     }
@@ -475,12 +566,22 @@ impl<S: TableSource> TableView<S> {
             if !keys.insert(&column.key) {
                 return Err(TableError::DuplicateColumnKey(column.key.clone()));
             }
+            if !column.minimum.0.is_finite()
+                || column.minimum.0 <= 0.
+                || !column.maximum.0.is_finite()
+                || column.maximum.0 < column.minimum.0
+                || !column.flex.is_finite()
+                || column.flex < 0.
+            {
+                return Err(TableError::InvalidGeometry);
+            }
             let extent = column.width.0;
             if !extent.is_finite() || extent <= 0. {
                 return Err(TableError::InvalidGeometry);
             }
             width += extent;
         }
+        super::layout::validate_groups(&self.columns)?;
         if !width.is_finite() {
             return Err(TableError::InvalidGeometry);
         }
@@ -599,4 +700,5 @@ impl TableSelectionRequest {
 pub enum TableEvent {
     SelectionRequested(TableSelectionRequest),
     ActiveChanged(Option<TableCellKey>),
+    ColumnResizeRequested(super::TableColumnResizeRequest),
 }
