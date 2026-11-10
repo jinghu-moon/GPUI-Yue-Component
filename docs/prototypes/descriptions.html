@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Descriptions 描述列表 · YueDescriptions</title>
+<style>
+:root{--font-ui:HarmonyOS,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;--mono:ui-monospace,Consolas,monospace;
+--fast:100ms;--normal:200ms;--ease:cubic-bezier(.2,0,.38,.9);color-scheme:light;
+--bg:#f5f5f5;--surface:#fff;--text:#1f1f1f;--text-2:#737373;--border:#e0e0e0;--border-control:#a3a3a3;--accent:#1f75db;--on-accent:#fff;
+--n-bg:#eee;--n-fg:#525252;--a-bg:#e6f0ff;--a-fg:#125fb8;--g-bg:#e0f2e7;--g-fg:#37674c;--w-bg:#fff4d3;--w-fg:#75471b;--d-bg:#ffecea;--d-fg:#a14138;--danger:#c75146;
+--hover:color-mix(in srgb,var(--text) 8%,transparent);--pressed:color-mix(in srgb,var(--text) 10%,transparent);padding-bottom:env(safe-area-inset-bottom,0px);padding-top:env(safe-area-inset-top,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;--bg:#141414;--surface:#1f1f1f;--text:#f5f5f5;--text-2:#a3a3a3;--border:#333;--border-control:#737373;--accent:#3581e2;--n-bg:#333;--n-fg:#e0e0e0;--a-bg:#0f2644;--a-fg:#93c1ff;--g-bg:#102219;--g-fg:#8fc9a5;--w-bg:#351b07;--w-fg:#f7c44d;--d-bg:#391512;--d-fg:#f5aaa3;--danger:#ea7d73}}
+:root[data-theme=dark]{color-scheme:dark;--bg:#141414;--surface:#1f1f1f;--text:#f5f5f5;--text-2:#a3a3a3;--border:#333;--border-control:#737373;--accent:#3581e2;--n-bg:#333;--n-fg:#e0e0e0;--a-bg:#0f2644;--a-fg:#93c1ff;--g-bg:#102219;--g-fg:#8fc9a5;--w-bg:#351b07;--w-fg:#f7c44d;--d-bg:#391512;--d-fg:#f5aaa3;--danger:#ea7d73}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--surface);color:var(--text);font:400 14px/20px var(--font-ui);transition:background var(--normal)}
+.top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 24px;background:var(--surface);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600}.mk{width:20px;height:20px;border-radius:4px;background:var(--accent)}
+.shell{display:grid;grid-template-columns:200px minmax(0,1fr)}
+.side{position:sticky;top:56px;align-self:start;height:calc(100vh - 56px);overflow:auto;padding:16px;border-right:1px solid var(--border)}
+.side b{display:block;margin:16px 8px 4px;font-size:12px;font-weight:500;color:var(--text-2)}.side b:first-child{margin-top:0}
+.side a{display:flex;gap:8px;align-items:center;height:32px;padding:0 8px;border-radius:4px;color:var(--text);text-decoration:none;transition:background var(--fast)}
+.side a i{font:12px var(--mono);color:var(--text-2);font-style:normal}.side a:hover{background:var(--hover)}.side a.on{background:var(--a-bg);color:var(--a-fg);font-weight:500}.side a.on i{color:inherit}
+.main{min-width:0;padding:48px 48px 96px}.doc{max-width:800px;margin:auto}
+section{margin-bottom:56px;scroll-margin-top:80px}
+h1{font-size:32px;line-height:40px;font-weight:600}
+h2{font-size:24px;line-height:32px;font-weight:600}h2 small{margin-left:12px;font-size:14px;font-weight:400;color:var(--text-2)}
+.lead{margin-top:8px;color:var(--text-2)}
+.demo{margin-top:16px;padding:24px;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:16px}
+.demo>.seg{align-self:flex-start}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px}.row>.sp1{flex:1}
+.cap{color:var(--text-2);font-size:12px}
+.col2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.anat{display:grid;grid-template-columns:96px 1fr;gap:12px 16px;align-items:center}.anat small{color:var(--text-2)}
+.i{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* —— List —— */
+.list{--h:40px;--px:12px;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden}
+.list.sm{--h:32px;--px:8px;--g:8px;--pv:4px;font-size:12px}.list.lg{--h:48px;--px:16px;font-size:16px}.list.flat{border-color:transparent}
+.li{position:relative;display:flex;align-items:center;gap:var(--g,12px);min-height:var(--h);padding:var(--pv,8px) var(--px);max-height:80px;transition:max-height var(--normal) var(--ease),opacity var(--normal),padding var(--normal),background var(--fast)}
+.li::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent);transform:scaleY(0);transition:transform var(--normal) var(--ease)}
+.split>.li+.li{border-top:1px solid var(--border)}.stripe>.li:nth-child(even){background:var(--hover)}
+.hov .li:hover{background:var(--hover)}.hov .li:active{background:var(--pressed)}
+.li.cl{cursor:pointer}.li[aria-selected=true]{background:var(--a-bg)!important}.li[aria-selected=true]::before{transform:scaleY(1)}
+.li.dis{color:color-mix(in srgb,var(--text) 38%,transparent);cursor:not-allowed}.li.dis .mt span{color:inherit}
+.li.out{max-height:0!important;pointer-events:none;min-height:0;padding-block:0;opacity:0;overflow:hidden;border-width:0}
+.li.fx{height:40px;min-height:0;padding-block:0;border-bottom:1px solid var(--border)}
+.li:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.mt{flex:1;min-width:0;display:flex;flex-direction:column}
+.mt b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.mt span{color:var(--text-2);font-size:12px;line-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lg .mt span{font-size:14px;line-height:20px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.ex{color:var(--text-2);font-size:12px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.ac{display:flex;gap:4px;opacity:0;transition:opacity var(--fast)}.li:hover .ac,.li:focus-within .ac,.ac.on{opacity:1}@media(hover:none){.ac{opacity:1}}
+.hd,.ft{display:flex;align-items:center;gap:8px;min-height:40px;padding:4px var(--px);color:var(--text-2)}
+.hd{justify-content:space-between;background:var(--hover);border-bottom:1px solid var(--border)}.hd b{color:var(--text);font-weight:600}.ft{justify-content:center;border-top:1px solid var(--border)}
+.gh{position:sticky;top:0;z-index:1;padding:4px var(--px);font-size:12px;font-weight:500;color:var(--text-2);background:var(--surface);border-bottom:1px solid var(--border)}.gh+.li{border-top:0!important}
+.sc{overflow:auto;max-height:264px}.vs{position:relative;height:320px;max-height:none}.vw{position:absolute;left:0;right:0;top:0}
+.empty{display:none;place-items:center;gap:8px;padding:32px 16px;color:var(--text-2)}.list:not(:has(.li:not(.out))) .empty{display:grid}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;border:0;background:none;overflow:visible}
+.grid .li{border:1px solid var(--border);border-radius:12px;background:var(--surface);transition:border-color var(--normal),transform var(--normal) var(--ease)}.grid .li:hover{border-color:var(--accent);transform:translateY(-2px)}
+/* —— atoms —— */
+.av{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;font-size:12px;font-weight:500;background:var(--n-bg);color:var(--n-fg)}.sm .av{width:24px;height:24px}.lg .av{width:40px;height:40px;font-size:14px}
+.av.a,.tag.a{background:var(--a-bg);color:var(--a-fg)}.av.g,.tag.g{background:var(--g-bg);color:var(--g-fg)}.av.w,.tag.w{background:var(--w-bg);color:var(--w-fg)}.av.d,.tag.d{background:var(--d-bg);color:var(--d-fg)}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:400;background:var(--n-bg);color:var(--n-fg);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:32px;padding:0 12px;border:1px solid var(--border-control);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:transform var(--fast),border-color var(--normal)}
+.btn:hover{background-image:linear-gradient(var(--hover),var(--hover));border-color:var(--accent)}.btn:active{background-image:linear-gradient(var(--pressed),var(--pressed));transform:scale(.97)}
+.btn.t{border-color:transparent;background-color:transparent}.btn.p{background:var(--text);color:var(--surface);border-color:transparent}.btn.dg{color:var(--danger)}
+.btn.s{height:24px;padding:0 8px;font-size:12px}.btn.sq{width:28px;height:28px;padding:0}.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.st.on{color:#eaa923}.st.on .i{fill:currentColor}
+.cb{appearance:none;display:grid;place-items:center;width:16px;height:16px;flex:none;margin:0;border:1px solid var(--border-control);border-radius:4px;background:var(--surface);cursor:pointer;transition:background var(--fast),border-color var(--fast)}
+.cb:checked,.cb:indeterminate{background:var(--accent);border-color:var(--accent)}.cb:checked::after{content:"";width:8px;height:4px;margin-top:-2px;border:solid var(--on-accent);border-width:0 0 2px 2px;transform:rotate(-45deg)}.cb:indeterminate::after{content:"";width:8px;height:2px;background:var(--on-accent)}
+.cb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.opt{display:flex;align-items:center;gap:8px;cursor:pointer}
+.seg{display:inline-flex;padding:2px;border-radius:8px;background:var(--n-bg)}.seg button{height:28px;padding:0 12px;border:0;border-radius:6px;background:none;color:var(--text-2);font:inherit;font-weight:500;cursor:pointer;transition:background var(--normal),color var(--normal)}.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.2)}.seg small{margin-left:4px;opacity:.7}
+.in{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border:1px solid var(--border-control);border-radius:8px;background:var(--surface);color:var(--text-2);transition:border-color var(--normal),box-shadow var(--normal)}.in:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}.in input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--text);font:inherit}
+.spin{animation:rot .8s linear infinite}@keyframes rot{to{transform:rotate(360deg)}}
+.tw{margin-top:16px;overflow-x:auto;border:1px solid var(--border);border-radius:8px}.api{width:100%;border-collapse:collapse;font-size:12px;line-height:20px}.api th,.api td{padding:8px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border)}.api th{background:var(--hover);color:var(--text-2);font-weight:500}.api tr:last-child td{border:0}.api td:first-child{font-family:var(--mono)}
+.li.ent{animation:ri var(--normal) var(--ease) backwards;animation-delay:calc(var(--i,0)*40ms)}@keyframes ri{from{opacity:0;transform:translateY(8px)}}
+.dot{transition:width var(--normal),margin var(--normal),transform var(--normal)}.li:not(.unr) .dot{width:0;margin-right:-6px;transform:scale(0)}.li.unr .mt b{font-weight:600}
+.bt{gap:4px;opacity:0;pointer-events:none;transition:opacity var(--normal)}.bt.show{opacity:1;pointer-events:auto}
+.sk{display:block;border-radius:4px;background:linear-gradient(90deg,var(--n-bg) 25%,var(--hover) 50%,var(--n-bg) 75%) 0 0/200% 100%;animation:sh 1.2s linear infinite}.av.sk{border-radius:50%}@keyframes sh{to{background-position:-200% 0}}
+.stt{display:grid;place-items:center;gap:8px;padding:32px 16px;color:var(--text-2)}
+.vt{align-items:flex-start;max-height:none}.vt .mt span{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.cv{flex:none;width:120px;height:80px;border-radius:8px}
+.tst{position:fixed;left:50%;bottom:24px;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 8px 8px 16px;border-radius:8px;background:var(--text);color:var(--surface);box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transform:translate(-50%,12px);pointer-events:none;transition:opacity var(--normal),transform var(--normal) var(--ease)}.tst.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}.tst button{height:28px;padding:0 8px;border:0;border-radius:4px;background:none;color:inherit;font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.btn:disabled{color:color-mix(in srgb,var(--text) 38%,transparent);pointer-events:none}.ft .sp1{flex:1;text-align:left}
+.gr{display:grid;place-items:center;flex:none;width:20px;height:28px;margin-left:-4px;color:var(--text-2);cursor:grab;touch-action:none}.gr:hover{color:var(--text)}
+#drag{overflow:visible}#drag .li:not(.drag){transition:transform var(--normal) var(--ease),background var(--fast)}.li.drag{z-index:2;background:var(--surface);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);cursor:grabbing}.rk{font:12px var(--mono);color:var(--text-2)}
+.chv{transition:transform var(--normal) var(--ease);color:var(--text-2)}.ng.open>.li .chv{transform:rotate(90deg)}.nest>.ng+.ng{border-top:1px solid var(--border)}
+.sub{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--normal) var(--ease)}.ng.open>.sub{grid-template-rows:1fr}.sub>div{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s var(--normal)}.ng.open>.sub>div{visibility:visible;transition-delay:0s}
+.sub .li{padding-left:calc(var(--px) + 28px);border-top:1px solid var(--border)}
+h3{margin-top:40px;font-size:16px;line-height:24px;font-weight:600}h3 small{margin-left:8px;font-size:12px;font-weight:400;color:var(--text-2)}
+.stage{position:relative;margin-top:16px;padding:56px 128px;border-radius:12px;background:var(--n-bg);display:flex;justify-content:center}
+.stage .list{width:100%;max-width:440px;border-color:transparent;box-shadow:0 8px 24px rgba(0,0,0,.12)}#st2{padding:56px 24px}#st2 .list{max-width:600px}
+.stage>i{position:absolute;display:block;pointer-events:none;font-style:normal}.hl{border:1px solid var(--accent);border-radius:2px}.ln{background:var(--accent)}
+.stage>.pin{display:grid;place-items:center;border-radius:50%;background:var(--text);color:var(--surface);font:600 14px var(--font-ui)}
+.stage>.gp{display:grid;place-items:center;background:color-mix(in srgb,var(--danger) 24%,transparent);color:var(--danger);font:600 10px var(--mono)}
+#pr2 .mt>*{align-self:flex-start}.cd{padding:0 4px;border-radius:4px;background:var(--n-bg);color:var(--n-fg);font-family:var(--mono)}.api.x td:first-child{font-family:inherit;white-space:nowrap}.api.x td:last-child{white-space:nowrap}
+@media(max-width:800px){.stage{padding-inline:40px}}
+@media(max-width:800px){.shell{grid-template-columns:1fr}.side{display:none}.main{padding:24px 16px 64px}.anat,.col2{grid-template-columns:1fr}.demo{padding:16px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+[hidden]{display:none!important}
+.ds-host{width:100%}.ds-hd{display:flex;align-items:center;gap:12px;margin-bottom:12px}.ds-ti{flex:1;min-width:0;font-size:16px;font-weight:600;line-height:24px}.ds-ex{display:flex;align-items:center;gap:8px}
+.ds{--py:10px;--px:14px;--rg:12px;--cgp:24px;display:grid;font-size:14px;line-height:22px;color:var(--text)}.ds.sm{--py:6px;--px:10px;--rg:8px;--cgp:20px;font-size:12px;line-height:20px}.ds.lg{--py:14px;--px:18px;--rg:16px;--cgp:32px;font-size:16px;line-height:24px}
+.ds:not(.bd){row-gap:var(--rg);column-gap:var(--cgp)}.ds-i{display:flex;min-width:0}.ds.v .ds-i{flex-direction:column}
+.ds-l{flex:none;width:var(--lw,112px);color:var(--text-2);font-weight:500}.ds.v .ds-l{width:auto;margin-bottom:2px}.ds.la-r .ds-l{text-align:right}.ds.la-c .ds-l{text-align:center}.ds.co:not(.v) .ds-l::after,.ds.co.v .ds-l::after{content:":"}
+.ds-v{flex:1;min-width:0;display:flex;align-items:flex-start;gap:8px;margin:0}.ds-t{min-width:0;flex:0 1 auto;overflow-wrap:anywhere}.ds-t.tr{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;overflow-wrap:normal;flex:1 1 auto}.ds-t.ln{display:-webkit-box;-webkit-line-clamp:var(--ln);-webkit-box-orient:vertical;overflow:hidden;flex:1 1 auto}.ds-t:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.ds.bd{gap:1px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--border)}.ds.bd .ds-i{background:var(--surface)}.ds.bd .ds-l{padding:var(--py) var(--px);background:color-mix(in srgb,var(--text) 4%,var(--surface))}.ds.bd:not(.v) .ds-l{border-right:1px solid var(--border)}.ds.bd.v .ds-l{width:auto;margin:0;border-bottom:1px solid var(--border)}.ds.bd .ds-v{padding:var(--py) var(--px)}
+.ds-sl{display:inline-flex;align-items:center;gap:6px;vertical-align:middle}.ds-a{color:var(--accent);text-decoration:none}.ds-a:hover{text-decoration:underline}.ds-a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+.ds-cp{display:grid;place-items:center;flex:none;width:22px;height:22px;margin-top:0;padding:0;border:0;border-radius:6px;background:none;color:var(--text-2);cursor:pointer;transition:background var(--fast),color var(--fast)}.ds-cp:hover{background:var(--hover);color:var(--text)}.ds-cp:focus-visible{outline:2px solid var(--accent);outline-offset:1px}.ds-cp .i{width:14px;height:14px}.ds-cp.ok{color:var(--g-fg)}
+.ds-pg{display:inline-flex;align-items:center;gap:8px;width:100%;max-width:200px}.ds-pg i{flex:1;height:6px;border-radius:3px;background:var(--n-bg);overflow:hidden}.ds-pg b{display:block;height:100%;border-radius:3px;background:var(--accent)}.ds-pg span{font-size:12px;font-variant-numeric:tabular-nums;color:var(--text-2)}
+.ds-tip{position:fixed;z-index:50;max-width:320px;padding:6px 10px;border-radius:6px;background:var(--text);color:var(--surface);font-size:12px;line-height:18px;opacity:0;pointer-events:none;transform:translateY(2px);transition:opacity var(--fast),transform var(--fast);overflow-wrap:anywhere}.ds-tip.on{opacity:1;transform:none}
+.ds-rs{resize:horizontal;overflow:auto;min-width:240px;max-width:100%;padding:16px;border:1px dashed var(--border-control);border-radius:8px}
+.ds-ed .in{width:100%;min-width:0}.in select{flex:1;min-width:0;border:0;outline:0;background:none;color:inherit;font:inherit}.ds-gt{margin:20px 0 10px;font-size:14px;font-weight:600}
+.cr{display:flex;flex-direction:column;min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden}.cr-h{display:flex;align-items:center;gap:12px;padding:16px 16px 0}.cr-ti{flex:1;min-width:0}.cr-t{font-size:16px;font-weight:600;line-height:1.4}.cr-s{margin-top:2px;font-size:12px;color:var(--text-2)}.cr-x{display:flex;align-items:center;gap:8px}.cr-b{padding:16px}
+.ds-split{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}.ds-split .list{border-radius:12px}
+@media(max-width:800px){.ds-split{grid-template-columns:1fr}}
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.83 2.83 0 1 0-4-4L4 16v4M13.5 6.5l4 4"/></symbol>
+<symbol id="i-del" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.75l-6.17 3.25 1.18-6.87-5-4.87 6.9-1L12 3.99l3.09 6.27 6.9 1-5 4.87 1.18 6.87z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 10-10"/></symbol>
+<symbol id="i-load" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="36 20"/></symbol>
+</defs></svg>
+<header class="top"><div class="logo"><span class="mk"></span>GPUI</div><button class="btn s" id="th">切换主题</button></header>
+<div class="shell"><nav class="side" id="nav"></nav><main class="main"><div class="doc">
+<h1>Descriptions 描述列表<small style="margin-left:12px;font-size:14px;font-weight:400;color:var(--text-2)">YueDescriptions</small></h1><p class="lead">在详情页里以“名称—内容”成对展示只读信息。首版范围：单列 / 多列、标签在左 / 在上、单项跨列、按容器宽度降列；有边框 / 无边框、三档密度、标签对齐；文字与任意插槽内容；长内容自然换行，可选择截断并显示完整提示。本页先给出结构与规格，再由局部到整体，最后用“列表 + 卡片 + 描述列表”组成一个工单详情页。</p>
+
+<section id="sa" style="margin-top:48px"><h2>组件结构<small>Anatomy</small></h2><p class="lead">一个描述列表由可选的头部（标题 + 额外操作）和若干“项”组成；每一项是一对标签与内容。内容可以是文字，也可以是徽标、头像、链接、复制按钮等任意插槽。</p>
+<div class="stage" id="st1" style="padding:56px 128px"><div id="ah" style="width:100%;max-width:520px"></div></div><div class="tw"><table class="api x" id="ta"></table></div>
+<h3>尺寸规格 <small>由真实渲染测量，非手填</small></h3><div class="tw"><table class="api x" id="szd"></table></div><h3>布局与交互规则</h3><div class="tw"><table class="api x wrap" id="rld"></table></div></section>
+
+<section id="sl"><h2>布局<small>Layout</small></h2><p class="lead">列数是“最多几列”，实际列数由容器宽度决定：容器变窄时自动降列，而不是看浏览器视口。拖动虚线框右下角试试；标签位置可以在左或在上。</p>
+<div class="demo"><div class="row"><span class="cap">最多列数</span><span class="seg" id="lc"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3" class="on">3</button><button data-v="4">4</button></span><span class="cap">标签位置</span><span class="seg" id="lp"><button data-v="h" class="on">在左</button><button data-v="v">在上</button></span><span class="tag a" id="lm"></span></div><div class="ds-rs"><div id="dl"></div></div></div></section>
+
+<section id="ss"><h2>跨列与行填充<small>Span · Filled</small></h2><p class="lead">单项可以跨多列；span 超过当前列数时自动收缩；每行放不下的项自动换行，有边框时每行最后一项会补齐整行，不留空格。缩窄容器观察变化。</p>
+<div class="demo"><div class="ds-rs"><div id="dsp"></div></div></div></section>
+
+<section id="sp"><h2>外观<small>Appearance</small></h2><p class="lead">有边框 / 无边框、三档密度、标签左对齐 / 右对齐 / 居中、可选冒号与标签宽度。密度对两种外观都生效。</p>
+<div class="demo"><div class="row"><span class="seg" id="ab"><button data-v="0">无边框</button><button data-v="1" class="on">有边框</button></span><span class="seg" id="az"><button data-v="sm">紧凑</button><button data-v="" class="on">默认</button><button data-v="lg">宽松</button></span><span class="seg" id="aa"><button data-v="" class="on">标签左对齐</button><button data-v="r">右对齐</button><button data-v="c">居中</button></span><label class="opt"><input type="checkbox" class="cb" id="ac">冒号</label><label class="opt">标签宽度<input type="range" id="aw" min="80" max="180" value="112"></label></div><div id="da"></div></div></section>
+
+<section id="sc"><h2>内容与插槽<small>Content · Slots</small></h2><p class="lead">内容区不限于文字：状态徽标、头像加姓名、链接、带复制按钮的编号、标签组、进度条都可以直接放进去，对齐与行高保持一致。点击复制按钮，图标变为对勾并给出“已复制”提示。</p>
+<div class="demo"><div id="dc"></div></div></section>
+
+<section id="sw"><h2>长内容<small>Wrap · Truncate</small></h2><p class="lead">默认自然换行，连续的长编号也会在边界处断开，不会撑破布局；也可以截断为单行或两行，只有内容真的被截断时，悬停或聚焦才显示完整内容的提示。缩窄容器观察变化。</p>
+<div class="demo"><div class="ds-rs"><div id="dw"></div></div></div></section>
+
+<section id="sh"><h2>整体：工单详情<small>List + Card + Descriptions</small></h2><p class="lead">左侧列表选择工单，右侧卡片里用描述列表展示详情，切换时内容淡入。点“编辑”后，值槽里换成已有的输入框与下拉框，描述列表本身仍只负责展示。</p>
+<div class="demo"><div class="ds-split"><div class="list split hov" id="ol" role="listbox" aria-label="工单"></div><div id="dd"></div></div></div></section>
+
+<section id="sapi"><h2>API</h2><div class="tw"><table class="api" id="api7"></table></div></section>
+</div></main></div>
+<div class="ds-tip" id="tip" role="tooltip"></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],ic=n=>`<svg class="i"><use href="#i-${n}"/></svg>`;
+const T=['a','g','w','d','n'],tone=s=>T[[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%5];
+const av=s=>`<span class="av ${tone(s)}">${s[0]}</span>`;
+const tag=(t,c='')=>`<span class="tag ${c}">${t}</span>`;
+const li=o=>`<div class="li${o.c||''}" ${o.at||''}>${o.pre||''}${o.av?av(o.t):''}<div class="mt"><b>${o.dot?'<i class="dot"></i>':''}${o.t}</b>${o.d?`<span>${o.d}</span>`:''}</div>${o.ex?`<div class="ex">${o.ex}</div>`:''}${o.ac?`<div class="ac">${o.ac}</div>`:''}</div>`;
+const cd=x=>`<span class="cd">${x}</span>`,TB=(id,h,r)=>$(id).innerHTML='<tr>'+h.map(x=>`<th>${x}</th>`).join('')+'</tr>'+r.map(a=>'<tr>'+a.map(x=>`<td>${x}</td>`).join('')+'</tr>').join('');
+const ADD=(st,c,x,y,w,h,t='')=>{const e=document.createElement('i');e.className=c;e.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px`;e.textContent=t;st.appendChild(e)};
+const callouts=(st,sp)=>{st.querySelectorAll(':scope>i').forEach(e=>e.remove());const S=st.getBoundingClientRect(),rc=e=>{const r=st.querySelector(e).getBoundingClientRect();return{x:r.left-S.left,y:r.top-S.top,w:r.width,h:r.height}};
+ sp.forEach(o=>{if(o.gap){const[A,ea,B,eb]=o.gap,a=rc(A),b=rc(B),r=rc(o.row),x1=a.x+(ea=='r'?a.w:0),x2=b.x+(eb=='r'?b.w:0);return ADD(st,'gp',x1,r.y,x2-x1,r.h,Math.round(x2-x1))}
+  let{x,y,w,h}=rc(o.el);if(o.mode=='top'){y-=1;h=3}if(o.mode=='out'){x-=6;y-=6;w+=12;h+=12}ADD(st,'hl',x,y,w,h);
+  const P=(px,py)=>ADD(st,'pin',px-14,py-14,28,28,o.n),d=o.d||0,cy=y+h/2+d,px=x+(o.dx==null?w/2:o.dx);
+  if(o.side=='l'){P(22,cy);ADD(st,'ln',36,cy,x-36,1)}else if(o.side=='r'){P(S.width-22,cy);ADD(st,'ln',x+w,cy,S.width-36-x-w,1)}
+  else if(o.side=='t'){P(px,18);ADD(st,'ln',px,32,1,y-32)}else{P(px,S.height-18);ADD(st,'ln',px,y+h,1,S.height-32-y-h)}})};
+
+/* —— 提示（复制反馈 / 溢出提示共用）—— */
+const TIP=$('#tip');const showTip=(el,t)=>{TIP.textContent=t;TIP.classList.add('on');const r=el.getBoundingClientRect(),w=TIP.offsetWidth,h=TIP.offsetHeight;let x=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2)),y=r.top-h-8;if(y<8)y=r.bottom+8;TIP.style.left=x+'px';TIP.style.top=y+'px'};const hideTip=()=>TIP.classList.remove('on');
+const ov=el=>el.scrollWidth>el.clientWidth+1||el.scrollHeight>el.clientHeight+1;
+document.addEventListener('mouseover',e=>{const t=e.target.closest('.ds-t.tr,.ds-t.ln');if(t&&ov(t))showTip(t,t.textContent.trim())});document.addEventListener('mouseout',e=>{if(e.target.closest('.ds-t.tr,.ds-t.ln'))hideTip()});
+document.addEventListener('focusin',e=>{const t=e.target.closest('.ds-t.tr,.ds-t.ln');if(t&&ov(t))showTip(t,t.textContent.trim())});document.addEventListener('focusout',e=>{if(e.target.closest('.ds-t.tr,.ds-t.ln'))hideTip()});
+document.addEventListener('click',e=>{const b=e.target.closest('.ds-cp');if(!b)return;const t=b.parentNode.querySelector('.ds-t').textContent.trim();const done=()=>{b.classList.add('ok');b.innerHTML='<svg class="i"><use href="#i-check"/></svg>';showTip(b,'已复制');clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('ok');b.innerHTML='<svg class="i"><use href="#i-copy"/></svg>';hideTip()},1200)};
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(done,()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove();done()})});
+/* —— 描述列表引擎 —— */
+function DS(host,c){host.classList.add('ds-host');
+ const cls=()=>'ds'+(c.bordered?' bd':'')+(c.size?' '+c.size:'')+(c.layout=='v'?' v':'')+(c.labelAlign?' la-'+c.labelAlign:'')+(c.colon?' co':''),vis=()=>c.items.filter(x=>!x.hide);
+ const itemH=it=>`<div class="ds-i"><dt class="ds-l">${it.label}</dt><dd class="ds-v"><span class="ds-t${it.truncate?' tr':''}${it.lines?' ln':''}"${it.lines?` style="--ln:${it.lines}"`:''}>${it.value}</span>${it.copy?`<button type="button" class="ds-cp" aria-label="复制${it.label}"><svg class="i"><use href="#i-copy"/></svg></button>`:''}</dd></div>`;
+ const render=()=>{host.innerHTML=(c.title||c.extra?`<div class="ds-hd"><div class="ds-ti">${c.title||''}</div><div class="ds-ex">${c.extra||''}</div></div>`:'')+`<dl class="${cls()}" style="--lw:${c.labelWidth||112}px">${vis().map(itemH).join('')}</dl>`;lay()};
+ const lay=()=>{const dl=host.querySelector('.ds');if(!dl)return;const its=vis(),els=[...dl.children],W=dl.clientWidth,gap=c.bordered?1:(parseFloat(getComputedStyle(dl).columnGap)||0),min=c.min||220,cols=Math.max(1,Math.min(c.column||3,Math.floor((W+gap)/(min+gap))));dl.style.gridTemplateColumns=`repeat(${cols},minmax(0,1fr))`;
+  const rows=[];let row=[],cur=0;els.forEach((el,i)=>{const sp=its[i].span;let s=sp=='filled'?Math.max(1,cols-cur):Math.min(Math.max(1,sp||1),cols);if(cur+s>cols){rows.push(row);row=[];cur=0;if(sp=='filled')s=cols}row.push({el,s});cur+=s;if(cur>=cols){rows.push(row);row=[];cur=0}});if(row.length)rows.push(row);
+  rows.forEach(r=>{const sum=r.reduce((a,x)=>a+x.s,0);if(sum<cols&&c.bordered)r[r.length-1].s+=cols-sum;r.forEach(x=>x.el.style.gridColumn=`span ${x.s}`)});
+  dl.querySelectorAll('.ds-t.tr,.ds-t.ln').forEach(t=>{ov(t)?t.tabIndex=0:t.removeAttribute('tabindex')});c.onCols&&c.onCols(cols)};
+ let w0=0;const ro=window.ResizeObserver&&new ResizeObserver(()=>{const w=host.clientWidth;if(w!=w0){w0=w;lay()}});ro&&ro.observe(host);render();
+ return{c,render,lay,destroy:()=>ro&&ro.disconnect()}}
+const mkD=(el,c)=>{el._d&&el._d.destroy();el._d=DS(el,c);return el._d};
+/* —— 内容构件 —— */
+const AVI=n=>`<span class="ds-sl"><span class="av ${tone(n)}" style="width:20px;height:20px;font-size:11px">${n[0]}</span>${n}</span>`,LK=t=>`<a class="ds-a" href="#">${t}</a>`,TG={待排产:'',生产中:'a',质检中:'w',已完成:'g',已延期:'d'},PG=v=>`<span class="ds-pg"><i><b style="width:${v}%"></b></i><span>${v}%</span></span>`;
+const NOTE='客户加急：需优先安排热处理与磨加工；包装按出口标准执行，外箱唛头与批次号需与合同保持一致，发货前由质检班组长复核并留存影像记录。';
+const BASE=[{label:'工单编号',value:'WO-20261110',copy:true},{label:'状态',value:tag('进行中','a')},{label:'负责人',value:AVI('张伟')},{label:'创建时间',value:'2026-11-10'},{label:'产品型号',value:LK('6205-ZZ')},{label:'数量',value:'6,100 件'},{label:'备注',value:NOTE,span:'filled'}];
+/* —— 结构 —— */
+mkD($('#ah'),{title:'工单信息',extra:'<button type="button" class="btn t s">编辑</button>',column:2,bordered:true,labelWidth:88,items:[{label:'负责人',value:AVI('张伟')},{label:'工单编号',value:'WO-20261110',copy:true},{label:'状态',value:tag('进行中','a')},{label:'创建时间',value:'2026-11-10'},{label:'备注',value:'这条内容跨两列展示，自然换行。',span:'filled'}]});
+const AN=()=>$('#st1 .ds-cp')&&callouts($('#st1'),[{n:1,el:'#ah',mode:'out',side:'b'},{n:2,el:'.ds-ti',side:'t',dx:30},{n:3,el:'.ds-ex',side:'r'},{n:4,el:'.ds-i:nth-child(3)',side:'l'},{n:5,el:'.ds-i:nth-child(1) .ds-l',side:'l'},{n:6,el:'.ds-i:nth-child(4) .ds-v',side:'r'},{n:7,el:'.ds-i:nth-child(5)',side:'l'},{n:8,el:'.ds-cp',side:'r'}]);AN();
+TB('#ta',['要素','描述','API'],[['1 容器 Descriptions','栅格容器；列数 = min(最多列数, 容器宽度能容纳的列数)',cd('column')+' '+cd('minItemWidth')],['2 标题 Title','可选，位于顶部',cd('title')],['3 额外操作 Extra','可选，标题右侧，通常放“编辑”等操作',cd('extra')],['4 项 Item','一对标签与内容；语义上是 dl 里的一组 dt / dd',cd('items')],['5 标签 Label','固定宽度，次要色；可左对齐 / 右对齐 / 居中；可带冒号',cd('labelAlign')+' '+cd('colon')],['6 内容 Value','文字或任意插槽；默认自然换行',cd('value')],['7 跨列项 Span','占多列；有边框时每行末项补齐整行',cd('span')],['8 插槽 Slot','徽标、头像、链接、复制按钮等；与文字基线对齐',cd('copyable')]]);
+const measD=()=>{const m=document.createElement('div');m.style.cssText='position:absolute;left:-9999px;top:0;width:640px';document.body.appendChild(m);const R=['sm','','lg'].map(z=>{const a=document.createElement('div'),b=document.createElement('div');m.append(a,b);const it=[{label:'名称',value:'内容'},{label:'名称',value:'内容'}];DS(a,{items:it,column:2,bordered:true,size:z});DS(b,{items:it,column:2,size:z});const q=s=>a.querySelector(s),v=getComputedStyle(q('.ds-v')),n=getComputedStyle(b.querySelector('.ds'));return[q('.ds-i').offsetHeight+'px',v.paddingLeft+' / '+v.paddingTop,n.rowGap+' / '+n.columnGap,getComputedStyle(q('.ds-l')).width,n.fontSize+' / '+n.lineHeight]});m.remove();return R};
+const MD=measD();TB('#szd',['规格','sm','md（默认）','lg'],['项高度（有边框）','单元格内边距 横 / 纵（有边框）','行间距 / 列间距（无边框）','标签宽度（默认）','字号 / 行高'].map((n,i)=>[n,MD[0][i],MD[1][i],MD[2][i]]));
+TB('#rld',['规则','说明'],[['按容器降列','实际列数 = min(最多列数, ⌊(容器宽 + 间距) / (最小项宽 + 间距)⌋)，最小项宽默认 220px。看的是容器宽度，放在卡片或侧栏里也能正确降列；这是与按视口断点响应的实现（如 Ant Design）的主要区别'],['跨列','span 为数字或 filled；超过当前列数时自动收缩；filled 占满当前行剩余列'],['行填充','有边框时每行最后一项自动补齐整行，保证网格线完整；无边框不补'],['标签','固定宽度（默认 112px，可调）；在上布局时宽度随内容；冒号只在需要时开启'],['长内容','默认自然换行并允许在任意位置断开长编号；截断为单行或 N 行时，仅在真的被截断时聚焦与悬停显示完整提示'],['插槽','内容区顶部对齐，徽标 / 头像 / 复制按钮与文字基线协调；复制成功后图标变对勾并提示'],['无障碍','dl / dt / dd 语义；被截断的内容可聚焦并给出提示；复制按钮带 aria-label'],['边界','描述列表只负责展示；编辑时在值槽中组合已有输入框与下拉框']]);
+/* —— 布局 —— */
+const LD={items:BASE.map(x=>({...x})),column:3,layout:'h',labelWidth:96,onCols:n=>{const e=$('#lm');if(e)e.textContent=`当前容器 ${n} 列`}},dl=mkD($('#dl'),LD);
+$('#lc').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#lc button').forEach(x=>x.classList.toggle('on',x==b));LD.column=+b.dataset.v;dl.render()};
+$('#lp').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#lp button').forEach(x=>x.classList.toggle('on',x==b));LD.layout=b.dataset.v;dl.render()};
+/* —— 跨列 —— */
+mkD($('#dsp'),{bordered:true,column:3,labelWidth:96,items:[{label:'A',value:'占 1 列'},{label:'B（span 2）',value:'占 2 列',span:2},{label:'C',value:'占 1 列'},{label:'D（filled）',value:'占满当前行剩余的列',span:'filled'},{label:'E（span 5）',value:'超过列数，自动收缩为整行',span:5},{label:'F',value:'末项自动补齐整行'}]});
+/* —— 外观 —— */
+const AD={items:BASE.slice(0,6).map(x=>({...x})),column:3,bordered:true,labelWidth:112},da=mkD($('#da'),AD);
+const seg=(id,fn)=>$(id).onclick=e=>{const b=e.target.closest('button');if(!b)return;$$(id+' button').forEach(x=>x.classList.toggle('on',x==b));fn(b.dataset.v);da.render()};
+seg('#ab',v=>AD.bordered=v=='1');seg('#az',v=>AD.size=v);seg('#aa',v=>AD.labelAlign=v);$('#ac').onchange=e=>{AD.colon=e.target.checked;da.render()};$('#aw').oninput=e=>{AD.labelWidth=+e.target.value;da.render()};
+/* —— 内容与插槽 —— */
+mkD($('#dc'),{column:3,labelWidth:84,items:[{label:'状态',value:tag('生产中','a')},{label:'负责人',value:AVI('李静')},{label:'客户',value:LK('远东机电')},{label:'工单编号',value:'WO-20261110',copy:true},{label:'产线',value:tag('大圈线','a')+' '+tag('小圈线','')},{label:'完成率',value:PG(68)},{label:'计划交期',value:'2026-12-02 '+tag('距今 22 天','w')},{label:'关联订单',value:LK('SO-8841')+'、'+LK('SO-8852')},{label:'检验',value:tag('已合格','g')+' 抽检 32 / 32'}]});
+/* —— 长内容 —— */
+const LONGID='WO-20261110-TRACE-BATCH-A0001-HEAT-TREAT-GRIND-PACK-EXPORT-LONGLONGLONG-0001';
+mkD($('#dw'),{column:2,bordered:true,labelWidth:110,min:260,items:[{label:'自然换行',value:NOTE},{label:'长编号',value:LONGID,copy:true},{label:'单行截断',value:NOTE,truncate:true,copy:true},{label:'两行截断',value:NOTE,lines:2},{label:'单行（不超长）',value:'6205-ZZ 深沟球轴承',truncate:true},{label:'两行（不超长）',value:'短内容不会显示提示',lines:2}]});
+/* —— 整体：工单详情 —— */
+const LN=['大圈线','小圈线'],OW=['张伟','李静','王磊','刘洋','陈曦'],OD=[['WO-24100','6205-ZZ','大圈线','张伟',6100,0,'待排产','2026-11-05','2026-12-02'],['WO-24101','6008-2RS','小圈线','李静',15200,52,'生产中','2026-11-06','2026-11-28'],['WO-24102','NU208','大圈线','王磊',14300,66,'质检中','2026-11-06','2026-11-25'],['WO-24103','6310','小圈线','刘洋',2900,49,'已延期','2026-10-28','2026-11-12'],['WO-24104','6012','大圈线','陈曦',18200,100,'已完成','2026-10-20','2026-11-08']].map(a=>({id:a[0],prod:a[1],line:a[2],owner:a[3],qty:a[4],done:a[5],status:a[6],created:a[7],due:a[8],note:NOTE}));
+let cur=0,ed=false;
+$('#ol').innerHTML=OD.map((o,i)=>li({t:o.id,d:o.prod+' · '+o.line,ex:tag(o.status,TG[o.status]),c:' cl',at:`role="option" tabindex="0" data-i="${i}" aria-selected="${i==0}"`})).join('');
+const inp=(f,v,t='text')=>`<label class="in ds-ed"><input data-f="${f}" type="${t}" value="${v}" spellcheck="false"></label>`,sel=(f,v,L)=>`<label class="in ds-ed"><select data-f="${f}">${L.map(l=>`<option${l==v?' selected':''}>${l}</option>`).join('')}</select></label>`;
+const renderD=anim=>{const o=OD[cur];$('#dd').innerHTML=`<div class="cr"><div class="cr-h"><div class="cr-ti"><div class="cr-t">${o.id}</div><div class="cr-s">${o.prod} · ${o.line}</div></div>${tag(o.status,TG[o.status])}<div class="cr-x">${ed?'<button type="button" class="btn s t" id="dx">取消</button><button type="button" class="btn s p" id="ds">保存</button>':'<button type="button" class="btn s" id="de">编辑</button>'}</div></div><div class="cr-b"><div id="d1"></div><h4 class="ds-gt">工艺信息</h4><div id="d2"></div></div></div>`;
+ mkD($('#d1'),{bordered:true,column:3,labelWidth:96,min:200,items:[{label:'工单编号',value:o.id,copy:!ed},{label:'状态',value:tag(o.status,TG[o.status])},{label:'产品型号',value:ed?inp('prod',o.prod):LK(o.prod)},{label:'产线',value:ed?sel('line',o.line,LN):tag(o.line,o.line=='大圈线'?'a':'')},{label:'负责人',value:ed?sel('owner',o.owner,OW):AVI(o.owner)},{label:'创建时间',value:o.created},{label:'计划交期',value:ed?inp('due',o.due,'date'):o.due},{label:'数量',value:ed?inp('qty',o.qty,'number'):o.qty.toLocaleString()+' 件'},{label:'完成率',value:PG(o.done)},{label:'备注',value:ed?inp('note',o.note):o.note,lines:ed?0:2,span:'filled'}]});
+ mkD($('#d2'),{layout:'v',column:3,min:160,items:[{label:'热处理',value:'840℃ 保温 40 分钟，油冷'},{label:'回火',value:'180℃，2 小时'},{label:'磨加工公差',value:'内径 24.995 – 25.000 mm'},{label:'检验标准',value:LK('GB/T 307.1')},{label:'包装方式',value:'防锈油纸 + 木箱，出口标准'}]});
+ anim&&$('#dd .cr').animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:200,easing:'cubic-bezier(.2,0,.38,.9)'})};
+renderD();
+const pickO=i=>{cur=i;ed=false;$$('#ol .li').forEach((r,k)=>r.setAttribute('aria-selected',k==i));renderD(1)};
+$('#ol').onclick=e=>{const r=e.target.closest('.li');r&&pickO(+r.dataset.i)};$('#ol').onkeydown=e=>{const r=e.target.closest('.li');if(!r)return;const i=+r.dataset.i,K=e.key;if(K=='Enter'||K==' '){e.preventDefault();pickO(i)}else if(K=='ArrowDown'||K=='ArrowUp'){e.preventDefault();const n=$$('#ol .li')[Math.max(0,Math.min(OD.length-1,i+(K=='ArrowDown'?1:-1)))];n.focus();pickO(+n.dataset.i)}};
+$('#dd').onclick=e=>{const id=e.target.id;if(id=='de'){ed=true;renderD()}else if(id=='dx'){ed=false;renderD()}else if(id=='ds'){const o=OD[cur];$$('#dd [data-f]').forEach(f=>{o[f.dataset.f]=f.type=='number'?+f.value:f.value});ed=false;$$('#ol .li')[cur].querySelector('.mt span').textContent=o.prod+' · '+o.line;renderD()}};
+/* —— API —— */
+TB('#api7',['属性','类型','默认','说明'],[['title / extra','ReactNode','—','头部标题与额外操作'],['column','number','3','最多列数；实际列数由容器宽度决定'],['minItemWidth','number','220','单项最小宽度，用于计算降列'],['layout','horizontal | vertical','horizontal','标签在左 / 在上'],['bordered','boolean','false','有边框时标签单元格带底色，每行末项补齐整行'],['size','sm | md | lg','md','对有边框与无边框都生效'],['labelAlign','left | right | center','left','标签对齐'],['labelWidth','number','112','水平布局下的标签宽度'],['colon','boolean','false','标签后加冒号'],['items[].label / value','ReactNode','—','值槽可放任意组件'],['items[].span','number | filled','1','跨列数；filled 占满当前行剩余'],['items[].truncate / lines','boolean / number','— / —','单行 / N 行截断，被截断时显示完整提示'],['items[].copyable','boolean','false','值后附复制按钮']].map(r=>[cd(r[0]),r[1],r[2],r[3]]));
+/* —— 导航 —— */
+const G=[['结构',[['sa','组件结构']]],['布局',[['sl','布局'],['ss','跨列与行填充']]],['外观与内容',[['sp','外观'],['sc','内容与插槽'],['sw','长内容']]],['整体',[['sh','工单详情'],['sapi','API']]]];let n=0;
+$('#nav').innerHTML=G.map(([g,a])=>`<b>${g}</b>`+a.map(([id,t])=>`<a href="#${id}"><i>${String(++n).padStart(2,'0')}</i>${t}</a>`).join('')).join('');
+window.ResizeObserver&&new ResizeObserver(AN).observe($('#st1'));document.fonts&&document.fonts.ready.then(()=>{AN();$$('.ds-host').forEach(h=>h._d&&h._d.lay())});
+const io=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&$$('.side a').forEach(a=>a.classList.toggle('on',a.hash=='#'+e.target.id))),{rootMargin:'-20% 0px -70% 0px'});$$('section').forEach(s=>io.observe(s));
+$('#th').onclick=()=>{const d=document.documentElement,dk=matchMedia('(prefers-color-scheme:dark)').matches;d.dataset.theme=(d.dataset.theme||(dk?'dark':'light'))=='dark'?'light':'dark'};
+</script></body></html>

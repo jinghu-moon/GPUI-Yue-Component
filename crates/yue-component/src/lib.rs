@@ -8,12 +8,14 @@ mod avatar;
 mod badge;
 mod breadcrumb;
 mod button;
+mod card;
 mod checkbox;
 mod choice_field;
 mod collapse;
 mod color_picker;
 mod control_layout;
 mod date_picker;
+mod descriptions;
 mod time_picker;
 mod dialog;
 mod divider;
@@ -31,6 +33,7 @@ mod list;
 mod loading;
 pub mod motion;
 mod popup;
+mod pagination;
 mod radio;
 mod resizable;
 mod scrollbar;
@@ -38,6 +41,7 @@ mod segmented;
 mod select;
 mod shortcut_recorder;
 mod slider;
+mod steps;
 mod swatch;
 mod switch;
 mod tabs;
@@ -85,6 +89,18 @@ pub use breadcrumb::{
     BreadcrumbSeparator, YueBreadcrumb, YueBreadcrumbItem,
 };
 pub use button::{ButtonGroup, ButtonShape, ButtonSize, ButtonVariant, IconPosition, YueButton};
+pub use card::{
+    CardCoverPlacement, CardHoverEffect, CardSize, CardVariant, YueCard, YueCardCover, YueCardFooter,
+    YueCardHeader, YueCardMeta,
+};
+pub use steps::{
+    StepsChange, StepsLabelPlacement, StepsLayout, StepsSize, StepsStatus, StepsValue, StepsVariant,
+    YueStepItem, YueSteps,
+};
+pub use pagination::{
+    PaginationChange, PaginationChangeSource, PaginationError, PaginationMode, PaginationSize,
+    PaginationSizeChangePolicy, PaginationValue, PaginationVariant, YuePagination, YuePaginationState,
+};
 pub use checkbox::{CheckboxSize, CheckboxState, YueCheckbox, YueCheckboxGroup, YueCheckboxOption};
 pub use collapse::{
     CollapseChangeRequest, CollapseChangeSource, CollapseExpandTrigger, CollapseIndicatorPosition,
@@ -100,6 +116,10 @@ pub use dialog::{
     YueDialogState,
 };
 pub use divider::{DividerAlign, DividerLayout, DividerLineStyle, YueDivider};
+pub use descriptions::{
+    DescriptionsAlign, DescriptionsLayout, DescriptionsSize, DescriptionsSpan,
+    DescriptionsTextOverflow, DescriptionsVerticalAlign, YueDescriptionItem, YueDescriptions,
+};
 pub use date_picker::{
     DateMonth, DateQuarter, DateWeek, DateYear, DatePickerChange, DatePickerChangeSource,
     DatePickerCloseReason, DatePickerCommitMode, DatePickerConstraints, DatePickerEndpoint,
@@ -186,6 +206,10 @@ pub use typography::{FontStack, TextRole, TypeStyle, load_fonts, tabular_nums};
 /// Common component types and GPUI composition traits. Import less frequently
 /// used component options explicitly from the crate root.
 pub mod prelude {
+    pub use crate::{YueDescriptionItem, YueDescriptions};
+    pub use crate::{StepsValue, YueStepItem, YueSteps};
+    pub use crate::{YueCard, YueCardCover, YueCardFooter, YueCardHeader, YueCardMeta};
+    pub use crate::{YuePagination, YuePaginationState, PaginationValue};
     pub use crate::{YueResizable, YueResizablePanel, YueResizableState, ResizableEvent};
     pub use crate::{TimePickerOptions,TimePickerValue,TimePickerSelection,TimePickerCommitMode,TimePickerConstraints,TimePickerEvent,TimePickerSteps,YueTimePicker,YueTimePickerState,YueTimePanel};
     pub use crate::{DatePickerOptions, DatePickerValue, DatePickerGranularity,

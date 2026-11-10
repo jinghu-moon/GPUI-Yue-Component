@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "revision": "7a154f98aa63def6482ab105ce4ea757f77e1ea7",
     "dirty": true,
-    "contentSha256": "2cb75485056d3b061a76fe43a54b43891307e912e12284c4bfb423cc5aa39947",
+    "contentSha256": "22b3717aae4aca44e297730fb15e46fc7445f27088014b57241482bdf0c9e8c4",
     "files": [
       [
         "packages/tokens/README.md",
@@ -41,7 +41,7 @@
       ],
       [
         "packages/tokens/src/component-tokens/_index.css",
-        "fde0b61e6bc29df32deea8b2e3435f1d56332d757f73f2bcaa4e49cca0e82ac8"
+        "ccc5ee8fa4d1d09d325425cce6b495a227b153632332c781327d4201d37504bb"
       ],
       [
         "packages/tokens/src/component-tokens/avatar.css",
@@ -68,6 +68,10 @@
         "ecad14cf1449c538974d6bc26d75f905cbf1eb9c260a1ef2547e600a5197d2fa"
       ],
       [
+        "packages/tokens/src/component-tokens/card.css",
+        "e0484a1115926726c9b1512953f2cdb250a9afcd006c6b1fa7f2f6ebc8d1c48a"
+      ],
+      [
         "packages/tokens/src/component-tokens/checkbox.css",
         "061076846dfab5145b60779a95b616308d74da74b29a9b53414a5a457e528123"
       ],
@@ -82,6 +86,10 @@
       [
         "packages/tokens/src/component-tokens/date-picker.css",
         "c95588fb0bb500d6d62410483935a6ecf60fbe3852aa9c1a9a1b36ebf12a6226"
+      ],
+      [
+        "packages/tokens/src/component-tokens/descriptions.css",
+        "ac065d14d8c32297ef83746b61636d3d9b718467db21b36c857a1ea1f750e35c"
       ],
       [
         "packages/tokens/src/component-tokens/dialog.css",
@@ -118,6 +126,10 @@
       [
         "packages/tokens/src/component-tokens/menu.css",
         "6a13c107a4cb4421332ebcb84b1d7edddb02bd619ee80751221efb64d40f0a99"
+      ],
+      [
+        "packages/tokens/src/component-tokens/pagination.css",
+        "bc31d55d9fbb7717f2134227bcec214ea49906434dd6fa810d4998d45721dab2"
       ],
       [
         "packages/tokens/src/component-tokens/popover.css",
@@ -162,6 +174,10 @@
       [
         "packages/tokens/src/component-tokens/status.css",
         "25e5d9b1666f12c4d872dcbeba0af81a59322c00e11dd36af56b02a891848c42"
+      ],
+      [
+        "packages/tokens/src/component-tokens/steps.css",
+        "b2db8f1c9564a8913e0adf6058eebc6dcfe29b6db03ac7aafa4eaa3b7378f468"
       ],
       [
         "packages/tokens/src/component-tokens/swatch.css",
@@ -329,7 +345,7 @@
       ]
     ]
   },
-  "payloadSha256": "00d02378ccc65cfeb29dd2396a6623a06eb2d352f642b876519d4ac3772dc82f",
+  "payloadSha256": "d436f4ad164f2f825436726984c2d471000b89ade09929aaeed3584385541954",
   "inventory": {
     "generatedFrom": {
       "entry": "packages/tokens/src/index.css",
@@ -342,10 +358,12 @@
         "packages/tokens/src/component-tokens/breadcrumb.css",
         "packages/tokens/src/component-tokens/button.css",
         "packages/tokens/src/component-tokens/calendar.css",
+        "packages/tokens/src/component-tokens/card.css",
         "packages/tokens/src/component-tokens/checkbox.css",
         "packages/tokens/src/component-tokens/collapse.css",
         "packages/tokens/src/component-tokens/color-picker.css",
         "packages/tokens/src/component-tokens/date-picker.css",
+        "packages/tokens/src/component-tokens/descriptions.css",
         "packages/tokens/src/component-tokens/dialog.css",
         "packages/tokens/src/component-tokens/divider.css",
         "packages/tokens/src/component-tokens/empty.css",
@@ -355,6 +373,7 @@
         "packages/tokens/src/component-tokens/link.css",
         "packages/tokens/src/component-tokens/loading.css",
         "packages/tokens/src/component-tokens/menu.css",
+        "packages/tokens/src/component-tokens/pagination.css",
         "packages/tokens/src/component-tokens/popover.css",
         "packages/tokens/src/component-tokens/progress.css",
         "packages/tokens/src/component-tokens/radio.css",
@@ -366,6 +385,7 @@
         "packages/tokens/src/component-tokens/slider.css",
         "packages/tokens/src/component-tokens/spinner.css",
         "packages/tokens/src/component-tokens/status.css",
+        "packages/tokens/src/component-tokens/steps.css",
         "packages/tokens/src/component-tokens/swatch.css",
         "packages/tokens/src/component-tokens/switch.css",
         "packages/tokens/src/component-tokens/tabs.css",
@@ -398,7 +418,7 @@
         "packages/tokens/src/semantics/text.css",
         "packages/tokens/src/semantics/typography.css"
       ],
-      "catalogueGroups": 39
+      "catalogueGroups": 43
     },
     "profiles": [
       "light/azure",
@@ -407,8 +427,8 @@
       "dark/neutral"
     ],
     "counts": {
-      "tokens": 1522,
-      "declared": 1522,
+      "tokens": 1628,
+      "declared": 1628,
       "byNamespace": {
         "accent": 18,
         "action": 6,
@@ -423,6 +443,7 @@
         "breakpoint": 4,
         "button": 85,
         "calendar": 21,
+        "card": 34,
         "checkbox": 40,
         "collapse": 42,
         "color": 63,
@@ -430,6 +451,7 @@
         "control": 14,
         "cyan": 11,
         "date": 4,
+        "descriptions": 30,
         "dialog": 34,
         "disabled": 2,
         "divider": 3,
@@ -463,6 +485,7 @@
         "opacity": 6,
         "orange": 11,
         "page": 1,
+        "pagination": 8,
         "popover": 13,
         "progress": 17,
         "purple": 11,
@@ -485,6 +508,7 @@
         "space": 10,
         "spinner": 11,
         "status": 5,
+        "steps": 34,
         "stone": 15,
         "success": 5,
         "surface": 10,
@@ -507,13 +531,13 @@
         "yellow": 11
       },
       "byLayer": {
-        "components": 1066,
+        "components": 1172,
         "primitives": 331,
         "semantics": 125
       },
-      "publicOverride": 1066,
+      "publicOverride": 1172,
       "internal": 0,
-      "unreferenced": 936
+      "unreferenced": 1042
     },
     "oldTokenNames": [
       "--accent-100",
@@ -806,6 +830,40 @@
       "--calendar-selected-background",
       "--calendar-selected-color",
       "--calendar-today-color",
+      "--card-action-min-width",
+      "--card-background",
+      "--card-background-filled",
+      "--card-background-selected",
+      "--card-body-color",
+      "--card-body-font-size-lg",
+      "--card-body-font-size-md",
+      "--card-body-font-size-sm",
+      "--card-border-color",
+      "--card-border-color-hover",
+      "--card-border-color-selected",
+      "--card-border-width",
+      "--card-cover-side-min-height",
+      "--card-cover-side-ratio",
+      "--card-description-color",
+      "--card-description-font-size-lg",
+      "--card-description-font-size-md",
+      "--card-description-font-size-sm",
+      "--card-divider-color",
+      "--card-gap-lg",
+      "--card-gap-md",
+      "--card-gap-sm",
+      "--card-offset-hover",
+      "--card-padding-lg",
+      "--card-padding-md",
+      "--card-padding-sm",
+      "--card-radius",
+      "--card-shadow",
+      "--card-shadow-hover",
+      "--card-title-color",
+      "--card-title-font-size-lg",
+      "--card-title-font-size-md",
+      "--card-title-font-size-sm",
+      "--card-title-weight",
       "--checkbox-accent-color",
       "--checkbox-background",
       "--checkbox-background-checked",
@@ -982,6 +1040,36 @@
       "--date-picker-popup-gap",
       "--date-picker-tags-gap",
       "--date-picker-window-margin",
+      "--descriptions-border-color",
+      "--descriptions-border-width",
+      "--descriptions-color",
+      "--descriptions-column-gap-lg",
+      "--descriptions-column-gap-md",
+      "--descriptions-column-gap-sm",
+      "--descriptions-content-gap",
+      "--descriptions-font-size-lg",
+      "--descriptions-font-size-md",
+      "--descriptions-font-size-sm",
+      "--descriptions-header-gap",
+      "--descriptions-header-margin-bottom",
+      "--descriptions-item-min-width",
+      "--descriptions-label-color",
+      "--descriptions-label-value-gap",
+      "--descriptions-label-width",
+      "--descriptions-line-height-lg",
+      "--descriptions-line-height-md",
+      "--descriptions-line-height-sm",
+      "--descriptions-padding-x-lg",
+      "--descriptions-padding-x-md",
+      "--descriptions-padding-x-sm",
+      "--descriptions-padding-y-lg",
+      "--descriptions-padding-y-md",
+      "--descriptions-padding-y-sm",
+      "--descriptions-radius",
+      "--descriptions-row-gap-lg",
+      "--descriptions-row-gap-md",
+      "--descriptions-row-gap-sm",
+      "--descriptions-value-min-width",
       "--dialog-action-background",
       "--dialog-action-border-color",
       "--dialog-action-border-radius",
@@ -1346,6 +1434,14 @@
       "--orange-900",
       "--orange-950",
       "--page",
+      "--pagination-color",
+      "--pagination-font-size-lg",
+      "--pagination-font-size-md",
+      "--pagination-font-size-sm",
+      "--pagination-group-gap",
+      "--pagination-item-gap",
+      "--pagination-jumper-width",
+      "--pagination-selector-width",
       "--popover-background",
       "--popover-border-color",
       "--popover-border-radius",
@@ -1696,6 +1792,40 @@
       "--status-gap",
       "--status-padding-block",
       "--status-padding-inline",
+      "--steps-arrow-width",
+      "--steps-background",
+      "--steps-background-current",
+      "--steps-background-error",
+      "--steps-background-finish",
+      "--steps-border-radius",
+      "--steps-color",
+      "--steps-color-current",
+      "--steps-color-disabled",
+      "--steps-color-error",
+      "--steps-color-finish",
+      "--steps-description-color",
+      "--steps-description-font-size",
+      "--steps-description-gap",
+      "--steps-dot-size",
+      "--steps-font-size-lg",
+      "--steps-font-size-md",
+      "--steps-font-size-sm",
+      "--steps-gap",
+      "--steps-icon-size-lg",
+      "--steps-icon-size-md",
+      "--steps-icon-size-sm",
+      "--steps-indicator-size-lg",
+      "--steps-indicator-size-md",
+      "--steps-indicator-size-sm",
+      "--steps-item-gap",
+      "--steps-item-min-width",
+      "--steps-line-color",
+      "--steps-line-color-error",
+      "--steps-line-color-finish",
+      "--steps-line-width",
+      "--steps-navigation-line-width",
+      "--steps-on-current",
+      "--steps-on-finish",
       "--stone-0",
       "--stone-100",
       "--stone-1000",
@@ -2047,10 +2177,12 @@
       "packages/tokens/src/component-tokens/breadcrumb.css",
       "packages/tokens/src/component-tokens/button.css",
       "packages/tokens/src/component-tokens/calendar.css",
+      "packages/tokens/src/component-tokens/card.css",
       "packages/tokens/src/component-tokens/checkbox.css",
       "packages/tokens/src/component-tokens/collapse.css",
       "packages/tokens/src/component-tokens/color-picker.css",
       "packages/tokens/src/component-tokens/date-picker.css",
+      "packages/tokens/src/component-tokens/descriptions.css",
       "packages/tokens/src/component-tokens/dialog.css",
       "packages/tokens/src/component-tokens/divider.css",
       "packages/tokens/src/component-tokens/empty.css",
@@ -2060,6 +2192,7 @@
       "packages/tokens/src/component-tokens/link.css",
       "packages/tokens/src/component-tokens/loading.css",
       "packages/tokens/src/component-tokens/menu.css",
+      "packages/tokens/src/component-tokens/pagination.css",
       "packages/tokens/src/component-tokens/popover.css",
       "packages/tokens/src/component-tokens/progress.css",
       "packages/tokens/src/component-tokens/radio.css",
@@ -2071,6 +2204,7 @@
       "packages/tokens/src/component-tokens/slider.css",
       "packages/tokens/src/component-tokens/spinner.css",
       "packages/tokens/src/component-tokens/status.css",
+      "packages/tokens/src/component-tokens/steps.css",
       "packages/tokens/src/component-tokens/swatch.css",
       "packages/tokens/src/component-tokens/switch.css",
       "packages/tokens/src/component-tokens/tabs.css",
@@ -2325,8 +2459,10 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/calendar.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/spinner.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/swatch.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/tabs.css",
@@ -2389,6 +2525,7 @@
           "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/select.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/component-tokens/tree.css",
@@ -2414,6 +2551,7 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/select.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/semantics/interaction.css"
@@ -2438,6 +2576,7 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/text.css",
@@ -3808,6 +3947,7 @@
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/divider.css",
           "packages/tokens/src/component-tokens/input.css",
@@ -3846,6 +3986,7 @@
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/spinner.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/semantics/interaction.css"
         ],
@@ -3917,6 +4058,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/input.css",
@@ -3946,11 +4088,14 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/resizable.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/tree.css",
@@ -3976,6 +4121,7 @@
         "publicOverride": "semantics",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/divider.css",
           "packages/tokens/src/semantics/surface.css"
         ],
@@ -5017,6 +5163,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/prototype/box.css"
         ],
         "resolved": {
@@ -5036,6 +5183,7 @@
         "reachableFromEntry": true,
         "publicOverride": "public",
         "consumers": [
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/prototype/box.css"
         ],
         "resolved": {
@@ -7540,6 +7688,584 @@
           "dark/azure": "#60a0f5",
           "light/neutral": "#1f1f1f",
           "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--card-action-min-width",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "64px",
+          "dark/azure": "64px",
+          "light/neutral": "64px",
+          "dark/neutral": "64px"
+        }
+      },
+      {
+        "name": "--card-background",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#181818",
+          "light/neutral": "#fff",
+          "dark/neutral": "#181818"
+        }
+      },
+      {
+        "name": "--card-background-filled",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fafafa",
+          "dark/azure": "#1f1f1f",
+          "light/neutral": "#fafafa",
+          "dark/neutral": "#1f1f1f"
+        }
+      },
+      {
+        "name": "--card-background-selected",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e6f0ff",
+          "dark/azure": "#0f2644",
+          "light/neutral": "#eee",
+          "dark/neutral": "#333"
+        }
+      },
+      {
+        "name": "--card-body-color",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--card-body-font-size-lg",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--card-body-font-size-md",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--card-body-font-size-sm",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--card-border-color",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--card-border-color-hover",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#737373",
+          "dark/azure": "#7a7a7a",
+          "light/neutral": "#737373",
+          "dark/neutral": "#7a7a7a"
+        }
+      },
+      {
+        "name": "--card-border-color-selected",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--card-border-width",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "1px",
+          "dark/azure": "1px",
+          "light/neutral": "1px",
+          "dark/neutral": "1px"
+        }
+      },
+      {
+        "name": "--card-cover-side-min-height",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(24px * 5)",
+          "dark/azure": "calc(24px * 5)",
+          "light/neutral": "calc(24px * 5)",
+          "dark/neutral": "calc(24px * 5)"
+        }
+      },
+      {
+        "name": "--card-cover-side-ratio",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "0.375",
+          "dark/azure": "0.375",
+          "light/neutral": "0.375",
+          "dark/neutral": "0.375"
+        }
+      },
+      {
+        "name": "--card-description-color",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--card-description-font-size-lg",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--card-description-font-size-md",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--card-description-font-size-sm",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--card-divider-color",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#eee",
+          "dark/azure": "#2b2b2b",
+          "light/neutral": "#eee",
+          "dark/neutral": "#2b2b2b"
+        }
+      },
+      {
+        "name": "--card-gap-lg",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--card-gap-md",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--card-gap-sm",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--card-offset-hover",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--card-padding-lg",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--card-padding-md",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--card-padding-sm",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--card-radius",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(8px*1.5)",
+          "dark/azure": "calc(8px*1.5)",
+          "light/neutral": "calc(8px*1.5)",
+          "dark/neutral": "calc(8px*1.5)"
+        }
+      },
+      {
+        "name": "--card-shadow",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)",
+          "dark/azure": "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)",
+          "light/neutral": "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)",
+          "dark/neutral": "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)"
+        }
+      },
+      {
+        "name": "--card-shadow-hover",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "0 12px 36px rgb(0 0 0/.16)",
+          "dark/azure": "0 12px 36px rgb(0 0 0/.38)",
+          "light/neutral": "0 12px 36px rgb(0 0 0/.16)",
+          "dark/neutral": "0 12px 36px rgb(0 0 0/.38)"
+        }
+      },
+      {
+        "name": "--card-title-color",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--card-title-font-size-lg",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--card-title-font-size-md",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--card-title-font-size-sm",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--card-title-weight",
+        "namespace": "card",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/card.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "500",
+          "dark/azure": "500",
+          "light/neutral": "500",
+          "dark/neutral": "500"
         }
       },
       {
@@ -10101,11 +10827,13 @@
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
         "resolved": {
@@ -10129,11 +10857,13 @@
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/prototype/form.css"
         ],
@@ -10158,11 +10888,13 @@
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
         "resolved": {
@@ -10270,6 +11002,7 @@
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/segmented.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
         "resolved": {
@@ -10292,6 +11025,7 @@
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/segmented.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
         "resolved": {
@@ -10314,6 +11048,7 @@
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/segmented.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css"
         ],
         "resolved": {
@@ -10648,6 +11383,516 @@
           "dark/azure": "8px",
           "light/neutral": "8px",
           "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-border-color",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--descriptions-border-width",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "1px",
+          "dark/azure": "1px",
+          "light/neutral": "1px",
+          "dark/neutral": "1px"
+        }
+      },
+      {
+        "name": "--descriptions-color",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--descriptions-column-gap-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--descriptions-column-gap-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--descriptions-column-gap-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(4px * 5)",
+          "dark/azure": "calc(4px * 5)",
+          "light/neutral": "calc(4px * 5)",
+          "dark/neutral": "calc(4px * 5)"
+        }
+      },
+      {
+        "name": "--descriptions-content-gap",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-font-size-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--descriptions-font-size-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--descriptions-font-size-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--descriptions-header-gap",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--descriptions-header-margin-bottom",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--descriptions-item-min-width",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(4px * 55)",
+          "dark/azure": "calc(4px * 55)",
+          "light/neutral": "calc(4px * 55)",
+          "dark/neutral": "calc(4px * 55)"
+        }
+      },
+      {
+        "name": "--descriptions-label-color",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--descriptions-label-value-gap",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-label-width",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(16px * 7)",
+          "dark/azure": "calc(16px * 7)",
+          "light/neutral": "calc(16px * 7)",
+          "dark/neutral": "calc(16px * 7)"
+        }
+      },
+      {
+        "name": "--descriptions-line-height-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--descriptions-line-height-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--descriptions-line-height-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--descriptions-padding-x-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(4px * 5)",
+          "dark/azure": "calc(4px * 5)",
+          "light/neutral": "calc(4px * 5)",
+          "dark/neutral": "calc(4px * 5)"
+        }
+      },
+      {
+        "name": "--descriptions-padding-x-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--descriptions-padding-x-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--descriptions-padding-y-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--descriptions-padding-y-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--descriptions-padding-y-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-radius",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-row-gap-lg",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--descriptions-row-gap-md",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--descriptions-row-gap-sm",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--descriptions-value-min-width",
+        "namespace": "descriptions",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/descriptions.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(16px * 4)",
+          "dark/azure": "calc(16px * 4)",
+          "light/neutral": "calc(16px * 4)",
+          "dark/neutral": "calc(16px * 4)"
         }
       },
       {
@@ -12230,6 +13475,7 @@
         "publicOverride": "semantics",
         "consumers": [
           "packages/tokens/src/component-tokens/input.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/prototype/form.css"
         ],
         "resolved": {
@@ -12249,6 +13495,7 @@
         "reachableFromEntry": true,
         "publicOverride": "semantics",
         "consumers": [
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/prototype/status.css"
         ],
@@ -12292,6 +13539,7 @@
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/link.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/prototype/status.css",
           "packages/vue/src/components/tag/style.css"
@@ -12529,7 +13777,9 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/link.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/primitives/control.css",
           "packages/tokens/src/semantics/typography.css"
         ],
@@ -12553,8 +13803,10 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css",
           "packages/tokens/src/semantics/typography.css"
@@ -12580,8 +13832,11 @@
           "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/link.css",
+          "packages/tokens/src/component-tokens/pagination.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/primitives/control.css",
           "packages/tokens/src/prototype/form.css",
           "packages/tokens/src/prototype/misc.css",
@@ -12607,6 +13862,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/semantics/typography.css"
         ],
         "resolved": {
@@ -17058,6 +18314,7 @@
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/semantics/accent.css",
@@ -17468,6 +18725,142 @@
           "dark/azure": "#121212",
           "light/neutral": "#f5f5f5",
           "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--pagination-color",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--pagination-font-size-lg",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--pagination-font-size-md",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--pagination-font-size-sm",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--pagination-group-gap",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--pagination-item-gap",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--pagination-jumper-width",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "64px",
+          "dark/azure": "64px",
+          "light/neutral": "64px",
+          "dark/neutral": "64px"
+        }
+      },
+      {
+        "name": "--pagination-selector-width",
+        "namespace": "pagination",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/pagination.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(16px * 7)",
+          "dark/azure": "calc(16px * 7)",
+          "light/neutral": "calc(16px * 7)",
+          "dark/neutral": "calc(16px * 7)"
         }
       },
       {
@@ -19365,6 +20758,7 @@
         "publicOverride": "primitives",
         "consumers": [
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/color-picker.css"
         ],
         "resolved": {
@@ -19390,6 +20784,7 @@
           "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/image-preview.css",
           "packages/tokens/src/component-tokens/segmented.css",
@@ -19445,6 +20840,7 @@
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/skeleton.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/swatch.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/tabs.css",
@@ -21345,6 +22741,7 @@
         "publicOverride": "semantics",
         "consumers": [
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/semantics/surface.css"
         ],
@@ -21576,10 +22973,12 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/checkbox.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/icon.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/spinner.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css"
@@ -21604,8 +23003,10 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/icon.css",
           "packages/tokens/src/component-tokens/input.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/switch.css"
         ],
         "resolved": {
@@ -21650,6 +23051,7 @@
           "packages/tokens/src/component-tokens/avatar.css",
           "packages/tokens/src/component-tokens/calendar.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/primitives/control.css"
@@ -23203,12 +24605,16 @@
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/calendar.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/divider.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/status.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/time-picker.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/primitives/control.css"
@@ -23232,10 +24638,14 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
+          "packages/tokens/src/component-tokens/pagination.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/component-tokens/tree.css",
           "packages/tokens/src/primitives/control.css"
@@ -23259,6 +24669,7 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/calendar.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/toast.css",
@@ -23284,9 +24695,12 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/box.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/checkbox.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/toast.css",
           "packages/tokens/src/component-tokens/tooltip.css",
           "packages/tokens/src/component-tokens/tree.css"
@@ -23308,6 +24722,7 @@
         "reachableFromEntry": true,
         "publicOverride": "primitives",
         "consumers": [
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/empty.css"
         ],
         "resolved": {
@@ -23333,15 +24748,18 @@
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/date-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/link.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/select.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/time-picker.css",
@@ -23389,7 +24807,9 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/badge.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/empty.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/component-tokens/slider.css"
         ],
         "resolved": {
@@ -23414,9 +24834,11 @@
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
           "packages/tokens/src/component-tokens/date-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
@@ -23425,6 +24847,7 @@
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/slider.css",
           "packages/tokens/src/component-tokens/status.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/textarea.css",
           "packages/tokens/src/component-tokens/time-picker.css",
@@ -23731,6 +25154,584 @@
           "dark/azure": "12px",
           "light/neutral": "12px",
           "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--steps-arrow-width",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--steps-background",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#eee",
+          "dark/azure": "#2b2b2b",
+          "light/neutral": "#eee",
+          "dark/neutral": "#2b2b2b"
+        }
+      },
+      {
+        "name": "--steps-background-current",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--steps-background-error",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#ffecea",
+          "dark/azure": "#391512",
+          "light/neutral": "#ffecea",
+          "dark/neutral": "#391512"
+        }
+      },
+      {
+        "name": "--steps-background-finish",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e6f0ff",
+          "dark/azure": "#0f2644",
+          "light/neutral": "#eee",
+          "dark/neutral": "#333"
+        }
+      },
+      {
+        "name": "--steps-border-radius",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(8px/2)",
+          "dark/azure": "calc(8px/2)",
+          "light/neutral": "calc(8px/2)",
+          "dark/neutral": "calc(8px/2)"
+        }
+      },
+      {
+        "name": "--steps-color",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--steps-color-current",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#1f1f1f",
+          "dark/azure": "#f5f5f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--steps-color-disabled",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/azure": "#707070",
+          "light/neutral": "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)",
+          "dark/neutral": "#707070"
+        }
+      },
+      {
+        "name": "--steps-color-error",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#6d342f",
+          "dark/azure": "#fee8e6",
+          "light/neutral": "#6d342f",
+          "dark/neutral": "#fee8e6"
+        }
+      },
+      {
+        "name": "--steps-color-finish",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#93c1ff",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--steps-description-color",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#525252",
+          "dark/azure": "#b8b8b8",
+          "light/neutral": "#525252",
+          "dark/neutral": "#b8b8b8"
+        }
+      },
+      {
+        "name": "--steps-description-font-size",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--steps-description-gap",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "4px",
+          "dark/azure": "4px",
+          "light/neutral": "4px",
+          "dark/neutral": "4px"
+        }
+      },
+      {
+        "name": "--steps-dot-size",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--steps-font-size-lg",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--steps-font-size-md",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "14px",
+          "dark/azure": "14px",
+          "light/neutral": "14px",
+          "dark/neutral": "14px"
+        }
+      },
+      {
+        "name": "--steps-font-size-sm",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "12px",
+          "dark/azure": "12px",
+          "light/neutral": "12px",
+          "dark/neutral": "12px"
+        }
+      },
+      {
+        "name": "--steps-gap",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "8px",
+          "dark/azure": "8px",
+          "light/neutral": "8px",
+          "dark/neutral": "8px"
+        }
+      },
+      {
+        "name": "--steps-icon-size-lg",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--steps-icon-size-md",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--steps-icon-size-sm",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "16px",
+          "dark/azure": "16px",
+          "light/neutral": "16px",
+          "dark/neutral": "16px"
+        }
+      },
+      {
+        "name": "--steps-indicator-size-lg",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "32px",
+          "dark/azure": "32px",
+          "light/neutral": "32px",
+          "dark/neutral": "32px"
+        }
+      },
+      {
+        "name": "--steps-indicator-size-md",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--steps-indicator-size-sm",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "20px",
+          "dark/azure": "20px",
+          "light/neutral": "20px",
+          "dark/neutral": "20px"
+        }
+      },
+      {
+        "name": "--steps-item-gap",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "24px",
+          "dark/azure": "24px",
+          "light/neutral": "24px",
+          "dark/neutral": "24px"
+        }
+      },
+      {
+        "name": "--steps-item-min-width",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "calc(16px * 10)",
+          "dark/azure": "calc(16px * 10)",
+          "light/neutral": "calc(16px * 10)",
+          "dark/neutral": "calc(16px * 10)"
+        }
+      },
+      {
+        "name": "--steps-line-color",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#e0e0e0",
+          "dark/azure": "#383838",
+          "light/neutral": "#e0e0e0",
+          "dark/neutral": "#383838"
+        }
+      },
+      {
+        "name": "--steps-line-color-error",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#a14138",
+          "dark/azure": "#f5aaa3",
+          "light/neutral": "#a14138",
+          "dark/neutral": "#f5aaa3"
+        }
+      },
+      {
+        "name": "--steps-line-color-finish",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#125fb8",
+          "dark/azure": "#60a0f5",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
+        }
+      },
+      {
+        "name": "--steps-line-width",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--steps-navigation-line-width",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "2px",
+          "dark/azure": "2px",
+          "light/neutral": "2px",
+          "dark/neutral": "2px"
+        }
+      },
+      {
+        "name": "--steps-on-current",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#fff",
+          "dark/azure": "#121212",
+          "light/neutral": "#fff",
+          "dark/neutral": "#121212"
+        }
+      },
+      {
+        "name": "--steps-on-finish",
+        "namespace": "steps",
+        "declaredIn": [
+          "packages/tokens/src/component-tokens/steps.css"
+        ],
+        "layer": "components",
+        "reachableFromEntry": true,
+        "publicOverride": "public",
+        "consumers": [],
+        "resolved": {
+          "light/azure": "#0b4c97",
+          "dark/azure": "#bed9fe",
+          "light/neutral": "#1f1f1f",
+          "dark/neutral": "#f5f5f5"
         }
       },
       {
@@ -24109,6 +26110,7 @@
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/box.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
@@ -24148,6 +26150,7 @@
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/skeleton.css",
           "packages/tokens/src/component-tokens/spinner.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/prototype/button.css"
@@ -24312,6 +26315,7 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/tag.css"
         ],
@@ -27880,6 +29884,7 @@
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/time-picker.css"
         ],
@@ -27984,9 +29989,11 @@
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/button.css",
           "packages/tokens/src/component-tokens/calendar.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/checkbox.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/dialog.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/image-preview.css",
@@ -27998,6 +30005,7 @@
           "packages/tokens/src/component-tokens/scrollbar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/skeleton.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
           "packages/tokens/src/component-tokens/toast.css",
@@ -28027,17 +30035,21 @@
           "packages/tokens/src/component-tokens/badge.css",
           "packages/tokens/src/component-tokens/breadcrumb.css",
           "packages/tokens/src/component-tokens/calendar.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/collapse.css",
           "packages/tokens/src/component-tokens/color-picker.css",
+          "packages/tokens/src/component-tokens/descriptions.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/input.css",
           "packages/tokens/src/component-tokens/loading.css",
+          "packages/tokens/src/component-tokens/pagination.css",
           "packages/tokens/src/component-tokens/progress.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/resizable.css",
           "packages/tokens/src/component-tokens/scrollbar.css",
           "packages/tokens/src/component-tokens/segmented.css",
           "packages/tokens/src/component-tokens/slider.css",
+          "packages/tokens/src/component-tokens/steps.css",
           "packages/tokens/src/component-tokens/switch.css",
           "packages/tokens/src/component-tokens/tabs.css",
           "packages/tokens/src/component-tokens/tag.css",
@@ -29616,6 +31628,7 @@
         "consumers": [
           "apps/docs/.vitepress/theme/custom.css",
           "packages/tokens/src/component-tokens/button.css",
+          "packages/tokens/src/component-tokens/card.css",
           "packages/tokens/src/component-tokens/empty.css",
           "packages/tokens/src/component-tokens/radio.css",
           "packages/tokens/src/component-tokens/segmented.css",
@@ -30879,6 +32892,96 @@
         ]
       ],
       [
+        "--card-background",
+        [
+          "#fff",
+          "#131920",
+          "#fff",
+          "#131920"
+        ]
+      ],
+      [
+        "--card-background-filled",
+        [
+          "#f7faff",
+          "#192029",
+          "#f7faff",
+          "#192029"
+        ]
+      ],
+      [
+        "--card-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#e7effa",
+          "#2b343f"
+        ]
+      ],
+      [
+        "--card-body-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--card-border-color",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--card-border-color-hover",
+        [
+          "#6a7481",
+          "#7a7a7a",
+          "#6a7481",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--card-border-color-selected",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--card-description-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--card-divider-color",
+        [
+          "#e7effa",
+          "#242c36",
+          "#e7effa",
+          "#242c36"
+        ]
+      ],
+      [
+        "--card-title-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -31191,6 +33294,33 @@
           "#0d1219",
           "#fff",
           "#0d1219"
+        ]
+      ],
+      [
+        "--descriptions-border-color",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--descriptions-color",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--descriptions-label-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -31812,6 +33942,15 @@
           "#0d1219",
           "#f0f6fd",
           "#0d1219"
+        ]
+      ],
+      [
+        "--pagination-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -32532,6 +34671,114 @@
           "#242c36",
           "#e7effa",
           "#242c36"
+        ]
+      ],
+      [
+        "--steps-background",
+        [
+          "#e7effa",
+          "#242c36",
+          "#e7effa",
+          "#242c36"
+        ]
+      ],
+      [
+        "--steps-background-current",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--steps-background-finish",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#e7effa",
+          "#2b343f"
+        ]
+      ],
+      [
+        "--steps-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-color-current",
+        [
+          "#192029",
+          "#f5f5f5",
+          "#192029",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--steps-color-disabled",
+        [
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #192029 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--steps-color-finish",
+        [
+          "#125fb8",
+          "#93c1ff",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--steps-description-color",
+        [
+          "#49535f",
+          "#b8b8b8",
+          "#49535f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-line-color",
+        [
+          "#d7e1ef",
+          "#383838",
+          "#d7e1ef",
+          "#383838"
+        ]
+      ],
+      [
+        "--steps-line-color-finish",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#192029",
+          "#f0f6fd"
+        ]
+      ],
+      [
+        "--steps-on-current",
+        [
+          "#fff",
+          "#0d1219",
+          "#fff",
+          "#0d1219"
+        ]
+      ],
+      [
+        "--steps-on-finish",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#192029",
+          "#f0f6fd"
         ]
       ],
       [
@@ -34211,6 +36458,96 @@
         ]
       ],
       [
+        "--card-background",
+        [
+          "#fff",
+          "#1c1712",
+          "#fff",
+          "#1c1712"
+        ]
+      ],
+      [
+        "--card-background-filled",
+        [
+          "#fcfaf7",
+          "#231e18",
+          "#fcfaf7",
+          "#231e18"
+        ]
+      ],
+      [
+        "--card-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#f3ede6",
+          "#38322b"
+        ]
+      ],
+      [
+        "--card-body-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--card-border-color",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--card-border-color-hover",
+        [
+          "#797269",
+          "#7a7a7a",
+          "#797269",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--card-border-color-selected",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--card-description-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--card-divider-color",
+        [
+          "#f3ede6",
+          "#302a23",
+          "#f3ede6",
+          "#302a23"
+        ]
+      ],
+      [
+        "--card-title-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -34523,6 +36860,33 @@
           "#15110d",
           "#fff",
           "#15110d"
+        ]
+      ],
+      [
+        "--descriptions-border-color",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--descriptions-color",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--descriptions-label-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
         ]
       ],
       [
@@ -35144,6 +37508,15 @@
           "#15110d",
           "#f9f4ef",
           "#15110d"
+        ]
+      ],
+      [
+        "--pagination-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
         ]
       ],
       [
@@ -35864,6 +38237,114 @@
           "#302a23",
           "#f3ede6",
           "#302a23"
+        ]
+      ],
+      [
+        "--steps-background",
+        [
+          "#f3ede6",
+          "#302a23",
+          "#f3ede6",
+          "#302a23"
+        ]
+      ],
+      [
+        "--steps-background-current",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--steps-background-finish",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#f3ede6",
+          "#38322b"
+        ]
+      ],
+      [
+        "--steps-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-color-current",
+        [
+          "#231e18",
+          "#f5f5f5",
+          "#231e18",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--steps-color-disabled",
+        [
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #231e18 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--steps-color-finish",
+        [
+          "#125fb8",
+          "#93c1ff",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--steps-description-color",
+        [
+          "#585149",
+          "#b8b8b8",
+          "#585149",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-line-color",
+        [
+          "#e6dfd6",
+          "#383838",
+          "#e6dfd6",
+          "#383838"
+        ]
+      ],
+      [
+        "--steps-line-color-finish",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#231e18",
+          "#f9f4ef"
+        ]
+      ],
+      [
+        "--steps-on-current",
+        [
+          "#fff",
+          "#15110d",
+          "#fff",
+          "#15110d"
+        ]
+      ],
+      [
+        "--steps-on-finish",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#231e18",
+          "#f9f4ef"
         ]
       ],
       [
@@ -37543,6 +40024,96 @@
         ]
       ],
       [
+        "--card-background",
+        [
+          "#fff",
+          "#181720",
+          "#fff",
+          "#181720"
+        ]
+      ],
+      [
+        "--card-background-filled",
+        [
+          "#faf9ff",
+          "#1f1e28",
+          "#faf9ff",
+          "#1f1e28"
+        ]
+      ],
+      [
+        "--card-background-selected",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#eeedf9",
+          "#33323e"
+        ]
+      ],
+      [
+        "--card-body-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--card-border-color",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--card-border-color-hover",
+        [
+          "#737181",
+          "#7a7a7a",
+          "#737181",
+          "#7a7a7a"
+        ]
+      ],
+      [
+        "--card-border-color-selected",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--card-description-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--card-divider-color",
+        [
+          "#eeedf9",
+          "#2b2a35",
+          "#eeedf9",
+          "#2b2a35"
+        ]
+      ],
+      [
+        "--card-title-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
         "--checkbox-accent-color",
         [
           "#125fb8",
@@ -37855,6 +40426,33 @@
           "#121119",
           "#fff",
           "#121119"
+        ]
+      ],
+      [
+        "--descriptions-border-color",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--descriptions-color",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--descriptions-label-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -38476,6 +41074,15 @@
           "#121119",
           "#f5f4fd",
           "#121119"
+        ]
+      ],
+      [
+        "--pagination-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
         ]
       ],
       [
@@ -39196,6 +41803,114 @@
           "#2b2a35",
           "#eeedf9",
           "#2b2a35"
+        ]
+      ],
+      [
+        "--steps-background",
+        [
+          "#eeedf9",
+          "#2b2a35",
+          "#eeedf9",
+          "#2b2a35"
+        ]
+      ],
+      [
+        "--steps-background-current",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--steps-background-finish",
+        [
+          "#e6f0ff",
+          "#0f2644",
+          "#eeedf9",
+          "#33323e"
+        ]
+      ],
+      [
+        "--steps-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-color-current",
+        [
+          "#1f1e28",
+          "#f5f5f5",
+          "#1f1e28",
+          "#f5f5f5"
+        ]
+      ],
+      [
+        "--steps-color-disabled",
+        [
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070",
+          "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)",
+          "#707070"
+        ]
+      ],
+      [
+        "--steps-color-finish",
+        [
+          "#125fb8",
+          "#93c1ff",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--steps-description-color",
+        [
+          "#53505f",
+          "#b8b8b8",
+          "#53505f",
+          "#b8b8b8"
+        ]
+      ],
+      [
+        "--steps-line-color",
+        [
+          "#e0deee",
+          "#383838",
+          "#e0deee",
+          "#383838"
+        ]
+      ],
+      [
+        "--steps-line-color-finish",
+        [
+          "#125fb8",
+          "#60a0f5",
+          "#1f1e28",
+          "#f5f4fd"
+        ]
+      ],
+      [
+        "--steps-on-current",
+        [
+          "#fff",
+          "#121119",
+          "#fff",
+          "#121119"
+        ]
+      ],
+      [
+        "--steps-on-finish",
+        [
+          "#0b4c97",
+          "#bed9fe",
+          "#1f1e28",
+          "#f5f4fd"
         ]
       ],
       [

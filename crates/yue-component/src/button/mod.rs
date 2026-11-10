@@ -12,7 +12,7 @@ use crate::YueTheme;
 
 use yue_component_icons::{Icon, IconDefinition};
 
-type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
+pub(crate) type ClickHandler = Rc<dyn Fn(&ClickEvent, &mut Window, &mut App)>;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ButtonVariant {
@@ -93,6 +93,17 @@ pub struct YueButton {
 crate::control_layout::control_layout!(YueButton);
 
 impl YueButton {
+    // Card extends pointer activation without duplicating the command or key engine.
+    pub(crate) fn card_command(&self) -> Option<ClickHandler> {
+        if self.disabled || self.loading {
+            None
+        } else {
+            self.on_click.clone()
+        }
+    }
+    pub(crate) fn card_focus(&self) -> Option<gpui_kit::FocusHandle> {
+        self.focus_handle.clone()
+    }
     /// Override the accessible command name without changing visible text.
     pub fn accessibility_label(mut self, label: impl Into<SharedString>) -> Self {
         let label = label.into();

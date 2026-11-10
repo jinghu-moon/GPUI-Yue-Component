@@ -12,6 +12,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
         ShowcasePage::Breadcrumb,
     ),
     ("button-page", "按钮 Button", ShowcasePage::Button),
+    ("card-page", "卡片 Card", ShowcasePage::Card),
     ("checkbox-page", "复选框 Checkbox", ShowcasePage::Checkbox),
     ("collapse-page", "折叠面板 Collapse", ShowcasePage::Collapse),
     (
@@ -20,6 +21,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
         ShowcasePage::ColorPicker,
     ),
     ("date-picker-page", "日期选择 DatePicker", ShowcasePage::DatePicker),
+    ("descriptions-page", "描述列表 Descriptions", ShowcasePage::Descriptions),
     ("dialog-page", "对话框 Dialog", ShowcasePage::Dialog),
     ("divider-page", "分隔线 Divider", ShowcasePage::Divider),
     ("dropdown-page", "下拉菜单 Dropdown", ShowcasePage::Dropdown),
@@ -34,6 +36,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("input-page", "输入框 Input", ShowcasePage::Input),
     ("link-page", "链接 Link", ShowcasePage::Link),
     ("list-page", "列表 List", ShowcasePage::List),
+    ("pagination-page", "分页 Pagination", ShowcasePage::Pagination),
     ("progress-page", "进度 Progress", ShowcasePage::Progress),
     ("radio-page", "单选框 Radio", ShowcasePage::Radio),
     ("resizable-page", "可调整分栏 Resizable", ShowcasePage::Resizable),
@@ -48,6 +51,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("skeleton-page", "骨架屏 Skeleton", ShowcasePage::Skeleton),
     ("slider-page", "滑动条 Slider", ShowcasePage::Slider),
     ("spinner-page", "旋转指示器 Spinner", ShowcasePage::Spinner),
+    ("steps-page", "步骤条 Steps", ShowcasePage::Steps),
     ("switch-page", "开关 Switch", ShowcasePage::Switch),
     ("tabs-page", "标签页 Tabs", ShowcasePage::Tabs),
     ("tag-page", "标签 Tag", ShowcasePage::Tag),
@@ -425,6 +429,8 @@ mod tests {
             ("date-picker-page", ShowcasePage::DatePicker, "date-picker-content"),
             ("time-picker-page", ShowcasePage::TimePicker, "time-picker-content"),
             ("empty-page", ShowcasePage::Empty, "empty-content"),
+            ("card-page", ShowcasePage::Card, "card-content"),
+            ("pagination-page", ShowcasePage::Pagination, "pagination-content"),
             ("tooltip-page", ShowcasePage::Tooltip, "tooltip-content"),
             ("link-page", ShowcasePage::Link, "link-content"),
             ("list-page", ShowcasePage::List, "list-content"),
@@ -432,6 +438,8 @@ mod tests {
             ("select-page", ShowcasePage::Select, "select-content"),
             ("progress-page", ShowcasePage::Progress, "progress-content"),
             ("spinner-page", ShowcasePage::Spinner, "spinner-content"),
+            ("steps-page", ShowcasePage::Steps, "steps-content"),
+            ("descriptions-page", ShowcasePage::Descriptions, "descriptions-content"),
             ("skeleton-page", ShowcasePage::Skeleton, "skeleton-content"),
             ("collapse-page", ShowcasePage::Collapse, "collapse-content"),
             ("divider-page", ShowcasePage::Divider, "divider-content"),
@@ -450,7 +458,7 @@ mod tests {
             // offscreen entries through the production sidebar scroll route.
             let height = cx.update(|w, _| w.viewport_size().height);
             let target = node(cx, id).bounds().center();
-            if target.y < gpui_kit::px(0.) || target.y > height {
+            if target.y < gpui_kit::px(60.) || target.y > height - gpui_kit::px(60.) {
                 cx.simulate_event(gpui_kit::ScrollWheelEvent {
                     position: gpui_kit::point(sidebar.center().x, height / 2.),
                     delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(

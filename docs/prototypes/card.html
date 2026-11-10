@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><link rel="icon" href="data:,"><title>Card 卡片 · Yue GPUI</title>
+<style>
+
+:root {
+  color-scheme: light;
+  --font-ui: HarmonyOS, system-ui, "Microsoft YaHei", sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+  --bg: #f6f6f6; --surface: #fff; --text: #242424; --text-2: #686868;
+  --border: #dedede; --border-control: #969696; --accent: #176ac7; --on-accent: #fff;
+  --n-bg: #efefef; --n-fg: #555; --a-bg: #eaf2fd; --a-fg: #145ba6;
+  --g-bg: #e7f1e9; --g-fg: #316041; --w-bg: #fff1d9; --w-fg: #79501d;
+  --d-bg: #fbeae8; --d-fg: #943c34; --danger: #aa4037;
+  --hover: color-mix(in srgb, var(--text) 5%, transparent);
+  --pressed: color-mix(in srgb, var(--text) 9%, transparent);
+  --shadow: 0 1px 3px rgb(0 0 0 / .08), 0 3px 10px rgb(0 0 0 / .04);
+  --shadow-hover: 0 6px 18px rgb(0 0 0 / .1);
+  --fast: 100ms; --normal: 200ms; --ease: cubic-bezier(.2,0,.38,.9);
+  --card-radius: .75rem; --card-line: 1px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark; --bg: #161616; --surface: #202020; --text: #ededed; --text-2: #aaa;
+    --border: #3c3c3c; --border-control: #818181; --accent: #8bbcff; --on-accent: #10253f;
+    --n-bg: #2c2c2c; --n-fg: #c6c6c6; --a-bg: #20354e; --a-fg: #aed0ff;
+    --g-bg: #213b2a; --g-fg: #a4d4b0; --w-bg: #45341b; --w-fg: #e6c68d;
+    --d-bg: #452b28; --d-fg: #eab0aa; --danger: #eab0aa;
+    --shadow: 0 1px 3px rgb(0 0 0 / .25), 0 3px 10px rgb(0 0 0 / .12);
+    --shadow-hover: 0 6px 18px rgb(0 0 0 / .3);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark; --bg: #161616; --surface: #202020; --text: #ededed; --text-2: #aaa;
+  --border: #3c3c3c; --border-control: #818181; --accent: #8bbcff; --on-accent: #10253f;
+  --n-bg: #2c2c2c; --n-fg: #c6c6c6; --a-bg: #20354e; --a-fg: #aed0ff;
+  --g-bg: #213b2a; --g-fg: #a4d4b0; --w-bg: #45341b; --w-fg: #e6c68d;
+  --d-bg: #452b28; --d-fg: #eab0aa; --danger: #eab0aa;
+  --shadow: 0 1px 3px rgb(0 0 0 / .25), 0 3px 10px rgb(0 0 0 / .12);
+  --shadow-hover: 0 6px 18px rgb(0 0 0 / .3);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--text); font: 400 .875rem/1.5 var(--font-ui); }
+button, input, select { font: inherit; }
+button, [role="tab"], label { -webkit-tap-highlight-color: transparent; }
+button { cursor: default; }
+button:disabled, input:disabled + label { cursor: not-allowed; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; min-height: 3.5rem; padding: .5rem 1.5rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+.logo { display: flex; align-items: center; gap: .5rem; font-size: 1rem; font-weight: 600; }
+.mk { width: 1.25rem; height: 1.25rem; border-radius: .3rem; background: var(--text); }
+.shell { display: grid; grid-template-columns: 12.5rem minmax(0,1fr); }
+.side { position: sticky; top: 3.5rem; align-self: start; height: calc(100vh - 3.5rem); overflow: auto; padding: 1rem; border-right: 1px solid var(--border); }
+.side b { display: block; margin: 1.25rem .5rem .25rem; font-size: .75rem; color: var(--text-2); font-weight: 500; }
+.side b:first-child { margin-top: 0; }
+.side a { display: flex; align-items: center; gap: .5rem; min-height: 2rem; padding: .3rem .5rem; border-radius: .375rem; color: var(--text); text-decoration: none; }
+.side a i { font: .75rem var(--mono); color: var(--text-2); }
+.side a:hover { background: var(--hover); }
+.side a.on { background: var(--n-bg); font-weight: 600; }
+.main { min-width: 0; padding: 3rem 3rem 6rem; }
+.doc { max-width: 62rem; margin: auto; }
+section { margin-block: 3.5rem; scroll-margin-top: 5rem; }
+h1,h2,h3,p { margin: 0; }
+h1 { font-size: 2rem; line-height: 1.25; font-weight: 600; letter-spacing: -.035em; }
+h2 { font-size: 1.5rem; line-height: 1.4; font-weight: 600; }
+h2 small,h3 small { margin-left: .75rem; font-size: .875rem; font-weight: 400; color: var(--text-2); letter-spacing: 0; }
+h3 { margin-top: 2rem; font-size: 1rem; font-weight: 600; }
+.lead { margin-top: .5rem; color: var(--text-2); max-width: 54rem; }
+.demo { margin-top: 1rem; padding: 1.5rem; border: 1px solid var(--border); border-radius: .75rem; display: grid; gap: 1.25rem; min-width: 0; }
+.row { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1.5rem; }
+.row > .sp1,.cr-f > .sp1 { flex: 1; }
+.cap { color: var(--text-2); font-size: .75rem; }
+.status { min-height: 1.5em; color: var(--text-2); font-size: .8125rem; }
+.opt { display: inline-flex; align-items: center; gap: .5rem; }
+.opt input { accent-color: var(--accent); width: 1rem; height: 1rem; margin: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 2rem; padding: .25rem .75rem; border: 1px solid var(--border-control); border-radius: .5rem; background: var(--surface); color: var(--text); font-weight: 500; line-height: 1.4; transition: background var(--fast),border-color var(--fast); }
+.btn:hover:not(:disabled) { background: color-mix(in srgb,var(--text) 5%,var(--surface)); border-color: var(--text-2); }
+.btn:active:not(:disabled) { background: color-mix(in srgb,var(--text) 9%,var(--surface)); }
+.btn.t { background: transparent; border-color: transparent; }
+.btn.p { background: var(--text); color: var(--surface); border-color: transparent; }
+.btn.p:hover:not(:disabled) { background: color-mix(in srgb,var(--text) 86%,var(--surface)); }
+.btn.s { min-height: 1.75rem; padding: .25rem .5rem; font-size: .75rem; }
+.btn.sq { width: 1.75rem; padding: .25rem; flex: none; }
+.btn:disabled { color: var(--text-2); border-color: var(--border); background: var(--n-bg); }
+.i { display: inline-block; width: 1rem; height: 1rem; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.seg { display: inline-flex; flex-wrap: wrap; padding: .125rem; gap: .125rem; border-radius: .5rem; background: var(--n-bg); width: fit-content; }
+.seg button { min-height: 1.75rem; padding: .25rem .75rem; border: 0; border-radius: .375rem; background: transparent; color: var(--text-2); }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgb(0 0 0 / .1); }
+.tag { display: inline-flex; align-items: center; flex: none; min-height: 1.5rem; padding: .125rem .5rem; border-radius: .3rem; background: var(--n-bg); color: var(--n-fg); font-size: .75rem; white-space: nowrap; }
+.tag.a { background: var(--a-bg); color: var(--a-fg); }.tag.g { background: var(--g-bg); color: var(--g-fg); }.tag.w { background: var(--w-bg); color: var(--w-fg); }.tag.d { background: var(--d-bg); color: var(--d-fg); }
+.av { display: grid; place-items: center; flex: none; width: 2rem; height: 2rem; border-radius: 50%; font-size: .75rem; font-weight: 500; background: var(--n-bg); color: var(--n-fg); }
+.cr {
+  --cp: 1rem; --cg: .75rem; --title-size: 1rem;
+  position: relative; display: flex; flex-direction: column; min-width: 0;
+  border: var(--card-line) solid var(--border); border-radius: var(--card-radius);
+  background: var(--surface); color: var(--text); isolation: isolate;
+  transition: border-color var(--normal),box-shadow var(--normal) var(--ease),transform var(--normal) var(--ease),background var(--normal);
+}
+.cr.sm { --cp: .75rem; --cg: .5rem; --title-size: .875rem; font-size: .75rem; }
+.cr.lg { --cp: 1.5rem; --cg: 1rem; --title-size: 1.125rem; font-size: 1rem; }
+.cr.el { border-color: transparent; box-shadow: var(--shadow); }.cr.fl { border-color: transparent; background: var(--n-bg); }.cr.nb { border-color: transparent; }
+.cr-h { display: flex; align-items: flex-start; gap: var(--cg); padding: var(--cp) var(--cp) 0; min-width: 0; border-start-start-radius: inherit; border-start-end-radius: inherit; }
+.cr-ti { flex: 1; min-width: 0; }.cr-t { margin: 0; font-size: var(--title-size); font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.cr-s { margin-top: .25rem; font-size: .8125rem; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+.cr.sm .cr-s { font-size: .75rem; }.cr.lg .cr-s { font-size: .875rem; }
+.cr-truncate .cr-t,.cr-truncate .cr-s { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cr-x { display: flex; align-items: center; gap: .25rem; flex: none; margin-left: auto; max-width: 48%; flex-wrap: wrap; justify-content: flex-end; }
+.cr.hd .cr-h { padding-bottom: var(--cp); border-bottom: 1px solid var(--border); }
+.cr-b { padding: var(--cp); line-height: 1.6; min-width: 0; overflow-wrap: anywhere; }
+.cr-h + .cr-b { padding-top: var(--cg); }.cr.hd .cr-h + .cr-b { padding-top: var(--cp); }
+.cr-cv { position: relative; aspect-ratio: var(--cr,16/9); overflow: hidden; flex: none; color: #fff; }
+.cr > .cr-cv:first-of-type { border-start-start-radius: calc(var(--card-radius) - var(--card-line)); border-start-end-radius: calc(var(--card-radius) - var(--card-line)); }
+.cr-h + .cr-cv { margin-top: var(--cp); }
+.cr-cv svg { position: absolute; inset: 0; margin: auto; height: 78%; fill: rgb(255 255 255 / .13); stroke: rgb(255 255 255 / .8); stroke-width: 1.4; }
+/* Illustrative product artwork intentionally retains its own colors in both themes. */
+.cv0 { background: linear-gradient(135deg,#467fae,#254966); }.cv1 { background: linear-gradient(135deg,#648c7c,#345a4d); }.cv2 { background: linear-gradient(135deg,#ad925b,#6b5830); }.cv3 { background: linear-gradient(135deg,#a77971,#67453e); }.cv4 { background: linear-gradient(135deg,#78849b,#454f65); }
+.cr-f { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-top: auto; padding: .75rem var(--cp); border-top: 1px solid var(--border); border-end-start-radius: inherit; border-end-end-radius: inherit; min-width: 0; }
+.cr-f.no-line { border-top-color: transparent; }.cr-m { font-size: .8125rem; color: var(--text-2); }.cr-f.eq { padding: 0; gap: 0; }.cr-f.eq .btn { flex: 1; min-height: 2.5rem; border: 0; border-radius: 0; min-width: 0; }.cr-f.eq .btn + .btn { border-left: 1px solid var(--border); }.cr-f.eq .btn:first-child { border-end-start-radius: inherit; }.cr-f.eq .btn:last-child { border-end-end-radius: inherit; }
+.cr.hv:hover:not(.dis):not(.is-loading) { border-color: var(--border-control); }
+.cr.lift:hover:not(.dis):not(.is-loading) { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.cr.lift:active:not(.dis):not(.is-loading) { transform: translateY(0); box-shadow: var(--shadow); }
+.cr:has(.cr-main-action:focus-visible),.cr:has(.choice-control:focus-visible) { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cr-main-action { position: absolute; inset: 0; border: 0; border-radius: inherit; background: transparent; z-index: 0; }
+.cr-main-action:focus-visible { outline: none; }.cr-main-action:disabled { cursor: not-allowed; }
+.cr.action-card > :not(.cr-main-action):not(.load-mask),.cr.choice-card > :not(.choice-control):not(.choice-hit):not(.load-mask) { position: relative; z-index: 1; }
+.cr.dis { color: var(--text-2); background: var(--n-bg); }.cr.dis .cr-t { color: var(--text-2); }
+.cr.sl:hover:not(.dis) { border-color: var(--border-control); }.cr.sl.sel { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.choice-control { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; clip-path: inset(50%); }
+.choice-hit { position: absolute; inset: 0; border-radius: inherit; z-index: 0; }
+.cr .cr-ck { position: absolute !important; top: .5rem; right: .5rem; z-index: 3 !important; display: grid; place-items: center; width: 1.375rem; height: 1.375rem; border-radius: 50%; background: var(--accent); color: var(--on-accent); transform: scale(0); transition: transform var(--normal) var(--ease); pointer-events: none; }
+.cr-ck .i { width: .875rem; height: .875rem; stroke-width: 3; }.cr.sel .cr-ck { transform: scale(1); }.cr.sl:not(:has(.cr-cv)) .cr-h { padding-right: calc(var(--cp) + 1.75rem); }
+.cr.hz { flex-direction: row; }.cr.hz .cr-cv { width: 38%; aspect-ratio: auto; min-height: 7.5rem; border-radius: calc(var(--card-radius) - 1px) 0 0 calc(var(--card-radius) - 1px); }.cr.hz.rv { flex-direction: row-reverse; }.cr.hz.rv .cr-cv { border-radius: 0 calc(var(--card-radius) - 1px) calc(var(--card-radius) - 1px) 0; }
+.cr-col { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.cr.ov { min-height: 15rem; justify-content: flex-end; color: #fff; border-color: transparent; overflow: hidden; }.cr.ov .cr-cv { position: absolute; inset: 0; aspect-ratio: auto; border-radius: inherit; }.cr.ov .cr-sc { position: relative; padding-top: 4rem; padding-bottom: var(--cp); background: linear-gradient(transparent,rgb(0 0 0 / .8)); }.cr.ov .cr-s { color: #f0f0f0; }
+.cr-bg { padding: 1.25rem; border-radius: .625rem; background: var(--bg); min-width: 0; }
+.cr-g,.cr-g2 { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); gap: 1rem; align-items: stretch; min-width: 0; }.cr-g2.c2 { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.cr-rs { resize: horizontal; overflow: auto; min-width: min(100%,17.5rem); max-width: 100%; width: 100%; padding: .75rem; border: 1px dashed var(--border-control); border-radius: .5rem; }
+.cr-g { grid-template-columns: repeat(auto-fill,minmax(min(100%,14rem),1fr)); }
+.cr-n { font-size: 1.75rem; font-weight: 600; line-height: 1.2; margin-block: .5rem .25rem; font-variant-numeric: tabular-nums; }.cr-lb { font-size: .8125rem; color: var(--text-2); }.cr-tr { font-size: .75rem; }.cr-tr.g { color: var(--g-fg); }.cr-tr.d { color: var(--d-fg); }
+.cr-sp { display: block; width: 100%; height: 2.25rem; margin-top: .75rem; fill: none; stroke: var(--text-2); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.cr-tb { position: relative; display: flex; gap: .25rem; padding: .5rem var(--cp) 0; border-bottom: 1px solid var(--border); border-start-start-radius: inherit; border-start-end-radius: inherit; }
+.cr-tab { min-height: 2.5rem; padding: 0 .625rem; border: 0; background: transparent; color: var(--text-2); white-space: nowrap; }
+.cr-tab[aria-selected="true"] { color: var(--text); font-weight: 600; }.cr-tab:hover { background: var(--hover); }
+.cr-tab:focus-visible { outline-offset: -3px; }.cr-ind { position: absolute; bottom: -1px; height: 2px; background: var(--accent); transition: left var(--normal) var(--ease),width var(--normal) var(--ease); pointer-events: none; }.cr-pn { padding: var(--cp); min-height: 11rem; }
+.cr-hb { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; border-radius: inherit; padding-bottom: var(--cp); }.cr-hb:focus-visible { outline-offset: -4px; }.cr-chv { color: var(--text-2); transition: transform var(--normal) var(--ease); }.cr.co.open .cr-chv { transform: rotate(90deg); }
+.cr-co { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows var(--normal) var(--ease),visibility 0s var(--normal); }.cr.co.open .cr-co { grid-template-rows: 1fr; visibility: visible; transition-delay: 0s; }.cr-co > div { min-height: 0; overflow: hidden; }.cr.co .cr-b { padding-top: 0; }
+.cr.in { --cp: .75rem; border-radius: .5rem; background: var(--bg); box-shadow: none; }
+.cr-bar { display: grid; grid-template-columns: 4.5rem minmax(0,1fr) 2.75rem; gap: .5rem; align-items: center; margin-bottom: .75rem; font-size: .75rem; }.cr-bar i { height: .5rem; border-radius: .25rem; background: var(--n-bg); overflow: hidden; }.cr-bar b { display: block; height: 100%; background: var(--text-2); border-radius: inherit; }.cr-bar span:last-child { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.cr-dash { display: grid; gap: 1rem; }.cr-r2 { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr); gap: 1rem; }.cr-kpis { grid-template-columns: repeat(4,minmax(0,1fr)); }.cr-workorders { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.list { border-radius: inherit; min-width: 0; }.li { display: flex; align-items: center; gap: .75rem; padding: .75rem var(--cp,1rem); }.li + .li { border-top: 1px solid var(--border); }.mt { flex: 1; min-width: 0; }.mt b { display: block; font-size: .8125rem; font-weight: 500; overflow-wrap: anywhere; }.mt > span { display: block; margin-top: .25rem; font-size: .75rem; color: var(--text-2); }.ex { flex: none; }
+.load-mask { position: absolute !important; inset: 0; display: none; z-index: 5 !important; border-radius: inherit; overflow: hidden; pointer-events: none; background: var(--surface); }
+.cr.is-loading > :not(.load-mask) { visibility: hidden; }.cr.is-loading > .load-mask { display: block; }
+.sk { position: absolute; display: block; border-radius: .25rem; background: linear-gradient(90deg,var(--n-bg) 25%,var(--hover) 50%,var(--n-bg) 75%) 0 0/200% 100%; animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.content-enter { animation: reveal var(--normal) var(--ease) both; }@keyframes reveal { from { opacity: 0; } to { opacity: 1; } }
+.stage { position: relative; margin-top: 1rem; padding: 3.5rem 6rem; border-radius: .75rem; background: var(--bg); display: flex; justify-content: center; }
+.stage .cr { width: 100%; box-shadow: var(--shadow); }.stage > i { position: absolute; display: block; pointer-events: none; font-style: normal; }.hl { border: 1px solid var(--accent); border-radius: .125rem; }.ln { background: var(--accent); }.stage > .pin { display: grid; place-items: center; border-radius: 50%; background: var(--text); color: var(--surface); font-weight: 600; }
+.tw { margin-top: 1rem; overflow-x: auto; border: 1px solid var(--border); border-radius: .5rem; }.api { width: 100%; border-collapse: collapse; font-size: .75rem; line-height: 1.6; }.api th,.api td { padding: .625rem .75rem; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); }.api th { background: var(--bg); color: var(--text-2); font-weight: 500; white-space: nowrap; }.api tr:last-child td { border: 0; }.api td:first-child { min-width: 7rem; }.cd { padding: .125rem .25rem; border-radius: .25rem; background: var(--n-bg); font-family: var(--mono); overflow-wrap: anywhere; }
+dialog { color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .75rem; padding: 0; width: min(30rem,calc(100% - 2rem)); max-height: calc(100% - 3rem); box-shadow: var(--shadow-hover); }
+dialog::backdrop { background: rgb(0 0 0 / .35); }.dialog-h { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid var(--border); }.dialog-h h2 { font-size: 1.125rem; }.dialog-b { padding: 1.25rem; }.dialog-b dl { display: grid; grid-template-columns: 5rem 1fr; gap: .75rem; margin: 0; }.dialog-b dt { color: var(--text-2); }.dialog-b dd { margin: 0; }.dialog-f { display: flex; justify-content: flex-end; gap: .5rem; padding: .75rem 1.25rem; border-top: 1px solid var(--border); }
+.notice { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); z-index: 30; max-width: calc(100% - 2rem); padding: .75rem 1rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--surface); box-shadow: var(--shadow-hover); font-size: .8125rem; pointer-events: none; }.notice:empty { display: none; }
+.action-popover { position: fixed; inset: auto; margin: 0; min-width: 9rem; padding: .375rem; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: .5rem; box-shadow: var(--shadow-hover); }.action-popover .btn { display: flex; width: 100%; justify-content: flex-start; }
+.width-control { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .75rem; font-size: .8125rem; }.width-control input { accent-color: var(--accent); max-width: 100%; }.width-control output { min-width: 6rem; color: var(--text-2); font-variant-numeric: tabular-nums; }
+@media (max-width: 1100px) { .main { padding-inline: 2rem; }.cr-kpis { grid-template-columns: repeat(2,minmax(0,1fr)); }.cr-workorders { grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); }.cr-r2 { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .shell { grid-template-columns: 1fr; }.side { display: none; }.main { padding: 2rem 1rem 4rem; }.top { padding-inline: 1rem; }.demo { padding: 1rem; }.stage { padding-inline: 3rem; }.cr-g2.c2 { grid-template-columns: repeat(auto-fit,minmax(min(100%,14rem),1fr)); }.cr.hz { flex-direction: column; }.cr.hz .cr-cv { width: 100%; aspect-ratio: 16/9; border-radius: calc(var(--card-radius) - 1px) calc(var(--card-radius) - 1px) 0 0; }.cr.hz.rv .cr-cv { border-radius: 0 0 calc(var(--card-radius) - 1px) calc(var(--card-radius) - 1px); }.cr.hz.rv { flex-direction: column-reverse; } }
+@media (max-width: 480px) { .stage { padding: 1.5rem; }.stage > i { display: none; }h2 small { display: block; margin: .25rem 0 0; }.cr-kpis { gap: .5rem; }.cr-kpis .cr { --cp: .75rem; }.cr-n { font-size: 1.5rem; } }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }.cr.lift:hover { transform: none; } }
+@media (forced-colors: active) { .cr { border-color: CanvasText; }.cr.sel { outline: 2px solid Highlight; outline-offset: -3px; }.cr-ck { forced-color-adjust: none; background: Highlight; color: HighlightText; }.cr:has(:focus-visible) { outline-color: Highlight; }.sk { background: GrayText; opacity: .3; }.cr-ind { background: Highlight; } }
+
+</style></head><body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4l10.5-10.5a2.83 2.83 0 1 0-4-4L4 16v4M13.5 6.5l4 4"/></symbol>
+<symbol id="i-del" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.75l-6.17 3.25 1.18-6.87-5-4.87 6.9-1L12 3.99l3.09 6.27 6.9 1-5 4.87 1.18 6.87z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M21 21l-6-6"/></symbol>
+<symbol id="i-grip" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M16 3v4M8 3v4M4 11h16"/></symbol>
+<symbol id="i-chl" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol><symbol id="i-chr" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+<symbol id="i-chl2" viewBox="0 0 24 24"><path d="M11 6l-6 6 6 6M18 6l-6 6 6 6"/></symbol><symbol id="i-chr2" viewBox="0 0 24 24"><path d="M13 6l6 6-6 6M6 6l6 6-6 6"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 10-10"/></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></symbol>
+<symbol id="i-load" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-dasharray="36 20"/></symbol>
+</defs></svg>
+<header class="top"><div class="logo"><span class="mk"></span>Yue · GPUI</div><button class="btn s" id="th">切换主题</button></header>
+<div class="shell"><nav class="side" id="nav" aria-label="卡片示例目录"></nav><main class="main"><div class="doc">
+<h1>Card 卡片</h1><p class="lead">把相关信息组织为一个清晰的内容单元。头部、封面、正文与页脚按需组合，选择、加载、页签和网格复用各自的基础能力。由一个容器，到可操作的工单，再到完整生产看板。</p>
+
+<section id="sa" style="margin-top:48px"><h2>组件结构<small>Anatomy</small></h2><p class="lead">封面可置于头部前后；正文和操作按内容自然排列。任何区域都可省略，省略后不留空白。</p>
+<div class="stage" id="st1" ><div id="ah" style="width:100%;max-width:24rem"></div></div><div class="tw"><table class="api x" id="ta"></table></div>
+<h3>尺寸规格 <small>由真实渲染测量，非手填</small></h3><div class="tw"><table class="api x" id="szc"></table></div><h3>布局与交互规则</h3><div class="tw"><table class="api x wrap" id="rlc"></table></div></section>
+
+<section id="sv"><h2>变体<small>Variants</small></h2><p class="lead">默认使用描边。阴影用于需要区分层次的表面，填充和无边框配合父背景；三档尺寸一起调整内边距、字号与间距。</p>
+<div class="demo"><div class="row"><label class="opt"><input type="checkbox" class="cb" data-k="hd">头部分割线</label><label class="opt"><input type="checkbox" class="cb" data-k="lift">预览悬停上浮（可选）</label><span class="seg" id="vz"><button data-v="sm">紧凑</button><button data-v="" class="on">默认</button><button data-v="lg">宽松</button></span></div><div class="cr-bg"><div class="cr-g2 c2" id="vg"></div></div></div></section>
+
+<section id="sp"><h2>局部：头部、封面、页脚<small>Header · Cover · Footer</small></h2><p class="lead">每个区域有几种固定的写法，组合起来就能覆盖大多数卡片。</p>
+<h3>头部</h3><div class="demo"><label class="opt"><input type="checkbox" id="truncate-title">标题改为单行省略</label><div class="cr-g2 c2" id="ph"></div></div>
+<h3>封面位置</h3><div class="demo"><div class="cr-g2 c2" id="pc"></div></div>
+<h3>页脚</h3><div class="demo"><div class="cr-g2 c2" id="pf"></div></div></section>
+
+<section id="si"><h2>交互<small>Hover · Click · Select</small></h2><p class="lead">整卡操作、独立按钮与文字选择互不干扰。单选和多选使用原生控件：Tab 聚焦，Space 选择，单选组支持方向键。</p>
+<div class="demo"><div class="row"><label class="opt"><input type="checkbox" id="interactive-lift">开启整卡悬停上浮</label><label class="opt"><input type="checkbox" id="disable-choice">禁用 NU208 选择</label></div><div class="row" style="align-items:flex-start;gap:16px"><div style="flex:1;min-width:220px;display:grid;gap:6px"><span class="cap">整卡操作（Enter / Space 打开，拖选文字不打开）</span><div id="ic"></div><span class="cap" id="icm">尚未点击</span></div><div style="flex:1;min-width:220px;display:grid;gap:6px"><span class="cap">禁用</span><div id="id"></div></div></div>
+<div style="display:grid;gap:6px"><span class="cap">多选（复选卡片）</span><div class="cr-g2" id="im"></div><span class="cap" id="imm"></span></div>
+<div style="display:grid;gap:6px"><span class="cap">单选（单选卡片，方向键切换）</span><div class="cr-g2" id="is"></div><span class="cap" id="ism"></span></div></div></section>
+
+<section id="sl"><h2>加载<small>Loading · Skeleton</small></h2><p class="lead">内容节点保持挂载，骨架沿真实布局覆盖。切换加载不会重建按钮与选择状态；窄窗口下骨架跟随内容换行，加载期间内容不接受交互。</p>
+<div class="demo"><div class="row"><span class="seg" id="lz"><button data-v="0" class="on">已加载</button><button data-v="1">加载中</button></span><button class="btn s" id="lr">模拟一次加载（1.5 秒）</button></div><p class="status" id="load-status" role="status">3 张工单已加载。</p><div class="cr-g2" id="lg" aria-label="工单加载示例" aria-busy="false"></div></div></section>
+
+<section id="sc"><h2>内容形态<small>Stat · Meta · Tabs · Collapse</small></h2><p class="lead">统计、人物、页签和折叠都由内容组合完成。页签保留各自的面板，折叠区关闭时退出键盘焦点顺序。</p>
+<div class="demo"><div class="cr-g2" id="cg"></div></div></section>
+
+<section id="sg"><h2>网格<small>Grid</small></h2><p class="lead">同一网格行的卡片等高，页脚贴底；不同行保持自然高度。拖动宽度滑块或虚线框右下角，观察列数变化与长内容换行。</p>
+<div class="demo"><label class="width-control">容器宽度<input id="grid-width" type="range" min="35" max="100" value="100" aria-label="网格容器宽度"><output id="grid-size" for="grid-width"></output></label><div class="cr-rs"><div class="cr-g" id="gg"></div></div><div class="cr-g2" id="gh"></div></div></section>
+
+<section id="sh"><h2>整体：生产看板<small>Composition</small></h2><p class="lead">统计、产线、异常列表与工单选择组成一张看板。先选择工单或切换产线，再切换加载，检查位置和状态是否保持。</p>
+<div class="demo"><div class="row"><span class="seg" id="dz"><button data-v="0" class="on">已加载</button><button data-v="1">加载中</button></span></div><p class="status" id="dashboard-status" role="status">看板已加载。</p><div class="cr-dash" id="dash" aria-label="生产看板" aria-busy="false"></div></div></section>
+
+<section id="sapi"><h2>组合与复用<small>Composition contract</small></h2><p class="lead">这里记录原型的职责划分；Rust API 以正式组件设计文档为准。</p><div class="tw"><table class="api" id="api6"></table></div></section>
+</div></main></div>
+
+<dialog id="detail-dialog" aria-labelledby="detail-title">
+  <div class="dialog-h"><h2 id="detail-title">工单详情</h2><button type="button" class="btn t sq" id="close-detail" aria-label="关闭详情">×</button></div>
+  <div class="dialog-b" id="detail-body"></div>
+  <div class="dialog-f"><button type="button" class="btn" id="detail-done">关闭</button><button type="button" class="btn p" id="schedule-confirm" hidden>加入排产</button></div>
+</dialog>
+<div popover="auto" role="dialog" aria-label="卡片操作" class="action-popover" id="card-menu">
+  <button type="button" class="btn t" data-action="menu-details">查看详情</button>
+  <button type="button" class="btn t" data-action="menu-favorite">收藏卡片</button>
+</div>
+<div class="notice" id="notice" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const ic = n => `<svg class="i" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const esc = text => String(text).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const tag = (text, tone = '') => `<span class="tag ${tone}">${esc(text)}</span>`;
+const av = name => `<span class="av" aria-hidden="true">${esc(name[0])}</span>`;
+const cd = text => `<code class="cd">${esc(text)}</code>`;
+function table(id, headings, rows) {
+  $(id).innerHTML = `<thead><tr>${headings.map(h => `<th scope="col">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+const MORE = `<button type="button" class="btn t sq s" data-action="more" aria-label="更多卡片操作" aria-haspopup="dialog" aria-expanded="false">${ic('more')}</button>`;
+const hd = (title, subtitle = '', extra = '', avatar = '') => `<div class="cr-h">${avatar ? av(avatar) : ''}<div class="cr-ti"><div class="cr-t">${esc(title)}</div>${subtitle ? `<div class="cr-s">${esc(subtitle)}</div>` : ''}</div>${extra ? `<div class="cr-x">${extra}</div>` : ''}</div>`;
+const card = (inner, classes = '', attrs = '') => `<article class="cr ${classes}" ${attrs}>${inner}</article>`;
+const BRG = n => `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="14"/>${Array.from({length:8},(_,i) => { const a = i / 8 * Math.PI * 2 + n * .4; return `<circle cx="${50+27*Math.cos(a)}" cy="${50+27*Math.sin(a)}" r="4.2"/>`; }).join('')}</svg>`;
+const cover = (n, ratio = '16/9') => `<div class="cr-cv cv${n%5}" style="--cr:${ratio}" data-skeleton="cover">${BRG(n)}</div>`;
+const PROD = [
+  ['6205-ZZ','深沟球轴承','内径 25 · 外径 52 · 宽 15 mm','生产中','a','大圈线'],
+  ['6008-2RS','深沟球轴承','内径 40 · 外径 68 · 宽 15 mm','质检中','w','小圈线'],
+  ['NU208','圆柱滚子轴承','内径 40 · 外径 80 · 宽 18 mm','待排产','','大圈线'],
+  ['6310','深沟球轴承','内径 50 · 外径 110 · 宽 27 mm','已完成','g','小圈线'],
+];
+const CHECK = `<i class="cr-ck" aria-hidden="true">${ic('check')}</i>`;
+function product(i, options = {}) {
+  const p = PROD[i];
+  let lead = '', attrs = `data-product="${i}"`, classes = options.classes || '';
+  if (options.action) {
+    lead = `<button type="button" class="cr-main-action" data-action="details" aria-label="查看 ${p[0]} 工单详情"></button>`;
+    classes += ' action-card hv';
+  }
+  if (options.choice) {
+    const id = `${options.group}-${i}`;
+    lead = `<input class="choice-control" type="${options.choice}" name="${options.group}" id="${id}" aria-label="选择 ${p[0]} 工单" ${options.checked ? 'checked' : ''}><label class="choice-hit" for="${id}"><span class="sr-only">选择 ${p[0]}</span></label>${CHECK}`;
+    classes += ` sl choice-card${options.checked ? ' sel' : ''}`;
+  }
+  return card(lead + cover(i) + hd(p[0],p[1],tag(p[3],p[4])) + `<div class="cr-b">${p[2]}</div>` + (options.noFooter ? '' : `<div class="cr-f"><span class="cr-m">${p[5]}</span><span class="sp1"></span>${options.action ? `<button type="button" class="btn s" id="icb" data-action="favorite" aria-pressed="false">收藏</button>` : `<button type="button" class="btn s t" data-action="details">详情</button><button type="button" class="btn s" data-action="schedule">排产</button>`}</div>`), classes, attrs);
+}
+const LOREM = '相关内容共用一个清晰的边界。标题、正文与操作各有位置，留白和字号保持一致。';
+
+/* Anatomy and measured density. */
+$('#ah').innerHTML = card(hd('6205-ZZ 深沟球轴承','大圈线 · 今日排产',MORE,'王磊') + cover(0,'2/1') + '<div class="cr-b">内径 25 · 外径 52 · 宽 15 mm，防尘盖密封，适用于中小型电机。</div><div class="cr-f"><span class="cr-m">WO-24100</span><span class="sp1"></span><button type="button" class="btn s" data-action="details">详情</button></div>', '', 'data-product="0"');
+function anatomy() {
+  const host = $('#st1'), base = host.getBoundingClientRect();
+  host.querySelectorAll(':scope > i').forEach(e => e.remove());
+  if (innerWidth <= 480) return;
+  const items = [['.cr','b'],['.cr-h','l'],['.av','t'],['.cr-ti','t'],['.cr-x','r'],['.cr-cv','l'],['.cr-b','r'],['.cr-f','l']];
+  items.forEach(([selector, side], i) => {
+    const r = host.querySelector(selector).getBoundingClientRect();
+    const x=r.left-base.left,y=r.top-base.top,w=r.width,h=r.height;
+    const add=(cls,left,top,width,height,text='') => { const el=document.createElement('i'); el.className=cls; el.style.cssText=`left:${left}px;top:${top}px;width:${Math.max(0,width)}px;height:${Math.max(0,height)}px`; el.textContent=text; el.setAttribute('aria-hidden','true'); host.append(el); };
+    add('hl',x,y,w,h);
+    if(side==='l') { add('pin',8,y+h/2-12,24,24,i+1); add('ln',32,y+h/2,x-32,1); }
+    else if(side==='r') { add('pin',base.width-32,y+h/2-12,24,24,i+1); add('ln',x+w,y+h/2,base.width-32-x-w,1); }
+    else if(side==='t') { add('pin',x+w/2-12,10,24,24,i+1); add('ln',x+w/2,34,1,y-34); }
+    else { add('pin',x+w/2-12,base.height-34,24,24,i+1); add('ln',x+w/2,y+h,1,base.height-34-y-h); }
+  });
+}
+table('#ta',['区域','规则','组合入口'],[
+  ['1 容器','独立的相关内容；圆角控制完整表面，焦点圈留在外侧',cd('variant / size')],
+  ['2 头部','前置内容、标题区与右侧操作；可省略，可加分割线',cd('header')],
+  ['3 前置内容','复用 Avatar 或 Icon，不让 Card 再维护头像逻辑',cd('leading')],
+  ['4 标题 / 副标题','默认自然换行；显式截断时提供完整标题',cd('title / subtitle')],
+  ['5 额外操作','独立按钮、状态或菜单，不能误触发整卡操作',cd('extra')],
+  ['6 封面','贴边、独立裁剪；可设置比例和位置',cd('cover')],
+  ['7 正文','自然高度；由内容决定换行和布局',cd('body')],
+  ['8 页脚','元信息与操作；同一网格行内等高、页脚贴底',cd('footer')],
+]);
+function measureDensity() {
+  const mount=document.createElement('div'); mount.style.cssText='position:absolute;left:-10000px;width:320px;visibility:hidden'; document.body.append(mount);
+  const rows=['sm','','lg'].map(size => {
+    mount.innerHTML=card(hd('标题','副标题')+'<div class="cr-b">内容</div><div class="cr-f"><button class="btn s">按钮</button></div>',size);
+    const q=s=>mount.querySelector(s), css=s=>getComputedStyle(q(s));
+    return [css('.cr-b').paddingLeft,`${q('.cr-h').offsetHeight}px`,css('.cr-t').fontSize,`${q('.cr-f').offsetHeight}px`,css('.cr').borderRadius,css('.cr-h').columnGap];
+  }); mount.remove();
+  table('#szc',['规格','紧凑 sm','默认 md','宽松 lg'],['内边距','头部自然高度','标题字号','页脚自然高度','容器圆角','头部内部间距'].map((label,i)=>[label,...rows.map(r=>r[i])]));
+}
+table('#rlc',['规则','说明'],[
+  ['省略区域','未提供的区域不占空间；分割线由相邻区域的共同边界负责。'],
+  ['整卡操作','使用真实按钮，Enter / Space 激活；内部按钮独立。拖动选择文本不触发打开。'],
+  ['选择卡片','原生 checkbox / radio 承担选择与键盘语义，Card 只呈现边界和对勾。'],
+  ['悬停','默认只加强边界；上浮 2px 需显式开启，减少动效时取消位移。'],
+  ['加载','保留正文节点与布局，在实际内容位置绘制骨架；加载期间隐藏内容并禁止操作。'],
+  ['等高','只保证同一网格行等高；容器负责列数，卡片负责页脚贴底。'],
+  ['禁用','禁用对应操作或选择入口，保留内容可读性，不使用整体透明度。'],
+]);
+
+/* Appearance and composable parts. */
+$('#vg').innerHTML = [['描边 Outlined',''],['阴影 Elevated','el'],['填充 Filled','fl'],['无边框 Borderless','nb']].map(([label,classes]) => card(hd(label,'三档尺寸 · 相同内容',MORE)+`<div class="cr-b">${LOREM}</div>`,classes)).join('');
+$$('#sv [data-k]').forEach(input => input.addEventListener('change',()=>$$('#vg .cr').forEach(c => c.classList.toggle(input.dataset.k,input.checked))));
+$('#vz').addEventListener('click',e=>{
+  const button=e.target.closest('button'); if(!button) return;
+  $$('#vg .cr').forEach(c=>{ c.classList.remove('sm','lg'); if(button.dataset.v) c.classList.add(button.dataset.v); });
+});
+$('#ph').innerHTML = [
+  card(hd('仅标题')+'<div class="cr-b">最简单的内容容器，不制造空的封面或操作区。</div>'),
+  card(hd('标题与副标题','今日排产 · 大圈线')+'<div class="cr-b">标题负责识别对象，副标题补充上下文。</div>'),
+  card(hd('头像与独立操作','班组长 · 大圈线',MORE,'王磊')+'<div class="cr-b">更多按钮有自己的焦点与操作，不与标题争夺宽度。</div>'),
+  card(hd('6205-ZZ 热处理后表面检测与硬度抽检记录','这是一段较长的副标题，用于检查窄窗口下的换行。',tag('待复核','w'))+'<div class="cr-b">标题自然换行；状态与操作保留独立空间。</div>'),
+].join('');
+$('#pc').innerHTML = card(cover(0)+hd('封面在上','16:9 · 通栏贴边')+`<div class="cr-b">${LOREM}</div>`)
+  + card(cover(1)+`<div class="cr-col">${hd('封面在左','横向布局')}<div class="cr-b">${LOREM}</div></div>`,'hz')
+  + card(cover(2)+`<div class="cr-col">${hd('封面在右','窄窗口转为上下布局')}<div class="cr-b">${LOREM}</div></div>`,'hz rv')
+  + card(cover(3)+`<div class="cr-sc">${hd('封面作背景','遮罩提升文字对比度，背景仅作示例插画。')}</div>`,'ov');
+$('#pf').innerHTML = card(hd('操作靠右')+`<div class="cr-b">${LOREM}</div><div class="cr-f"><span class="sp1"></span><button class="btn s t" data-action="cancel">取消</button><button class="btn s" data-action="schedule">排产</button></div>`)
+  + card(hd('等分操作区')+`<div class="cr-b">等分的是布局空间，按钮仍然独立可聚焦。</div><div class="cr-f eq"><button class="btn t" data-action="favorite" aria-pressed="false">${ic('star')}收藏</button><button class="btn t" data-action="details">${ic('edit')}查看</button><button class="btn t" data-action="archive">归档</button></div>`)
+  + card(hd('元信息与操作')+`<div class="cr-b">${LOREM}</div><div class="cr-f">${av('王磊')}<span class="cr-m">王磊 · 2 小时前</span><span class="sp1"></span>${MORE}</div>`)
+  + card(hd('无分割线页脚')+`<div class="cr-b">元信息与正文属于同一内容组，不必额外画一道线。</div><div class="cr-f no-line"><span class="cr-m">阅读 1,284 · 评论 36</span><span class="sp1"></span>${tag('置顶')}</div>`);
+
+/* Real sibling controls, no nested button or link roles. */
+$('#ic').innerHTML=product(0,{action:true});
+$('#icm').setAttribute('role','status');
+$('#id').innerHTML=card('<button class="cr-main-action" disabled aria-label="已停产型号，不可排产"></button>'+hd('已停产型号','6004-2RS')+'<div class="cr-b">该型号已停产，排产操作不可用，内容仍然可读。</div>','dis action-card');
+$('#im').setAttribute('role','group'); $('#im').setAttribute('aria-label','多选工单');
+$('#im').innerHTML=[0,1,2].map(i=>product(i,{choice:'checkbox',group:'orders',noFooter:true})).join('');
+const PLAN=[['常规排产','按交期顺序排入产线','标准',''],['加急插单','插入当前班次，优先加工','+20% 工时','w'],['外协加工','交由外协厂完成热处理','需审批','']];
+$('#is').setAttribute('role','radiogroup'); $('#is').setAttribute('aria-label','排产方式');
+$('#is').innerHTML=PLAN.map((p,i)=>card(`<input class="choice-control" type="radio" name="plan" id="plan-${i}" aria-labelledby="plan-title-${i}" ${i===0?'checked':''}><label class="choice-hit" for="plan-${i}"><span class="sr-only">选择${p[0]}</span></label>${CHECK}<div class="cr-h"><div class="cr-ti"><div class="cr-t" id="plan-title-${i}">${p[0]}</div></div><div class="cr-x">${tag(p[2],p[3])}</div></div><div class="cr-b">${p[1]}</div>`,'sl choice-card'+(i===0?' sel':''))).join('');
+function syncChoices() {
+  $$('.choice-card').forEach(c=>{const input=c.querySelector('.choice-control'); c.classList.toggle('sel',input.checked); c.classList.toggle('dis',input.disabled);});
+  const selected=$$('#im input:checked').map(el=>el.closest('.cr').querySelector('.cr-t').textContent);
+  $('#imm').textContent=selected.length?`已选 ${selected.length} 项：${selected.join('、')}`:'未选择工单';
+  const radio=$('#is input:checked'); $('#ism').textContent=`当前方式：${radio?radio.closest('.cr').querySelector('.cr-t').textContent:'—'}`;
+  const count=$$('#dash input:checked').length; if($('#dsel')) $('#dsel').textContent=count?`已选 ${count} 项`:'未选择';
+}
+document.addEventListener('change',e=>{if(e.target.matches('.choice-control')) syncChoices();});
+const interactive='button,a,input,select,textarea,label,[contenteditable="true"],[role="tab"]';
+const pressOrigins=new WeakMap();
+document.addEventListener('pointerdown',e=>{
+  const c=e.target.closest('.action-card,.choice-card'); if(c&&e.button===0) pressOrigins.set(c,{x:e.clientX,y:e.clientY});
+});
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.action-card,.choice-card'); if(!c||e.target.closest(interactive)||c.classList.contains('is-loading')) return;
+  const start=pressOrigins.get(c); pressOrigins.delete(c);
+  if((start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>5)||!getSelection().isCollapsed) return;
+  const control=c.querySelector('.cr-main-action,.choice-control'); if(control&&!control.disabled) { control.focus({preventScroll:true}); control.click(); }
+});
+
+/* Retained content and measured skeletons: toggling loading never rebuilds it. */
+$('#lg').innerHTML=[0,1,2].map(i=>product(i)).join('');
+const loadingHosts=new Map();
+const contentSemantics=new WeakMap();
+function prepareLoading(host) {
+  host.querySelectorAll('.cr').forEach(c=>{
+    if(c.querySelector(':scope > .load-mask')) return;
+    const mask=document.createElement('div'); mask.className='load-mask'; mask.setAttribute('aria-hidden','true'); c.append(mask);
+  });
+  loadingHosts.set(host,false);
+}
+function paintSkeleton(c) {
+  const r=c.getBoundingClientRect(), border=parseFloat(getComputedStyle(c).borderLeftWidth)||0;
+  const mask=c.querySelector(':scope > .load-mask'); if(!mask) return;
+  const parts=c.querySelectorAll('.cr-cv,.cr-t,.cr-s,.cr-b,.cr-f .cr-m,.cr-f .btn,.cr-x .tag,.cr-lb,.cr-n,.cr-tr,.cr-sp,.li,.cr-tb');
+  mask.replaceChildren();
+  parts.forEach(part=>{
+    if(part.closest('.cr')!==c) return;
+    // The body gets one block when it has no more specific placeholder parts.
+    if(part.matches('.cr-b')&&part.querySelector('.cr-lb,.cr-n,.cr-tr,.cr-sp')) return;
+    const b=part.getBoundingClientRect(); if(!b.width||!b.height) return;
+    const css=getComputedStyle(part), block=part.matches('.cr-cv,.cr-sp,.li,.cr-tb');
+    const padX=block?0:parseFloat(css.paddingLeft)||0, padY=block?0:parseFloat(css.paddingTop)||0;
+    const width=Math.max(0,b.width-padX-(block?0:parseFloat(css.paddingRight)||0));
+    const height=block?b.height:Math.min(b.height-padY-(parseFloat(css.paddingBottom)||0),parseFloat(css.lineHeight)||16);
+    const sk=document.createElement('span'); sk.className='sk';
+    sk.style.cssText=`left:${b.left-r.left-border+padX}px;top:${b.top-r.top-border+padY}px;width:${width}px;height:${Math.max(0,height)}px;${part.matches('.cr-cv')?'border-radius:0':''}`;
+    mask.append(sk);
+  });
+}
+function setLoading(host,on) {
+  const wasLoading=loadingHosts.get(host)===true;
+  loadingHosts.set(host,on); host.setAttribute('aria-busy',String(on));
+  host.querySelectorAll('.cr').forEach(c=>{
+    if(on) { c.classList.remove('content-enter'); paintSkeleton(c); }
+    c.querySelectorAll(':scope > :not(.load-mask)').forEach(el=>{
+      if(on) {
+        if(!contentSemantics.has(el)) contentSemantics.set(el,{inert:el.inert,hidden:el.getAttribute('aria-hidden')});
+        el.inert=true;el.setAttribute('aria-hidden','true');
+      } else {
+        const previous=contentSemantics.get(el);if(!previous)return;
+        el.inert=previous.inert;
+        if(previous.hidden===null)el.removeAttribute('aria-hidden');else el.setAttribute('aria-hidden',previous.hidden);
+        contentSemantics.delete(el);
+      }
+    });
+    c.classList.toggle('is-loading',on);
+    if(wasLoading&&!on) c.classList.add('content-enter');
+    if(!on) { const mask=c.querySelector(':scope > .load-mask'); if(mask)mask.replaceChildren(); }
+  });
+}
+prepareLoading($('#lg'));
+let loadingTimer;
+function updateLoad(on,simulated=false) {
+  clearTimeout(loadingTimer); setLoading($('#lg'),on);
+  $$('#lz button').forEach(b=>{b.classList.toggle('on',b.dataset.v===String(Number(on))); b.setAttribute('aria-pressed',String(b.classList.contains('on')));});
+  $('#load-status').textContent=on?'正在加载工单，卡片位置保持不变。':'3 张工单已加载。';
+  $('#lr').textContent=simulated?'重新模拟加载（1.5 秒）':'模拟一次加载（1.5 秒）';
+  if(simulated) loadingTimer=setTimeout(()=>updateLoad(false),1500);
+}
+$('#lz').addEventListener('click',e=>{const b=e.target.closest('button');if(b)updateLoad(b.dataset.v==='1');});
+$('#lr').addEventListener('click',()=>updateLoad(true,true));
+
+/* Tabs are composed content, with persistent panels and linked semantics. */
+const BAR1=[['6205-ZZ',72],['6310',58],['NU208',41],['6012',33]];
+const BAR2=[['6008-2RS',66],['6206-ZZ',52],['6204-2RS',47],['6305',29]];
+const bars=items=>items.map(([name,value])=>`<div class="cr-bar"><span>${name}</span><i aria-hidden="true"><b style="width:${value}%"></b></i><span>${value*20}</span></div>`).join('');
+function tabs(host,items) {
+  const prefix=host.id;
+  host.innerHTML=`<div class="cr-tb" role="tablist" aria-label="产线">${items.map((x,i)=>`<button type="button" class="cr-tab" role="tab" id="${prefix}-tab-${i}" aria-controls="${prefix}-panel-${i}" data-i="${i}">${x.title}</button>`).join('')}<i class="cr-ind" aria-hidden="true"></i></div>${items.map((x,i)=>`<div class="cr-pn" role="tabpanel" id="${prefix}-panel-${i}" aria-labelledby="${prefix}-tab-${i}" tabindex="0" ${i?'hidden':''}>${x.body}</div>`).join('')}`;
+  const buttons=[...host.querySelectorAll('.cr-tab')], panels=[...host.querySelectorAll('.cr-pn')], indicator=host.querySelector('.cr-ind'); let active=0;
+  const align=()=>{const b=buttons[active]; indicator.style.left=`${b.offsetLeft}px`;indicator.style.width=`${b.offsetWidth}px`;};
+  function set(i,focus=false) { active=i; buttons.forEach((b,k)=>{b.setAttribute('aria-selected',String(k===i));b.tabIndex=k===i?0:-1;panels[k].hidden=k!==i;}); align(); if(focus)buttons[i].focus(); }
+  host.addEventListener('click',e=>{const b=e.target.closest('.cr-tab');if(b)set(Number(b.dataset.i));});
+  host.addEventListener('keydown',e=>{
+    const b=e.target.closest('.cr-tab');if(!b||e.altKey||e.ctrlKey||e.metaKey)return;
+    const i=Number(b.dataset.i);let next;
+    if(e.key==='ArrowRight')next=(i+1)%buttons.length;
+    else if(e.key==='ArrowLeft')next=(i-1+buttons.length)%buttons.length;
+    else if(e.key==='Home')next=0;else if(e.key==='End')next=buttons.length-1;
+    if(next!==undefined){e.preventDefault();set(next,true);}
+  });
+  const observer=new ResizeObserver(align);observer.observe(host);set(0);
+}
+const spark=values=>{const max=Math.max(...values),min=Math.min(...values);return `<svg class="cr-sp" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><polyline points="${values.map((v,i)=>`${i/(values.length-1)*100},${34-(v-min)/(max-min||1)*30}`).join(' ')}" vector-effect="non-scaling-stroke"/></svg>`;};
+const stat=(label,value,trend,tone,values)=>card(`<div class="cr-b"><div class="cr-lb">${label}</div><div class="cr-n">${value}</div><div class="cr-tr ${tone}">${trend}</div>${spark(values)}</div>`);
+$('#cg').innerHTML=stat('今日产量','12,480','↑ 5.2% 较昨日','g',[3,5,4,6,5,7,8])
+  +card(hd('李静','质检班组长 · 小圈线',tag('在线','g'),'李静')+'<div class="cr-b">负责小圈线成品质检与不合格品处置，本周处理异常 6 起。</div>')
+  +card('<div id="tb1"></div>')
+  +card(`<button type="button" class="cr-h cr-hb" aria-expanded="false" aria-controls="process-body"><span class="cr-ti"><span class="cr-t">工艺参数</span></span>${ic('chev').replace('class="i"','class="i cr-chv"')}</button><div class="cr-co" id="process-body" inert aria-hidden="true"><div><div class="cr-b">热处理温度 840℃，保温 40 分钟，油冷；回火 180℃，2 小时。</div></div></div>`,'co');
+tabs($('#tb1'),[{title:'大圈线',body:bars(BAR1)},{title:'小圈线',body:bars(BAR2)}]);
+$('#cg').addEventListener('click',e=>{const b=e.target.closest('.cr-hb');if(!b)return;const c=b.closest('.cr'),body=c.querySelector('.cr-co'),open=b.getAttribute('aria-expanded')!=='true';b.setAttribute('aria-expanded',String(open));c.classList.toggle('open',open);body.inert=!open;body.setAttribute('aria-hidden',String(!open));});
+
+/* Equal height belongs to the grid row, never to unrelated rows. */
+const descriptions=['短内容。','内容适中，用两行左右的文字说明任务与当前状态。','较长的说明：热处理后需进行表面检测与硬度抽检，合格后方可转入磨加工工序，并记录批次号与检验员。','中等长度的说明；页脚与本行其他卡片对齐。'];
+$('#gg').innerHTML=descriptions.map((text,i)=>card(hd(PROD[i][0],'',tag(PROD[i][3],PROD[i][4]))+`<div class="cr-b">${text}</div><div class="cr-f"><span class="cr-m">页脚贴底</span><span class="sp1"></span><button class="btn s" data-action="details">详情</button></div>`,'',`data-product="${i}"`)).join('');
+$('#gh').innerHTML=[0,1].map(i=>card(cover(i)+`<div class="cr-col">${hd(PROD[i][0],PROD[i][1])}<div class="cr-b">${PROD[i][2]}</div><div class="cr-f"><span class="cr-m">${PROD[i][5]}</span><span class="sp1"></span><button class="btn s" data-action="details">详情</button></div></div>`,'hz',`data-product="${i}"`)).join('');
+const gridHost=$('#gg').parentElement;
+const gridObserver=new ResizeObserver(()=>{
+  const columns=getComputedStyle($('#gg')).gridTemplateColumns.split(' ').length;
+  $('#grid-size').textContent=`${Math.round(gridHost.getBoundingClientRect().width)}px · ${columns} 列`;
+});gridObserver.observe(gridHost);
+$('#grid-width').addEventListener('input',e=>{gridHost.style.width=`${e.target.value}%`;});
+
+/* Dashboard content and choice state survive loading. */
+const kpis=[['今日产量','12,480','↑ 5.2%','g',[3,5,4,6,5,7,8]],['合格率','98.6%','↑ 0.3%','g',[6,6,7,7,6,8,8]],['设备稼动率','86.4%','↓ 1.8%','d',[8,7,8,6,7,5,6]],['在制工单','37','较昨日持平','',[5,5,6,5,5,6,5]]];
+const exceptions=[['设备报警 · 磨床 M-07','10:24 · 大圈线','紧急','d'],['质检不合格 · 6008-2RS','09:48 · 小圈线','待处理','w'],['物料缺料 · 钢球 G10','09:15 · 小圈线','待处理',''],['交期风险 · WO-24103','昨天','关注','']];
+$('#dash').innerHTML=`<div class="cr-g2 cr-kpis">${kpis.map(k=>stat(...k)).join('')}</div><div class="cr-r2">${card(hd('产线日产量','单位：套')+'<div id="dt"></div>')}${card(hd('待处理异常','今日 4 条')+`<div class="list">${exceptions.map(r=>`<div class="li"><div class="mt"><b>${r[0]}</b><span>${r[1]}</span></div><div class="ex">${tag(r[2],r[3])}</div></div>`).join('')}</div><div class="cr-f"><span class="sp1"></span><button class="btn s t" data-action="exceptions">查看全部</button></div>`)}</div><div><div class="row" style="justify-content:space-between;margin-bottom:.5rem"><b>重点工单</b><span class="tag" id="dsel">未选择</span></div><div class="cr-g2 cr-workorders" id="dwo">${[0,1,2].map(i=>product(i,{choice:'checkbox',group:'dashboard',noFooter:true})).join('')}</div></div>`;
+tabs($('#dt'),[{title:'大圈线',body:bars(BAR1)},{title:'小圈线',body:bars(BAR2)}]);
+prepareLoading($('#dash'));
+$('#dz').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setLoading($('#dash'),b.dataset.v==='1');$('#dashboard-status').textContent=b.dataset.v==='1'?'正在加载看板。':'看板已加载，原有选择和页签保持。';});
+syncChoices();
+
+/* Button actions with local feedback, a native modal and independent favorites. */
+let noticeTimer,dialogTrigger,menuTrigger;
+function notify(message) { $('#notice').textContent=message;clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('#notice').textContent='',2500); }
+function openDetails(trigger,mode='details') {
+  const c=trigger.closest('.cr'), p=PROD[Number(c?.dataset.product)||0]; dialogTrigger=trigger;
+  $('#detail-title').textContent=mode==='schedule'?`排产 ${p[0]}`:`${p[0]} 工单详情`;
+  $('#detail-body').innerHTML=`<dl><dt>型号</dt><dd>${p[0]}</dd><dt>类型</dt><dd>${p[1]}</dd><dt>规格</dt><dd>${p[2]}</dd><dt>产线</dt><dd>${p[5]}</dd><dt>当前状态</dt><dd>${p[3]}</dd></dl>`;
+  $('#schedule-confirm').hidden=mode!=='schedule';$('#detail-dialog').showModal();
+}
+document.addEventListener('click',e=>{
+  const button=e.target.closest('button[data-action]');if(!button||button.disabled)return;
+  const action=button.dataset.action;
+  if(action==='details'||action==='schedule') {
+    if(button.closest('#ic'))$('#icm').textContent='打开了 6205-ZZ 工单详情。';
+    openDetails(button,action);
+  } else if(action==='favorite') {
+    const on=button.getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(on));button.textContent=on?'已收藏':'收藏';
+    if(button.closest('#ic'))$('#icm').textContent=on?'已收藏，未触发整卡打开。':'已取消收藏，未触发整卡打开。';
+  } else if(action==='more') {
+    const menu=$('#card-menu');if(menu.matches(':popover-open')&&menuTrigger===button){menu.hidePopover();return;}
+    if(menuTrigger)menuTrigger.setAttribute('aria-expanded','false');
+    if(menu.matches(':popover-open'))menu.hidePopover();menuTrigger=button;button.setAttribute('aria-expanded','true');
+    menu.showPopover({source:button});const r=button.getBoundingClientRect(),m=menu.getBoundingClientRect();
+    menu.style.left=`${Math.max(8,Math.min(innerWidth-m.width-8,r.right-m.width))}px`;menu.style.top=`${r.bottom+m.height+8<innerHeight?r.bottom+6:Math.max(8,r.top-m.height-6)}px`;
+    menu.querySelector('button').focus();
+  } else if(action==='menu-details') { $('#card-menu').hidePopover();openDetails(menuTrigger); }
+  else if(action==='menu-favorite') { $('#card-menu').hidePopover();notify('已收藏此卡片。'); }
+  else if(action==='archive') { button.textContent='已归档';button.disabled=true; }
+  else if(action==='cancel') notify('已取消本次排产。');
+  else if(action==='exceptions') { $('#detail-title').textContent='全部待处理异常';$('#detail-body').innerHTML=exceptions.map(r=>`<p style="margin-bottom:.75rem">${r[0]} · ${r[1]} · ${r[2]}</p>`).join('');$('#schedule-confirm').hidden=true;dialogTrigger=button;$('#detail-dialog').showModal(); }
+});
+$('#card-menu').addEventListener('toggle',e=>{if(e.newState==='closed'&&menuTrigger){menuTrigger.setAttribute('aria-expanded','false');if(!$('#detail-dialog').open)menuTrigger.focus({preventScroll:true});}});
+$('#detail-dialog').addEventListener('close',()=>{if(dialogTrigger?.isConnected)dialogTrigger.focus({preventScroll:true});});
+$('#close-detail').addEventListener('click',()=>$('#detail-dialog').close());
+$('#detail-done').addEventListener('click',()=>$('#detail-dialog').close());
+$('#schedule-confirm').addEventListener('click',()=>{
+  const c=dialogTrigger?.closest('.cr'), label=c?.querySelector('.cr-x .tag');if(label){label.textContent='已排产';label.className='tag';}
+  $('#detail-dialog').close();notify('已将工单加入示例排产队列。');
+});
+
+/* Presentation controls are not Card's proposed state API. */
+table('#api6',['职责','建议入口','复用关系'],[
+  ['表面与密度',cd('variant / size'),'描边、阴影、填充、无边框；紧凑、默认、宽松。'],
+  ['结构',cd('header / body / footer'),'所有区域可省略；标题与自定义内容由调用方组合。'],
+  ['封面',cd('cover / placement / ratio'),'上、左、右与背景；封面自己裁剪，不裁掉内部控件焦点。'],
+  ['边界',cd('headerBordered / footerBordered'),'头部默认无分割线，页脚默认有；每条边只绘制一次。'],
+  ['整卡操作',cd('onAction / disabled'),'真实按钮语义；内部控件独立，文字选择不触发操作。'],
+  ['悬停',cd('hoverEffect'),'默认无位移；边界反馈与可选上浮分开。'],
+  ['选择','Checkbox / Radio','复用现有选择机制，Card 不维护另一份选中状态。'],
+  ['加载','LoadingRegion + Skeleton','共享实际布局，保留内容身份，加载时禁止内容操作。'],
+  ['页签与折叠','Tabs / Collapse','作为内容组合，不重复提供 activeTab / defaultOpen 状态。'],
+  ['卡片集合','List + ListGrid','父布局负责列数与同行等高；大量数据复用虚拟列表。'],
+]);
+const groups=[['结构',[['sa','组件结构']]],['局部',[['sv','外观与尺寸'],['sp','头部 / 封面 / 页脚']]],['行为',[['si','点击与选择'],['sl','加载与占位'],['sc','内容组合']]],['布局',[['sg','自适应网格'],['sh','生产看板'],['sapi','组合与复用']]]];
+let number=0;
+$('#nav').innerHTML=groups.map(([label,items])=>`<b>${label}</b>${items.map(([id,title])=>`<a href="#${id}"><i>${String(++number).padStart(2,'0')}</i>${title}</a>`).join('')}`).join('');
+const sections=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting)$$('.side a').forEach(a=>{const on=a.hash===`#${entry.target.id}`;a.classList.toggle('on',on);if(on)a.setAttribute('aria-current','location');else a.removeAttribute('aria-current');});});},{rootMargin:'-15% 0px -60% 0px'});$$('section').forEach(s=>sections.observe(s));
+document.querySelectorAll('.seg').forEach(group=>{
+  group.setAttribute('role','group'); group.querySelectorAll('button').forEach(b=>{b.type='button';b.setAttribute('aria-pressed',String(b.classList.contains('on')));});
+  group.addEventListener('click',e=>{const b=e.target.closest('button');if(b)group.querySelectorAll('button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-pressed',String(x===b));});});
+});
+$('#interactive-lift').addEventListener('change',e=>$('#ic .cr').classList.toggle('lift',e.target.checked));
+$('#disable-choice').addEventListener('change',e=>{const input=$('#im input#orders-2');input.disabled=e.target.checked;syncChoices();});
+$('#truncate-title').addEventListener('change',e=>$$('#ph .cr').forEach(c=>{c.classList.toggle('cr-truncate',e.target.checked);c.querySelectorAll('.cr-t,.cr-s').forEach(el=>{if(e.target.checked)el.title=el.textContent;else el.removeAttribute('title');});}));
+$('#th').addEventListener('click',()=>{
+  const dark=getComputedStyle(document.documentElement).colorScheme==='dark';document.documentElement.dataset.theme=dark?'light':'dark';
+  $('#th').textContent=dark?'切换深色':'切换浅色';$('#th').setAttribute('aria-pressed',String(!dark));
+});
+const initialDark=getComputedStyle(document.documentElement).colorScheme==='dark';
+$('#th').textContent=initialDark?'切换浅色':'切换深色';$('#th').setAttribute('aria-pressed',String(initialDark));
+const resizeObserver=new ResizeObserver(()=>{anatomy();for(const[host,on]of loadingHosts)if(on)host.querySelectorAll('.cr').forEach(paintSkeleton);});resizeObserver.observe($('#st1'));resizeObserver.observe($('#lg'));resizeObserver.observe($('#dash'));
+document.fonts.ready.then(()=>{measureDensity();anatomy();});
+window.addEventListener('pagehide',()=>{clearTimeout(loadingTimer);clearTimeout(noticeTimer);});
+
+</script></body></html>

@@ -46,6 +46,10 @@ fn main() {
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum ShowcasePage {
+    Descriptions,
+    Steps,
+    Pagination,
+    Card,
     Scrollbar,
     Resizable,
     Tree,
@@ -94,6 +98,10 @@ enum ShowcasePage {
 }
 
 struct Showcase {
+    descriptions_demo: gpui_kit::Entity<pages::descriptions::DescriptionsPage>,
+    steps_demo: gpui_kit::Entity<pages::steps::StepsPage>,
+    pagination_demo: gpui_kit::Entity<pages::pagination::PaginationPage>,
+    card_demo: gpui_kit::Entity<pages::card::CardPage>,
     scrollbar_demo: gpui_kit::Entity<pages::scrollbar::ScrollbarPage>,
     resizable_demo: gpui_kit::Entity<pages::resizable::ResizablePage>,
     tree_demo: gpui_kit::Entity<pages::tree::TreePage>,
@@ -310,6 +318,10 @@ impl Showcase {
             tree_select_demo: cx.new(|cx| pages::tree_select::TreeSelectPage::new(window, cx)),
             date_picker_demo: cx.new(|cx| pages::date_picker::DatePickerPage::new(window, cx)),
             empty_demo: cx.new(pages::empty::EmptyPage::new),
+            card_demo: cx.new(|cx| pages::card::CardPage::new(window, cx)),
+            descriptions_demo: cx.new(|cx| pages::descriptions::DescriptionsPage::new(window, cx)),
+            steps_demo: cx.new(|cx| pages::steps::StepsPage::new(window, cx)),
+            pagination_demo: cx.new(|cx| pages::pagination::PaginationPage::new(window, cx)),
             scrollbar_demo: cx.new(pages::scrollbar::ScrollbarPage::new),
             resizable_demo: cx.new(|cx| pages::resizable::ResizablePage::new(window, cx)),
             shortcut_demo: None,
@@ -541,6 +553,10 @@ impl Render for Showcase {
                         ShowcasePage::TimePicker => self.time_picker_demo.clone().into_any_element(),
                         ShowcasePage::DatePicker => self.date_picker_demo.clone().into_any_element(),
                         ShowcasePage::Empty => self.empty_demo.clone().into_any_element(),
+                        ShowcasePage::Card => self.card_demo.clone().into_any_element(),
+                        ShowcasePage::Descriptions => self.descriptions_demo.clone().into_any_element(),
+                        ShowcasePage::Steps => self.steps_demo.clone().into_any_element(),
+                        ShowcasePage::Pagination => self.pagination_demo.clone().into_any_element(),
                         ShowcasePage::Scrollbar => self.scrollbar_demo.clone().into_any_element(),
                         ShowcasePage::Resizable => self.resizable_demo.clone().into_any_element(),
                         ShowcasePage::Badge => self.badge_demo.clone().into_any_element(),

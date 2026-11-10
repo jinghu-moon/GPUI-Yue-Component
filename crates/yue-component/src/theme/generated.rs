@@ -1,6 +1,6 @@
 // Generated from the Yue Design System Token inventory tool.
 // Source: @yue-ui/design-tokens@0.1.0
-// Source content SHA-256: 2cb75485056d3b061a76fe43a54b43891307e912e12284c4bfb423cc5aa39947
+// Source content SHA-256: 22b3717aae4aca44e297730fb15e46fc7445f27088014b57241482bdf0c9e8c4
 // Run `node tools/sync-yue-theme.mjs --write` to regenerate from the checked-in snapshot.
 use super::TokenValue;
 
@@ -297,1241 +297,1347 @@ pub mod keys {
     pub const CALENDAR_SELECTED_BACKGROUND: TokenKey = TokenKey(287);
     pub const CALENDAR_SELECTED_COLOR: TokenKey = TokenKey(288);
     pub const CALENDAR_TODAY_COLOR: TokenKey = TokenKey(289);
-    pub const CHECKBOX_ACCENT_COLOR: TokenKey = TokenKey(290);
-    pub const CHECKBOX_BACKGROUND: TokenKey = TokenKey(291);
-    pub const CHECKBOX_BACKGROUND_CHECKED: TokenKey = TokenKey(292);
-    pub const CHECKBOX_BORDER_COLOR: TokenKey = TokenKey(293);
-    pub const CHECKBOX_BORDER_COLOR_CHECKED: TokenKey = TokenKey(294);
-    pub const CHECKBOX_BORDER_RADIUS: TokenKey = TokenKey(295);
-    pub const CHECKBOX_BORDER_WIDTH: TokenKey = TokenKey(296);
-    pub const CHECKBOX_DISABLED_BACKGROUND: TokenKey = TokenKey(297);
-    pub const CHECKBOX_DISABLED_BORDER_COLOR: TokenKey = TokenKey(298);
-    pub const CHECKBOX_DISABLED_MARK_COLOR: TokenKey = TokenKey(299);
-    pub const CHECKBOX_DURATION: TokenKey = TokenKey(300);
-    pub const CHECKBOX_DURATION_FAST: TokenKey = TokenKey(301);
-    pub const CHECKBOX_EASE: TokenKey = TokenKey(302);
-    pub const CHECKBOX_EASE_ENTER: TokenKey = TokenKey(303);
-    pub const CHECKBOX_EASE_EXIT: TokenKey = TokenKey(304);
-    pub const CHECKBOX_FOCUS_RING_COLOR: TokenKey = TokenKey(305);
-    pub const CHECKBOX_FOCUS_RING_OFFSET: TokenKey = TokenKey(306);
-    pub const CHECKBOX_FOCUS_RING_WIDTH: TokenKey = TokenKey(307);
-    pub const CHECKBOX_GROUP_GAP: TokenKey = TokenKey(308);
-    pub const CHECKBOX_GROUP_INDENT: TokenKey = TokenKey(309);
-    pub const CHECKBOX_HALO_COLOR: TokenKey = TokenKey(310);
-    pub const CHECKBOX_HALO_WIDTH: TokenKey = TokenKey(311);
-    pub const CHECKBOX_HEIGHT_LG: TokenKey = TokenKey(312);
-    pub const CHECKBOX_HEIGHT_MD: TokenKey = TokenKey(313);
-    pub const CHECKBOX_HEIGHT_SM: TokenKey = TokenKey(314);
-    pub const CHECKBOX_LABEL_COLOR: TokenKey = TokenKey(315);
-    pub const CHECKBOX_LABEL_COLOR_DISABLED: TokenKey = TokenKey(316);
-    pub const CHECKBOX_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(317);
-    pub const CHECKBOX_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(318);
-    pub const CHECKBOX_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(319);
-    pub const CHECKBOX_LABEL_GAP: TokenKey = TokenKey(320);
-    pub const CHECKBOX_MARK_COLOR: TokenKey = TokenKey(321);
-    pub const CHECKBOX_MARK_STROKE_WIDTH_LG: TokenKey = TokenKey(322);
-    pub const CHECKBOX_MARK_STROKE_WIDTH_MD: TokenKey = TokenKey(323);
-    pub const CHECKBOX_MARK_STROKE_WIDTH_SM: TokenKey = TokenKey(324);
-    pub const CHECKBOX_PRESS_SCALE: TokenKey = TokenKey(325);
-    pub const CHECKBOX_SIZE: TokenKey = TokenKey(326);
-    pub const CHECKBOX_SIZE_LG: TokenKey = TokenKey(327);
-    pub const CHECKBOX_SIZE_MD: TokenKey = TokenKey(328);
-    pub const CHECKBOX_SIZE_SM: TokenKey = TokenKey(329);
-    pub const COLLAPSE_ACTIONS_GAP: TokenKey = TokenKey(330);
-    pub const COLLAPSE_BORDER_COLOR: TokenKey = TokenKey(331);
-    pub const COLLAPSE_BORDER_WIDTH: TokenKey = TokenKey(332);
-    pub const COLLAPSE_COLLAPSE_DURATION: TokenKey = TokenKey(333);
-    pub const COLLAPSE_COLOR: TokenKey = TokenKey(334);
-    pub const COLLAPSE_CONTENT_BACKGROUND: TokenKey = TokenKey(335);
-    pub const COLLAPSE_CONTENT_PADDING_LG: TokenKey = TokenKey(336);
-    pub const COLLAPSE_CONTENT_PADDING_MD: TokenKey = TokenKey(337);
-    pub const COLLAPSE_CONTENT_PADDING_SM: TokenKey = TokenKey(338);
-    pub const COLLAPSE_EASE: TokenKey = TokenKey(339);
-    pub const COLLAPSE_EXPAND_DURATION: TokenKey = TokenKey(340);
-    pub const COLLAPSE_FOCUS_COLOR: TokenKey = TokenKey(341);
-    pub const COLLAPSE_FOCUS_WIDTH: TokenKey = TokenKey(342);
-    pub const COLLAPSE_FONT_SIZE_LG: TokenKey = TokenKey(343);
-    pub const COLLAPSE_FONT_SIZE_MD: TokenKey = TokenKey(344);
-    pub const COLLAPSE_FONT_SIZE_SM: TokenKey = TokenKey(345);
-    pub const COLLAPSE_HEADER_BACKGROUND: TokenKey = TokenKey(346);
-    pub const COLLAPSE_HEADER_BACKGROUND_HOVER: TokenKey = TokenKey(347);
-    pub const COLLAPSE_HEADER_BACKGROUND_PRESSED: TokenKey = TokenKey(348);
-    pub const COLLAPSE_HEADER_GAP: TokenKey = TokenKey(349);
-    pub const COLLAPSE_HEADER_MIN_HEIGHT_LG: TokenKey = TokenKey(350);
-    pub const COLLAPSE_HEADER_MIN_HEIGHT_MD: TokenKey = TokenKey(351);
-    pub const COLLAPSE_HEADER_MIN_HEIGHT_SM: TokenKey = TokenKey(352);
-    pub const COLLAPSE_HEADER_PADDING_X_LG: TokenKey = TokenKey(353);
-    pub const COLLAPSE_HEADER_PADDING_X_MD: TokenKey = TokenKey(354);
-    pub const COLLAPSE_HEADER_PADDING_X_SM: TokenKey = TokenKey(355);
-    pub const COLLAPSE_HEADER_PADDING_Y_LG: TokenKey = TokenKey(356);
-    pub const COLLAPSE_HEADER_PADDING_Y_MD: TokenKey = TokenKey(357);
-    pub const COLLAPSE_HEADER_PADDING_Y_SM: TokenKey = TokenKey(358);
-    pub const COLLAPSE_INDICATOR_COLOR: TokenKey = TokenKey(359);
-    pub const COLLAPSE_INDICATOR_HIT_SIZE_LG: TokenKey = TokenKey(360);
-    pub const COLLAPSE_INDICATOR_HIT_SIZE_MD: TokenKey = TokenKey(361);
-    pub const COLLAPSE_INDICATOR_HIT_SIZE_SM: TokenKey = TokenKey(362);
-    pub const COLLAPSE_INDICATOR_SIZE_LG: TokenKey = TokenKey(363);
-    pub const COLLAPSE_INDICATOR_SIZE_MD: TokenKey = TokenKey(364);
-    pub const COLLAPSE_INDICATOR_SIZE_SM: TokenKey = TokenKey(365);
-    pub const COLLAPSE_INTERACTION_DURATION: TokenKey = TokenKey(366);
-    pub const COLLAPSE_LINE_HEIGHT_LG: TokenKey = TokenKey(367);
-    pub const COLLAPSE_LINE_HEIGHT_MD: TokenKey = TokenKey(368);
-    pub const COLLAPSE_LINE_HEIGHT_SM: TokenKey = TokenKey(369);
-    pub const COLLAPSE_OPACITY_DISABLED: TokenKey = TokenKey(370);
-    pub const COLLAPSE_RADIUS: TokenKey = TokenKey(371);
-    pub const COLOR_PICKER_ALPHA_HEIGHT: TokenKey = TokenKey(372);
-    pub const COLOR_PICKER_ALPHA_HIT_HEIGHT: TokenKey = TokenKey(373);
-    pub const COLOR_PICKER_BACKGROUND: TokenKey = TokenKey(374);
-    pub const COLOR_PICKER_BORDER_COLOR: TokenKey = TokenKey(375);
-    pub const COLOR_PICKER_BORDER_COLOR_HOVER: TokenKey = TokenKey(376);
-    pub const COLOR_PICKER_BORDER_COLOR_OPEN: TokenKey = TokenKey(377);
-    pub const COLOR_PICKER_CHANNEL_GAP: TokenKey = TokenKey(378);
-    pub const COLOR_PICKER_CHANNEL_MIN_WIDTH: TokenKey = TokenKey(379);
-    pub const COLOR_PICKER_CHECKER_DARK_COLOR: TokenKey = TokenKey(380);
-    pub const COLOR_PICKER_CHECKER_LIGHT_COLOR: TokenKey = TokenKey(381);
-    pub const COLOR_PICKER_CHECKER_SIZE: TokenKey = TokenKey(382);
-    pub const COLOR_PICKER_COLOR: TokenKey = TokenKey(383);
-    pub const COLOR_PICKER_DISABLED_BACKGROUND: TokenKey = TokenKey(384);
-    pub const COLOR_PICKER_DISABLED_BORDER_COLOR: TokenKey = TokenKey(385);
-    pub const COLOR_PICKER_DISABLED_COLOR: TokenKey = TokenKey(386);
-    pub const COLOR_PICKER_ENTER_DURATION: TokenKey = TokenKey(387);
-    pub const COLOR_PICKER_ENTER_EASE: TokenKey = TokenKey(388);
-    pub const COLOR_PICKER_ERROR_COLOR: TokenKey = TokenKey(389);
-    pub const COLOR_PICKER_EXIT_DURATION: TokenKey = TokenKey(390);
-    pub const COLOR_PICKER_EXIT_EASE: TokenKey = TokenKey(391);
-    pub const COLOR_PICKER_FOCUS_RING_COLOR: TokenKey = TokenKey(392);
-    pub const COLOR_PICKER_FOCUS_RING_OFFSET: TokenKey = TokenKey(393);
-    pub const COLOR_PICKER_FOCUS_RING_WIDTH: TokenKey = TokenKey(394);
-    pub const COLOR_PICKER_FONT_SIZE_LG: TokenKey = TokenKey(395);
-    pub const COLOR_PICKER_FONT_SIZE_MD: TokenKey = TokenKey(396);
-    pub const COLOR_PICKER_FONT_SIZE_SM: TokenKey = TokenKey(397);
-    pub const COLOR_PICKER_HEIGHT_LG: TokenKey = TokenKey(398);
-    pub const COLOR_PICKER_HEIGHT_MD: TokenKey = TokenKey(399);
-    pub const COLOR_PICKER_HEIGHT_SM: TokenKey = TokenKey(400);
-    pub const COLOR_PICKER_HUE_HEIGHT: TokenKey = TokenKey(401);
-    pub const COLOR_PICKER_HUE_HIT_HEIGHT: TokenKey = TokenKey(402);
-    pub const COLOR_PICKER_PADDING_INLINE_LG: TokenKey = TokenKey(403);
-    pub const COLOR_PICKER_PADDING_INLINE_MD: TokenKey = TokenKey(404);
-    pub const COLOR_PICKER_PADDING_INLINE_SM: TokenKey = TokenKey(405);
-    pub const COLOR_PICKER_PANEL_BACKGROUND: TokenKey = TokenKey(406);
-    pub const COLOR_PICKER_PANEL_BORDER_COLOR: TokenKey = TokenKey(407);
-    pub const COLOR_PICKER_PANEL_GAP: TokenKey = TokenKey(408);
-    pub const COLOR_PICKER_PANEL_MIN_WIDTH: TokenKey = TokenKey(409);
-    pub const COLOR_PICKER_PANEL_OFFSET: TokenKey = TokenKey(410);
-    pub const COLOR_PICKER_PANEL_PADDING: TokenKey = TokenKey(411);
-    pub const COLOR_PICKER_PANEL_RADIUS: TokenKey = TokenKey(412);
-    pub const COLOR_PICKER_PANEL_SHADOW: TokenKey = TokenKey(413);
-    pub const COLOR_PICKER_PANEL_WIDTH: TokenKey = TokenKey(414);
-    pub const COLOR_PICKER_PREVIEW_SIZE: TokenKey = TokenKey(415);
-    pub const COLOR_PICKER_RADIUS: TokenKey = TokenKey(416);
-    pub const COLOR_PICKER_RECENT_COLOR: TokenKey = TokenKey(417);
-    pub const COLOR_PICKER_SLIDER_GAP: TokenKey = TokenKey(418);
-    pub const COLOR_PICKER_STATE_DURATION: TokenKey = TokenKey(419);
-    pub const COLOR_PICKER_STATE_EASE: TokenKey = TokenKey(420);
-    pub const COLOR_PICKER_SV_HEIGHT: TokenKey = TokenKey(421);
-    pub const COLOR_PICKER_SWATCH_SIZE_LG: TokenKey = TokenKey(422);
-    pub const COLOR_PICKER_SWATCH_SIZE_MD: TokenKey = TokenKey(423);
-    pub const COLOR_PICKER_SWATCH_SIZE_SM: TokenKey = TokenKey(424);
-    pub const COLOR_PICKER_THUMB_BORDER_COLOR: TokenKey = TokenKey(425);
-    pub const COLOR_PICKER_THUMB_BORDER_WIDTH: TokenKey = TokenKey(426);
-    pub const COLOR_PICKER_THUMB_DRAG_SCALE: TokenKey = TokenKey(427);
-    pub const COLOR_PICKER_THUMB_OUTLINE_COLOR: TokenKey = TokenKey(428);
-    pub const COLOR_PICKER_THUMB_OUTLINE_WIDTH: TokenKey = TokenKey(429);
-    pub const COLOR_PICKER_THUMB_SHADOW: TokenKey = TokenKey(430);
-    pub const COLOR_PICKER_THUMB_SIZE: TokenKey = TokenKey(431);
-    pub const COLOR_PICKER_TRIGGER_GAP: TokenKey = TokenKey(432);
-    pub const COLOR_PICKER_TRIGGER_WIDTH: TokenKey = TokenKey(433);
-    pub const COLOR_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(434);
-    pub const CONTAINER_PAGE: TokenKey = TokenKey(435);
-    pub const CONTAINER_TEXT: TokenKey = TokenKey(436);
-    pub const CONTROL_ACCENT: TokenKey = TokenKey(437);
-    pub const CONTROL_ACCENT_CHECKED: TokenKey = TokenKey(438);
-    pub const CONTROL_FONT_SIZE_LG: TokenKey = TokenKey(439);
-    pub const CONTROL_FONT_SIZE_MD: TokenKey = TokenKey(440);
-    pub const CONTROL_FONT_SIZE_SM: TokenKey = TokenKey(441);
-    pub const CONTROL_HEIGHT_LG: TokenKey = TokenKey(442);
-    pub const CONTROL_HEIGHT_MD: TokenKey = TokenKey(443);
-    pub const CONTROL_HEIGHT_SM: TokenKey = TokenKey(444);
-    pub const CONTROL_ICON_SIZE_LG: TokenKey = TokenKey(445);
-    pub const CONTROL_ICON_SIZE_MD: TokenKey = TokenKey(446);
-    pub const CONTROL_ICON_SIZE_SM: TokenKey = TokenKey(447);
-    pub const CONTROL_PADDING_INLINE_LG: TokenKey = TokenKey(448);
-    pub const CONTROL_PADDING_INLINE_MD: TokenKey = TokenKey(449);
-    pub const CONTROL_PADDING_INLINE_SM: TokenKey = TokenKey(450);
-    pub const CYAN_100: TokenKey = TokenKey(451);
-    pub const CYAN_200: TokenKey = TokenKey(452);
-    pub const CYAN_300: TokenKey = TokenKey(453);
-    pub const CYAN_400: TokenKey = TokenKey(454);
-    pub const CYAN_50: TokenKey = TokenKey(455);
-    pub const CYAN_500: TokenKey = TokenKey(456);
-    pub const CYAN_600: TokenKey = TokenKey(457);
-    pub const CYAN_700: TokenKey = TokenKey(458);
-    pub const CYAN_800: TokenKey = TokenKey(459);
-    pub const CYAN_900: TokenKey = TokenKey(460);
-    pub const CYAN_950: TokenKey = TokenKey(461);
-    pub const DATE_PICKER_FOOTER_GAP: TokenKey = TokenKey(462);
-    pub const DATE_PICKER_POPUP_GAP: TokenKey = TokenKey(463);
-    pub const DATE_PICKER_TAGS_GAP: TokenKey = TokenKey(464);
-    pub const DATE_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(465);
-    pub const DIALOG_ACTION_BACKGROUND: TokenKey = TokenKey(466);
-    pub const DIALOG_ACTION_BORDER_COLOR: TokenKey = TokenKey(467);
-    pub const DIALOG_ACTION_BORDER_RADIUS: TokenKey = TokenKey(468);
-    pub const DIALOG_ACTION_BORDER_WIDTH: TokenKey = TokenKey(469);
-    pub const DIALOG_ACTION_DANGER_BACKGROUND: TokenKey = TokenKey(470);
-    pub const DIALOG_ACTION_DANGER_BORDER: TokenKey = TokenKey(471);
-    pub const DIALOG_ACTION_ON_DANGER: TokenKey = TokenKey(472);
-    pub const DIALOG_ACTION_ON_PRIMARY: TokenKey = TokenKey(473);
-    pub const DIALOG_ACTION_PRIMARY_BACKGROUND: TokenKey = TokenKey(474);
-    pub const DIALOG_ACTION_PRIMARY_BORDER: TokenKey = TokenKey(475);
-    pub const DIALOG_ACTION_SPACING_BLOCK: TokenKey = TokenKey(476);
-    pub const DIALOG_ACTION_SPACING_INLINE: TokenKey = TokenKey(477);
-    pub const DIALOG_ACTION_TEXT_COLOR: TokenKey = TokenKey(478);
-    pub const DIALOG_BACKGROUND: TokenKey = TokenKey(479);
-    pub const DIALOG_BORDER_COLOR: TokenKey = TokenKey(480);
-    pub const DIALOG_BORDER_RADIUS: TokenKey = TokenKey(481);
-    pub const DIALOG_BORDER_WIDTH: TokenKey = TokenKey(482);
-    pub const DIALOG_COLOR: TokenKey = TokenKey(483);
-    pub const DIALOG_DURATION_ENTER: TokenKey = TokenKey(484);
-    pub const DIALOG_DURATION_EXIT: TokenKey = TokenKey(485);
-    pub const DIALOG_EASE: TokenKey = TokenKey(486);
-    pub const DIALOG_FOOTER_GAP: TokenKey = TokenKey(487);
-    pub const DIALOG_HEADER_HEIGHT: TokenKey = TokenKey(488);
-    pub const DIALOG_PADDING: TokenKey = TokenKey(489);
-    pub const DIALOG_SCRIM_COLOR: TokenKey = TokenKey(490);
-    pub const DIALOG_SECTION_PADDING: TokenKey = TokenKey(491);
-    pub const DIALOG_SHADOW: TokenKey = TokenKey(492);
-    pub const DIALOG_SPACING: TokenKey = TokenKey(493);
-    pub const DIALOG_SPINNER_DURATION: TokenKey = TokenKey(494);
-    pub const DIALOG_WIDTH_LG: TokenKey = TokenKey(495);
-    pub const DIALOG_WIDTH_MD: TokenKey = TokenKey(496);
-    pub const DIALOG_WIDTH_SM: TokenKey = TokenKey(497);
-    pub const DIALOG_WIDTH_XL: TokenKey = TokenKey(498);
-    pub const DIALOG_Z_INDEX: TokenKey = TokenKey(499);
-    pub const DISABLED_CONTAINER: TokenKey = TokenKey(500);
-    pub const DISABLED_CONTENT: TokenKey = TokenKey(501);
-    pub const DIVIDER_BORDER_COLOR: TokenKey = TokenKey(502);
-    pub const DIVIDER_BORDER_WIDTH: TokenKey = TokenKey(503);
-    pub const DIVIDER_MARGIN_BLOCK: TokenKey = TokenKey(504);
-    pub const DURATION_100: TokenKey = TokenKey(505);
-    pub const DURATION_150: TokenKey = TokenKey(506);
-    pub const DURATION_200: TokenKey = TokenKey(507);
-    pub const DURATION_250: TokenKey = TokenKey(508);
-    pub const DURATION_300: TokenKey = TokenKey(509);
-    pub const DURATION_350: TokenKey = TokenKey(510);
-    pub const DURATION_400: TokenKey = TokenKey(511);
-    pub const DURATION_FAST: TokenKey = TokenKey(512);
-    pub const DURATION_NORMAL: TokenKey = TokenKey(513);
-    pub const DURATION_SLOW: TokenKey = TokenKey(514);
-    pub const EASE_ENTER: TokenKey = TokenKey(515);
-    pub const EASE_EXIT: TokenKey = TokenKey(516);
-    pub const EASE_EXPRESSIVE_ENTER: TokenKey = TokenKey(517);
-    pub const EASE_EXPRESSIVE_EXIT: TokenKey = TokenKey(518);
-    pub const EASE_EXPRESSIVE_STANDARD: TokenKey = TokenKey(519);
-    pub const EASE_IN_OUT: TokenKey = TokenKey(520);
-    pub const EASE_LINEAR: TokenKey = TokenKey(521);
-    pub const EASE_OUT_CUBIC: TokenKey = TokenKey(522);
-    pub const EASE_OUT_SMOOTH: TokenKey = TokenKey(523);
-    pub const EASE_SPRING: TokenKey = TokenKey(524);
-    pub const EASE_STANDARD: TokenKey = TokenKey(525);
-    pub const ELEVATION_DIALOG: TokenKey = TokenKey(526);
-    pub const ELEVATION_PANEL: TokenKey = TokenKey(527);
-    pub const ELEVATION_POPOVER: TokenKey = TokenKey(528);
-    pub const EMPTY_ACTIONS_GAP_MD: TokenKey = TokenKey(529);
-    pub const EMPTY_ACTIONS_GAP_SM: TokenKey = TokenKey(530);
-    pub const EMPTY_CONTENT_MAX_WIDTH: TokenKey = TokenKey(531);
-    pub const EMPTY_DESCRIPTION_COLOR: TokenKey = TokenKey(532);
-    pub const EMPTY_FONT_SIZE_MD: TokenKey = TokenKey(533);
-    pub const EMPTY_FONT_SIZE_SM: TokenKey = TokenKey(534);
-    pub const EMPTY_ICON_COLOR: TokenKey = TokenKey(535);
-    pub const EMPTY_ICON_SIZE_MD: TokenKey = TokenKey(536);
-    pub const EMPTY_ICON_SIZE_SM: TokenKey = TokenKey(537);
-    pub const EMPTY_IMAGE_SIZE_MD: TokenKey = TokenKey(538);
-    pub const EMPTY_IMAGE_SIZE_SM: TokenKey = TokenKey(539);
-    pub const EMPTY_LINE_HEIGHT_MD: TokenKey = TokenKey(540);
-    pub const EMPTY_LINE_HEIGHT_SM: TokenKey = TokenKey(541);
-    pub const EMPTY_MEDIA_GAP_MD: TokenKey = TokenKey(542);
-    pub const EMPTY_MEDIA_GAP_SM: TokenKey = TokenKey(543);
-    pub const EMPTY_PADDING_MD: TokenKey = TokenKey(544);
-    pub const EMPTY_PADDING_SM: TokenKey = TokenKey(545);
-    pub const EMPTY_TEXT_GAP: TokenKey = TokenKey(546);
-    pub const EMPTY_TITLE_COLOR: TokenKey = TokenKey(547);
-    pub const EMPTY_TITLE_WEIGHT: TokenKey = TokenKey(548);
-    pub const ERROR: TokenKey = TokenKey(549);
-    pub const ERROR_BG: TokenKey = TokenKey(550);
-    pub const ERROR_BORDER: TokenKey = TokenKey(551);
-    pub const ERROR_FOREGROUND: TokenKey = TokenKey(552);
-    pub const ERROR_SOLID: TokenKey = TokenKey(553);
-    pub const FOCUS_RING_COLOR: TokenKey = TokenKey(554);
-    pub const FOCUS_RING_OFFSET: TokenKey = TokenKey(555);
-    pub const FOCUS_RING_WIDTH: TokenKey = TokenKey(556);
-    pub const FONT_MONO: TokenKey = TokenKey(557);
-    pub const FONT_NUMBER: TokenKey = TokenKey(558);
-    pub const FONT_SIZE_2XL: TokenKey = TokenKey(559);
-    pub const FONT_SIZE_3XL: TokenKey = TokenKey(560);
-    pub const FONT_SIZE_DISPLAY: TokenKey = TokenKey(561);
-    pub const FONT_SIZE_LG: TokenKey = TokenKey(562);
-    pub const FONT_SIZE_MD: TokenKey = TokenKey(563);
-    pub const FONT_SIZE_SM: TokenKey = TokenKey(564);
-    pub const FONT_SIZE_XL: TokenKey = TokenKey(565);
-    pub const FONT_UI: TokenKey = TokenKey(566);
-    pub const GAP_CONTROL_GROUP: TokenKey = TokenKey(567);
-    pub const GAP_FORM_FIELD: TokenKey = TokenKey(568);
-    pub const GAP_PAGE_SECTION: TokenKey = TokenKey(569);
-    pub const GAP_SECTION: TokenKey = TokenKey(570);
-    pub const GREEN_100: TokenKey = TokenKey(571);
-    pub const GREEN_200: TokenKey = TokenKey(572);
-    pub const GREEN_300: TokenKey = TokenKey(573);
-    pub const GREEN_400: TokenKey = TokenKey(574);
-    pub const GREEN_50: TokenKey = TokenKey(575);
-    pub const GREEN_500: TokenKey = TokenKey(576);
-    pub const GREEN_600: TokenKey = TokenKey(577);
-    pub const GREEN_700: TokenKey = TokenKey(578);
-    pub const GREEN_800: TokenKey = TokenKey(579);
-    pub const GREEN_900: TokenKey = TokenKey(580);
-    pub const GREEN_950: TokenKey = TokenKey(581);
-    pub const HAZE_0: TokenKey = TokenKey(582);
-    pub const HAZE_100: TokenKey = TokenKey(583);
-    pub const HAZE_1000: TokenKey = TokenKey(584);
-    pub const HAZE_200: TokenKey = TokenKey(585);
-    pub const HAZE_300: TokenKey = TokenKey(586);
-    pub const HAZE_400: TokenKey = TokenKey(587);
-    pub const HAZE_50: TokenKey = TokenKey(588);
-    pub const HAZE_500: TokenKey = TokenKey(589);
-    pub const HAZE_600: TokenKey = TokenKey(590);
-    pub const HAZE_700: TokenKey = TokenKey(591);
-    pub const HAZE_800: TokenKey = TokenKey(592);
-    pub const HAZE_850: TokenKey = TokenKey(593);
-    pub const HAZE_900: TokenKey = TokenKey(594);
-    pub const HAZE_925: TokenKey = TokenKey(595);
-    pub const HAZE_950: TokenKey = TokenKey(596);
-    pub const ICON_SIZE_LG: TokenKey = TokenKey(597);
-    pub const ICON_SIZE_MD: TokenKey = TokenKey(598);
-    pub const ICON_SIZE_SM: TokenKey = TokenKey(599);
-    pub const IMAGE_PREVIEW_BLACK: TokenKey = TokenKey(600);
-    pub const IMAGE_PREVIEW_CHECKER_DARK_A: TokenKey = TokenKey(601);
-    pub const IMAGE_PREVIEW_CHECKER_DARK_B: TokenKey = TokenKey(602);
-    pub const IMAGE_PREVIEW_CHECKER_LIGHT_A: TokenKey = TokenKey(603);
-    pub const IMAGE_PREVIEW_CHECKER_LIGHT_B: TokenKey = TokenKey(604);
-    pub const IMAGE_PREVIEW_CHECKER_SIZE: TokenKey = TokenKey(605);
-    pub const IMAGE_PREVIEW_COMPARE_DURATION: TokenKey = TokenKey(606);
-    pub const IMAGE_PREVIEW_COMPARE_EASE: TokenKey = TokenKey(607);
-    pub const IMAGE_PREVIEW_DIVIDER_COLOR: TokenKey = TokenKey(608);
-    pub const IMAGE_PREVIEW_DIVIDER_HIT_WIDTH: TokenKey = TokenKey(609);
-    pub const IMAGE_PREVIEW_DIVIDER_WIDTH: TokenKey = TokenKey(610);
-    pub const IMAGE_PREVIEW_GAP: TokenKey = TokenKey(611);
-    pub const IMAGE_PREVIEW_GLASS_BACKGROUND: TokenKey = TokenKey(612);
-    pub const IMAGE_PREVIEW_GLASS_BLUR: TokenKey = TokenKey(613);
-    pub const IMAGE_PREVIEW_GLASS_BORDER: TokenKey = TokenKey(614);
-    pub const IMAGE_PREVIEW_GLASS_COLOR: TokenKey = TokenKey(615);
-    pub const IMAGE_PREVIEW_GLASS_SHADOW: TokenKey = TokenKey(616);
-    pub const IMAGE_PREVIEW_GRIP_BACKGROUND: TokenKey = TokenKey(617);
-    pub const IMAGE_PREVIEW_GRIP_BORDER: TokenKey = TokenKey(618);
-    pub const IMAGE_PREVIEW_GRIP_SIZE: TokenKey = TokenKey(619);
-    pub const IMAGE_PREVIEW_INSET: TokenKey = TokenKey(620);
-    pub const IMAGE_PREVIEW_PAN_STEP: TokenKey = TokenKey(621);
-    pub const IMAGE_PREVIEW_PIXEL_GRID_COLOR: TokenKey = TokenKey(622);
-    pub const IMAGE_PREVIEW_PIXEL_GRID_SHADOW_COLOR: TokenKey = TokenKey(623);
-    pub const IMAGE_PREVIEW_RADIUS: TokenKey = TokenKey(624);
-    pub const IMAGE_PREVIEW_TOOLBAR_CLEARANCE: TokenKey = TokenKey(625);
-    pub const IMAGE_PREVIEW_TOOLBAR_OPACITY_DRAGGED: TokenKey = TokenKey(626);
-    pub const IMAGE_PREVIEW_VIEW_DURATION: TokenKey = TokenKey(627);
-    pub const IMAGE_PREVIEW_VIEW_EASE: TokenKey = TokenKey(628);
-    pub const IMAGE_PREVIEW_WHITE: TokenKey = TokenKey(629);
-    pub const INFO: TokenKey = TokenKey(630);
-    pub const INFO_BG: TokenKey = TokenKey(631);
-    pub const INFO_BORDER: TokenKey = TokenKey(632);
-    pub const INFO_FOREGROUND: TokenKey = TokenKey(633);
-    pub const INPUT_AFFIX_COLOR: TokenKey = TokenKey(634);
-    pub const INPUT_BACKGROUND: TokenKey = TokenKey(635);
-    pub const INPUT_BACKGROUND_DISABLED: TokenKey = TokenKey(636);
-    pub const INPUT_BACKGROUND_READONLY: TokenKey = TokenKey(637);
-    pub const INPUT_BORDER_COLOR: TokenKey = TokenKey(638);
-    pub const INPUT_BORDER_COLOR_DISABLED: TokenKey = TokenKey(639);
-    pub const INPUT_BORDER_COLOR_FOCUS: TokenKey = TokenKey(640);
-    pub const INPUT_BORDER_COLOR_HOVER: TokenKey = TokenKey(641);
-    pub const INPUT_BORDER_COLOR_INVALID: TokenKey = TokenKey(642);
-    pub const INPUT_BORDER_RADIUS: TokenKey = TokenKey(643);
-    pub const INPUT_BORDER_WIDTH: TokenKey = TokenKey(644);
-    pub const INPUT_CLEAR_BORDER_RADIUS: TokenKey = TokenKey(645);
-    pub const INPUT_CLEAR_COLOR: TokenKey = TokenKey(646);
-    pub const INPUT_CLEAR_COLOR_HOVER: TokenKey = TokenKey(647);
-    pub const INPUT_CLEAR_GLYPH_WIDTH: TokenKey = TokenKey(648);
-    pub const INPUT_CLEAR_HIT_SIZE: TokenKey = TokenKey(649);
-    pub const INPUT_COLOR: TokenKey = TokenKey(650);
-    pub const INPUT_COLOR_DISABLED: TokenKey = TokenKey(651);
-    pub const INPUT_DURATION: TokenKey = TokenKey(652);
-    pub const INPUT_EASE: TokenKey = TokenKey(653);
-    pub const INPUT_FOCUS_RING_COLOR: TokenKey = TokenKey(654);
-    pub const INPUT_FOCUS_RING_OFFSET: TokenKey = TokenKey(655);
-    pub const INPUT_FOCUS_RING_WIDTH: TokenKey = TokenKey(656);
-    pub const INPUT_FONT_SIZE_LG: TokenKey = TokenKey(657);
-    pub const INPUT_FONT_SIZE_MD: TokenKey = TokenKey(658);
-    pub const INPUT_FONT_SIZE_SM: TokenKey = TokenKey(659);
-    pub const INPUT_GAP: TokenKey = TokenKey(660);
-    pub const INPUT_HEIGHT_LG: TokenKey = TokenKey(661);
-    pub const INPUT_HEIGHT_MD: TokenKey = TokenKey(662);
-    pub const INPUT_HEIGHT_SM: TokenKey = TokenKey(663);
-    pub const INPUT_ICON_SIZE_LG: TokenKey = TokenKey(664);
-    pub const INPUT_ICON_SIZE_MD: TokenKey = TokenKey(665);
-    pub const INPUT_ICON_SIZE_SM: TokenKey = TokenKey(666);
-    pub const INPUT_NUMBER_PADDING_INLINE: TokenKey = TokenKey(667);
-    pub const INPUT_PADDING_BLOCK: TokenKey = TokenKey(668);
-    pub const INPUT_PADDING_INLINE_LG: TokenKey = TokenKey(669);
-    pub const INPUT_PADDING_INLINE_MD: TokenKey = TokenKey(670);
-    pub const INPUT_PADDING_INLINE_SM: TokenKey = TokenKey(671);
-    pub const INPUT_PLACEHOLDER_COLOR: TokenKey = TokenKey(672);
-    pub const INPUT_STEPPER_BACKGROUND_HOVER: TokenKey = TokenKey(673);
-    pub const INPUT_STEPPER_BACKGROUND_PRESSED: TokenKey = TokenKey(674);
-    pub const INPUT_STEPPER_BORDER_RADIUS: TokenKey = TokenKey(675);
-    pub const LAYER_BASE: TokenKey = TokenKey(676);
-    pub const LAYER_DIALOG: TokenKey = TokenKey(677);
-    pub const LAYER_MODAL: TokenKey = TokenKey(678);
-    pub const LAYER_POPOVER: TokenKey = TokenKey(679);
-    pub const LAYER_STICKY: TokenKey = TokenKey(680);
-    pub const LAYER_TOAST: TokenKey = TokenKey(681);
-    pub const LAYER_TOOLTIP: TokenKey = TokenKey(682);
-    pub const LAYOUT_GRID_COLUMNS: TokenKey = TokenKey(683);
-    pub const LAYOUT_GRID_GAP: TokenKey = TokenKey(684);
-    pub const LAYOUT_HEADER_HEIGHT: TokenKey = TokenKey(685);
-    pub const LAYOUT_PAGE_GUTTER: TokenKey = TokenKey(686);
-    pub const LAYOUT_PAGE_GUTTER_LG: TokenKey = TokenKey(687);
-    pub const LAYOUT_PAGE_GUTTER_MD: TokenKey = TokenKey(688);
-    pub const LAYOUT_PANE_WIDTH: TokenKey = TokenKey(689);
-    pub const LAYOUT_SIDEBAR_COLLAPSE_AT: TokenKey = TokenKey(690);
-    pub const LAYOUT_SIDEBAR_WIDTH: TokenKey = TokenKey(691);
-    pub const LAYOUT_SIDEBAR_WIDTH_COLLAPSED: TokenKey = TokenKey(692);
-    pub const LEADING_NORMAL: TokenKey = TokenKey(693);
-    pub const LEADING_RELAXED: TokenKey = TokenKey(694);
-    pub const LEADING_TIGHT: TokenKey = TokenKey(695);
-    pub const LIME_100: TokenKey = TokenKey(696);
-    pub const LIME_200: TokenKey = TokenKey(697);
-    pub const LIME_300: TokenKey = TokenKey(698);
-    pub const LIME_400: TokenKey = TokenKey(699);
-    pub const LIME_50: TokenKey = TokenKey(700);
-    pub const LIME_500: TokenKey = TokenKey(701);
-    pub const LIME_600: TokenKey = TokenKey(702);
-    pub const LIME_700: TokenKey = TokenKey(703);
-    pub const LIME_800: TokenKey = TokenKey(704);
-    pub const LIME_900: TokenKey = TokenKey(705);
-    pub const LIME_950: TokenKey = TokenKey(706);
-    pub const LINE_HEIGHT_2XL: TokenKey = TokenKey(707);
-    pub const LINE_HEIGHT_3XL: TokenKey = TokenKey(708);
-    pub const LINE_HEIGHT_DISPLAY: TokenKey = TokenKey(709);
-    pub const LINE_HEIGHT_LG: TokenKey = TokenKey(710);
-    pub const LINE_HEIGHT_MD: TokenKey = TokenKey(711);
-    pub const LINE_HEIGHT_SM: TokenKey = TokenKey(712);
-    pub const LINE_HEIGHT_XL: TokenKey = TokenKey(713);
-    pub const LINK_COLOR: TokenKey = TokenKey(714);
-    pub const LINK_COLOR_HOVER: TokenKey = TokenKey(715);
-    pub const LINK_DANGER_COLOR: TokenKey = TokenKey(716);
-    pub const LINK_DANGER_COLOR_HOVER: TokenKey = TokenKey(717);
-    pub const LINK_DECORATION: TokenKey = TokenKey(718);
-    pub const LINK_DEFAULT_COLOR: TokenKey = TokenKey(719);
-    pub const LINK_DEFAULT_COLOR_HOVER: TokenKey = TokenKey(720);
-    pub const LINK_DURATION: TokenKey = TokenKey(721);
-    pub const LINK_EASE: TokenKey = TokenKey(722);
-    pub const LINK_FOCUS_RING_COLOR: TokenKey = TokenKey(723);
-    pub const LINK_FOCUS_RING_OFFSET: TokenKey = TokenKey(724);
-    pub const LINK_FOCUS_RING_RADIUS: TokenKey = TokenKey(725);
-    pub const LINK_FOCUS_RING_WIDTH: TokenKey = TokenKey(726);
-    pub const LINK_FONT_SIZE_LG: TokenKey = TokenKey(727);
-    pub const LINK_FONT_SIZE_MD: TokenKey = TokenKey(728);
-    pub const LINK_FONT_SIZE_SM: TokenKey = TokenKey(729);
-    pub const LINK_FONT_WEIGHT: TokenKey = TokenKey(730);
-    pub const LINK_GAP: TokenKey = TokenKey(731);
-    pub const LINK_ICON_SIZE_LG: TokenKey = TokenKey(732);
-    pub const LINK_ICON_SIZE_MD: TokenKey = TokenKey(733);
-    pub const LINK_ICON_SIZE_SM: TokenKey = TokenKey(734);
-    pub const LINK_LINE_HEIGHT_LG: TokenKey = TokenKey(735);
-    pub const LINK_LINE_HEIGHT_MD: TokenKey = TokenKey(736);
-    pub const LINK_LINE_HEIGHT_SM: TokenKey = TokenKey(737);
-    pub const LINK_OPACITY_DISABLED: TokenKey = TokenKey(738);
-    pub const LINK_SUCCESS_COLOR: TokenKey = TokenKey(739);
-    pub const LINK_SUCCESS_COLOR_HOVER: TokenKey = TokenKey(740);
-    pub const LINK_UNDERLINE_WIDTH: TokenKey = TokenKey(741);
-    pub const LINK_WARNING_COLOR: TokenKey = TokenKey(742);
-    pub const LINK_WARNING_COLOR_HOVER: TokenKey = TokenKey(743);
-    pub const LIST_ROW_BACKGROUND_HOVER: TokenKey = TokenKey(744);
-    pub const LIST_ROW_BACKGROUND_SELECTED: TokenKey = TokenKey(745);
-    pub const LIST_ROW_COLOR: TokenKey = TokenKey(746);
-    pub const LOADING_COLOR: TokenKey = TokenKey(747);
-    pub const LOADING_DELAY: TokenKey = TokenKey(748);
-    pub const LOADING_EASE: TokenKey = TokenKey(749);
-    pub const LOADING_FONT_SIZE_LG: TokenKey = TokenKey(750);
-    pub const LOADING_FONT_SIZE_MD: TokenKey = TokenKey(751);
-    pub const LOADING_FONT_SIZE_SM: TokenKey = TokenKey(752);
-    pub const LOADING_GAP: TokenKey = TokenKey(753);
-    pub const LOADING_SPIN_DURATION: TokenKey = TokenKey(754);
-    pub const LOADING_TRACK_DURATION: TokenKey = TokenKey(755);
-    pub const LOADING_TRANSITION_DURATION: TokenKey = TokenKey(756);
-    pub const MAGENTA_100: TokenKey = TokenKey(757);
-    pub const MAGENTA_200: TokenKey = TokenKey(758);
-    pub const MAGENTA_300: TokenKey = TokenKey(759);
-    pub const MAGENTA_400: TokenKey = TokenKey(760);
-    pub const MAGENTA_50: TokenKey = TokenKey(761);
-    pub const MAGENTA_500: TokenKey = TokenKey(762);
-    pub const MAGENTA_600: TokenKey = TokenKey(763);
-    pub const MAGENTA_700: TokenKey = TokenKey(764);
-    pub const MAGENTA_800: TokenKey = TokenKey(765);
-    pub const MAGENTA_900: TokenKey = TokenKey(766);
-    pub const MAGENTA_950: TokenKey = TokenKey(767);
-    pub const MENU_ITEM_BACKGROUND_HOVER: TokenKey = TokenKey(768);
-    pub const MENU_ITEM_BORDER_RADIUS: TokenKey = TokenKey(769);
-    pub const MENU_ITEM_COLOR: TokenKey = TokenKey(770);
-    pub const MENU_ITEM_DURATION: TokenKey = TokenKey(771);
-    pub const MENU_ITEM_EASE: TokenKey = TokenKey(772);
-    pub const MENU_WIDTH: TokenKey = TokenKey(773);
-    pub const MOTION_DURATION_ENTER: TokenKey = TokenKey(774);
-    pub const MOTION_DURATION_ENTER_LARGE: TokenKey = TokenKey(775);
-    pub const MOTION_DURATION_ENTER_PAGE: TokenKey = TokenKey(776);
-    pub const MOTION_DURATION_EXIT: TokenKey = TokenKey(777);
-    pub const MOTION_DURATION_EXIT_LARGE: TokenKey = TokenKey(778);
-    pub const MOTION_DURATION_EXIT_PAGE: TokenKey = TokenKey(779);
-    pub const MOTION_DURATION_INTERACTION: TokenKey = TokenKey(780);
-    pub const MOTION_DURATION_LOOP: TokenKey = TokenKey(781);
-    pub const MOTION_DURATION_LOOP_TRACK: TokenKey = TokenKey(782);
-    pub const MOTION_DURATION_SETTLE: TokenKey = TokenKey(783);
-    pub const MOTION_EASE_ENTER: TokenKey = TokenKey(784);
-    pub const MOTION_EASE_EXIT: TokenKey = TokenKey(785);
-    pub const MOTION_EASE_EXPRESSIVE_ENTER: TokenKey = TokenKey(786);
-    pub const MOTION_EASE_EXPRESSIVE_EXIT: TokenKey = TokenKey(787);
-    pub const MOTION_EASE_EXPRESSIVE_STANDARD: TokenKey = TokenKey(788);
-    pub const MOTION_EASE_FADE: TokenKey = TokenKey(789);
-    pub const MOTION_EASE_SPRING: TokenKey = TokenKey(790);
-    pub const MOTION_EASE_STANDARD: TokenKey = TokenKey(791);
-    pub const MOTION_EASE_STOW: TokenKey = TokenKey(792);
-    pub const NEUTRAL_0: TokenKey = TokenKey(793);
-    pub const NEUTRAL_100: TokenKey = TokenKey(794);
-    pub const NEUTRAL_1000: TokenKey = TokenKey(795);
-    pub const NEUTRAL_200: TokenKey = TokenKey(796);
-    pub const NEUTRAL_300: TokenKey = TokenKey(797);
-    pub const NEUTRAL_400: TokenKey = TokenKey(798);
-    pub const NEUTRAL_50: TokenKey = TokenKey(799);
-    pub const NEUTRAL_500: TokenKey = TokenKey(800);
-    pub const NEUTRAL_600: TokenKey = TokenKey(801);
-    pub const NEUTRAL_700: TokenKey = TokenKey(802);
-    pub const NEUTRAL_800: TokenKey = TokenKey(803);
-    pub const NEUTRAL_850: TokenKey = TokenKey(804);
-    pub const NEUTRAL_900: TokenKey = TokenKey(805);
-    pub const NEUTRAL_925: TokenKey = TokenKey(806);
-    pub const NEUTRAL_950: TokenKey = TokenKey(807);
-    pub const ON_ACCENT: TokenKey = TokenKey(808);
-    pub const ON_ERROR_SOLID: TokenKey = TokenKey(809);
-    pub const ON_SUCCESS_SOLID: TokenKey = TokenKey(810);
-    pub const ON_WARNING_SOLID: TokenKey = TokenKey(811);
-    pub const OPACITY_DISABLED_CONTAINER: TokenKey = TokenKey(812);
-    pub const OPACITY_DISABLED_CONTENT: TokenKey = TokenKey(813);
-    pub const OPACITY_DRAGGED: TokenKey = TokenKey(814);
-    pub const OPACITY_FOCUS: TokenKey = TokenKey(815);
-    pub const OPACITY_HOVER: TokenKey = TokenKey(816);
-    pub const OPACITY_PRESSED: TokenKey = TokenKey(817);
-    pub const ORANGE_100: TokenKey = TokenKey(818);
-    pub const ORANGE_200: TokenKey = TokenKey(819);
-    pub const ORANGE_300: TokenKey = TokenKey(820);
-    pub const ORANGE_400: TokenKey = TokenKey(821);
-    pub const ORANGE_50: TokenKey = TokenKey(822);
-    pub const ORANGE_500: TokenKey = TokenKey(823);
-    pub const ORANGE_600: TokenKey = TokenKey(824);
-    pub const ORANGE_700: TokenKey = TokenKey(825);
-    pub const ORANGE_800: TokenKey = TokenKey(826);
-    pub const ORANGE_900: TokenKey = TokenKey(827);
-    pub const ORANGE_950: TokenKey = TokenKey(828);
-    pub const PAGE: TokenKey = TokenKey(829);
-    pub const POPOVER_BACKGROUND: TokenKey = TokenKey(830);
-    pub const POPOVER_BORDER_COLOR: TokenKey = TokenKey(831);
-    pub const POPOVER_BORDER_RADIUS: TokenKey = TokenKey(832);
-    pub const POPOVER_BORDER_WIDTH: TokenKey = TokenKey(833);
-    pub const POPOVER_COLOR: TokenKey = TokenKey(834);
-    pub const POPOVER_DURATION_ENTER: TokenKey = TokenKey(835);
-    pub const POPOVER_DURATION_EXIT: TokenKey = TokenKey(836);
-    pub const POPOVER_EASE: TokenKey = TokenKey(837);
-    pub const POPOVER_EASE_FADE: TokenKey = TokenKey(838);
-    pub const POPOVER_FONT_SIZE: TokenKey = TokenKey(839);
-    pub const POPOVER_PADDING: TokenKey = TokenKey(840);
-    pub const POPOVER_SHADOW: TokenKey = TokenKey(841);
-    pub const POPOVER_Z_INDEX: TokenKey = TokenKey(842);
-    pub const PROGRESS_BORDER_RADIUS: TokenKey = TokenKey(843);
-    pub const PROGRESS_CIRCLE_FONT_SIZE_SM: TokenKey = TokenKey(844);
-    pub const PROGRESS_CIRCLE_SIZE_LG: TokenKey = TokenKey(845);
-    pub const PROGRESS_CIRCLE_SIZE_MD: TokenKey = TokenKey(846);
-    pub const PROGRESS_CIRCLE_SIZE_SM: TokenKey = TokenKey(847);
-    pub const PROGRESS_CIRCLE_STROKE_LG: TokenKey = TokenKey(848);
-    pub const PROGRESS_CIRCLE_STROKE_MD: TokenKey = TokenKey(849);
-    pub const PROGRESS_CIRCLE_STROKE_SM: TokenKey = TokenKey(850);
-    pub const PROGRESS_ERROR: TokenKey = TokenKey(851);
-    pub const PROGRESS_FILL: TokenKey = TokenKey(852);
-    pub const PROGRESS_HEIGHT: TokenKey = TokenKey(853);
-    pub const PROGRESS_HEIGHT_LG: TokenKey = TokenKey(854);
-    pub const PROGRESS_HEIGHT_MD: TokenKey = TokenKey(855);
-    pub const PROGRESS_HEIGHT_SM: TokenKey = TokenKey(856);
-    pub const PROGRESS_PAUSED: TokenKey = TokenKey(857);
-    pub const PROGRESS_SUCCESS: TokenKey = TokenKey(858);
-    pub const PROGRESS_TRACK: TokenKey = TokenKey(859);
-    pub const PURPLE_100: TokenKey = TokenKey(860);
-    pub const PURPLE_200: TokenKey = TokenKey(861);
-    pub const PURPLE_300: TokenKey = TokenKey(862);
-    pub const PURPLE_400: TokenKey = TokenKey(863);
-    pub const PURPLE_50: TokenKey = TokenKey(864);
-    pub const PURPLE_500: TokenKey = TokenKey(865);
-    pub const PURPLE_600: TokenKey = TokenKey(866);
-    pub const PURPLE_700: TokenKey = TokenKey(867);
-    pub const PURPLE_800: TokenKey = TokenKey(868);
-    pub const PURPLE_900: TokenKey = TokenKey(869);
-    pub const PURPLE_950: TokenKey = TokenKey(870);
-    pub const RADIO_ACCENT_COLOR: TokenKey = TokenKey(871);
-    pub const RADIO_BACKGROUND: TokenKey = TokenKey(872);
-    pub const RADIO_BACKGROUND_CHECKED: TokenKey = TokenKey(873);
-    pub const RADIO_BORDER_COLOR: TokenKey = TokenKey(874);
-    pub const RADIO_BORDER_COLOR_CHECKED: TokenKey = TokenKey(875);
-    pub const RADIO_BORDER_RADIUS: TokenKey = TokenKey(876);
-    pub const RADIO_BORDER_WIDTH: TokenKey = TokenKey(877);
-    pub const RADIO_BUTTON_BACKGROUND: TokenKey = TokenKey(878);
-    pub const RADIO_BUTTON_BACKGROUND_SELECTED: TokenKey = TokenKey(879);
-    pub const RADIO_BUTTON_BORDER_COLOR: TokenKey = TokenKey(880);
-    pub const RADIO_BUTTON_BORDER_RADIUS: TokenKey = TokenKey(881);
-    pub const RADIO_BUTTON_BORDER_WIDTH: TokenKey = TokenKey(882);
-    pub const RADIO_BUTTON_COLOR: TokenKey = TokenKey(883);
-    pub const RADIO_BUTTON_COLOR_HOVER: TokenKey = TokenKey(884);
-    pub const RADIO_BUTTON_COLOR_SELECTED: TokenKey = TokenKey(885);
-    pub const RADIO_BUTTON_DISABLED_BACKGROUND: TokenKey = TokenKey(886);
-    pub const RADIO_BUTTON_DISABLED_COLOR: TokenKey = TokenKey(887);
-    pub const RADIO_BUTTON_DURATION: TokenKey = TokenKey(888);
-    pub const RADIO_BUTTON_DURATION_FAST: TokenKey = TokenKey(889);
-    pub const RADIO_BUTTON_EASE: TokenKey = TokenKey(890);
-    pub const RADIO_BUTTON_FONT_SIZE_LG: TokenKey = TokenKey(891);
-    pub const RADIO_BUTTON_FONT_SIZE_MD: TokenKey = TokenKey(892);
-    pub const RADIO_BUTTON_FONT_SIZE_SM: TokenKey = TokenKey(893);
-    pub const RADIO_BUTTON_HEIGHT_LG: TokenKey = TokenKey(894);
-    pub const RADIO_BUTTON_HEIGHT_MD: TokenKey = TokenKey(895);
-    pub const RADIO_BUTTON_HEIGHT_SM: TokenKey = TokenKey(896);
-    pub const RADIO_BUTTON_HOVER_BACKGROUND: TokenKey = TokenKey(897);
-    pub const RADIO_BUTTON_PADDING_INLINE_LG: TokenKey = TokenKey(898);
-    pub const RADIO_BUTTON_PADDING_INLINE_MD: TokenKey = TokenKey(899);
-    pub const RADIO_BUTTON_PADDING_INLINE_SM: TokenKey = TokenKey(900);
-    pub const RADIO_BUTTON_PRESSED_BACKGROUND: TokenKey = TokenKey(901);
-    pub const RADIO_BUTTON_WEIGHT_SELECTED: TokenKey = TokenKey(902);
-    pub const RADIO_DISABLED_BACKGROUND: TokenKey = TokenKey(903);
-    pub const RADIO_DISABLED_BORDER_COLOR: TokenKey = TokenKey(904);
-    pub const RADIO_DISABLED_DOT_COLOR: TokenKey = TokenKey(905);
-    pub const RADIO_DOT_COLOR: TokenKey = TokenKey(906);
-    pub const RADIO_DOT_SIZE: TokenKey = TokenKey(907);
-    pub const RADIO_DOT_SIZE_LG: TokenKey = TokenKey(908);
-    pub const RADIO_DOT_SIZE_MD: TokenKey = TokenKey(909);
-    pub const RADIO_DOT_SIZE_SM: TokenKey = TokenKey(910);
-    pub const RADIO_DURATION: TokenKey = TokenKey(911);
-    pub const RADIO_DURATION_FAST: TokenKey = TokenKey(912);
-    pub const RADIO_EASE: TokenKey = TokenKey(913);
-    pub const RADIO_EASE_ENTER: TokenKey = TokenKey(914);
-    pub const RADIO_EASE_EXIT: TokenKey = TokenKey(915);
-    pub const RADIO_FOCUS_RING_COLOR: TokenKey = TokenKey(916);
-    pub const RADIO_FOCUS_RING_OFFSET: TokenKey = TokenKey(917);
-    pub const RADIO_FOCUS_RING_WIDTH: TokenKey = TokenKey(918);
-    pub const RADIO_GROUP_GAP: TokenKey = TokenKey(919);
-    pub const RADIO_HALO_COLOR: TokenKey = TokenKey(920);
-    pub const RADIO_HALO_WIDTH: TokenKey = TokenKey(921);
-    pub const RADIO_HEIGHT_LG: TokenKey = TokenKey(922);
-    pub const RADIO_HEIGHT_MD: TokenKey = TokenKey(923);
-    pub const RADIO_HEIGHT_SM: TokenKey = TokenKey(924);
-    pub const RADIO_LABEL_COLOR: TokenKey = TokenKey(925);
-    pub const RADIO_LABEL_COLOR_DISABLED: TokenKey = TokenKey(926);
-    pub const RADIO_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(927);
-    pub const RADIO_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(928);
-    pub const RADIO_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(929);
-    pub const RADIO_LABEL_GAP: TokenKey = TokenKey(930);
-    pub const RADIO_PRESS_SCALE: TokenKey = TokenKey(931);
-    pub const RADIO_SIZE: TokenKey = TokenKey(932);
-    pub const RADIO_SIZE_LG: TokenKey = TokenKey(933);
-    pub const RADIO_SIZE_MD: TokenKey = TokenKey(934);
-    pub const RADIO_SIZE_SM: TokenKey = TokenKey(935);
-    pub const RADIUS_BASE: TokenKey = TokenKey(936);
-    pub const RADIUS_FULL: TokenKey = TokenKey(937);
-    pub const RADIUS_LG: TokenKey = TokenKey(938);
-    pub const RADIUS_MD: TokenKey = TokenKey(939);
-    pub const RADIUS_NONE: TokenKey = TokenKey(940);
-    pub const RADIUS_SM: TokenKey = TokenKey(941);
-    pub const RADIUS_XL: TokenKey = TokenKey(942);
-    pub const RADIUS_XS: TokenKey = TokenKey(943);
-    pub const RED_100: TokenKey = TokenKey(944);
-    pub const RED_200: TokenKey = TokenKey(945);
-    pub const RED_300: TokenKey = TokenKey(946);
-    pub const RED_400: TokenKey = TokenKey(947);
-    pub const RED_50: TokenKey = TokenKey(948);
-    pub const RED_500: TokenKey = TokenKey(949);
-    pub const RED_600: TokenKey = TokenKey(950);
-    pub const RED_700: TokenKey = TokenKey(951);
-    pub const RED_800: TokenKey = TokenKey(952);
-    pub const RED_900: TokenKey = TokenKey(953);
-    pub const RED_950: TokenKey = TokenKey(954);
-    pub const RESIZABLE_HIT_WIDTH: TokenKey = TokenKey(955);
-    pub const RESIZABLE_KEYBOARD_STEP: TokenKey = TokenKey(956);
-    pub const RESIZABLE_KEYBOARD_STEP_LARGE: TokenKey = TokenKey(957);
-    pub const RESIZABLE_LINE_COLOR: TokenKey = TokenKey(958);
-    pub const RESIZABLE_LINE_COLOR_ACTIVE: TokenKey = TokenKey(959);
-    pub const RESIZABLE_LINE_COLOR_DISABLED: TokenKey = TokenKey(960);
-    pub const RESIZABLE_LINE_COLOR_HOVER: TokenKey = TokenKey(961);
-    pub const RESIZABLE_LINE_WIDTH: TokenKey = TokenKey(962);
-    pub const RESIZABLE_OUTLINE_COLOR: TokenKey = TokenKey(963);
-    pub const RESIZABLE_OUTLINE_WIDTH: TokenKey = TokenKey(964);
-    pub const RESIZABLE_PANEL_MIN_SIZE: TokenKey = TokenKey(965);
-    pub const ROSE_100: TokenKey = TokenKey(966);
-    pub const ROSE_200: TokenKey = TokenKey(967);
-    pub const ROSE_300: TokenKey = TokenKey(968);
-    pub const ROSE_400: TokenKey = TokenKey(969);
-    pub const ROSE_50: TokenKey = TokenKey(970);
-    pub const ROSE_500: TokenKey = TokenKey(971);
-    pub const ROSE_600: TokenKey = TokenKey(972);
-    pub const ROSE_700: TokenKey = TokenKey(973);
-    pub const ROSE_800: TokenKey = TokenKey(974);
-    pub const ROSE_900: TokenKey = TokenKey(975);
-    pub const ROSE_950: TokenKey = TokenKey(976);
-    pub const SCRIM: TokenKey = TokenKey(977);
-    pub const SCRIM_MODAL: TokenKey = TokenKey(978);
-    pub const SCROLLBAR_DURATION_COLOR: TokenKey = TokenKey(979);
-    pub const SCROLLBAR_DURATION_ENTER: TokenKey = TokenKey(980);
-    pub const SCROLLBAR_DURATION_EXIT: TokenKey = TokenKey(981);
-    pub const SCROLLBAR_DURATION_EXPAND: TokenKey = TokenKey(982);
-    pub const SCROLLBAR_EASE_EXPAND: TokenKey = TokenKey(983);
-    pub const SCROLLBAR_EASE_FADE: TokenKey = TokenKey(984);
-    pub const SCROLLBAR_HIT_WIDTH: TokenKey = TokenKey(985);
-    pub const SCROLLBAR_IDLE_DELAY: TokenKey = TokenKey(986);
-    pub const SCROLLBAR_THUMB_COLOR: TokenKey = TokenKey(987);
-    pub const SCROLLBAR_THUMB_COLOR_ACTIVE: TokenKey = TokenKey(988);
-    pub const SCROLLBAR_THUMB_COLOR_HOVER: TokenKey = TokenKey(989);
-    pub const SCROLLBAR_THUMB_INSET: TokenKey = TokenKey(990);
-    pub const SCROLLBAR_THUMB_MIN_LENGTH: TokenKey = TokenKey(991);
-    pub const SCROLLBAR_THUMB_WIDTH: TokenKey = TokenKey(992);
-    pub const SCROLLBAR_THUMB_WIDTH_ACTIVE: TokenKey = TokenKey(993);
-    pub const SCROLLBAR_THUMB_WIDTH_HOVER: TokenKey = TokenKey(994);
-    pub const SEGMENTED_ACCENT_BACKGROUND: TokenKey = TokenKey(995);
-    pub const SEGMENTED_ACCENT_COLOR: TokenKey = TokenKey(996);
-    pub const SEGMENTED_ACCENT_THUMB_BACKGROUND: TokenKey = TokenKey(997);
-    pub const SEGMENTED_ACCENT_THUMB_COLOR: TokenKey = TokenKey(998);
-    pub const SEGMENTED_BACKGROUND: TokenKey = TokenKey(999);
-    pub const SEGMENTED_COLOR: TokenKey = TokenKey(1000);
-    pub const SEGMENTED_COLOR_HOVER: TokenKey = TokenKey(1001);
-    pub const SEGMENTED_CONTENT_GAP: TokenKey = TokenKey(1002);
-    pub const SEGMENTED_DISABLED_BACKGROUND: TokenKey = TokenKey(1003);
-    pub const SEGMENTED_DISABLED_COLOR: TokenKey = TokenKey(1004);
-    pub const SEGMENTED_DISABLED_THUMB_BACKGROUND: TokenKey = TokenKey(1005);
-    pub const SEGMENTED_DISABLED_THUMB_COLOR: TokenKey = TokenKey(1006);
-    pub const SEGMENTED_DURATION: TokenKey = TokenKey(1007);
-    pub const SEGMENTED_EASE: TokenKey = TokenKey(1008);
-    pub const SEGMENTED_FOCUS_RING_COLOR: TokenKey = TokenKey(1009);
-    pub const SEGMENTED_FOCUS_RING_OFFSET: TokenKey = TokenKey(1010);
-    pub const SEGMENTED_FOCUS_RING_WIDTH: TokenKey = TokenKey(1011);
-    pub const SEGMENTED_FONT_SIZE_LG: TokenKey = TokenKey(1012);
-    pub const SEGMENTED_FONT_SIZE_MD: TokenKey = TokenKey(1013);
-    pub const SEGMENTED_FONT_SIZE_SM: TokenKey = TokenKey(1014);
-    pub const SEGMENTED_HEIGHT_LG: TokenKey = TokenKey(1015);
-    pub const SEGMENTED_HEIGHT_MD: TokenKey = TokenKey(1016);
-    pub const SEGMENTED_HEIGHT_SM: TokenKey = TokenKey(1017);
-    pub const SEGMENTED_HOVER_BACKGROUND: TokenKey = TokenKey(1018);
-    pub const SEGMENTED_ICON_SIZE_LG: TokenKey = TokenKey(1019);
-    pub const SEGMENTED_ICON_SIZE_MD: TokenKey = TokenKey(1020);
-    pub const SEGMENTED_ICON_SIZE_SM: TokenKey = TokenKey(1021);
-    pub const SEGMENTED_LINE_HEIGHT_LG: TokenKey = TokenKey(1022);
-    pub const SEGMENTED_LINE_HEIGHT_MD: TokenKey = TokenKey(1023);
-    pub const SEGMENTED_LINE_HEIGHT_SM: TokenKey = TokenKey(1024);
-    pub const SEGMENTED_PADDING_INLINE_LG: TokenKey = TokenKey(1025);
-    pub const SEGMENTED_PADDING_INLINE_MD: TokenKey = TokenKey(1026);
-    pub const SEGMENTED_PADDING_INLINE_SM: TokenKey = TokenKey(1027);
-    pub const SEGMENTED_PRESSED_BACKGROUND: TokenKey = TokenKey(1028);
-    pub const SEGMENTED_RADIUS: TokenKey = TokenKey(1029);
-    pub const SEGMENTED_STATE_DURATION: TokenKey = TokenKey(1030);
-    pub const SEGMENTED_STATE_EASE: TokenKey = TokenKey(1031);
-    pub const SEGMENTED_THUMB_BACKGROUND: TokenKey = TokenKey(1032);
-    pub const SEGMENTED_THUMB_COLOR: TokenKey = TokenKey(1033);
-    pub const SEGMENTED_THUMB_RADIUS: TokenKey = TokenKey(1034);
-    pub const SEGMENTED_THUMB_SHADOW: TokenKey = TokenKey(1035);
-    pub const SEGMENTED_TRACK_PADDING: TokenKey = TokenKey(1036);
-    pub const SEGMENTED_WEIGHT: TokenKey = TokenKey(1037);
-    pub const SEGMENTED_WEIGHT_SELECTED: TokenKey = TokenKey(1038);
-    pub const SELECT_LIST_MAX_HEIGHT: TokenKey = TokenKey(1039);
-    pub const SELECT_OPTION_BACKGROUND_SELECTED: TokenKey = TokenKey(1040);
-    pub const SELECT_OPTION_COLOR_SELECTED: TokenKey = TokenKey(1041);
-    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_LG: TokenKey = TokenKey(1042);
-    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_MD: TokenKey = TokenKey(1043);
-    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_SM: TokenKey = TokenKey(1044);
-    pub const SELECT_OPTION_HEIGHT_LG: TokenKey = TokenKey(1045);
-    pub const SELECT_OPTION_HEIGHT_MD: TokenKey = TokenKey(1046);
-    pub const SELECT_OPTION_HEIGHT_SM: TokenKey = TokenKey(1047);
-    pub const SELECT_PANEL_GAP: TokenKey = TokenKey(1048);
-    pub const SELECT_TAG_GAP: TokenKey = TokenKey(1049);
-    pub const SELECT_WIDTH: TokenKey = TokenKey(1050);
-    pub const SELECTED_BACKGROUND: TokenKey = TokenKey(1051);
-    pub const SELECTED_COLOR: TokenKey = TokenKey(1052);
-    pub const SELECTED_MARKER_COLOR: TokenKey = TokenKey(1053);
-    pub const SELECTED_MARKER_WIDTH: TokenKey = TokenKey(1054);
-    pub const SELECTION_BG: TokenKey = TokenKey(1055);
-    pub const SELECTION_FOREGROUND: TokenKey = TokenKey(1056);
-    pub const SHADOW_1: TokenKey = TokenKey(1057);
-    pub const SHADOW_2: TokenKey = TokenKey(1058);
-    pub const SHADOW_3: TokenKey = TokenKey(1059);
-    pub const SIZE_12: TokenKey = TokenKey(1060);
-    pub const SIZE_16: TokenKey = TokenKey(1061);
-    pub const SIZE_20: TokenKey = TokenKey(1062);
-    pub const SIZE_24: TokenKey = TokenKey(1063);
-    pub const SIZE_28: TokenKey = TokenKey(1064);
-    pub const SIZE_32: TokenKey = TokenKey(1065);
-    pub const SIZE_40: TokenKey = TokenKey(1066);
-    pub const SIZE_48: TokenKey = TokenKey(1067);
-    pub const SIZE_56: TokenKey = TokenKey(1068);
-    pub const SKELETON_BASE: TokenKey = TokenKey(1069);
-    pub const SKELETON_CIRCLE_LG: TokenKey = TokenKey(1070);
-    pub const SKELETON_CIRCLE_MD: TokenKey = TokenKey(1071);
-    pub const SKELETON_CIRCLE_SM: TokenKey = TokenKey(1072);
-    pub const SKELETON_DURATION: TokenKey = TokenKey(1073);
-    pub const SKELETON_HEIGHT: TokenKey = TokenKey(1074);
-    pub const SKELETON_HIGHLIGHT: TokenKey = TokenKey(1075);
-    pub const SKELETON_LINE_LG: TokenKey = TokenKey(1076);
-    pub const SKELETON_LINE_MD: TokenKey = TokenKey(1077);
-    pub const SKELETON_LINE_SM: TokenKey = TokenKey(1078);
-    pub const SKELETON_RADIUS: TokenKey = TokenKey(1079);
-    pub const SKELETON_TEXT_LG: TokenKey = TokenKey(1080);
-    pub const SKELETON_TEXT_MD: TokenKey = TokenKey(1081);
-    pub const SKELETON_TEXT_SM: TokenKey = TokenKey(1082);
-    pub const SKELETON_WIDTH: TokenKey = TokenKey(1083);
-    pub const SLATE_0: TokenKey = TokenKey(1084);
-    pub const SLATE_100: TokenKey = TokenKey(1085);
-    pub const SLATE_1000: TokenKey = TokenKey(1086);
-    pub const SLATE_200: TokenKey = TokenKey(1087);
-    pub const SLATE_300: TokenKey = TokenKey(1088);
-    pub const SLATE_400: TokenKey = TokenKey(1089);
-    pub const SLATE_50: TokenKey = TokenKey(1090);
-    pub const SLATE_500: TokenKey = TokenKey(1091);
-    pub const SLATE_600: TokenKey = TokenKey(1092);
-    pub const SLATE_700: TokenKey = TokenKey(1093);
-    pub const SLATE_800: TokenKey = TokenKey(1094);
-    pub const SLATE_850: TokenKey = TokenKey(1095);
-    pub const SLATE_900: TokenKey = TokenKey(1096);
-    pub const SLATE_925: TokenKey = TokenKey(1097);
-    pub const SLATE_950: TokenKey = TokenKey(1098);
-    pub const SLIDER_DISABLED_FILL_BACKGROUND: TokenKey = TokenKey(1099);
-    pub const SLIDER_DISABLED_THUMB_BACKGROUND: TokenKey = TokenKey(1100);
-    pub const SLIDER_DISABLED_THUMB_BORDER_COLOR: TokenKey = TokenKey(1101);
-    pub const SLIDER_DISABLED_TRACK_BACKGROUND: TokenKey = TokenKey(1102);
-    pub const SLIDER_FILL_BACKGROUND: TokenKey = TokenKey(1103);
-    pub const SLIDER_FOCUS_RING_COLOR: TokenKey = TokenKey(1104);
-    pub const SLIDER_FOCUS_RING_OFFSET: TokenKey = TokenKey(1105);
-    pub const SLIDER_FOCUS_RING_WIDTH: TokenKey = TokenKey(1106);
-    pub const SLIDER_HEIGHT: TokenKey = TokenKey(1107);
-    pub const SLIDER_HIT_SIZE_LG: TokenKey = TokenKey(1108);
-    pub const SLIDER_HIT_SIZE_MD: TokenKey = TokenKey(1109);
-    pub const SLIDER_HIT_SIZE_SM: TokenKey = TokenKey(1110);
-    pub const SLIDER_INPUT_GAP: TokenKey = TokenKey(1111);
-    pub const SLIDER_INPUT_MIN_DIGITS: TokenKey = TokenKey(1112);
-    pub const SLIDER_LABEL_COLOR: TokenKey = TokenKey(1113);
-    pub const SLIDER_LABEL_COLOR_ACTIVE: TokenKey = TokenKey(1114);
-    pub const SLIDER_LABEL_COLOR_DISABLED: TokenKey = TokenKey(1115);
-    pub const SLIDER_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(1116);
-    pub const SLIDER_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(1117);
-    pub const SLIDER_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(1118);
-    pub const SLIDER_LABEL_GAP: TokenKey = TokenKey(1119);
-    pub const SLIDER_LABEL_LINE_HEIGHT_LG: TokenKey = TokenKey(1120);
-    pub const SLIDER_LABEL_LINE_HEIGHT_MD: TokenKey = TokenKey(1121);
-    pub const SLIDER_LABEL_LINE_HEIGHT_SM: TokenKey = TokenKey(1122);
-    pub const SLIDER_LABEL_MAX_WIDTH: TokenKey = TokenKey(1123);
-    pub const SLIDER_LABEL_MIN_GAP: TokenKey = TokenKey(1124);
-    pub const SLIDER_MARK_COLOR: TokenKey = TokenKey(1125);
-    pub const SLIDER_MARK_COLOR_ACTIVE: TokenKey = TokenKey(1126);
-    pub const SLIDER_MARK_SIZE: TokenKey = TokenKey(1127);
-    pub const SLIDER_MIN_TRACK_LENGTH: TokenKey = TokenKey(1128);
-    pub const SLIDER_RADIUS: TokenKey = TokenKey(1129);
-    pub const SLIDER_RELEASE_DURATION: TokenKey = TokenKey(1130);
-    pub const SLIDER_SNAP_DISTANCE: TokenKey = TokenKey(1131);
-    pub const SLIDER_STATE_DURATION: TokenKey = TokenKey(1132);
-    pub const SLIDER_STATE_EASE: TokenKey = TokenKey(1133);
-    pub const SLIDER_STEPPER_GAP: TokenKey = TokenKey(1134);
-    pub const SLIDER_THUMB_BACKGROUND: TokenKey = TokenKey(1135);
-    pub const SLIDER_THUMB_BORDER_COLOR: TokenKey = TokenKey(1136);
-    pub const SLIDER_THUMB_BORDER_COLOR_ACTIVE: TokenKey = TokenKey(1137);
-    pub const SLIDER_THUMB_BORDER_COLOR_HOVER: TokenKey = TokenKey(1138);
-    pub const SLIDER_THUMB_BORDER_WIDTH: TokenKey = TokenKey(1139);
-    pub const SLIDER_THUMB_HALO_COLOR: TokenKey = TokenKey(1140);
-    pub const SLIDER_THUMB_HALO_SIZE: TokenKey = TokenKey(1141);
-    pub const SLIDER_THUMB_RADIUS: TokenKey = TokenKey(1142);
-    pub const SLIDER_THUMB_SCALE_PRESSED: TokenKey = TokenKey(1143);
-    pub const SLIDER_THUMB_SHADOW: TokenKey = TokenKey(1144);
-    pub const SLIDER_THUMB_SIZE_LG: TokenKey = TokenKey(1145);
-    pub const SLIDER_THUMB_SIZE_MD: TokenKey = TokenKey(1146);
-    pub const SLIDER_THUMB_SIZE_SM: TokenKey = TokenKey(1147);
-    pub const SLIDER_TOOLTIP_GAP: TokenKey = TokenKey(1148);
-    pub const SLIDER_TRACK_BACKGROUND: TokenKey = TokenKey(1149);
-    pub const SLIDER_TRACK_HEIGHT_LG: TokenKey = TokenKey(1150);
-    pub const SLIDER_TRACK_HEIGHT_MD: TokenKey = TokenKey(1151);
-    pub const SLIDER_TRACK_HEIGHT_SM: TokenKey = TokenKey(1152);
-    pub const SLIDER_WIDTH: TokenKey = TokenKey(1153);
-    pub const SPACE_0: TokenKey = TokenKey(1154);
-    pub const SPACE_12: TokenKey = TokenKey(1155);
-    pub const SPACE_16: TokenKey = TokenKey(1156);
-    pub const SPACE_2: TokenKey = TokenKey(1157);
-    pub const SPACE_24: TokenKey = TokenKey(1158);
-    pub const SPACE_32: TokenKey = TokenKey(1159);
-    pub const SPACE_4: TokenKey = TokenKey(1160);
-    pub const SPACE_48: TokenKey = TokenKey(1161);
-    pub const SPACE_64: TokenKey = TokenKey(1162);
-    pub const SPACE_8: TokenKey = TokenKey(1163);
-    pub const SPINNER_BORDER_WIDTH: TokenKey = TokenKey(1164);
-    pub const SPINNER_COLOR: TokenKey = TokenKey(1165);
-    pub const SPINNER_DURATION: TokenKey = TokenKey(1166);
-    pub const SPINNER_SIZE: TokenKey = TokenKey(1167);
-    pub const SPINNER_SIZE_LG: TokenKey = TokenKey(1168);
-    pub const SPINNER_SIZE_MD: TokenKey = TokenKey(1169);
-    pub const SPINNER_SIZE_SM: TokenKey = TokenKey(1170);
-    pub const SPINNER_STROKE_LG: TokenKey = TokenKey(1171);
-    pub const SPINNER_STROKE_MD: TokenKey = TokenKey(1172);
-    pub const SPINNER_STROKE_SM: TokenKey = TokenKey(1173);
-    pub const SPINNER_TRACK: TokenKey = TokenKey(1174);
-    pub const STATUS_BORDER_RADIUS: TokenKey = TokenKey(1175);
-    pub const STATUS_BORDER_WIDTH: TokenKey = TokenKey(1176);
-    pub const STATUS_GAP: TokenKey = TokenKey(1177);
-    pub const STATUS_PADDING_BLOCK: TokenKey = TokenKey(1178);
-    pub const STATUS_PADDING_INLINE: TokenKey = TokenKey(1179);
-    pub const STONE_0: TokenKey = TokenKey(1180);
-    pub const STONE_100: TokenKey = TokenKey(1181);
-    pub const STONE_1000: TokenKey = TokenKey(1182);
-    pub const STONE_200: TokenKey = TokenKey(1183);
-    pub const STONE_300: TokenKey = TokenKey(1184);
-    pub const STONE_400: TokenKey = TokenKey(1185);
-    pub const STONE_50: TokenKey = TokenKey(1186);
-    pub const STONE_500: TokenKey = TokenKey(1187);
-    pub const STONE_600: TokenKey = TokenKey(1188);
-    pub const STONE_700: TokenKey = TokenKey(1189);
-    pub const STONE_800: TokenKey = TokenKey(1190);
-    pub const STONE_850: TokenKey = TokenKey(1191);
-    pub const STONE_900: TokenKey = TokenKey(1192);
-    pub const STONE_925: TokenKey = TokenKey(1193);
-    pub const STONE_950: TokenKey = TokenKey(1194);
-    pub const SUCCESS: TokenKey = TokenKey(1195);
-    pub const SUCCESS_BG: TokenKey = TokenKey(1196);
-    pub const SUCCESS_BORDER: TokenKey = TokenKey(1197);
-    pub const SUCCESS_FOREGROUND: TokenKey = TokenKey(1198);
-    pub const SUCCESS_SOLID: TokenKey = TokenKey(1199);
-    pub const SURFACE: TokenKey = TokenKey(1200);
-    pub const SURFACE_COMPONENT: TokenKey = TokenKey(1201);
-    pub const SURFACE_GLASS: TokenKey = TokenKey(1202);
-    pub const SURFACE_GLASS_BORDER: TokenKey = TokenKey(1203);
-    pub const SURFACE_INVERSE: TokenKey = TokenKey(1204);
-    pub const SURFACE_LEVEL_2: TokenKey = TokenKey(1205);
-    pub const SURFACE_LEVEL_2_BORDER: TokenKey = TokenKey(1206);
-    pub const SURFACE_LEVEL_3: TokenKey = TokenKey(1207);
-    pub const SURFACE_LEVEL_3_BORDER: TokenKey = TokenKey(1208);
-    pub const SURFACE_SUBTLE: TokenKey = TokenKey(1209);
-    pub const SWATCH_BORDER_COLOR: TokenKey = TokenKey(1210);
-    pub const SWATCH_CHECKER_SIZE: TokenKey = TokenKey(1211);
-    pub const SWATCH_FOCUS_RING_COLOR: TokenKey = TokenKey(1212);
-    pub const SWATCH_FOCUS_RING_OFFSET: TokenKey = TokenKey(1213);
-    pub const SWATCH_FOCUS_RING_WIDTH: TokenKey = TokenKey(1214);
-    pub const SWATCH_GAP: TokenKey = TokenKey(1215);
-    pub const SWATCH_HIT_SIZE: TokenKey = TokenKey(1216);
-    pub const SWATCH_RADIUS: TokenKey = TokenKey(1217);
-    pub const SWATCH_SELECTED_COLOR: TokenKey = TokenKey(1218);
-    pub const SWATCH_SELECTED_OFFSET: TokenKey = TokenKey(1219);
-    pub const SWATCH_SELECTED_WIDTH: TokenKey = TokenKey(1220);
-    pub const SWATCH_SIZE: TokenKey = TokenKey(1221);
-    pub const SWITCH_BACKGROUND: TokenKey = TokenKey(1222);
-    pub const SWITCH_BACKGROUND_CHECKED: TokenKey = TokenKey(1223);
-    pub const SWITCH_BORDER_COLOR: TokenKey = TokenKey(1224);
-    pub const SWITCH_BORDER_RADIUS: TokenKey = TokenKey(1225);
-    pub const SWITCH_BORDER_RADIUS_CAPSULE: TokenKey = TokenKey(1226);
-    pub const SWITCH_BORDER_RADIUS_ROUNDED: TokenKey = TokenKey(1227);
-    pub const SWITCH_BORDER_WIDTH: TokenKey = TokenKey(1228);
-    pub const SWITCH_DURATION: TokenKey = TokenKey(1229);
-    pub const SWITCH_DURATION_FAST: TokenKey = TokenKey(1230);
-    pub const SWITCH_EASE: TokenKey = TokenKey(1231);
-    pub const SWITCH_HEIGHT: TokenKey = TokenKey(1232);
-    pub const SWITCH_HEIGHT_LG: TokenKey = TokenKey(1233);
-    pub const SWITCH_HEIGHT_MD: TokenKey = TokenKey(1234);
-    pub const SWITCH_HEIGHT_SM: TokenKey = TokenKey(1235);
-    pub const SWITCH_INDICATOR_COLOR: TokenKey = TokenKey(1236);
-    pub const SWITCH_INDICATOR_COLOR_CHECKED: TokenKey = TokenKey(1237);
-    pub const SWITCH_INDICATOR_COLOR_UNCHECKED: TokenKey = TokenKey(1238);
-    pub const SWITCH_INDICATOR_SIZE_LG: TokenKey = TokenKey(1239);
-    pub const SWITCH_INDICATOR_SIZE_MD: TokenKey = TokenKey(1240);
-    pub const SWITCH_INDICATOR_SIZE_SM: TokenKey = TokenKey(1241);
-    pub const SWITCH_INSET: TokenKey = TokenKey(1242);
-    pub const SWITCH_INSET_LG: TokenKey = TokenKey(1243);
-    pub const SWITCH_INSET_MD: TokenKey = TokenKey(1244);
-    pub const SWITCH_INSET_SM: TokenKey = TokenKey(1245);
-    pub const SWITCH_OPACITY_DISABLED: TokenKey = TokenKey(1246);
-    pub const SWITCH_THUMB: TokenKey = TokenKey(1247);
-    pub const SWITCH_THUMB_BORDER_RADIUS_CAPSULE: TokenKey = TokenKey(1248);
-    pub const SWITCH_THUMB_BORDER_RADIUS_ROUNDED: TokenKey = TokenKey(1249);
-    pub const SWITCH_THUMB_COLOR: TokenKey = TokenKey(1250);
-    pub const SWITCH_THUMB_COLOR_CHECKED: TokenKey = TokenKey(1251);
-    pub const SWITCH_THUMB_LG: TokenKey = TokenKey(1252);
-    pub const SWITCH_THUMB_MD: TokenKey = TokenKey(1253);
-    pub const SWITCH_THUMB_SHIFT: TokenKey = TokenKey(1254);
-    pub const SWITCH_THUMB_SM: TokenKey = TokenKey(1255);
-    pub const SWITCH_WIDTH: TokenKey = TokenKey(1256);
-    pub const SWITCH_WIDTH_LG: TokenKey = TokenKey(1257);
-    pub const SWITCH_WIDTH_MD: TokenKey = TokenKey(1258);
-    pub const SWITCH_WIDTH_SM: TokenKey = TokenKey(1259);
-    pub const TABS_ACTION_SIZE_LG: TokenKey = TokenKey(1260);
-    pub const TABS_ACTION_SIZE_MD: TokenKey = TokenKey(1261);
-    pub const TABS_ACTION_SIZE_SM: TokenKey = TokenKey(1262);
-    pub const TABS_BACKGROUND_HOVER: TokenKey = TokenKey(1263);
-    pub const TABS_BACKGROUND_PRESSED: TokenKey = TokenKey(1264);
-    pub const TABS_BORDER_COLOR: TokenKey = TokenKey(1265);
-    pub const TABS_BORDER_RADIUS: TokenKey = TokenKey(1266);
-    pub const TABS_BORDER_WIDTH: TokenKey = TokenKey(1267);
-    pub const TABS_CARD_BACKGROUND: TokenKey = TokenKey(1268);
-    pub const TABS_CARD_BACKGROUND_SELECTED: TokenKey = TokenKey(1269);
-    pub const TABS_CLOSE_ICON_SIZE_LG: TokenKey = TokenKey(1270);
-    pub const TABS_CLOSE_ICON_SIZE_MD: TokenKey = TokenKey(1271);
-    pub const TABS_CLOSE_ICON_SIZE_SM: TokenKey = TokenKey(1272);
-    pub const TABS_COLOR: TokenKey = TokenKey(1273);
-    pub const TABS_COLOR_DISABLED: TokenKey = TokenKey(1274);
-    pub const TABS_COLOR_SELECTED: TokenKey = TokenKey(1275);
-    pub const TABS_CONTENT_DURATION_ENTER: TokenKey = TokenKey(1276);
-    pub const TABS_CONTENT_DURATION_EXIT: TokenKey = TokenKey(1277);
-    pub const TABS_CONTENT_OFFSET: TokenKey = TokenKey(1278);
-    pub const TABS_DURATION: TokenKey = TokenKey(1279);
-    pub const TABS_EASE: TokenKey = TokenKey(1280);
-    pub const TABS_FOCUS_RING_COLOR: TokenKey = TokenKey(1281);
-    pub const TABS_FOCUS_RING_OFFSET: TokenKey = TokenKey(1282);
-    pub const TABS_FOCUS_RING_WIDTH: TokenKey = TokenKey(1283);
-    pub const TABS_FONT_SIZE_LG: TokenKey = TokenKey(1284);
-    pub const TABS_FONT_SIZE_MD: TokenKey = TokenKey(1285);
-    pub const TABS_FONT_SIZE_SM: TokenKey = TokenKey(1286);
-    pub const TABS_GAP_LG: TokenKey = TokenKey(1287);
-    pub const TABS_GAP_MD: TokenKey = TokenKey(1288);
-    pub const TABS_GAP_SM: TokenKey = TokenKey(1289);
-    pub const TABS_HEADER_WIDTH: TokenKey = TokenKey(1290);
-    pub const TABS_HEIGHT_LG: TokenKey = TokenKey(1291);
-    pub const TABS_HEIGHT_MD: TokenKey = TokenKey(1292);
-    pub const TABS_HEIGHT_SM: TokenKey = TokenKey(1293);
-    pub const TABS_ICON_SIZE_LG: TokenKey = TokenKey(1294);
-    pub const TABS_ICON_SIZE_MD: TokenKey = TokenKey(1295);
-    pub const TABS_ICON_SIZE_SM: TokenKey = TokenKey(1296);
-    pub const TABS_INDICATOR_COLOR: TokenKey = TokenKey(1297);
-    pub const TABS_INDICATOR_DURATION: TokenKey = TokenKey(1298);
-    pub const TABS_INDICATOR_RADIUS: TokenKey = TokenKey(1299);
-    pub const TABS_INDICATOR_SIZE: TokenKey = TokenKey(1300);
-    pub const TABS_MAX_ITEM_WIDTH: TokenKey = TokenKey(1301);
-    pub const TABS_PADDING_INLINE_LG: TokenKey = TokenKey(1302);
-    pub const TABS_PADDING_INLINE_MD: TokenKey = TokenKey(1303);
-    pub const TABS_PADDING_INLINE_SM: TokenKey = TokenKey(1304);
-    pub const TABS_SCROLL_DURATION: TokenKey = TokenKey(1305);
-    pub const TAG_BACKGROUND: TokenKey = TokenKey(1306);
-    pub const TAG_BACKGROUND_HOVER: TokenKey = TokenKey(1307);
-    pub const TAG_BACKGROUND_SELECTED: TokenKey = TokenKey(1308);
-    pub const TAG_BORDER_COLOR: TokenKey = TokenKey(1309);
-    pub const TAG_BORDER_COLOR_SELECTED: TokenKey = TokenKey(1310);
-    pub const TAG_BORDER_RADIUS: TokenKey = TokenKey(1311);
-    pub const TAG_BORDER_RADIUS_ROUND: TokenKey = TokenKey(1312);
-    pub const TAG_BORDER_WIDTH: TokenKey = TokenKey(1313);
-    pub const TAG_CLOSE_ICON_SIZE: TokenKey = TokenKey(1314);
-    pub const TAG_COLOR: TokenKey = TokenKey(1315);
-    pub const TAG_COLOR_SELECTED: TokenKey = TokenKey(1316);
-    pub const TAG_DANGER_FILLED_BACKGROUND: TokenKey = TokenKey(1317);
-    pub const TAG_DANGER_FILLED_BORDER_COLOR: TokenKey = TokenKey(1318);
-    pub const TAG_DANGER_FILLED_COLOR: TokenKey = TokenKey(1319);
-    pub const TAG_DANGER_OUTLINE_BACKGROUND: TokenKey = TokenKey(1320);
-    pub const TAG_DANGER_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1321);
-    pub const TAG_DANGER_OUTLINE_COLOR: TokenKey = TokenKey(1322);
-    pub const TAG_DANGER_TINT_BACKGROUND: TokenKey = TokenKey(1323);
-    pub const TAG_DANGER_TINT_BORDER_COLOR: TokenKey = TokenKey(1324);
-    pub const TAG_DANGER_TINT_COLOR: TokenKey = TokenKey(1325);
-    pub const TAG_DANGER_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1326);
-    pub const TAG_DANGER_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1327);
-    pub const TAG_DANGER_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1328);
-    pub const TAG_DEFAULT_FILLED_BACKGROUND: TokenKey = TokenKey(1329);
-    pub const TAG_DEFAULT_FILLED_BORDER_COLOR: TokenKey = TokenKey(1330);
-    pub const TAG_DEFAULT_FILLED_COLOR: TokenKey = TokenKey(1331);
-    pub const TAG_DEFAULT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1332);
-    pub const TAG_DEFAULT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1333);
-    pub const TAG_DEFAULT_OUTLINE_COLOR: TokenKey = TokenKey(1334);
-    pub const TAG_DEFAULT_TINT_BACKGROUND: TokenKey = TokenKey(1335);
-    pub const TAG_DEFAULT_TINT_BORDER_COLOR: TokenKey = TokenKey(1336);
-    pub const TAG_DEFAULT_TINT_COLOR: TokenKey = TokenKey(1337);
-    pub const TAG_DEFAULT_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1338);
-    pub const TAG_DEFAULT_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1339);
-    pub const TAG_DEFAULT_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1340);
-    pub const TAG_DURATION: TokenKey = TokenKey(1341);
-    pub const TAG_EASE: TokenKey = TokenKey(1342);
-    pub const TAG_FOCUS_RING_COLOR: TokenKey = TokenKey(1343);
-    pub const TAG_FOCUS_RING_OFFSET: TokenKey = TokenKey(1344);
-    pub const TAG_FOCUS_RING_WIDTH: TokenKey = TokenKey(1345);
-    pub const TAG_FONT_SIZE_LG: TokenKey = TokenKey(1346);
-    pub const TAG_FONT_SIZE_MD: TokenKey = TokenKey(1347);
-    pub const TAG_FONT_SIZE_SM: TokenKey = TokenKey(1348);
-    pub const TAG_FONT_WEIGHT: TokenKey = TokenKey(1349);
-    pub const TAG_GAP: TokenKey = TokenKey(1350);
-    pub const TAG_HEIGHT_LG: TokenKey = TokenKey(1351);
-    pub const TAG_HEIGHT_MD: TokenKey = TokenKey(1352);
-    pub const TAG_HEIGHT_SM: TokenKey = TokenKey(1353);
-    pub const TAG_LINE_HEIGHT: TokenKey = TokenKey(1354);
-    pub const TAG_OPACITY_DISABLED: TokenKey = TokenKey(1355);
-    pub const TAG_PADDING_BLOCK: TokenKey = TokenKey(1356);
-    pub const TAG_PADDING_INLINE_LG: TokenKey = TokenKey(1357);
-    pub const TAG_PADDING_INLINE_MD: TokenKey = TokenKey(1358);
-    pub const TAG_PADDING_INLINE_SM: TokenKey = TokenKey(1359);
-    pub const TAG_PRIMARY_FILLED_BACKGROUND: TokenKey = TokenKey(1360);
-    pub const TAG_PRIMARY_FILLED_BORDER_COLOR: TokenKey = TokenKey(1361);
-    pub const TAG_PRIMARY_FILLED_COLOR: TokenKey = TokenKey(1362);
-    pub const TAG_PRIMARY_OUTLINE_BACKGROUND: TokenKey = TokenKey(1363);
-    pub const TAG_PRIMARY_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1364);
-    pub const TAG_PRIMARY_OUTLINE_COLOR: TokenKey = TokenKey(1365);
-    pub const TAG_PRIMARY_TINT_BACKGROUND: TokenKey = TokenKey(1366);
-    pub const TAG_PRIMARY_TINT_BORDER_COLOR: TokenKey = TokenKey(1367);
-    pub const TAG_PRIMARY_TINT_COLOR: TokenKey = TokenKey(1368);
-    pub const TAG_PRIMARY_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1369);
-    pub const TAG_PRIMARY_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1370);
-    pub const TAG_PRIMARY_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1371);
-    pub const TAG_SUCCESS_FILLED_BACKGROUND: TokenKey = TokenKey(1372);
-    pub const TAG_SUCCESS_FILLED_BORDER_COLOR: TokenKey = TokenKey(1373);
-    pub const TAG_SUCCESS_FILLED_COLOR: TokenKey = TokenKey(1374);
-    pub const TAG_SUCCESS_OUTLINE_BACKGROUND: TokenKey = TokenKey(1375);
-    pub const TAG_SUCCESS_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1376);
-    pub const TAG_SUCCESS_OUTLINE_COLOR: TokenKey = TokenKey(1377);
-    pub const TAG_SUCCESS_TINT_BACKGROUND: TokenKey = TokenKey(1378);
-    pub const TAG_SUCCESS_TINT_BORDER_COLOR: TokenKey = TokenKey(1379);
-    pub const TAG_SUCCESS_TINT_COLOR: TokenKey = TokenKey(1380);
-    pub const TAG_SUCCESS_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1381);
-    pub const TAG_SUCCESS_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1382);
-    pub const TAG_SUCCESS_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1383);
-    pub const TAG_WARNING_FILLED_BACKGROUND: TokenKey = TokenKey(1384);
-    pub const TAG_WARNING_FILLED_BORDER_COLOR: TokenKey = TokenKey(1385);
-    pub const TAG_WARNING_FILLED_COLOR: TokenKey = TokenKey(1386);
-    pub const TAG_WARNING_OUTLINE_BACKGROUND: TokenKey = TokenKey(1387);
-    pub const TAG_WARNING_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1388);
-    pub const TAG_WARNING_OUTLINE_COLOR: TokenKey = TokenKey(1389);
-    pub const TAG_WARNING_TINT_BACKGROUND: TokenKey = TokenKey(1390);
-    pub const TAG_WARNING_TINT_BORDER_COLOR: TokenKey = TokenKey(1391);
-    pub const TAG_WARNING_TINT_COLOR: TokenKey = TokenKey(1392);
-    pub const TAG_WARNING_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1393);
-    pub const TAG_WARNING_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1394);
-    pub const TAG_WARNING_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1395);
-    pub const TEAL_100: TokenKey = TokenKey(1396);
-    pub const TEAL_200: TokenKey = TokenKey(1397);
-    pub const TEAL_300: TokenKey = TokenKey(1398);
-    pub const TEAL_400: TokenKey = TokenKey(1399);
-    pub const TEAL_50: TokenKey = TokenKey(1400);
-    pub const TEAL_500: TokenKey = TokenKey(1401);
-    pub const TEAL_600: TokenKey = TokenKey(1402);
-    pub const TEAL_700: TokenKey = TokenKey(1403);
-    pub const TEAL_800: TokenKey = TokenKey(1404);
-    pub const TEAL_900: TokenKey = TokenKey(1405);
-    pub const TEAL_950: TokenKey = TokenKey(1406);
-    pub const TEXT_DISABLED: TokenKey = TokenKey(1407);
-    pub const TEXT_INVERSE: TokenKey = TokenKey(1408);
-    pub const TEXT_LINK: TokenKey = TokenKey(1409);
-    pub const TEXT_ON_GLASS: TokenKey = TokenKey(1410);
-    pub const TEXT_PLACEHOLDER: TokenKey = TokenKey(1411);
-    pub const TEXT_PRIMARY: TokenKey = TokenKey(1412);
-    pub const TEXT_SECONDARY: TokenKey = TokenKey(1413);
-    pub const TEXTAREA_LINE_HEIGHT: TokenKey = TokenKey(1414);
-    pub const TEXTAREA_PADDING_BLOCK: TokenKey = TokenKey(1415);
-    pub const TIME_PICKER_COLUMN_WIDTH: TokenKey = TokenKey(1416);
-    pub const TIME_PICKER_DISABLED_COLOR: TokenKey = TokenKey(1417);
-    pub const TIME_PICKER_FOCUS_COLOR: TokenKey = TokenKey(1418);
-    pub const TIME_PICKER_HOVER_BACKGROUND: TokenKey = TokenKey(1419);
-    pub const TIME_PICKER_ITEM_HEIGHT_LG: TokenKey = TokenKey(1420);
-    pub const TIME_PICKER_ITEM_HEIGHT_MD: TokenKey = TokenKey(1421);
-    pub const TIME_PICKER_ITEM_HEIGHT_SM: TokenKey = TokenKey(1422);
-    pub const TIME_PICKER_ITEM_RADIUS: TokenKey = TokenKey(1423);
-    pub const TIME_PICKER_PANEL_GAP: TokenKey = TokenKey(1424);
-    pub const TIME_PICKER_POPUP_GAP: TokenKey = TokenKey(1425);
-    pub const TIME_PICKER_SELECTED_BACKGROUND: TokenKey = TokenKey(1426);
-    pub const TIME_PICKER_SELECTED_COLOR: TokenKey = TokenKey(1427);
-    pub const TIME_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(1428);
-    pub const TOAST_BACKGROUND: TokenKey = TokenKey(1429);
-    pub const TOAST_BORDER_COLOR: TokenKey = TokenKey(1430);
-    pub const TOAST_BORDER_RADIUS: TokenKey = TokenKey(1431);
-    pub const TOAST_CLOSE_ICON_SIZE: TokenKey = TokenKey(1432);
-    pub const TOAST_CLOSE_SIZE: TokenKey = TokenKey(1433);
-    pub const TOAST_COLLAPSE_DELAY: TokenKey = TokenKey(1434);
-    pub const TOAST_COLLAPSED_SCALE_STEP: TokenKey = TokenKey(1435);
-    pub const TOAST_COLOR: TokenKey = TokenKey(1436);
-    pub const TOAST_CONTENT_MIN_WIDTH: TokenKey = TokenKey(1437);
-    pub const TOAST_DESCRIPTION_COLOR: TokenKey = TokenKey(1438);
-    pub const TOAST_DURATION_CONTENT: TokenKey = TokenKey(1439);
-    pub const TOAST_DURATION_ENTER: TokenKey = TokenKey(1440);
-    pub const TOAST_DURATION_EXIT: TokenKey = TokenKey(1441);
-    pub const TOAST_GAP: TokenKey = TokenKey(1442);
-    pub const TOAST_ICON_SIZE: TokenKey = TokenKey(1443);
-    pub const TOAST_LAYOUT_RESPONSE: TokenKey = TokenKey(1444);
-    pub const TOAST_PADDING_BLOCK: TokenKey = TokenKey(1445);
-    pub const TOAST_PADDING_INLINE: TokenKey = TokenKey(1446);
-    pub const TOAST_PEEK: TokenKey = TokenKey(1447);
-    pub const TOAST_PROGRESS_HEIGHT: TokenKey = TokenKey(1448);
-    pub const TOAST_SHADOW: TokenKey = TokenKey(1449);
-    pub const TOAST_VIEWPORT_OFFSET: TokenKey = TokenKey(1450);
-    pub const TOAST_VIEWPORT_OFFSET_COMPACT: TokenKey = TokenKey(1451);
-    pub const TOAST_WIDTH: TokenKey = TokenKey(1452);
-    pub const TOOLTIP_ARROW_SIZE: TokenKey = TokenKey(1453);
-    pub const TOOLTIP_DURATION_ENTER: TokenKey = TokenKey(1454);
-    pub const TOOLTIP_DURATION_EXIT: TokenKey = TokenKey(1455);
-    pub const TOOLTIP_DURATION_MOVE: TokenKey = TokenKey(1456);
-    pub const TOOLTIP_EASE_ENTER: TokenKey = TokenKey(1457);
-    pub const TOOLTIP_EASE_EXIT: TokenKey = TokenKey(1458);
-    pub const TOOLTIP_EASE_MOVE: TokenKey = TokenKey(1459);
-    pub const TOOLTIP_GAP: TokenKey = TokenKey(1460);
-    pub const TOOLTIP_MAX_WIDTH: TokenKey = TokenKey(1461);
-    pub const TOOLTIP_MOVE_MAX_DISTANCE: TokenKey = TokenKey(1462);
-    pub const TOOLTIP_MOVE_MAX_GAP: TokenKey = TokenKey(1463);
-    pub const TOOLTIP_SHADOW: TokenKey = TokenKey(1464);
-    pub const TOOLTIP_VIEWPORT_MARGIN: TokenKey = TokenKey(1465);
-    pub const TRACKING_NORMAL: TokenKey = TokenKey(1466);
-    pub const TRACKING_WIDE: TokenKey = TokenKey(1467);
-    pub const TREE_BACKGROUND_HOVER: TokenKey = TokenKey(1468);
-    pub const TREE_BACKGROUND_SELECTED: TokenKey = TokenKey(1469);
-    pub const TREE_COLOR: TokenKey = TokenKey(1470);
-    pub const TREE_COLOR_DISABLED: TokenKey = TokenKey(1471);
-    pub const TREE_COLOR_SELECTED: TokenKey = TokenKey(1472);
-    pub const TREE_GAP: TokenKey = TokenKey(1473);
-    pub const TREE_INDENT_LG: TokenKey = TokenKey(1474);
-    pub const TREE_INDENT_MD: TokenKey = TokenKey(1475);
-    pub const TREE_INDENT_SM: TokenKey = TokenKey(1476);
-    pub const TREE_LINE_COLOR: TokenKey = TokenKey(1477);
-    pub const TREE_LINE_WIDTH: TokenKey = TokenKey(1478);
-    pub const TREE_MAX_HEIGHT: TokenKey = TokenKey(1479);
-    pub const TREE_OUTLINE_COLOR: TokenKey = TokenKey(1480);
-    pub const TREE_PADDING_INLINE: TokenKey = TokenKey(1481);
-    pub const TREE_ROW_HEIGHT_LG: TokenKey = TokenKey(1482);
-    pub const TREE_ROW_HEIGHT_MD: TokenKey = TokenKey(1483);
-    pub const TREE_ROW_HEIGHT_SM: TokenKey = TokenKey(1484);
-    pub const TREE_ROW_RADIUS: TokenKey = TokenKey(1485);
-    pub const TYPE_BODY: TokenKey = TokenKey(1486);
-    pub const TYPE_BODY_LG: TokenKey = TokenKey(1487);
-    pub const TYPE_CAPTION: TokenKey = TokenKey(1488);
-    pub const TYPE_CODE: TokenKey = TokenKey(1489);
-    pub const TYPE_DISPLAY: TokenKey = TokenKey(1490);
-    pub const TYPE_FIGURE: TokenKey = TokenKey(1491);
-    pub const TYPE_HEADING_1: TokenKey = TokenKey(1492);
-    pub const TYPE_HEADING_2: TokenKey = TokenKey(1493);
-    pub const TYPE_HEADING_3: TokenKey = TokenKey(1494);
-    pub const TYPE_LABEL: TokenKey = TokenKey(1495);
-    pub const TYPE_NUMBER: TokenKey = TokenKey(1496);
-    pub const TYPE_TITLE: TokenKey = TokenKey(1497);
-    pub const WARNING: TokenKey = TokenKey(1498);
-    pub const WARNING_BG: TokenKey = TokenKey(1499);
-    pub const WARNING_BORDER: TokenKey = TokenKey(1500);
-    pub const WARNING_FOREGROUND: TokenKey = TokenKey(1501);
-    pub const WARNING_SOLID: TokenKey = TokenKey(1502);
-    pub const WEIGHT_DISPLAY: TokenKey = TokenKey(1503);
-    pub const WEIGHT_MEDIUM: TokenKey = TokenKey(1504);
-    pub const WEIGHT_REGULAR: TokenKey = TokenKey(1505);
-    pub const WEIGHT_SEMIBOLD: TokenKey = TokenKey(1506);
-    pub const WIDTH_LG: TokenKey = TokenKey(1507);
-    pub const WIDTH_MD: TokenKey = TokenKey(1508);
-    pub const WIDTH_SM: TokenKey = TokenKey(1509);
-    pub const WIDTH_XL: TokenKey = TokenKey(1510);
-    pub const YELLOW_100: TokenKey = TokenKey(1511);
-    pub const YELLOW_200: TokenKey = TokenKey(1512);
-    pub const YELLOW_300: TokenKey = TokenKey(1513);
-    pub const YELLOW_400: TokenKey = TokenKey(1514);
-    pub const YELLOW_50: TokenKey = TokenKey(1515);
-    pub const YELLOW_500: TokenKey = TokenKey(1516);
-    pub const YELLOW_600: TokenKey = TokenKey(1517);
-    pub const YELLOW_700: TokenKey = TokenKey(1518);
-    pub const YELLOW_800: TokenKey = TokenKey(1519);
-    pub const YELLOW_900: TokenKey = TokenKey(1520);
-    pub const YELLOW_950: TokenKey = TokenKey(1521);
+    pub const CARD_ACTION_MIN_WIDTH: TokenKey = TokenKey(290);
+    pub const CARD_BACKGROUND: TokenKey = TokenKey(291);
+    pub const CARD_BACKGROUND_FILLED: TokenKey = TokenKey(292);
+    pub const CARD_BACKGROUND_SELECTED: TokenKey = TokenKey(293);
+    pub const CARD_BODY_COLOR: TokenKey = TokenKey(294);
+    pub const CARD_BODY_FONT_SIZE_LG: TokenKey = TokenKey(295);
+    pub const CARD_BODY_FONT_SIZE_MD: TokenKey = TokenKey(296);
+    pub const CARD_BODY_FONT_SIZE_SM: TokenKey = TokenKey(297);
+    pub const CARD_BORDER_COLOR: TokenKey = TokenKey(298);
+    pub const CARD_BORDER_COLOR_HOVER: TokenKey = TokenKey(299);
+    pub const CARD_BORDER_COLOR_SELECTED: TokenKey = TokenKey(300);
+    pub const CARD_BORDER_WIDTH: TokenKey = TokenKey(301);
+    pub const CARD_COVER_SIDE_MIN_HEIGHT: TokenKey = TokenKey(302);
+    pub const CARD_COVER_SIDE_RATIO: TokenKey = TokenKey(303);
+    pub const CARD_DESCRIPTION_COLOR: TokenKey = TokenKey(304);
+    pub const CARD_DESCRIPTION_FONT_SIZE_LG: TokenKey = TokenKey(305);
+    pub const CARD_DESCRIPTION_FONT_SIZE_MD: TokenKey = TokenKey(306);
+    pub const CARD_DESCRIPTION_FONT_SIZE_SM: TokenKey = TokenKey(307);
+    pub const CARD_DIVIDER_COLOR: TokenKey = TokenKey(308);
+    pub const CARD_GAP_LG: TokenKey = TokenKey(309);
+    pub const CARD_GAP_MD: TokenKey = TokenKey(310);
+    pub const CARD_GAP_SM: TokenKey = TokenKey(311);
+    pub const CARD_OFFSET_HOVER: TokenKey = TokenKey(312);
+    pub const CARD_PADDING_LG: TokenKey = TokenKey(313);
+    pub const CARD_PADDING_MD: TokenKey = TokenKey(314);
+    pub const CARD_PADDING_SM: TokenKey = TokenKey(315);
+    pub const CARD_RADIUS: TokenKey = TokenKey(316);
+    pub const CARD_SHADOW: TokenKey = TokenKey(317);
+    pub const CARD_SHADOW_HOVER: TokenKey = TokenKey(318);
+    pub const CARD_TITLE_COLOR: TokenKey = TokenKey(319);
+    pub const CARD_TITLE_FONT_SIZE_LG: TokenKey = TokenKey(320);
+    pub const CARD_TITLE_FONT_SIZE_MD: TokenKey = TokenKey(321);
+    pub const CARD_TITLE_FONT_SIZE_SM: TokenKey = TokenKey(322);
+    pub const CARD_TITLE_WEIGHT: TokenKey = TokenKey(323);
+    pub const CHECKBOX_ACCENT_COLOR: TokenKey = TokenKey(324);
+    pub const CHECKBOX_BACKGROUND: TokenKey = TokenKey(325);
+    pub const CHECKBOX_BACKGROUND_CHECKED: TokenKey = TokenKey(326);
+    pub const CHECKBOX_BORDER_COLOR: TokenKey = TokenKey(327);
+    pub const CHECKBOX_BORDER_COLOR_CHECKED: TokenKey = TokenKey(328);
+    pub const CHECKBOX_BORDER_RADIUS: TokenKey = TokenKey(329);
+    pub const CHECKBOX_BORDER_WIDTH: TokenKey = TokenKey(330);
+    pub const CHECKBOX_DISABLED_BACKGROUND: TokenKey = TokenKey(331);
+    pub const CHECKBOX_DISABLED_BORDER_COLOR: TokenKey = TokenKey(332);
+    pub const CHECKBOX_DISABLED_MARK_COLOR: TokenKey = TokenKey(333);
+    pub const CHECKBOX_DURATION: TokenKey = TokenKey(334);
+    pub const CHECKBOX_DURATION_FAST: TokenKey = TokenKey(335);
+    pub const CHECKBOX_EASE: TokenKey = TokenKey(336);
+    pub const CHECKBOX_EASE_ENTER: TokenKey = TokenKey(337);
+    pub const CHECKBOX_EASE_EXIT: TokenKey = TokenKey(338);
+    pub const CHECKBOX_FOCUS_RING_COLOR: TokenKey = TokenKey(339);
+    pub const CHECKBOX_FOCUS_RING_OFFSET: TokenKey = TokenKey(340);
+    pub const CHECKBOX_FOCUS_RING_WIDTH: TokenKey = TokenKey(341);
+    pub const CHECKBOX_GROUP_GAP: TokenKey = TokenKey(342);
+    pub const CHECKBOX_GROUP_INDENT: TokenKey = TokenKey(343);
+    pub const CHECKBOX_HALO_COLOR: TokenKey = TokenKey(344);
+    pub const CHECKBOX_HALO_WIDTH: TokenKey = TokenKey(345);
+    pub const CHECKBOX_HEIGHT_LG: TokenKey = TokenKey(346);
+    pub const CHECKBOX_HEIGHT_MD: TokenKey = TokenKey(347);
+    pub const CHECKBOX_HEIGHT_SM: TokenKey = TokenKey(348);
+    pub const CHECKBOX_LABEL_COLOR: TokenKey = TokenKey(349);
+    pub const CHECKBOX_LABEL_COLOR_DISABLED: TokenKey = TokenKey(350);
+    pub const CHECKBOX_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(351);
+    pub const CHECKBOX_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(352);
+    pub const CHECKBOX_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(353);
+    pub const CHECKBOX_LABEL_GAP: TokenKey = TokenKey(354);
+    pub const CHECKBOX_MARK_COLOR: TokenKey = TokenKey(355);
+    pub const CHECKBOX_MARK_STROKE_WIDTH_LG: TokenKey = TokenKey(356);
+    pub const CHECKBOX_MARK_STROKE_WIDTH_MD: TokenKey = TokenKey(357);
+    pub const CHECKBOX_MARK_STROKE_WIDTH_SM: TokenKey = TokenKey(358);
+    pub const CHECKBOX_PRESS_SCALE: TokenKey = TokenKey(359);
+    pub const CHECKBOX_SIZE: TokenKey = TokenKey(360);
+    pub const CHECKBOX_SIZE_LG: TokenKey = TokenKey(361);
+    pub const CHECKBOX_SIZE_MD: TokenKey = TokenKey(362);
+    pub const CHECKBOX_SIZE_SM: TokenKey = TokenKey(363);
+    pub const COLLAPSE_ACTIONS_GAP: TokenKey = TokenKey(364);
+    pub const COLLAPSE_BORDER_COLOR: TokenKey = TokenKey(365);
+    pub const COLLAPSE_BORDER_WIDTH: TokenKey = TokenKey(366);
+    pub const COLLAPSE_COLLAPSE_DURATION: TokenKey = TokenKey(367);
+    pub const COLLAPSE_COLOR: TokenKey = TokenKey(368);
+    pub const COLLAPSE_CONTENT_BACKGROUND: TokenKey = TokenKey(369);
+    pub const COLLAPSE_CONTENT_PADDING_LG: TokenKey = TokenKey(370);
+    pub const COLLAPSE_CONTENT_PADDING_MD: TokenKey = TokenKey(371);
+    pub const COLLAPSE_CONTENT_PADDING_SM: TokenKey = TokenKey(372);
+    pub const COLLAPSE_EASE: TokenKey = TokenKey(373);
+    pub const COLLAPSE_EXPAND_DURATION: TokenKey = TokenKey(374);
+    pub const COLLAPSE_FOCUS_COLOR: TokenKey = TokenKey(375);
+    pub const COLLAPSE_FOCUS_WIDTH: TokenKey = TokenKey(376);
+    pub const COLLAPSE_FONT_SIZE_LG: TokenKey = TokenKey(377);
+    pub const COLLAPSE_FONT_SIZE_MD: TokenKey = TokenKey(378);
+    pub const COLLAPSE_FONT_SIZE_SM: TokenKey = TokenKey(379);
+    pub const COLLAPSE_HEADER_BACKGROUND: TokenKey = TokenKey(380);
+    pub const COLLAPSE_HEADER_BACKGROUND_HOVER: TokenKey = TokenKey(381);
+    pub const COLLAPSE_HEADER_BACKGROUND_PRESSED: TokenKey = TokenKey(382);
+    pub const COLLAPSE_HEADER_GAP: TokenKey = TokenKey(383);
+    pub const COLLAPSE_HEADER_MIN_HEIGHT_LG: TokenKey = TokenKey(384);
+    pub const COLLAPSE_HEADER_MIN_HEIGHT_MD: TokenKey = TokenKey(385);
+    pub const COLLAPSE_HEADER_MIN_HEIGHT_SM: TokenKey = TokenKey(386);
+    pub const COLLAPSE_HEADER_PADDING_X_LG: TokenKey = TokenKey(387);
+    pub const COLLAPSE_HEADER_PADDING_X_MD: TokenKey = TokenKey(388);
+    pub const COLLAPSE_HEADER_PADDING_X_SM: TokenKey = TokenKey(389);
+    pub const COLLAPSE_HEADER_PADDING_Y_LG: TokenKey = TokenKey(390);
+    pub const COLLAPSE_HEADER_PADDING_Y_MD: TokenKey = TokenKey(391);
+    pub const COLLAPSE_HEADER_PADDING_Y_SM: TokenKey = TokenKey(392);
+    pub const COLLAPSE_INDICATOR_COLOR: TokenKey = TokenKey(393);
+    pub const COLLAPSE_INDICATOR_HIT_SIZE_LG: TokenKey = TokenKey(394);
+    pub const COLLAPSE_INDICATOR_HIT_SIZE_MD: TokenKey = TokenKey(395);
+    pub const COLLAPSE_INDICATOR_HIT_SIZE_SM: TokenKey = TokenKey(396);
+    pub const COLLAPSE_INDICATOR_SIZE_LG: TokenKey = TokenKey(397);
+    pub const COLLAPSE_INDICATOR_SIZE_MD: TokenKey = TokenKey(398);
+    pub const COLLAPSE_INDICATOR_SIZE_SM: TokenKey = TokenKey(399);
+    pub const COLLAPSE_INTERACTION_DURATION: TokenKey = TokenKey(400);
+    pub const COLLAPSE_LINE_HEIGHT_LG: TokenKey = TokenKey(401);
+    pub const COLLAPSE_LINE_HEIGHT_MD: TokenKey = TokenKey(402);
+    pub const COLLAPSE_LINE_HEIGHT_SM: TokenKey = TokenKey(403);
+    pub const COLLAPSE_OPACITY_DISABLED: TokenKey = TokenKey(404);
+    pub const COLLAPSE_RADIUS: TokenKey = TokenKey(405);
+    pub const COLOR_PICKER_ALPHA_HEIGHT: TokenKey = TokenKey(406);
+    pub const COLOR_PICKER_ALPHA_HIT_HEIGHT: TokenKey = TokenKey(407);
+    pub const COLOR_PICKER_BACKGROUND: TokenKey = TokenKey(408);
+    pub const COLOR_PICKER_BORDER_COLOR: TokenKey = TokenKey(409);
+    pub const COLOR_PICKER_BORDER_COLOR_HOVER: TokenKey = TokenKey(410);
+    pub const COLOR_PICKER_BORDER_COLOR_OPEN: TokenKey = TokenKey(411);
+    pub const COLOR_PICKER_CHANNEL_GAP: TokenKey = TokenKey(412);
+    pub const COLOR_PICKER_CHANNEL_MIN_WIDTH: TokenKey = TokenKey(413);
+    pub const COLOR_PICKER_CHECKER_DARK_COLOR: TokenKey = TokenKey(414);
+    pub const COLOR_PICKER_CHECKER_LIGHT_COLOR: TokenKey = TokenKey(415);
+    pub const COLOR_PICKER_CHECKER_SIZE: TokenKey = TokenKey(416);
+    pub const COLOR_PICKER_COLOR: TokenKey = TokenKey(417);
+    pub const COLOR_PICKER_DISABLED_BACKGROUND: TokenKey = TokenKey(418);
+    pub const COLOR_PICKER_DISABLED_BORDER_COLOR: TokenKey = TokenKey(419);
+    pub const COLOR_PICKER_DISABLED_COLOR: TokenKey = TokenKey(420);
+    pub const COLOR_PICKER_ENTER_DURATION: TokenKey = TokenKey(421);
+    pub const COLOR_PICKER_ENTER_EASE: TokenKey = TokenKey(422);
+    pub const COLOR_PICKER_ERROR_COLOR: TokenKey = TokenKey(423);
+    pub const COLOR_PICKER_EXIT_DURATION: TokenKey = TokenKey(424);
+    pub const COLOR_PICKER_EXIT_EASE: TokenKey = TokenKey(425);
+    pub const COLOR_PICKER_FOCUS_RING_COLOR: TokenKey = TokenKey(426);
+    pub const COLOR_PICKER_FOCUS_RING_OFFSET: TokenKey = TokenKey(427);
+    pub const COLOR_PICKER_FOCUS_RING_WIDTH: TokenKey = TokenKey(428);
+    pub const COLOR_PICKER_FONT_SIZE_LG: TokenKey = TokenKey(429);
+    pub const COLOR_PICKER_FONT_SIZE_MD: TokenKey = TokenKey(430);
+    pub const COLOR_PICKER_FONT_SIZE_SM: TokenKey = TokenKey(431);
+    pub const COLOR_PICKER_HEIGHT_LG: TokenKey = TokenKey(432);
+    pub const COLOR_PICKER_HEIGHT_MD: TokenKey = TokenKey(433);
+    pub const COLOR_PICKER_HEIGHT_SM: TokenKey = TokenKey(434);
+    pub const COLOR_PICKER_HUE_HEIGHT: TokenKey = TokenKey(435);
+    pub const COLOR_PICKER_HUE_HIT_HEIGHT: TokenKey = TokenKey(436);
+    pub const COLOR_PICKER_PADDING_INLINE_LG: TokenKey = TokenKey(437);
+    pub const COLOR_PICKER_PADDING_INLINE_MD: TokenKey = TokenKey(438);
+    pub const COLOR_PICKER_PADDING_INLINE_SM: TokenKey = TokenKey(439);
+    pub const COLOR_PICKER_PANEL_BACKGROUND: TokenKey = TokenKey(440);
+    pub const COLOR_PICKER_PANEL_BORDER_COLOR: TokenKey = TokenKey(441);
+    pub const COLOR_PICKER_PANEL_GAP: TokenKey = TokenKey(442);
+    pub const COLOR_PICKER_PANEL_MIN_WIDTH: TokenKey = TokenKey(443);
+    pub const COLOR_PICKER_PANEL_OFFSET: TokenKey = TokenKey(444);
+    pub const COLOR_PICKER_PANEL_PADDING: TokenKey = TokenKey(445);
+    pub const COLOR_PICKER_PANEL_RADIUS: TokenKey = TokenKey(446);
+    pub const COLOR_PICKER_PANEL_SHADOW: TokenKey = TokenKey(447);
+    pub const COLOR_PICKER_PANEL_WIDTH: TokenKey = TokenKey(448);
+    pub const COLOR_PICKER_PREVIEW_SIZE: TokenKey = TokenKey(449);
+    pub const COLOR_PICKER_RADIUS: TokenKey = TokenKey(450);
+    pub const COLOR_PICKER_RECENT_COLOR: TokenKey = TokenKey(451);
+    pub const COLOR_PICKER_SLIDER_GAP: TokenKey = TokenKey(452);
+    pub const COLOR_PICKER_STATE_DURATION: TokenKey = TokenKey(453);
+    pub const COLOR_PICKER_STATE_EASE: TokenKey = TokenKey(454);
+    pub const COLOR_PICKER_SV_HEIGHT: TokenKey = TokenKey(455);
+    pub const COLOR_PICKER_SWATCH_SIZE_LG: TokenKey = TokenKey(456);
+    pub const COLOR_PICKER_SWATCH_SIZE_MD: TokenKey = TokenKey(457);
+    pub const COLOR_PICKER_SWATCH_SIZE_SM: TokenKey = TokenKey(458);
+    pub const COLOR_PICKER_THUMB_BORDER_COLOR: TokenKey = TokenKey(459);
+    pub const COLOR_PICKER_THUMB_BORDER_WIDTH: TokenKey = TokenKey(460);
+    pub const COLOR_PICKER_THUMB_DRAG_SCALE: TokenKey = TokenKey(461);
+    pub const COLOR_PICKER_THUMB_OUTLINE_COLOR: TokenKey = TokenKey(462);
+    pub const COLOR_PICKER_THUMB_OUTLINE_WIDTH: TokenKey = TokenKey(463);
+    pub const COLOR_PICKER_THUMB_SHADOW: TokenKey = TokenKey(464);
+    pub const COLOR_PICKER_THUMB_SIZE: TokenKey = TokenKey(465);
+    pub const COLOR_PICKER_TRIGGER_GAP: TokenKey = TokenKey(466);
+    pub const COLOR_PICKER_TRIGGER_WIDTH: TokenKey = TokenKey(467);
+    pub const COLOR_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(468);
+    pub const CONTAINER_PAGE: TokenKey = TokenKey(469);
+    pub const CONTAINER_TEXT: TokenKey = TokenKey(470);
+    pub const CONTROL_ACCENT: TokenKey = TokenKey(471);
+    pub const CONTROL_ACCENT_CHECKED: TokenKey = TokenKey(472);
+    pub const CONTROL_FONT_SIZE_LG: TokenKey = TokenKey(473);
+    pub const CONTROL_FONT_SIZE_MD: TokenKey = TokenKey(474);
+    pub const CONTROL_FONT_SIZE_SM: TokenKey = TokenKey(475);
+    pub const CONTROL_HEIGHT_LG: TokenKey = TokenKey(476);
+    pub const CONTROL_HEIGHT_MD: TokenKey = TokenKey(477);
+    pub const CONTROL_HEIGHT_SM: TokenKey = TokenKey(478);
+    pub const CONTROL_ICON_SIZE_LG: TokenKey = TokenKey(479);
+    pub const CONTROL_ICON_SIZE_MD: TokenKey = TokenKey(480);
+    pub const CONTROL_ICON_SIZE_SM: TokenKey = TokenKey(481);
+    pub const CONTROL_PADDING_INLINE_LG: TokenKey = TokenKey(482);
+    pub const CONTROL_PADDING_INLINE_MD: TokenKey = TokenKey(483);
+    pub const CONTROL_PADDING_INLINE_SM: TokenKey = TokenKey(484);
+    pub const CYAN_100: TokenKey = TokenKey(485);
+    pub const CYAN_200: TokenKey = TokenKey(486);
+    pub const CYAN_300: TokenKey = TokenKey(487);
+    pub const CYAN_400: TokenKey = TokenKey(488);
+    pub const CYAN_50: TokenKey = TokenKey(489);
+    pub const CYAN_500: TokenKey = TokenKey(490);
+    pub const CYAN_600: TokenKey = TokenKey(491);
+    pub const CYAN_700: TokenKey = TokenKey(492);
+    pub const CYAN_800: TokenKey = TokenKey(493);
+    pub const CYAN_900: TokenKey = TokenKey(494);
+    pub const CYAN_950: TokenKey = TokenKey(495);
+    pub const DATE_PICKER_FOOTER_GAP: TokenKey = TokenKey(496);
+    pub const DATE_PICKER_POPUP_GAP: TokenKey = TokenKey(497);
+    pub const DATE_PICKER_TAGS_GAP: TokenKey = TokenKey(498);
+    pub const DATE_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(499);
+    pub const DESCRIPTIONS_BORDER_COLOR: TokenKey = TokenKey(500);
+    pub const DESCRIPTIONS_BORDER_WIDTH: TokenKey = TokenKey(501);
+    pub const DESCRIPTIONS_COLOR: TokenKey = TokenKey(502);
+    pub const DESCRIPTIONS_COLUMN_GAP_LG: TokenKey = TokenKey(503);
+    pub const DESCRIPTIONS_COLUMN_GAP_MD: TokenKey = TokenKey(504);
+    pub const DESCRIPTIONS_COLUMN_GAP_SM: TokenKey = TokenKey(505);
+    pub const DESCRIPTIONS_CONTENT_GAP: TokenKey = TokenKey(506);
+    pub const DESCRIPTIONS_FONT_SIZE_LG: TokenKey = TokenKey(507);
+    pub const DESCRIPTIONS_FONT_SIZE_MD: TokenKey = TokenKey(508);
+    pub const DESCRIPTIONS_FONT_SIZE_SM: TokenKey = TokenKey(509);
+    pub const DESCRIPTIONS_HEADER_GAP: TokenKey = TokenKey(510);
+    pub const DESCRIPTIONS_HEADER_MARGIN_BOTTOM: TokenKey = TokenKey(511);
+    pub const DESCRIPTIONS_ITEM_MIN_WIDTH: TokenKey = TokenKey(512);
+    pub const DESCRIPTIONS_LABEL_COLOR: TokenKey = TokenKey(513);
+    pub const DESCRIPTIONS_LABEL_VALUE_GAP: TokenKey = TokenKey(514);
+    pub const DESCRIPTIONS_LABEL_WIDTH: TokenKey = TokenKey(515);
+    pub const DESCRIPTIONS_LINE_HEIGHT_LG: TokenKey = TokenKey(516);
+    pub const DESCRIPTIONS_LINE_HEIGHT_MD: TokenKey = TokenKey(517);
+    pub const DESCRIPTIONS_LINE_HEIGHT_SM: TokenKey = TokenKey(518);
+    pub const DESCRIPTIONS_PADDING_X_LG: TokenKey = TokenKey(519);
+    pub const DESCRIPTIONS_PADDING_X_MD: TokenKey = TokenKey(520);
+    pub const DESCRIPTIONS_PADDING_X_SM: TokenKey = TokenKey(521);
+    pub const DESCRIPTIONS_PADDING_Y_LG: TokenKey = TokenKey(522);
+    pub const DESCRIPTIONS_PADDING_Y_MD: TokenKey = TokenKey(523);
+    pub const DESCRIPTIONS_PADDING_Y_SM: TokenKey = TokenKey(524);
+    pub const DESCRIPTIONS_RADIUS: TokenKey = TokenKey(525);
+    pub const DESCRIPTIONS_ROW_GAP_LG: TokenKey = TokenKey(526);
+    pub const DESCRIPTIONS_ROW_GAP_MD: TokenKey = TokenKey(527);
+    pub const DESCRIPTIONS_ROW_GAP_SM: TokenKey = TokenKey(528);
+    pub const DESCRIPTIONS_VALUE_MIN_WIDTH: TokenKey = TokenKey(529);
+    pub const DIALOG_ACTION_BACKGROUND: TokenKey = TokenKey(530);
+    pub const DIALOG_ACTION_BORDER_COLOR: TokenKey = TokenKey(531);
+    pub const DIALOG_ACTION_BORDER_RADIUS: TokenKey = TokenKey(532);
+    pub const DIALOG_ACTION_BORDER_WIDTH: TokenKey = TokenKey(533);
+    pub const DIALOG_ACTION_DANGER_BACKGROUND: TokenKey = TokenKey(534);
+    pub const DIALOG_ACTION_DANGER_BORDER: TokenKey = TokenKey(535);
+    pub const DIALOG_ACTION_ON_DANGER: TokenKey = TokenKey(536);
+    pub const DIALOG_ACTION_ON_PRIMARY: TokenKey = TokenKey(537);
+    pub const DIALOG_ACTION_PRIMARY_BACKGROUND: TokenKey = TokenKey(538);
+    pub const DIALOG_ACTION_PRIMARY_BORDER: TokenKey = TokenKey(539);
+    pub const DIALOG_ACTION_SPACING_BLOCK: TokenKey = TokenKey(540);
+    pub const DIALOG_ACTION_SPACING_INLINE: TokenKey = TokenKey(541);
+    pub const DIALOG_ACTION_TEXT_COLOR: TokenKey = TokenKey(542);
+    pub const DIALOG_BACKGROUND: TokenKey = TokenKey(543);
+    pub const DIALOG_BORDER_COLOR: TokenKey = TokenKey(544);
+    pub const DIALOG_BORDER_RADIUS: TokenKey = TokenKey(545);
+    pub const DIALOG_BORDER_WIDTH: TokenKey = TokenKey(546);
+    pub const DIALOG_COLOR: TokenKey = TokenKey(547);
+    pub const DIALOG_DURATION_ENTER: TokenKey = TokenKey(548);
+    pub const DIALOG_DURATION_EXIT: TokenKey = TokenKey(549);
+    pub const DIALOG_EASE: TokenKey = TokenKey(550);
+    pub const DIALOG_FOOTER_GAP: TokenKey = TokenKey(551);
+    pub const DIALOG_HEADER_HEIGHT: TokenKey = TokenKey(552);
+    pub const DIALOG_PADDING: TokenKey = TokenKey(553);
+    pub const DIALOG_SCRIM_COLOR: TokenKey = TokenKey(554);
+    pub const DIALOG_SECTION_PADDING: TokenKey = TokenKey(555);
+    pub const DIALOG_SHADOW: TokenKey = TokenKey(556);
+    pub const DIALOG_SPACING: TokenKey = TokenKey(557);
+    pub const DIALOG_SPINNER_DURATION: TokenKey = TokenKey(558);
+    pub const DIALOG_WIDTH_LG: TokenKey = TokenKey(559);
+    pub const DIALOG_WIDTH_MD: TokenKey = TokenKey(560);
+    pub const DIALOG_WIDTH_SM: TokenKey = TokenKey(561);
+    pub const DIALOG_WIDTH_XL: TokenKey = TokenKey(562);
+    pub const DIALOG_Z_INDEX: TokenKey = TokenKey(563);
+    pub const DISABLED_CONTAINER: TokenKey = TokenKey(564);
+    pub const DISABLED_CONTENT: TokenKey = TokenKey(565);
+    pub const DIVIDER_BORDER_COLOR: TokenKey = TokenKey(566);
+    pub const DIVIDER_BORDER_WIDTH: TokenKey = TokenKey(567);
+    pub const DIVIDER_MARGIN_BLOCK: TokenKey = TokenKey(568);
+    pub const DURATION_100: TokenKey = TokenKey(569);
+    pub const DURATION_150: TokenKey = TokenKey(570);
+    pub const DURATION_200: TokenKey = TokenKey(571);
+    pub const DURATION_250: TokenKey = TokenKey(572);
+    pub const DURATION_300: TokenKey = TokenKey(573);
+    pub const DURATION_350: TokenKey = TokenKey(574);
+    pub const DURATION_400: TokenKey = TokenKey(575);
+    pub const DURATION_FAST: TokenKey = TokenKey(576);
+    pub const DURATION_NORMAL: TokenKey = TokenKey(577);
+    pub const DURATION_SLOW: TokenKey = TokenKey(578);
+    pub const EASE_ENTER: TokenKey = TokenKey(579);
+    pub const EASE_EXIT: TokenKey = TokenKey(580);
+    pub const EASE_EXPRESSIVE_ENTER: TokenKey = TokenKey(581);
+    pub const EASE_EXPRESSIVE_EXIT: TokenKey = TokenKey(582);
+    pub const EASE_EXPRESSIVE_STANDARD: TokenKey = TokenKey(583);
+    pub const EASE_IN_OUT: TokenKey = TokenKey(584);
+    pub const EASE_LINEAR: TokenKey = TokenKey(585);
+    pub const EASE_OUT_CUBIC: TokenKey = TokenKey(586);
+    pub const EASE_OUT_SMOOTH: TokenKey = TokenKey(587);
+    pub const EASE_SPRING: TokenKey = TokenKey(588);
+    pub const EASE_STANDARD: TokenKey = TokenKey(589);
+    pub const ELEVATION_DIALOG: TokenKey = TokenKey(590);
+    pub const ELEVATION_PANEL: TokenKey = TokenKey(591);
+    pub const ELEVATION_POPOVER: TokenKey = TokenKey(592);
+    pub const EMPTY_ACTIONS_GAP_MD: TokenKey = TokenKey(593);
+    pub const EMPTY_ACTIONS_GAP_SM: TokenKey = TokenKey(594);
+    pub const EMPTY_CONTENT_MAX_WIDTH: TokenKey = TokenKey(595);
+    pub const EMPTY_DESCRIPTION_COLOR: TokenKey = TokenKey(596);
+    pub const EMPTY_FONT_SIZE_MD: TokenKey = TokenKey(597);
+    pub const EMPTY_FONT_SIZE_SM: TokenKey = TokenKey(598);
+    pub const EMPTY_ICON_COLOR: TokenKey = TokenKey(599);
+    pub const EMPTY_ICON_SIZE_MD: TokenKey = TokenKey(600);
+    pub const EMPTY_ICON_SIZE_SM: TokenKey = TokenKey(601);
+    pub const EMPTY_IMAGE_SIZE_MD: TokenKey = TokenKey(602);
+    pub const EMPTY_IMAGE_SIZE_SM: TokenKey = TokenKey(603);
+    pub const EMPTY_LINE_HEIGHT_MD: TokenKey = TokenKey(604);
+    pub const EMPTY_LINE_HEIGHT_SM: TokenKey = TokenKey(605);
+    pub const EMPTY_MEDIA_GAP_MD: TokenKey = TokenKey(606);
+    pub const EMPTY_MEDIA_GAP_SM: TokenKey = TokenKey(607);
+    pub const EMPTY_PADDING_MD: TokenKey = TokenKey(608);
+    pub const EMPTY_PADDING_SM: TokenKey = TokenKey(609);
+    pub const EMPTY_TEXT_GAP: TokenKey = TokenKey(610);
+    pub const EMPTY_TITLE_COLOR: TokenKey = TokenKey(611);
+    pub const EMPTY_TITLE_WEIGHT: TokenKey = TokenKey(612);
+    pub const ERROR: TokenKey = TokenKey(613);
+    pub const ERROR_BG: TokenKey = TokenKey(614);
+    pub const ERROR_BORDER: TokenKey = TokenKey(615);
+    pub const ERROR_FOREGROUND: TokenKey = TokenKey(616);
+    pub const ERROR_SOLID: TokenKey = TokenKey(617);
+    pub const FOCUS_RING_COLOR: TokenKey = TokenKey(618);
+    pub const FOCUS_RING_OFFSET: TokenKey = TokenKey(619);
+    pub const FOCUS_RING_WIDTH: TokenKey = TokenKey(620);
+    pub const FONT_MONO: TokenKey = TokenKey(621);
+    pub const FONT_NUMBER: TokenKey = TokenKey(622);
+    pub const FONT_SIZE_2XL: TokenKey = TokenKey(623);
+    pub const FONT_SIZE_3XL: TokenKey = TokenKey(624);
+    pub const FONT_SIZE_DISPLAY: TokenKey = TokenKey(625);
+    pub const FONT_SIZE_LG: TokenKey = TokenKey(626);
+    pub const FONT_SIZE_MD: TokenKey = TokenKey(627);
+    pub const FONT_SIZE_SM: TokenKey = TokenKey(628);
+    pub const FONT_SIZE_XL: TokenKey = TokenKey(629);
+    pub const FONT_UI: TokenKey = TokenKey(630);
+    pub const GAP_CONTROL_GROUP: TokenKey = TokenKey(631);
+    pub const GAP_FORM_FIELD: TokenKey = TokenKey(632);
+    pub const GAP_PAGE_SECTION: TokenKey = TokenKey(633);
+    pub const GAP_SECTION: TokenKey = TokenKey(634);
+    pub const GREEN_100: TokenKey = TokenKey(635);
+    pub const GREEN_200: TokenKey = TokenKey(636);
+    pub const GREEN_300: TokenKey = TokenKey(637);
+    pub const GREEN_400: TokenKey = TokenKey(638);
+    pub const GREEN_50: TokenKey = TokenKey(639);
+    pub const GREEN_500: TokenKey = TokenKey(640);
+    pub const GREEN_600: TokenKey = TokenKey(641);
+    pub const GREEN_700: TokenKey = TokenKey(642);
+    pub const GREEN_800: TokenKey = TokenKey(643);
+    pub const GREEN_900: TokenKey = TokenKey(644);
+    pub const GREEN_950: TokenKey = TokenKey(645);
+    pub const HAZE_0: TokenKey = TokenKey(646);
+    pub const HAZE_100: TokenKey = TokenKey(647);
+    pub const HAZE_1000: TokenKey = TokenKey(648);
+    pub const HAZE_200: TokenKey = TokenKey(649);
+    pub const HAZE_300: TokenKey = TokenKey(650);
+    pub const HAZE_400: TokenKey = TokenKey(651);
+    pub const HAZE_50: TokenKey = TokenKey(652);
+    pub const HAZE_500: TokenKey = TokenKey(653);
+    pub const HAZE_600: TokenKey = TokenKey(654);
+    pub const HAZE_700: TokenKey = TokenKey(655);
+    pub const HAZE_800: TokenKey = TokenKey(656);
+    pub const HAZE_850: TokenKey = TokenKey(657);
+    pub const HAZE_900: TokenKey = TokenKey(658);
+    pub const HAZE_925: TokenKey = TokenKey(659);
+    pub const HAZE_950: TokenKey = TokenKey(660);
+    pub const ICON_SIZE_LG: TokenKey = TokenKey(661);
+    pub const ICON_SIZE_MD: TokenKey = TokenKey(662);
+    pub const ICON_SIZE_SM: TokenKey = TokenKey(663);
+    pub const IMAGE_PREVIEW_BLACK: TokenKey = TokenKey(664);
+    pub const IMAGE_PREVIEW_CHECKER_DARK_A: TokenKey = TokenKey(665);
+    pub const IMAGE_PREVIEW_CHECKER_DARK_B: TokenKey = TokenKey(666);
+    pub const IMAGE_PREVIEW_CHECKER_LIGHT_A: TokenKey = TokenKey(667);
+    pub const IMAGE_PREVIEW_CHECKER_LIGHT_B: TokenKey = TokenKey(668);
+    pub const IMAGE_PREVIEW_CHECKER_SIZE: TokenKey = TokenKey(669);
+    pub const IMAGE_PREVIEW_COMPARE_DURATION: TokenKey = TokenKey(670);
+    pub const IMAGE_PREVIEW_COMPARE_EASE: TokenKey = TokenKey(671);
+    pub const IMAGE_PREVIEW_DIVIDER_COLOR: TokenKey = TokenKey(672);
+    pub const IMAGE_PREVIEW_DIVIDER_HIT_WIDTH: TokenKey = TokenKey(673);
+    pub const IMAGE_PREVIEW_DIVIDER_WIDTH: TokenKey = TokenKey(674);
+    pub const IMAGE_PREVIEW_GAP: TokenKey = TokenKey(675);
+    pub const IMAGE_PREVIEW_GLASS_BACKGROUND: TokenKey = TokenKey(676);
+    pub const IMAGE_PREVIEW_GLASS_BLUR: TokenKey = TokenKey(677);
+    pub const IMAGE_PREVIEW_GLASS_BORDER: TokenKey = TokenKey(678);
+    pub const IMAGE_PREVIEW_GLASS_COLOR: TokenKey = TokenKey(679);
+    pub const IMAGE_PREVIEW_GLASS_SHADOW: TokenKey = TokenKey(680);
+    pub const IMAGE_PREVIEW_GRIP_BACKGROUND: TokenKey = TokenKey(681);
+    pub const IMAGE_PREVIEW_GRIP_BORDER: TokenKey = TokenKey(682);
+    pub const IMAGE_PREVIEW_GRIP_SIZE: TokenKey = TokenKey(683);
+    pub const IMAGE_PREVIEW_INSET: TokenKey = TokenKey(684);
+    pub const IMAGE_PREVIEW_PAN_STEP: TokenKey = TokenKey(685);
+    pub const IMAGE_PREVIEW_PIXEL_GRID_COLOR: TokenKey = TokenKey(686);
+    pub const IMAGE_PREVIEW_PIXEL_GRID_SHADOW_COLOR: TokenKey = TokenKey(687);
+    pub const IMAGE_PREVIEW_RADIUS: TokenKey = TokenKey(688);
+    pub const IMAGE_PREVIEW_TOOLBAR_CLEARANCE: TokenKey = TokenKey(689);
+    pub const IMAGE_PREVIEW_TOOLBAR_OPACITY_DRAGGED: TokenKey = TokenKey(690);
+    pub const IMAGE_PREVIEW_VIEW_DURATION: TokenKey = TokenKey(691);
+    pub const IMAGE_PREVIEW_VIEW_EASE: TokenKey = TokenKey(692);
+    pub const IMAGE_PREVIEW_WHITE: TokenKey = TokenKey(693);
+    pub const INFO: TokenKey = TokenKey(694);
+    pub const INFO_BG: TokenKey = TokenKey(695);
+    pub const INFO_BORDER: TokenKey = TokenKey(696);
+    pub const INFO_FOREGROUND: TokenKey = TokenKey(697);
+    pub const INPUT_AFFIX_COLOR: TokenKey = TokenKey(698);
+    pub const INPUT_BACKGROUND: TokenKey = TokenKey(699);
+    pub const INPUT_BACKGROUND_DISABLED: TokenKey = TokenKey(700);
+    pub const INPUT_BACKGROUND_READONLY: TokenKey = TokenKey(701);
+    pub const INPUT_BORDER_COLOR: TokenKey = TokenKey(702);
+    pub const INPUT_BORDER_COLOR_DISABLED: TokenKey = TokenKey(703);
+    pub const INPUT_BORDER_COLOR_FOCUS: TokenKey = TokenKey(704);
+    pub const INPUT_BORDER_COLOR_HOVER: TokenKey = TokenKey(705);
+    pub const INPUT_BORDER_COLOR_INVALID: TokenKey = TokenKey(706);
+    pub const INPUT_BORDER_RADIUS: TokenKey = TokenKey(707);
+    pub const INPUT_BORDER_WIDTH: TokenKey = TokenKey(708);
+    pub const INPUT_CLEAR_BORDER_RADIUS: TokenKey = TokenKey(709);
+    pub const INPUT_CLEAR_COLOR: TokenKey = TokenKey(710);
+    pub const INPUT_CLEAR_COLOR_HOVER: TokenKey = TokenKey(711);
+    pub const INPUT_CLEAR_GLYPH_WIDTH: TokenKey = TokenKey(712);
+    pub const INPUT_CLEAR_HIT_SIZE: TokenKey = TokenKey(713);
+    pub const INPUT_COLOR: TokenKey = TokenKey(714);
+    pub const INPUT_COLOR_DISABLED: TokenKey = TokenKey(715);
+    pub const INPUT_DURATION: TokenKey = TokenKey(716);
+    pub const INPUT_EASE: TokenKey = TokenKey(717);
+    pub const INPUT_FOCUS_RING_COLOR: TokenKey = TokenKey(718);
+    pub const INPUT_FOCUS_RING_OFFSET: TokenKey = TokenKey(719);
+    pub const INPUT_FOCUS_RING_WIDTH: TokenKey = TokenKey(720);
+    pub const INPUT_FONT_SIZE_LG: TokenKey = TokenKey(721);
+    pub const INPUT_FONT_SIZE_MD: TokenKey = TokenKey(722);
+    pub const INPUT_FONT_SIZE_SM: TokenKey = TokenKey(723);
+    pub const INPUT_GAP: TokenKey = TokenKey(724);
+    pub const INPUT_HEIGHT_LG: TokenKey = TokenKey(725);
+    pub const INPUT_HEIGHT_MD: TokenKey = TokenKey(726);
+    pub const INPUT_HEIGHT_SM: TokenKey = TokenKey(727);
+    pub const INPUT_ICON_SIZE_LG: TokenKey = TokenKey(728);
+    pub const INPUT_ICON_SIZE_MD: TokenKey = TokenKey(729);
+    pub const INPUT_ICON_SIZE_SM: TokenKey = TokenKey(730);
+    pub const INPUT_NUMBER_PADDING_INLINE: TokenKey = TokenKey(731);
+    pub const INPUT_PADDING_BLOCK: TokenKey = TokenKey(732);
+    pub const INPUT_PADDING_INLINE_LG: TokenKey = TokenKey(733);
+    pub const INPUT_PADDING_INLINE_MD: TokenKey = TokenKey(734);
+    pub const INPUT_PADDING_INLINE_SM: TokenKey = TokenKey(735);
+    pub const INPUT_PLACEHOLDER_COLOR: TokenKey = TokenKey(736);
+    pub const INPUT_STEPPER_BACKGROUND_HOVER: TokenKey = TokenKey(737);
+    pub const INPUT_STEPPER_BACKGROUND_PRESSED: TokenKey = TokenKey(738);
+    pub const INPUT_STEPPER_BORDER_RADIUS: TokenKey = TokenKey(739);
+    pub const LAYER_BASE: TokenKey = TokenKey(740);
+    pub const LAYER_DIALOG: TokenKey = TokenKey(741);
+    pub const LAYER_MODAL: TokenKey = TokenKey(742);
+    pub const LAYER_POPOVER: TokenKey = TokenKey(743);
+    pub const LAYER_STICKY: TokenKey = TokenKey(744);
+    pub const LAYER_TOAST: TokenKey = TokenKey(745);
+    pub const LAYER_TOOLTIP: TokenKey = TokenKey(746);
+    pub const LAYOUT_GRID_COLUMNS: TokenKey = TokenKey(747);
+    pub const LAYOUT_GRID_GAP: TokenKey = TokenKey(748);
+    pub const LAYOUT_HEADER_HEIGHT: TokenKey = TokenKey(749);
+    pub const LAYOUT_PAGE_GUTTER: TokenKey = TokenKey(750);
+    pub const LAYOUT_PAGE_GUTTER_LG: TokenKey = TokenKey(751);
+    pub const LAYOUT_PAGE_GUTTER_MD: TokenKey = TokenKey(752);
+    pub const LAYOUT_PANE_WIDTH: TokenKey = TokenKey(753);
+    pub const LAYOUT_SIDEBAR_COLLAPSE_AT: TokenKey = TokenKey(754);
+    pub const LAYOUT_SIDEBAR_WIDTH: TokenKey = TokenKey(755);
+    pub const LAYOUT_SIDEBAR_WIDTH_COLLAPSED: TokenKey = TokenKey(756);
+    pub const LEADING_NORMAL: TokenKey = TokenKey(757);
+    pub const LEADING_RELAXED: TokenKey = TokenKey(758);
+    pub const LEADING_TIGHT: TokenKey = TokenKey(759);
+    pub const LIME_100: TokenKey = TokenKey(760);
+    pub const LIME_200: TokenKey = TokenKey(761);
+    pub const LIME_300: TokenKey = TokenKey(762);
+    pub const LIME_400: TokenKey = TokenKey(763);
+    pub const LIME_50: TokenKey = TokenKey(764);
+    pub const LIME_500: TokenKey = TokenKey(765);
+    pub const LIME_600: TokenKey = TokenKey(766);
+    pub const LIME_700: TokenKey = TokenKey(767);
+    pub const LIME_800: TokenKey = TokenKey(768);
+    pub const LIME_900: TokenKey = TokenKey(769);
+    pub const LIME_950: TokenKey = TokenKey(770);
+    pub const LINE_HEIGHT_2XL: TokenKey = TokenKey(771);
+    pub const LINE_HEIGHT_3XL: TokenKey = TokenKey(772);
+    pub const LINE_HEIGHT_DISPLAY: TokenKey = TokenKey(773);
+    pub const LINE_HEIGHT_LG: TokenKey = TokenKey(774);
+    pub const LINE_HEIGHT_MD: TokenKey = TokenKey(775);
+    pub const LINE_HEIGHT_SM: TokenKey = TokenKey(776);
+    pub const LINE_HEIGHT_XL: TokenKey = TokenKey(777);
+    pub const LINK_COLOR: TokenKey = TokenKey(778);
+    pub const LINK_COLOR_HOVER: TokenKey = TokenKey(779);
+    pub const LINK_DANGER_COLOR: TokenKey = TokenKey(780);
+    pub const LINK_DANGER_COLOR_HOVER: TokenKey = TokenKey(781);
+    pub const LINK_DECORATION: TokenKey = TokenKey(782);
+    pub const LINK_DEFAULT_COLOR: TokenKey = TokenKey(783);
+    pub const LINK_DEFAULT_COLOR_HOVER: TokenKey = TokenKey(784);
+    pub const LINK_DURATION: TokenKey = TokenKey(785);
+    pub const LINK_EASE: TokenKey = TokenKey(786);
+    pub const LINK_FOCUS_RING_COLOR: TokenKey = TokenKey(787);
+    pub const LINK_FOCUS_RING_OFFSET: TokenKey = TokenKey(788);
+    pub const LINK_FOCUS_RING_RADIUS: TokenKey = TokenKey(789);
+    pub const LINK_FOCUS_RING_WIDTH: TokenKey = TokenKey(790);
+    pub const LINK_FONT_SIZE_LG: TokenKey = TokenKey(791);
+    pub const LINK_FONT_SIZE_MD: TokenKey = TokenKey(792);
+    pub const LINK_FONT_SIZE_SM: TokenKey = TokenKey(793);
+    pub const LINK_FONT_WEIGHT: TokenKey = TokenKey(794);
+    pub const LINK_GAP: TokenKey = TokenKey(795);
+    pub const LINK_ICON_SIZE_LG: TokenKey = TokenKey(796);
+    pub const LINK_ICON_SIZE_MD: TokenKey = TokenKey(797);
+    pub const LINK_ICON_SIZE_SM: TokenKey = TokenKey(798);
+    pub const LINK_LINE_HEIGHT_LG: TokenKey = TokenKey(799);
+    pub const LINK_LINE_HEIGHT_MD: TokenKey = TokenKey(800);
+    pub const LINK_LINE_HEIGHT_SM: TokenKey = TokenKey(801);
+    pub const LINK_OPACITY_DISABLED: TokenKey = TokenKey(802);
+    pub const LINK_SUCCESS_COLOR: TokenKey = TokenKey(803);
+    pub const LINK_SUCCESS_COLOR_HOVER: TokenKey = TokenKey(804);
+    pub const LINK_UNDERLINE_WIDTH: TokenKey = TokenKey(805);
+    pub const LINK_WARNING_COLOR: TokenKey = TokenKey(806);
+    pub const LINK_WARNING_COLOR_HOVER: TokenKey = TokenKey(807);
+    pub const LIST_ROW_BACKGROUND_HOVER: TokenKey = TokenKey(808);
+    pub const LIST_ROW_BACKGROUND_SELECTED: TokenKey = TokenKey(809);
+    pub const LIST_ROW_COLOR: TokenKey = TokenKey(810);
+    pub const LOADING_COLOR: TokenKey = TokenKey(811);
+    pub const LOADING_DELAY: TokenKey = TokenKey(812);
+    pub const LOADING_EASE: TokenKey = TokenKey(813);
+    pub const LOADING_FONT_SIZE_LG: TokenKey = TokenKey(814);
+    pub const LOADING_FONT_SIZE_MD: TokenKey = TokenKey(815);
+    pub const LOADING_FONT_SIZE_SM: TokenKey = TokenKey(816);
+    pub const LOADING_GAP: TokenKey = TokenKey(817);
+    pub const LOADING_SPIN_DURATION: TokenKey = TokenKey(818);
+    pub const LOADING_TRACK_DURATION: TokenKey = TokenKey(819);
+    pub const LOADING_TRANSITION_DURATION: TokenKey = TokenKey(820);
+    pub const MAGENTA_100: TokenKey = TokenKey(821);
+    pub const MAGENTA_200: TokenKey = TokenKey(822);
+    pub const MAGENTA_300: TokenKey = TokenKey(823);
+    pub const MAGENTA_400: TokenKey = TokenKey(824);
+    pub const MAGENTA_50: TokenKey = TokenKey(825);
+    pub const MAGENTA_500: TokenKey = TokenKey(826);
+    pub const MAGENTA_600: TokenKey = TokenKey(827);
+    pub const MAGENTA_700: TokenKey = TokenKey(828);
+    pub const MAGENTA_800: TokenKey = TokenKey(829);
+    pub const MAGENTA_900: TokenKey = TokenKey(830);
+    pub const MAGENTA_950: TokenKey = TokenKey(831);
+    pub const MENU_ITEM_BACKGROUND_HOVER: TokenKey = TokenKey(832);
+    pub const MENU_ITEM_BORDER_RADIUS: TokenKey = TokenKey(833);
+    pub const MENU_ITEM_COLOR: TokenKey = TokenKey(834);
+    pub const MENU_ITEM_DURATION: TokenKey = TokenKey(835);
+    pub const MENU_ITEM_EASE: TokenKey = TokenKey(836);
+    pub const MENU_WIDTH: TokenKey = TokenKey(837);
+    pub const MOTION_DURATION_ENTER: TokenKey = TokenKey(838);
+    pub const MOTION_DURATION_ENTER_LARGE: TokenKey = TokenKey(839);
+    pub const MOTION_DURATION_ENTER_PAGE: TokenKey = TokenKey(840);
+    pub const MOTION_DURATION_EXIT: TokenKey = TokenKey(841);
+    pub const MOTION_DURATION_EXIT_LARGE: TokenKey = TokenKey(842);
+    pub const MOTION_DURATION_EXIT_PAGE: TokenKey = TokenKey(843);
+    pub const MOTION_DURATION_INTERACTION: TokenKey = TokenKey(844);
+    pub const MOTION_DURATION_LOOP: TokenKey = TokenKey(845);
+    pub const MOTION_DURATION_LOOP_TRACK: TokenKey = TokenKey(846);
+    pub const MOTION_DURATION_SETTLE: TokenKey = TokenKey(847);
+    pub const MOTION_EASE_ENTER: TokenKey = TokenKey(848);
+    pub const MOTION_EASE_EXIT: TokenKey = TokenKey(849);
+    pub const MOTION_EASE_EXPRESSIVE_ENTER: TokenKey = TokenKey(850);
+    pub const MOTION_EASE_EXPRESSIVE_EXIT: TokenKey = TokenKey(851);
+    pub const MOTION_EASE_EXPRESSIVE_STANDARD: TokenKey = TokenKey(852);
+    pub const MOTION_EASE_FADE: TokenKey = TokenKey(853);
+    pub const MOTION_EASE_SPRING: TokenKey = TokenKey(854);
+    pub const MOTION_EASE_STANDARD: TokenKey = TokenKey(855);
+    pub const MOTION_EASE_STOW: TokenKey = TokenKey(856);
+    pub const NEUTRAL_0: TokenKey = TokenKey(857);
+    pub const NEUTRAL_100: TokenKey = TokenKey(858);
+    pub const NEUTRAL_1000: TokenKey = TokenKey(859);
+    pub const NEUTRAL_200: TokenKey = TokenKey(860);
+    pub const NEUTRAL_300: TokenKey = TokenKey(861);
+    pub const NEUTRAL_400: TokenKey = TokenKey(862);
+    pub const NEUTRAL_50: TokenKey = TokenKey(863);
+    pub const NEUTRAL_500: TokenKey = TokenKey(864);
+    pub const NEUTRAL_600: TokenKey = TokenKey(865);
+    pub const NEUTRAL_700: TokenKey = TokenKey(866);
+    pub const NEUTRAL_800: TokenKey = TokenKey(867);
+    pub const NEUTRAL_850: TokenKey = TokenKey(868);
+    pub const NEUTRAL_900: TokenKey = TokenKey(869);
+    pub const NEUTRAL_925: TokenKey = TokenKey(870);
+    pub const NEUTRAL_950: TokenKey = TokenKey(871);
+    pub const ON_ACCENT: TokenKey = TokenKey(872);
+    pub const ON_ERROR_SOLID: TokenKey = TokenKey(873);
+    pub const ON_SUCCESS_SOLID: TokenKey = TokenKey(874);
+    pub const ON_WARNING_SOLID: TokenKey = TokenKey(875);
+    pub const OPACITY_DISABLED_CONTAINER: TokenKey = TokenKey(876);
+    pub const OPACITY_DISABLED_CONTENT: TokenKey = TokenKey(877);
+    pub const OPACITY_DRAGGED: TokenKey = TokenKey(878);
+    pub const OPACITY_FOCUS: TokenKey = TokenKey(879);
+    pub const OPACITY_HOVER: TokenKey = TokenKey(880);
+    pub const OPACITY_PRESSED: TokenKey = TokenKey(881);
+    pub const ORANGE_100: TokenKey = TokenKey(882);
+    pub const ORANGE_200: TokenKey = TokenKey(883);
+    pub const ORANGE_300: TokenKey = TokenKey(884);
+    pub const ORANGE_400: TokenKey = TokenKey(885);
+    pub const ORANGE_50: TokenKey = TokenKey(886);
+    pub const ORANGE_500: TokenKey = TokenKey(887);
+    pub const ORANGE_600: TokenKey = TokenKey(888);
+    pub const ORANGE_700: TokenKey = TokenKey(889);
+    pub const ORANGE_800: TokenKey = TokenKey(890);
+    pub const ORANGE_900: TokenKey = TokenKey(891);
+    pub const ORANGE_950: TokenKey = TokenKey(892);
+    pub const PAGE: TokenKey = TokenKey(893);
+    pub const PAGINATION_COLOR: TokenKey = TokenKey(894);
+    pub const PAGINATION_FONT_SIZE_LG: TokenKey = TokenKey(895);
+    pub const PAGINATION_FONT_SIZE_MD: TokenKey = TokenKey(896);
+    pub const PAGINATION_FONT_SIZE_SM: TokenKey = TokenKey(897);
+    pub const PAGINATION_GROUP_GAP: TokenKey = TokenKey(898);
+    pub const PAGINATION_ITEM_GAP: TokenKey = TokenKey(899);
+    pub const PAGINATION_JUMPER_WIDTH: TokenKey = TokenKey(900);
+    pub const PAGINATION_SELECTOR_WIDTH: TokenKey = TokenKey(901);
+    pub const POPOVER_BACKGROUND: TokenKey = TokenKey(902);
+    pub const POPOVER_BORDER_COLOR: TokenKey = TokenKey(903);
+    pub const POPOVER_BORDER_RADIUS: TokenKey = TokenKey(904);
+    pub const POPOVER_BORDER_WIDTH: TokenKey = TokenKey(905);
+    pub const POPOVER_COLOR: TokenKey = TokenKey(906);
+    pub const POPOVER_DURATION_ENTER: TokenKey = TokenKey(907);
+    pub const POPOVER_DURATION_EXIT: TokenKey = TokenKey(908);
+    pub const POPOVER_EASE: TokenKey = TokenKey(909);
+    pub const POPOVER_EASE_FADE: TokenKey = TokenKey(910);
+    pub const POPOVER_FONT_SIZE: TokenKey = TokenKey(911);
+    pub const POPOVER_PADDING: TokenKey = TokenKey(912);
+    pub const POPOVER_SHADOW: TokenKey = TokenKey(913);
+    pub const POPOVER_Z_INDEX: TokenKey = TokenKey(914);
+    pub const PROGRESS_BORDER_RADIUS: TokenKey = TokenKey(915);
+    pub const PROGRESS_CIRCLE_FONT_SIZE_SM: TokenKey = TokenKey(916);
+    pub const PROGRESS_CIRCLE_SIZE_LG: TokenKey = TokenKey(917);
+    pub const PROGRESS_CIRCLE_SIZE_MD: TokenKey = TokenKey(918);
+    pub const PROGRESS_CIRCLE_SIZE_SM: TokenKey = TokenKey(919);
+    pub const PROGRESS_CIRCLE_STROKE_LG: TokenKey = TokenKey(920);
+    pub const PROGRESS_CIRCLE_STROKE_MD: TokenKey = TokenKey(921);
+    pub const PROGRESS_CIRCLE_STROKE_SM: TokenKey = TokenKey(922);
+    pub const PROGRESS_ERROR: TokenKey = TokenKey(923);
+    pub const PROGRESS_FILL: TokenKey = TokenKey(924);
+    pub const PROGRESS_HEIGHT: TokenKey = TokenKey(925);
+    pub const PROGRESS_HEIGHT_LG: TokenKey = TokenKey(926);
+    pub const PROGRESS_HEIGHT_MD: TokenKey = TokenKey(927);
+    pub const PROGRESS_HEIGHT_SM: TokenKey = TokenKey(928);
+    pub const PROGRESS_PAUSED: TokenKey = TokenKey(929);
+    pub const PROGRESS_SUCCESS: TokenKey = TokenKey(930);
+    pub const PROGRESS_TRACK: TokenKey = TokenKey(931);
+    pub const PURPLE_100: TokenKey = TokenKey(932);
+    pub const PURPLE_200: TokenKey = TokenKey(933);
+    pub const PURPLE_300: TokenKey = TokenKey(934);
+    pub const PURPLE_400: TokenKey = TokenKey(935);
+    pub const PURPLE_50: TokenKey = TokenKey(936);
+    pub const PURPLE_500: TokenKey = TokenKey(937);
+    pub const PURPLE_600: TokenKey = TokenKey(938);
+    pub const PURPLE_700: TokenKey = TokenKey(939);
+    pub const PURPLE_800: TokenKey = TokenKey(940);
+    pub const PURPLE_900: TokenKey = TokenKey(941);
+    pub const PURPLE_950: TokenKey = TokenKey(942);
+    pub const RADIO_ACCENT_COLOR: TokenKey = TokenKey(943);
+    pub const RADIO_BACKGROUND: TokenKey = TokenKey(944);
+    pub const RADIO_BACKGROUND_CHECKED: TokenKey = TokenKey(945);
+    pub const RADIO_BORDER_COLOR: TokenKey = TokenKey(946);
+    pub const RADIO_BORDER_COLOR_CHECKED: TokenKey = TokenKey(947);
+    pub const RADIO_BORDER_RADIUS: TokenKey = TokenKey(948);
+    pub const RADIO_BORDER_WIDTH: TokenKey = TokenKey(949);
+    pub const RADIO_BUTTON_BACKGROUND: TokenKey = TokenKey(950);
+    pub const RADIO_BUTTON_BACKGROUND_SELECTED: TokenKey = TokenKey(951);
+    pub const RADIO_BUTTON_BORDER_COLOR: TokenKey = TokenKey(952);
+    pub const RADIO_BUTTON_BORDER_RADIUS: TokenKey = TokenKey(953);
+    pub const RADIO_BUTTON_BORDER_WIDTH: TokenKey = TokenKey(954);
+    pub const RADIO_BUTTON_COLOR: TokenKey = TokenKey(955);
+    pub const RADIO_BUTTON_COLOR_HOVER: TokenKey = TokenKey(956);
+    pub const RADIO_BUTTON_COLOR_SELECTED: TokenKey = TokenKey(957);
+    pub const RADIO_BUTTON_DISABLED_BACKGROUND: TokenKey = TokenKey(958);
+    pub const RADIO_BUTTON_DISABLED_COLOR: TokenKey = TokenKey(959);
+    pub const RADIO_BUTTON_DURATION: TokenKey = TokenKey(960);
+    pub const RADIO_BUTTON_DURATION_FAST: TokenKey = TokenKey(961);
+    pub const RADIO_BUTTON_EASE: TokenKey = TokenKey(962);
+    pub const RADIO_BUTTON_FONT_SIZE_LG: TokenKey = TokenKey(963);
+    pub const RADIO_BUTTON_FONT_SIZE_MD: TokenKey = TokenKey(964);
+    pub const RADIO_BUTTON_FONT_SIZE_SM: TokenKey = TokenKey(965);
+    pub const RADIO_BUTTON_HEIGHT_LG: TokenKey = TokenKey(966);
+    pub const RADIO_BUTTON_HEIGHT_MD: TokenKey = TokenKey(967);
+    pub const RADIO_BUTTON_HEIGHT_SM: TokenKey = TokenKey(968);
+    pub const RADIO_BUTTON_HOVER_BACKGROUND: TokenKey = TokenKey(969);
+    pub const RADIO_BUTTON_PADDING_INLINE_LG: TokenKey = TokenKey(970);
+    pub const RADIO_BUTTON_PADDING_INLINE_MD: TokenKey = TokenKey(971);
+    pub const RADIO_BUTTON_PADDING_INLINE_SM: TokenKey = TokenKey(972);
+    pub const RADIO_BUTTON_PRESSED_BACKGROUND: TokenKey = TokenKey(973);
+    pub const RADIO_BUTTON_WEIGHT_SELECTED: TokenKey = TokenKey(974);
+    pub const RADIO_DISABLED_BACKGROUND: TokenKey = TokenKey(975);
+    pub const RADIO_DISABLED_BORDER_COLOR: TokenKey = TokenKey(976);
+    pub const RADIO_DISABLED_DOT_COLOR: TokenKey = TokenKey(977);
+    pub const RADIO_DOT_COLOR: TokenKey = TokenKey(978);
+    pub const RADIO_DOT_SIZE: TokenKey = TokenKey(979);
+    pub const RADIO_DOT_SIZE_LG: TokenKey = TokenKey(980);
+    pub const RADIO_DOT_SIZE_MD: TokenKey = TokenKey(981);
+    pub const RADIO_DOT_SIZE_SM: TokenKey = TokenKey(982);
+    pub const RADIO_DURATION: TokenKey = TokenKey(983);
+    pub const RADIO_DURATION_FAST: TokenKey = TokenKey(984);
+    pub const RADIO_EASE: TokenKey = TokenKey(985);
+    pub const RADIO_EASE_ENTER: TokenKey = TokenKey(986);
+    pub const RADIO_EASE_EXIT: TokenKey = TokenKey(987);
+    pub const RADIO_FOCUS_RING_COLOR: TokenKey = TokenKey(988);
+    pub const RADIO_FOCUS_RING_OFFSET: TokenKey = TokenKey(989);
+    pub const RADIO_FOCUS_RING_WIDTH: TokenKey = TokenKey(990);
+    pub const RADIO_GROUP_GAP: TokenKey = TokenKey(991);
+    pub const RADIO_HALO_COLOR: TokenKey = TokenKey(992);
+    pub const RADIO_HALO_WIDTH: TokenKey = TokenKey(993);
+    pub const RADIO_HEIGHT_LG: TokenKey = TokenKey(994);
+    pub const RADIO_HEIGHT_MD: TokenKey = TokenKey(995);
+    pub const RADIO_HEIGHT_SM: TokenKey = TokenKey(996);
+    pub const RADIO_LABEL_COLOR: TokenKey = TokenKey(997);
+    pub const RADIO_LABEL_COLOR_DISABLED: TokenKey = TokenKey(998);
+    pub const RADIO_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(999);
+    pub const RADIO_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(1000);
+    pub const RADIO_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(1001);
+    pub const RADIO_LABEL_GAP: TokenKey = TokenKey(1002);
+    pub const RADIO_PRESS_SCALE: TokenKey = TokenKey(1003);
+    pub const RADIO_SIZE: TokenKey = TokenKey(1004);
+    pub const RADIO_SIZE_LG: TokenKey = TokenKey(1005);
+    pub const RADIO_SIZE_MD: TokenKey = TokenKey(1006);
+    pub const RADIO_SIZE_SM: TokenKey = TokenKey(1007);
+    pub const RADIUS_BASE: TokenKey = TokenKey(1008);
+    pub const RADIUS_FULL: TokenKey = TokenKey(1009);
+    pub const RADIUS_LG: TokenKey = TokenKey(1010);
+    pub const RADIUS_MD: TokenKey = TokenKey(1011);
+    pub const RADIUS_NONE: TokenKey = TokenKey(1012);
+    pub const RADIUS_SM: TokenKey = TokenKey(1013);
+    pub const RADIUS_XL: TokenKey = TokenKey(1014);
+    pub const RADIUS_XS: TokenKey = TokenKey(1015);
+    pub const RED_100: TokenKey = TokenKey(1016);
+    pub const RED_200: TokenKey = TokenKey(1017);
+    pub const RED_300: TokenKey = TokenKey(1018);
+    pub const RED_400: TokenKey = TokenKey(1019);
+    pub const RED_50: TokenKey = TokenKey(1020);
+    pub const RED_500: TokenKey = TokenKey(1021);
+    pub const RED_600: TokenKey = TokenKey(1022);
+    pub const RED_700: TokenKey = TokenKey(1023);
+    pub const RED_800: TokenKey = TokenKey(1024);
+    pub const RED_900: TokenKey = TokenKey(1025);
+    pub const RED_950: TokenKey = TokenKey(1026);
+    pub const RESIZABLE_HIT_WIDTH: TokenKey = TokenKey(1027);
+    pub const RESIZABLE_KEYBOARD_STEP: TokenKey = TokenKey(1028);
+    pub const RESIZABLE_KEYBOARD_STEP_LARGE: TokenKey = TokenKey(1029);
+    pub const RESIZABLE_LINE_COLOR: TokenKey = TokenKey(1030);
+    pub const RESIZABLE_LINE_COLOR_ACTIVE: TokenKey = TokenKey(1031);
+    pub const RESIZABLE_LINE_COLOR_DISABLED: TokenKey = TokenKey(1032);
+    pub const RESIZABLE_LINE_COLOR_HOVER: TokenKey = TokenKey(1033);
+    pub const RESIZABLE_LINE_WIDTH: TokenKey = TokenKey(1034);
+    pub const RESIZABLE_OUTLINE_COLOR: TokenKey = TokenKey(1035);
+    pub const RESIZABLE_OUTLINE_WIDTH: TokenKey = TokenKey(1036);
+    pub const RESIZABLE_PANEL_MIN_SIZE: TokenKey = TokenKey(1037);
+    pub const ROSE_100: TokenKey = TokenKey(1038);
+    pub const ROSE_200: TokenKey = TokenKey(1039);
+    pub const ROSE_300: TokenKey = TokenKey(1040);
+    pub const ROSE_400: TokenKey = TokenKey(1041);
+    pub const ROSE_50: TokenKey = TokenKey(1042);
+    pub const ROSE_500: TokenKey = TokenKey(1043);
+    pub const ROSE_600: TokenKey = TokenKey(1044);
+    pub const ROSE_700: TokenKey = TokenKey(1045);
+    pub const ROSE_800: TokenKey = TokenKey(1046);
+    pub const ROSE_900: TokenKey = TokenKey(1047);
+    pub const ROSE_950: TokenKey = TokenKey(1048);
+    pub const SCRIM: TokenKey = TokenKey(1049);
+    pub const SCRIM_MODAL: TokenKey = TokenKey(1050);
+    pub const SCROLLBAR_DURATION_COLOR: TokenKey = TokenKey(1051);
+    pub const SCROLLBAR_DURATION_ENTER: TokenKey = TokenKey(1052);
+    pub const SCROLLBAR_DURATION_EXIT: TokenKey = TokenKey(1053);
+    pub const SCROLLBAR_DURATION_EXPAND: TokenKey = TokenKey(1054);
+    pub const SCROLLBAR_EASE_EXPAND: TokenKey = TokenKey(1055);
+    pub const SCROLLBAR_EASE_FADE: TokenKey = TokenKey(1056);
+    pub const SCROLLBAR_HIT_WIDTH: TokenKey = TokenKey(1057);
+    pub const SCROLLBAR_IDLE_DELAY: TokenKey = TokenKey(1058);
+    pub const SCROLLBAR_THUMB_COLOR: TokenKey = TokenKey(1059);
+    pub const SCROLLBAR_THUMB_COLOR_ACTIVE: TokenKey = TokenKey(1060);
+    pub const SCROLLBAR_THUMB_COLOR_HOVER: TokenKey = TokenKey(1061);
+    pub const SCROLLBAR_THUMB_INSET: TokenKey = TokenKey(1062);
+    pub const SCROLLBAR_THUMB_MIN_LENGTH: TokenKey = TokenKey(1063);
+    pub const SCROLLBAR_THUMB_WIDTH: TokenKey = TokenKey(1064);
+    pub const SCROLLBAR_THUMB_WIDTH_ACTIVE: TokenKey = TokenKey(1065);
+    pub const SCROLLBAR_THUMB_WIDTH_HOVER: TokenKey = TokenKey(1066);
+    pub const SEGMENTED_ACCENT_BACKGROUND: TokenKey = TokenKey(1067);
+    pub const SEGMENTED_ACCENT_COLOR: TokenKey = TokenKey(1068);
+    pub const SEGMENTED_ACCENT_THUMB_BACKGROUND: TokenKey = TokenKey(1069);
+    pub const SEGMENTED_ACCENT_THUMB_COLOR: TokenKey = TokenKey(1070);
+    pub const SEGMENTED_BACKGROUND: TokenKey = TokenKey(1071);
+    pub const SEGMENTED_COLOR: TokenKey = TokenKey(1072);
+    pub const SEGMENTED_COLOR_HOVER: TokenKey = TokenKey(1073);
+    pub const SEGMENTED_CONTENT_GAP: TokenKey = TokenKey(1074);
+    pub const SEGMENTED_DISABLED_BACKGROUND: TokenKey = TokenKey(1075);
+    pub const SEGMENTED_DISABLED_COLOR: TokenKey = TokenKey(1076);
+    pub const SEGMENTED_DISABLED_THUMB_BACKGROUND: TokenKey = TokenKey(1077);
+    pub const SEGMENTED_DISABLED_THUMB_COLOR: TokenKey = TokenKey(1078);
+    pub const SEGMENTED_DURATION: TokenKey = TokenKey(1079);
+    pub const SEGMENTED_EASE: TokenKey = TokenKey(1080);
+    pub const SEGMENTED_FOCUS_RING_COLOR: TokenKey = TokenKey(1081);
+    pub const SEGMENTED_FOCUS_RING_OFFSET: TokenKey = TokenKey(1082);
+    pub const SEGMENTED_FOCUS_RING_WIDTH: TokenKey = TokenKey(1083);
+    pub const SEGMENTED_FONT_SIZE_LG: TokenKey = TokenKey(1084);
+    pub const SEGMENTED_FONT_SIZE_MD: TokenKey = TokenKey(1085);
+    pub const SEGMENTED_FONT_SIZE_SM: TokenKey = TokenKey(1086);
+    pub const SEGMENTED_HEIGHT_LG: TokenKey = TokenKey(1087);
+    pub const SEGMENTED_HEIGHT_MD: TokenKey = TokenKey(1088);
+    pub const SEGMENTED_HEIGHT_SM: TokenKey = TokenKey(1089);
+    pub const SEGMENTED_HOVER_BACKGROUND: TokenKey = TokenKey(1090);
+    pub const SEGMENTED_ICON_SIZE_LG: TokenKey = TokenKey(1091);
+    pub const SEGMENTED_ICON_SIZE_MD: TokenKey = TokenKey(1092);
+    pub const SEGMENTED_ICON_SIZE_SM: TokenKey = TokenKey(1093);
+    pub const SEGMENTED_LINE_HEIGHT_LG: TokenKey = TokenKey(1094);
+    pub const SEGMENTED_LINE_HEIGHT_MD: TokenKey = TokenKey(1095);
+    pub const SEGMENTED_LINE_HEIGHT_SM: TokenKey = TokenKey(1096);
+    pub const SEGMENTED_PADDING_INLINE_LG: TokenKey = TokenKey(1097);
+    pub const SEGMENTED_PADDING_INLINE_MD: TokenKey = TokenKey(1098);
+    pub const SEGMENTED_PADDING_INLINE_SM: TokenKey = TokenKey(1099);
+    pub const SEGMENTED_PRESSED_BACKGROUND: TokenKey = TokenKey(1100);
+    pub const SEGMENTED_RADIUS: TokenKey = TokenKey(1101);
+    pub const SEGMENTED_STATE_DURATION: TokenKey = TokenKey(1102);
+    pub const SEGMENTED_STATE_EASE: TokenKey = TokenKey(1103);
+    pub const SEGMENTED_THUMB_BACKGROUND: TokenKey = TokenKey(1104);
+    pub const SEGMENTED_THUMB_COLOR: TokenKey = TokenKey(1105);
+    pub const SEGMENTED_THUMB_RADIUS: TokenKey = TokenKey(1106);
+    pub const SEGMENTED_THUMB_SHADOW: TokenKey = TokenKey(1107);
+    pub const SEGMENTED_TRACK_PADDING: TokenKey = TokenKey(1108);
+    pub const SEGMENTED_WEIGHT: TokenKey = TokenKey(1109);
+    pub const SEGMENTED_WEIGHT_SELECTED: TokenKey = TokenKey(1110);
+    pub const SELECT_LIST_MAX_HEIGHT: TokenKey = TokenKey(1111);
+    pub const SELECT_OPTION_BACKGROUND_SELECTED: TokenKey = TokenKey(1112);
+    pub const SELECT_OPTION_COLOR_SELECTED: TokenKey = TokenKey(1113);
+    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_LG: TokenKey = TokenKey(1114);
+    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_MD: TokenKey = TokenKey(1115);
+    pub const SELECT_OPTION_DESCRIPTION_HEIGHT_SM: TokenKey = TokenKey(1116);
+    pub const SELECT_OPTION_HEIGHT_LG: TokenKey = TokenKey(1117);
+    pub const SELECT_OPTION_HEIGHT_MD: TokenKey = TokenKey(1118);
+    pub const SELECT_OPTION_HEIGHT_SM: TokenKey = TokenKey(1119);
+    pub const SELECT_PANEL_GAP: TokenKey = TokenKey(1120);
+    pub const SELECT_TAG_GAP: TokenKey = TokenKey(1121);
+    pub const SELECT_WIDTH: TokenKey = TokenKey(1122);
+    pub const SELECTED_BACKGROUND: TokenKey = TokenKey(1123);
+    pub const SELECTED_COLOR: TokenKey = TokenKey(1124);
+    pub const SELECTED_MARKER_COLOR: TokenKey = TokenKey(1125);
+    pub const SELECTED_MARKER_WIDTH: TokenKey = TokenKey(1126);
+    pub const SELECTION_BG: TokenKey = TokenKey(1127);
+    pub const SELECTION_FOREGROUND: TokenKey = TokenKey(1128);
+    pub const SHADOW_1: TokenKey = TokenKey(1129);
+    pub const SHADOW_2: TokenKey = TokenKey(1130);
+    pub const SHADOW_3: TokenKey = TokenKey(1131);
+    pub const SIZE_12: TokenKey = TokenKey(1132);
+    pub const SIZE_16: TokenKey = TokenKey(1133);
+    pub const SIZE_20: TokenKey = TokenKey(1134);
+    pub const SIZE_24: TokenKey = TokenKey(1135);
+    pub const SIZE_28: TokenKey = TokenKey(1136);
+    pub const SIZE_32: TokenKey = TokenKey(1137);
+    pub const SIZE_40: TokenKey = TokenKey(1138);
+    pub const SIZE_48: TokenKey = TokenKey(1139);
+    pub const SIZE_56: TokenKey = TokenKey(1140);
+    pub const SKELETON_BASE: TokenKey = TokenKey(1141);
+    pub const SKELETON_CIRCLE_LG: TokenKey = TokenKey(1142);
+    pub const SKELETON_CIRCLE_MD: TokenKey = TokenKey(1143);
+    pub const SKELETON_CIRCLE_SM: TokenKey = TokenKey(1144);
+    pub const SKELETON_DURATION: TokenKey = TokenKey(1145);
+    pub const SKELETON_HEIGHT: TokenKey = TokenKey(1146);
+    pub const SKELETON_HIGHLIGHT: TokenKey = TokenKey(1147);
+    pub const SKELETON_LINE_LG: TokenKey = TokenKey(1148);
+    pub const SKELETON_LINE_MD: TokenKey = TokenKey(1149);
+    pub const SKELETON_LINE_SM: TokenKey = TokenKey(1150);
+    pub const SKELETON_RADIUS: TokenKey = TokenKey(1151);
+    pub const SKELETON_TEXT_LG: TokenKey = TokenKey(1152);
+    pub const SKELETON_TEXT_MD: TokenKey = TokenKey(1153);
+    pub const SKELETON_TEXT_SM: TokenKey = TokenKey(1154);
+    pub const SKELETON_WIDTH: TokenKey = TokenKey(1155);
+    pub const SLATE_0: TokenKey = TokenKey(1156);
+    pub const SLATE_100: TokenKey = TokenKey(1157);
+    pub const SLATE_1000: TokenKey = TokenKey(1158);
+    pub const SLATE_200: TokenKey = TokenKey(1159);
+    pub const SLATE_300: TokenKey = TokenKey(1160);
+    pub const SLATE_400: TokenKey = TokenKey(1161);
+    pub const SLATE_50: TokenKey = TokenKey(1162);
+    pub const SLATE_500: TokenKey = TokenKey(1163);
+    pub const SLATE_600: TokenKey = TokenKey(1164);
+    pub const SLATE_700: TokenKey = TokenKey(1165);
+    pub const SLATE_800: TokenKey = TokenKey(1166);
+    pub const SLATE_850: TokenKey = TokenKey(1167);
+    pub const SLATE_900: TokenKey = TokenKey(1168);
+    pub const SLATE_925: TokenKey = TokenKey(1169);
+    pub const SLATE_950: TokenKey = TokenKey(1170);
+    pub const SLIDER_DISABLED_FILL_BACKGROUND: TokenKey = TokenKey(1171);
+    pub const SLIDER_DISABLED_THUMB_BACKGROUND: TokenKey = TokenKey(1172);
+    pub const SLIDER_DISABLED_THUMB_BORDER_COLOR: TokenKey = TokenKey(1173);
+    pub const SLIDER_DISABLED_TRACK_BACKGROUND: TokenKey = TokenKey(1174);
+    pub const SLIDER_FILL_BACKGROUND: TokenKey = TokenKey(1175);
+    pub const SLIDER_FOCUS_RING_COLOR: TokenKey = TokenKey(1176);
+    pub const SLIDER_FOCUS_RING_OFFSET: TokenKey = TokenKey(1177);
+    pub const SLIDER_FOCUS_RING_WIDTH: TokenKey = TokenKey(1178);
+    pub const SLIDER_HEIGHT: TokenKey = TokenKey(1179);
+    pub const SLIDER_HIT_SIZE_LG: TokenKey = TokenKey(1180);
+    pub const SLIDER_HIT_SIZE_MD: TokenKey = TokenKey(1181);
+    pub const SLIDER_HIT_SIZE_SM: TokenKey = TokenKey(1182);
+    pub const SLIDER_INPUT_GAP: TokenKey = TokenKey(1183);
+    pub const SLIDER_INPUT_MIN_DIGITS: TokenKey = TokenKey(1184);
+    pub const SLIDER_LABEL_COLOR: TokenKey = TokenKey(1185);
+    pub const SLIDER_LABEL_COLOR_ACTIVE: TokenKey = TokenKey(1186);
+    pub const SLIDER_LABEL_COLOR_DISABLED: TokenKey = TokenKey(1187);
+    pub const SLIDER_LABEL_FONT_SIZE_LG: TokenKey = TokenKey(1188);
+    pub const SLIDER_LABEL_FONT_SIZE_MD: TokenKey = TokenKey(1189);
+    pub const SLIDER_LABEL_FONT_SIZE_SM: TokenKey = TokenKey(1190);
+    pub const SLIDER_LABEL_GAP: TokenKey = TokenKey(1191);
+    pub const SLIDER_LABEL_LINE_HEIGHT_LG: TokenKey = TokenKey(1192);
+    pub const SLIDER_LABEL_LINE_HEIGHT_MD: TokenKey = TokenKey(1193);
+    pub const SLIDER_LABEL_LINE_HEIGHT_SM: TokenKey = TokenKey(1194);
+    pub const SLIDER_LABEL_MAX_WIDTH: TokenKey = TokenKey(1195);
+    pub const SLIDER_LABEL_MIN_GAP: TokenKey = TokenKey(1196);
+    pub const SLIDER_MARK_COLOR: TokenKey = TokenKey(1197);
+    pub const SLIDER_MARK_COLOR_ACTIVE: TokenKey = TokenKey(1198);
+    pub const SLIDER_MARK_SIZE: TokenKey = TokenKey(1199);
+    pub const SLIDER_MIN_TRACK_LENGTH: TokenKey = TokenKey(1200);
+    pub const SLIDER_RADIUS: TokenKey = TokenKey(1201);
+    pub const SLIDER_RELEASE_DURATION: TokenKey = TokenKey(1202);
+    pub const SLIDER_SNAP_DISTANCE: TokenKey = TokenKey(1203);
+    pub const SLIDER_STATE_DURATION: TokenKey = TokenKey(1204);
+    pub const SLIDER_STATE_EASE: TokenKey = TokenKey(1205);
+    pub const SLIDER_STEPPER_GAP: TokenKey = TokenKey(1206);
+    pub const SLIDER_THUMB_BACKGROUND: TokenKey = TokenKey(1207);
+    pub const SLIDER_THUMB_BORDER_COLOR: TokenKey = TokenKey(1208);
+    pub const SLIDER_THUMB_BORDER_COLOR_ACTIVE: TokenKey = TokenKey(1209);
+    pub const SLIDER_THUMB_BORDER_COLOR_HOVER: TokenKey = TokenKey(1210);
+    pub const SLIDER_THUMB_BORDER_WIDTH: TokenKey = TokenKey(1211);
+    pub const SLIDER_THUMB_HALO_COLOR: TokenKey = TokenKey(1212);
+    pub const SLIDER_THUMB_HALO_SIZE: TokenKey = TokenKey(1213);
+    pub const SLIDER_THUMB_RADIUS: TokenKey = TokenKey(1214);
+    pub const SLIDER_THUMB_SCALE_PRESSED: TokenKey = TokenKey(1215);
+    pub const SLIDER_THUMB_SHADOW: TokenKey = TokenKey(1216);
+    pub const SLIDER_THUMB_SIZE_LG: TokenKey = TokenKey(1217);
+    pub const SLIDER_THUMB_SIZE_MD: TokenKey = TokenKey(1218);
+    pub const SLIDER_THUMB_SIZE_SM: TokenKey = TokenKey(1219);
+    pub const SLIDER_TOOLTIP_GAP: TokenKey = TokenKey(1220);
+    pub const SLIDER_TRACK_BACKGROUND: TokenKey = TokenKey(1221);
+    pub const SLIDER_TRACK_HEIGHT_LG: TokenKey = TokenKey(1222);
+    pub const SLIDER_TRACK_HEIGHT_MD: TokenKey = TokenKey(1223);
+    pub const SLIDER_TRACK_HEIGHT_SM: TokenKey = TokenKey(1224);
+    pub const SLIDER_WIDTH: TokenKey = TokenKey(1225);
+    pub const SPACE_0: TokenKey = TokenKey(1226);
+    pub const SPACE_12: TokenKey = TokenKey(1227);
+    pub const SPACE_16: TokenKey = TokenKey(1228);
+    pub const SPACE_2: TokenKey = TokenKey(1229);
+    pub const SPACE_24: TokenKey = TokenKey(1230);
+    pub const SPACE_32: TokenKey = TokenKey(1231);
+    pub const SPACE_4: TokenKey = TokenKey(1232);
+    pub const SPACE_48: TokenKey = TokenKey(1233);
+    pub const SPACE_64: TokenKey = TokenKey(1234);
+    pub const SPACE_8: TokenKey = TokenKey(1235);
+    pub const SPINNER_BORDER_WIDTH: TokenKey = TokenKey(1236);
+    pub const SPINNER_COLOR: TokenKey = TokenKey(1237);
+    pub const SPINNER_DURATION: TokenKey = TokenKey(1238);
+    pub const SPINNER_SIZE: TokenKey = TokenKey(1239);
+    pub const SPINNER_SIZE_LG: TokenKey = TokenKey(1240);
+    pub const SPINNER_SIZE_MD: TokenKey = TokenKey(1241);
+    pub const SPINNER_SIZE_SM: TokenKey = TokenKey(1242);
+    pub const SPINNER_STROKE_LG: TokenKey = TokenKey(1243);
+    pub const SPINNER_STROKE_MD: TokenKey = TokenKey(1244);
+    pub const SPINNER_STROKE_SM: TokenKey = TokenKey(1245);
+    pub const SPINNER_TRACK: TokenKey = TokenKey(1246);
+    pub const STATUS_BORDER_RADIUS: TokenKey = TokenKey(1247);
+    pub const STATUS_BORDER_WIDTH: TokenKey = TokenKey(1248);
+    pub const STATUS_GAP: TokenKey = TokenKey(1249);
+    pub const STATUS_PADDING_BLOCK: TokenKey = TokenKey(1250);
+    pub const STATUS_PADDING_INLINE: TokenKey = TokenKey(1251);
+    pub const STEPS_ARROW_WIDTH: TokenKey = TokenKey(1252);
+    pub const STEPS_BACKGROUND: TokenKey = TokenKey(1253);
+    pub const STEPS_BACKGROUND_CURRENT: TokenKey = TokenKey(1254);
+    pub const STEPS_BACKGROUND_ERROR: TokenKey = TokenKey(1255);
+    pub const STEPS_BACKGROUND_FINISH: TokenKey = TokenKey(1256);
+    pub const STEPS_BORDER_RADIUS: TokenKey = TokenKey(1257);
+    pub const STEPS_COLOR: TokenKey = TokenKey(1258);
+    pub const STEPS_COLOR_CURRENT: TokenKey = TokenKey(1259);
+    pub const STEPS_COLOR_DISABLED: TokenKey = TokenKey(1260);
+    pub const STEPS_COLOR_ERROR: TokenKey = TokenKey(1261);
+    pub const STEPS_COLOR_FINISH: TokenKey = TokenKey(1262);
+    pub const STEPS_DESCRIPTION_COLOR: TokenKey = TokenKey(1263);
+    pub const STEPS_DESCRIPTION_FONT_SIZE: TokenKey = TokenKey(1264);
+    pub const STEPS_DESCRIPTION_GAP: TokenKey = TokenKey(1265);
+    pub const STEPS_DOT_SIZE: TokenKey = TokenKey(1266);
+    pub const STEPS_FONT_SIZE_LG: TokenKey = TokenKey(1267);
+    pub const STEPS_FONT_SIZE_MD: TokenKey = TokenKey(1268);
+    pub const STEPS_FONT_SIZE_SM: TokenKey = TokenKey(1269);
+    pub const STEPS_GAP: TokenKey = TokenKey(1270);
+    pub const STEPS_ICON_SIZE_LG: TokenKey = TokenKey(1271);
+    pub const STEPS_ICON_SIZE_MD: TokenKey = TokenKey(1272);
+    pub const STEPS_ICON_SIZE_SM: TokenKey = TokenKey(1273);
+    pub const STEPS_INDICATOR_SIZE_LG: TokenKey = TokenKey(1274);
+    pub const STEPS_INDICATOR_SIZE_MD: TokenKey = TokenKey(1275);
+    pub const STEPS_INDICATOR_SIZE_SM: TokenKey = TokenKey(1276);
+    pub const STEPS_ITEM_GAP: TokenKey = TokenKey(1277);
+    pub const STEPS_ITEM_MIN_WIDTH: TokenKey = TokenKey(1278);
+    pub const STEPS_LINE_COLOR: TokenKey = TokenKey(1279);
+    pub const STEPS_LINE_COLOR_ERROR: TokenKey = TokenKey(1280);
+    pub const STEPS_LINE_COLOR_FINISH: TokenKey = TokenKey(1281);
+    pub const STEPS_LINE_WIDTH: TokenKey = TokenKey(1282);
+    pub const STEPS_NAVIGATION_LINE_WIDTH: TokenKey = TokenKey(1283);
+    pub const STEPS_ON_CURRENT: TokenKey = TokenKey(1284);
+    pub const STEPS_ON_FINISH: TokenKey = TokenKey(1285);
+    pub const STONE_0: TokenKey = TokenKey(1286);
+    pub const STONE_100: TokenKey = TokenKey(1287);
+    pub const STONE_1000: TokenKey = TokenKey(1288);
+    pub const STONE_200: TokenKey = TokenKey(1289);
+    pub const STONE_300: TokenKey = TokenKey(1290);
+    pub const STONE_400: TokenKey = TokenKey(1291);
+    pub const STONE_50: TokenKey = TokenKey(1292);
+    pub const STONE_500: TokenKey = TokenKey(1293);
+    pub const STONE_600: TokenKey = TokenKey(1294);
+    pub const STONE_700: TokenKey = TokenKey(1295);
+    pub const STONE_800: TokenKey = TokenKey(1296);
+    pub const STONE_850: TokenKey = TokenKey(1297);
+    pub const STONE_900: TokenKey = TokenKey(1298);
+    pub const STONE_925: TokenKey = TokenKey(1299);
+    pub const STONE_950: TokenKey = TokenKey(1300);
+    pub const SUCCESS: TokenKey = TokenKey(1301);
+    pub const SUCCESS_BG: TokenKey = TokenKey(1302);
+    pub const SUCCESS_BORDER: TokenKey = TokenKey(1303);
+    pub const SUCCESS_FOREGROUND: TokenKey = TokenKey(1304);
+    pub const SUCCESS_SOLID: TokenKey = TokenKey(1305);
+    pub const SURFACE: TokenKey = TokenKey(1306);
+    pub const SURFACE_COMPONENT: TokenKey = TokenKey(1307);
+    pub const SURFACE_GLASS: TokenKey = TokenKey(1308);
+    pub const SURFACE_GLASS_BORDER: TokenKey = TokenKey(1309);
+    pub const SURFACE_INVERSE: TokenKey = TokenKey(1310);
+    pub const SURFACE_LEVEL_2: TokenKey = TokenKey(1311);
+    pub const SURFACE_LEVEL_2_BORDER: TokenKey = TokenKey(1312);
+    pub const SURFACE_LEVEL_3: TokenKey = TokenKey(1313);
+    pub const SURFACE_LEVEL_3_BORDER: TokenKey = TokenKey(1314);
+    pub const SURFACE_SUBTLE: TokenKey = TokenKey(1315);
+    pub const SWATCH_BORDER_COLOR: TokenKey = TokenKey(1316);
+    pub const SWATCH_CHECKER_SIZE: TokenKey = TokenKey(1317);
+    pub const SWATCH_FOCUS_RING_COLOR: TokenKey = TokenKey(1318);
+    pub const SWATCH_FOCUS_RING_OFFSET: TokenKey = TokenKey(1319);
+    pub const SWATCH_FOCUS_RING_WIDTH: TokenKey = TokenKey(1320);
+    pub const SWATCH_GAP: TokenKey = TokenKey(1321);
+    pub const SWATCH_HIT_SIZE: TokenKey = TokenKey(1322);
+    pub const SWATCH_RADIUS: TokenKey = TokenKey(1323);
+    pub const SWATCH_SELECTED_COLOR: TokenKey = TokenKey(1324);
+    pub const SWATCH_SELECTED_OFFSET: TokenKey = TokenKey(1325);
+    pub const SWATCH_SELECTED_WIDTH: TokenKey = TokenKey(1326);
+    pub const SWATCH_SIZE: TokenKey = TokenKey(1327);
+    pub const SWITCH_BACKGROUND: TokenKey = TokenKey(1328);
+    pub const SWITCH_BACKGROUND_CHECKED: TokenKey = TokenKey(1329);
+    pub const SWITCH_BORDER_COLOR: TokenKey = TokenKey(1330);
+    pub const SWITCH_BORDER_RADIUS: TokenKey = TokenKey(1331);
+    pub const SWITCH_BORDER_RADIUS_CAPSULE: TokenKey = TokenKey(1332);
+    pub const SWITCH_BORDER_RADIUS_ROUNDED: TokenKey = TokenKey(1333);
+    pub const SWITCH_BORDER_WIDTH: TokenKey = TokenKey(1334);
+    pub const SWITCH_DURATION: TokenKey = TokenKey(1335);
+    pub const SWITCH_DURATION_FAST: TokenKey = TokenKey(1336);
+    pub const SWITCH_EASE: TokenKey = TokenKey(1337);
+    pub const SWITCH_HEIGHT: TokenKey = TokenKey(1338);
+    pub const SWITCH_HEIGHT_LG: TokenKey = TokenKey(1339);
+    pub const SWITCH_HEIGHT_MD: TokenKey = TokenKey(1340);
+    pub const SWITCH_HEIGHT_SM: TokenKey = TokenKey(1341);
+    pub const SWITCH_INDICATOR_COLOR: TokenKey = TokenKey(1342);
+    pub const SWITCH_INDICATOR_COLOR_CHECKED: TokenKey = TokenKey(1343);
+    pub const SWITCH_INDICATOR_COLOR_UNCHECKED: TokenKey = TokenKey(1344);
+    pub const SWITCH_INDICATOR_SIZE_LG: TokenKey = TokenKey(1345);
+    pub const SWITCH_INDICATOR_SIZE_MD: TokenKey = TokenKey(1346);
+    pub const SWITCH_INDICATOR_SIZE_SM: TokenKey = TokenKey(1347);
+    pub const SWITCH_INSET: TokenKey = TokenKey(1348);
+    pub const SWITCH_INSET_LG: TokenKey = TokenKey(1349);
+    pub const SWITCH_INSET_MD: TokenKey = TokenKey(1350);
+    pub const SWITCH_INSET_SM: TokenKey = TokenKey(1351);
+    pub const SWITCH_OPACITY_DISABLED: TokenKey = TokenKey(1352);
+    pub const SWITCH_THUMB: TokenKey = TokenKey(1353);
+    pub const SWITCH_THUMB_BORDER_RADIUS_CAPSULE: TokenKey = TokenKey(1354);
+    pub const SWITCH_THUMB_BORDER_RADIUS_ROUNDED: TokenKey = TokenKey(1355);
+    pub const SWITCH_THUMB_COLOR: TokenKey = TokenKey(1356);
+    pub const SWITCH_THUMB_COLOR_CHECKED: TokenKey = TokenKey(1357);
+    pub const SWITCH_THUMB_LG: TokenKey = TokenKey(1358);
+    pub const SWITCH_THUMB_MD: TokenKey = TokenKey(1359);
+    pub const SWITCH_THUMB_SHIFT: TokenKey = TokenKey(1360);
+    pub const SWITCH_THUMB_SM: TokenKey = TokenKey(1361);
+    pub const SWITCH_WIDTH: TokenKey = TokenKey(1362);
+    pub const SWITCH_WIDTH_LG: TokenKey = TokenKey(1363);
+    pub const SWITCH_WIDTH_MD: TokenKey = TokenKey(1364);
+    pub const SWITCH_WIDTH_SM: TokenKey = TokenKey(1365);
+    pub const TABS_ACTION_SIZE_LG: TokenKey = TokenKey(1366);
+    pub const TABS_ACTION_SIZE_MD: TokenKey = TokenKey(1367);
+    pub const TABS_ACTION_SIZE_SM: TokenKey = TokenKey(1368);
+    pub const TABS_BACKGROUND_HOVER: TokenKey = TokenKey(1369);
+    pub const TABS_BACKGROUND_PRESSED: TokenKey = TokenKey(1370);
+    pub const TABS_BORDER_COLOR: TokenKey = TokenKey(1371);
+    pub const TABS_BORDER_RADIUS: TokenKey = TokenKey(1372);
+    pub const TABS_BORDER_WIDTH: TokenKey = TokenKey(1373);
+    pub const TABS_CARD_BACKGROUND: TokenKey = TokenKey(1374);
+    pub const TABS_CARD_BACKGROUND_SELECTED: TokenKey = TokenKey(1375);
+    pub const TABS_CLOSE_ICON_SIZE_LG: TokenKey = TokenKey(1376);
+    pub const TABS_CLOSE_ICON_SIZE_MD: TokenKey = TokenKey(1377);
+    pub const TABS_CLOSE_ICON_SIZE_SM: TokenKey = TokenKey(1378);
+    pub const TABS_COLOR: TokenKey = TokenKey(1379);
+    pub const TABS_COLOR_DISABLED: TokenKey = TokenKey(1380);
+    pub const TABS_COLOR_SELECTED: TokenKey = TokenKey(1381);
+    pub const TABS_CONTENT_DURATION_ENTER: TokenKey = TokenKey(1382);
+    pub const TABS_CONTENT_DURATION_EXIT: TokenKey = TokenKey(1383);
+    pub const TABS_CONTENT_OFFSET: TokenKey = TokenKey(1384);
+    pub const TABS_DURATION: TokenKey = TokenKey(1385);
+    pub const TABS_EASE: TokenKey = TokenKey(1386);
+    pub const TABS_FOCUS_RING_COLOR: TokenKey = TokenKey(1387);
+    pub const TABS_FOCUS_RING_OFFSET: TokenKey = TokenKey(1388);
+    pub const TABS_FOCUS_RING_WIDTH: TokenKey = TokenKey(1389);
+    pub const TABS_FONT_SIZE_LG: TokenKey = TokenKey(1390);
+    pub const TABS_FONT_SIZE_MD: TokenKey = TokenKey(1391);
+    pub const TABS_FONT_SIZE_SM: TokenKey = TokenKey(1392);
+    pub const TABS_GAP_LG: TokenKey = TokenKey(1393);
+    pub const TABS_GAP_MD: TokenKey = TokenKey(1394);
+    pub const TABS_GAP_SM: TokenKey = TokenKey(1395);
+    pub const TABS_HEADER_WIDTH: TokenKey = TokenKey(1396);
+    pub const TABS_HEIGHT_LG: TokenKey = TokenKey(1397);
+    pub const TABS_HEIGHT_MD: TokenKey = TokenKey(1398);
+    pub const TABS_HEIGHT_SM: TokenKey = TokenKey(1399);
+    pub const TABS_ICON_SIZE_LG: TokenKey = TokenKey(1400);
+    pub const TABS_ICON_SIZE_MD: TokenKey = TokenKey(1401);
+    pub const TABS_ICON_SIZE_SM: TokenKey = TokenKey(1402);
+    pub const TABS_INDICATOR_COLOR: TokenKey = TokenKey(1403);
+    pub const TABS_INDICATOR_DURATION: TokenKey = TokenKey(1404);
+    pub const TABS_INDICATOR_RADIUS: TokenKey = TokenKey(1405);
+    pub const TABS_INDICATOR_SIZE: TokenKey = TokenKey(1406);
+    pub const TABS_MAX_ITEM_WIDTH: TokenKey = TokenKey(1407);
+    pub const TABS_PADDING_INLINE_LG: TokenKey = TokenKey(1408);
+    pub const TABS_PADDING_INLINE_MD: TokenKey = TokenKey(1409);
+    pub const TABS_PADDING_INLINE_SM: TokenKey = TokenKey(1410);
+    pub const TABS_SCROLL_DURATION: TokenKey = TokenKey(1411);
+    pub const TAG_BACKGROUND: TokenKey = TokenKey(1412);
+    pub const TAG_BACKGROUND_HOVER: TokenKey = TokenKey(1413);
+    pub const TAG_BACKGROUND_SELECTED: TokenKey = TokenKey(1414);
+    pub const TAG_BORDER_COLOR: TokenKey = TokenKey(1415);
+    pub const TAG_BORDER_COLOR_SELECTED: TokenKey = TokenKey(1416);
+    pub const TAG_BORDER_RADIUS: TokenKey = TokenKey(1417);
+    pub const TAG_BORDER_RADIUS_ROUND: TokenKey = TokenKey(1418);
+    pub const TAG_BORDER_WIDTH: TokenKey = TokenKey(1419);
+    pub const TAG_CLOSE_ICON_SIZE: TokenKey = TokenKey(1420);
+    pub const TAG_COLOR: TokenKey = TokenKey(1421);
+    pub const TAG_COLOR_SELECTED: TokenKey = TokenKey(1422);
+    pub const TAG_DANGER_FILLED_BACKGROUND: TokenKey = TokenKey(1423);
+    pub const TAG_DANGER_FILLED_BORDER_COLOR: TokenKey = TokenKey(1424);
+    pub const TAG_DANGER_FILLED_COLOR: TokenKey = TokenKey(1425);
+    pub const TAG_DANGER_OUTLINE_BACKGROUND: TokenKey = TokenKey(1426);
+    pub const TAG_DANGER_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1427);
+    pub const TAG_DANGER_OUTLINE_COLOR: TokenKey = TokenKey(1428);
+    pub const TAG_DANGER_TINT_BACKGROUND: TokenKey = TokenKey(1429);
+    pub const TAG_DANGER_TINT_BORDER_COLOR: TokenKey = TokenKey(1430);
+    pub const TAG_DANGER_TINT_COLOR: TokenKey = TokenKey(1431);
+    pub const TAG_DANGER_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1432);
+    pub const TAG_DANGER_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1433);
+    pub const TAG_DANGER_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1434);
+    pub const TAG_DEFAULT_FILLED_BACKGROUND: TokenKey = TokenKey(1435);
+    pub const TAG_DEFAULT_FILLED_BORDER_COLOR: TokenKey = TokenKey(1436);
+    pub const TAG_DEFAULT_FILLED_COLOR: TokenKey = TokenKey(1437);
+    pub const TAG_DEFAULT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1438);
+    pub const TAG_DEFAULT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1439);
+    pub const TAG_DEFAULT_OUTLINE_COLOR: TokenKey = TokenKey(1440);
+    pub const TAG_DEFAULT_TINT_BACKGROUND: TokenKey = TokenKey(1441);
+    pub const TAG_DEFAULT_TINT_BORDER_COLOR: TokenKey = TokenKey(1442);
+    pub const TAG_DEFAULT_TINT_COLOR: TokenKey = TokenKey(1443);
+    pub const TAG_DEFAULT_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1444);
+    pub const TAG_DEFAULT_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1445);
+    pub const TAG_DEFAULT_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1446);
+    pub const TAG_DURATION: TokenKey = TokenKey(1447);
+    pub const TAG_EASE: TokenKey = TokenKey(1448);
+    pub const TAG_FOCUS_RING_COLOR: TokenKey = TokenKey(1449);
+    pub const TAG_FOCUS_RING_OFFSET: TokenKey = TokenKey(1450);
+    pub const TAG_FOCUS_RING_WIDTH: TokenKey = TokenKey(1451);
+    pub const TAG_FONT_SIZE_LG: TokenKey = TokenKey(1452);
+    pub const TAG_FONT_SIZE_MD: TokenKey = TokenKey(1453);
+    pub const TAG_FONT_SIZE_SM: TokenKey = TokenKey(1454);
+    pub const TAG_FONT_WEIGHT: TokenKey = TokenKey(1455);
+    pub const TAG_GAP: TokenKey = TokenKey(1456);
+    pub const TAG_HEIGHT_LG: TokenKey = TokenKey(1457);
+    pub const TAG_HEIGHT_MD: TokenKey = TokenKey(1458);
+    pub const TAG_HEIGHT_SM: TokenKey = TokenKey(1459);
+    pub const TAG_LINE_HEIGHT: TokenKey = TokenKey(1460);
+    pub const TAG_OPACITY_DISABLED: TokenKey = TokenKey(1461);
+    pub const TAG_PADDING_BLOCK: TokenKey = TokenKey(1462);
+    pub const TAG_PADDING_INLINE_LG: TokenKey = TokenKey(1463);
+    pub const TAG_PADDING_INLINE_MD: TokenKey = TokenKey(1464);
+    pub const TAG_PADDING_INLINE_SM: TokenKey = TokenKey(1465);
+    pub const TAG_PRIMARY_FILLED_BACKGROUND: TokenKey = TokenKey(1466);
+    pub const TAG_PRIMARY_FILLED_BORDER_COLOR: TokenKey = TokenKey(1467);
+    pub const TAG_PRIMARY_FILLED_COLOR: TokenKey = TokenKey(1468);
+    pub const TAG_PRIMARY_OUTLINE_BACKGROUND: TokenKey = TokenKey(1469);
+    pub const TAG_PRIMARY_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1470);
+    pub const TAG_PRIMARY_OUTLINE_COLOR: TokenKey = TokenKey(1471);
+    pub const TAG_PRIMARY_TINT_BACKGROUND: TokenKey = TokenKey(1472);
+    pub const TAG_PRIMARY_TINT_BORDER_COLOR: TokenKey = TokenKey(1473);
+    pub const TAG_PRIMARY_TINT_COLOR: TokenKey = TokenKey(1474);
+    pub const TAG_PRIMARY_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1475);
+    pub const TAG_PRIMARY_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1476);
+    pub const TAG_PRIMARY_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1477);
+    pub const TAG_SUCCESS_FILLED_BACKGROUND: TokenKey = TokenKey(1478);
+    pub const TAG_SUCCESS_FILLED_BORDER_COLOR: TokenKey = TokenKey(1479);
+    pub const TAG_SUCCESS_FILLED_COLOR: TokenKey = TokenKey(1480);
+    pub const TAG_SUCCESS_OUTLINE_BACKGROUND: TokenKey = TokenKey(1481);
+    pub const TAG_SUCCESS_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1482);
+    pub const TAG_SUCCESS_OUTLINE_COLOR: TokenKey = TokenKey(1483);
+    pub const TAG_SUCCESS_TINT_BACKGROUND: TokenKey = TokenKey(1484);
+    pub const TAG_SUCCESS_TINT_BORDER_COLOR: TokenKey = TokenKey(1485);
+    pub const TAG_SUCCESS_TINT_COLOR: TokenKey = TokenKey(1486);
+    pub const TAG_SUCCESS_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1487);
+    pub const TAG_SUCCESS_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1488);
+    pub const TAG_SUCCESS_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1489);
+    pub const TAG_WARNING_FILLED_BACKGROUND: TokenKey = TokenKey(1490);
+    pub const TAG_WARNING_FILLED_BORDER_COLOR: TokenKey = TokenKey(1491);
+    pub const TAG_WARNING_FILLED_COLOR: TokenKey = TokenKey(1492);
+    pub const TAG_WARNING_OUTLINE_BACKGROUND: TokenKey = TokenKey(1493);
+    pub const TAG_WARNING_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1494);
+    pub const TAG_WARNING_OUTLINE_COLOR: TokenKey = TokenKey(1495);
+    pub const TAG_WARNING_TINT_BACKGROUND: TokenKey = TokenKey(1496);
+    pub const TAG_WARNING_TINT_BORDER_COLOR: TokenKey = TokenKey(1497);
+    pub const TAG_WARNING_TINT_COLOR: TokenKey = TokenKey(1498);
+    pub const TAG_WARNING_TINT_OUTLINE_BACKGROUND: TokenKey = TokenKey(1499);
+    pub const TAG_WARNING_TINT_OUTLINE_BORDER_COLOR: TokenKey = TokenKey(1500);
+    pub const TAG_WARNING_TINT_OUTLINE_COLOR: TokenKey = TokenKey(1501);
+    pub const TEAL_100: TokenKey = TokenKey(1502);
+    pub const TEAL_200: TokenKey = TokenKey(1503);
+    pub const TEAL_300: TokenKey = TokenKey(1504);
+    pub const TEAL_400: TokenKey = TokenKey(1505);
+    pub const TEAL_50: TokenKey = TokenKey(1506);
+    pub const TEAL_500: TokenKey = TokenKey(1507);
+    pub const TEAL_600: TokenKey = TokenKey(1508);
+    pub const TEAL_700: TokenKey = TokenKey(1509);
+    pub const TEAL_800: TokenKey = TokenKey(1510);
+    pub const TEAL_900: TokenKey = TokenKey(1511);
+    pub const TEAL_950: TokenKey = TokenKey(1512);
+    pub const TEXT_DISABLED: TokenKey = TokenKey(1513);
+    pub const TEXT_INVERSE: TokenKey = TokenKey(1514);
+    pub const TEXT_LINK: TokenKey = TokenKey(1515);
+    pub const TEXT_ON_GLASS: TokenKey = TokenKey(1516);
+    pub const TEXT_PLACEHOLDER: TokenKey = TokenKey(1517);
+    pub const TEXT_PRIMARY: TokenKey = TokenKey(1518);
+    pub const TEXT_SECONDARY: TokenKey = TokenKey(1519);
+    pub const TEXTAREA_LINE_HEIGHT: TokenKey = TokenKey(1520);
+    pub const TEXTAREA_PADDING_BLOCK: TokenKey = TokenKey(1521);
+    pub const TIME_PICKER_COLUMN_WIDTH: TokenKey = TokenKey(1522);
+    pub const TIME_PICKER_DISABLED_COLOR: TokenKey = TokenKey(1523);
+    pub const TIME_PICKER_FOCUS_COLOR: TokenKey = TokenKey(1524);
+    pub const TIME_PICKER_HOVER_BACKGROUND: TokenKey = TokenKey(1525);
+    pub const TIME_PICKER_ITEM_HEIGHT_LG: TokenKey = TokenKey(1526);
+    pub const TIME_PICKER_ITEM_HEIGHT_MD: TokenKey = TokenKey(1527);
+    pub const TIME_PICKER_ITEM_HEIGHT_SM: TokenKey = TokenKey(1528);
+    pub const TIME_PICKER_ITEM_RADIUS: TokenKey = TokenKey(1529);
+    pub const TIME_PICKER_PANEL_GAP: TokenKey = TokenKey(1530);
+    pub const TIME_PICKER_POPUP_GAP: TokenKey = TokenKey(1531);
+    pub const TIME_PICKER_SELECTED_BACKGROUND: TokenKey = TokenKey(1532);
+    pub const TIME_PICKER_SELECTED_COLOR: TokenKey = TokenKey(1533);
+    pub const TIME_PICKER_WINDOW_MARGIN: TokenKey = TokenKey(1534);
+    pub const TOAST_BACKGROUND: TokenKey = TokenKey(1535);
+    pub const TOAST_BORDER_COLOR: TokenKey = TokenKey(1536);
+    pub const TOAST_BORDER_RADIUS: TokenKey = TokenKey(1537);
+    pub const TOAST_CLOSE_ICON_SIZE: TokenKey = TokenKey(1538);
+    pub const TOAST_CLOSE_SIZE: TokenKey = TokenKey(1539);
+    pub const TOAST_COLLAPSE_DELAY: TokenKey = TokenKey(1540);
+    pub const TOAST_COLLAPSED_SCALE_STEP: TokenKey = TokenKey(1541);
+    pub const TOAST_COLOR: TokenKey = TokenKey(1542);
+    pub const TOAST_CONTENT_MIN_WIDTH: TokenKey = TokenKey(1543);
+    pub const TOAST_DESCRIPTION_COLOR: TokenKey = TokenKey(1544);
+    pub const TOAST_DURATION_CONTENT: TokenKey = TokenKey(1545);
+    pub const TOAST_DURATION_ENTER: TokenKey = TokenKey(1546);
+    pub const TOAST_DURATION_EXIT: TokenKey = TokenKey(1547);
+    pub const TOAST_GAP: TokenKey = TokenKey(1548);
+    pub const TOAST_ICON_SIZE: TokenKey = TokenKey(1549);
+    pub const TOAST_LAYOUT_RESPONSE: TokenKey = TokenKey(1550);
+    pub const TOAST_PADDING_BLOCK: TokenKey = TokenKey(1551);
+    pub const TOAST_PADDING_INLINE: TokenKey = TokenKey(1552);
+    pub const TOAST_PEEK: TokenKey = TokenKey(1553);
+    pub const TOAST_PROGRESS_HEIGHT: TokenKey = TokenKey(1554);
+    pub const TOAST_SHADOW: TokenKey = TokenKey(1555);
+    pub const TOAST_VIEWPORT_OFFSET: TokenKey = TokenKey(1556);
+    pub const TOAST_VIEWPORT_OFFSET_COMPACT: TokenKey = TokenKey(1557);
+    pub const TOAST_WIDTH: TokenKey = TokenKey(1558);
+    pub const TOOLTIP_ARROW_SIZE: TokenKey = TokenKey(1559);
+    pub const TOOLTIP_DURATION_ENTER: TokenKey = TokenKey(1560);
+    pub const TOOLTIP_DURATION_EXIT: TokenKey = TokenKey(1561);
+    pub const TOOLTIP_DURATION_MOVE: TokenKey = TokenKey(1562);
+    pub const TOOLTIP_EASE_ENTER: TokenKey = TokenKey(1563);
+    pub const TOOLTIP_EASE_EXIT: TokenKey = TokenKey(1564);
+    pub const TOOLTIP_EASE_MOVE: TokenKey = TokenKey(1565);
+    pub const TOOLTIP_GAP: TokenKey = TokenKey(1566);
+    pub const TOOLTIP_MAX_WIDTH: TokenKey = TokenKey(1567);
+    pub const TOOLTIP_MOVE_MAX_DISTANCE: TokenKey = TokenKey(1568);
+    pub const TOOLTIP_MOVE_MAX_GAP: TokenKey = TokenKey(1569);
+    pub const TOOLTIP_SHADOW: TokenKey = TokenKey(1570);
+    pub const TOOLTIP_VIEWPORT_MARGIN: TokenKey = TokenKey(1571);
+    pub const TRACKING_NORMAL: TokenKey = TokenKey(1572);
+    pub const TRACKING_WIDE: TokenKey = TokenKey(1573);
+    pub const TREE_BACKGROUND_HOVER: TokenKey = TokenKey(1574);
+    pub const TREE_BACKGROUND_SELECTED: TokenKey = TokenKey(1575);
+    pub const TREE_COLOR: TokenKey = TokenKey(1576);
+    pub const TREE_COLOR_DISABLED: TokenKey = TokenKey(1577);
+    pub const TREE_COLOR_SELECTED: TokenKey = TokenKey(1578);
+    pub const TREE_GAP: TokenKey = TokenKey(1579);
+    pub const TREE_INDENT_LG: TokenKey = TokenKey(1580);
+    pub const TREE_INDENT_MD: TokenKey = TokenKey(1581);
+    pub const TREE_INDENT_SM: TokenKey = TokenKey(1582);
+    pub const TREE_LINE_COLOR: TokenKey = TokenKey(1583);
+    pub const TREE_LINE_WIDTH: TokenKey = TokenKey(1584);
+    pub const TREE_MAX_HEIGHT: TokenKey = TokenKey(1585);
+    pub const TREE_OUTLINE_COLOR: TokenKey = TokenKey(1586);
+    pub const TREE_PADDING_INLINE: TokenKey = TokenKey(1587);
+    pub const TREE_ROW_HEIGHT_LG: TokenKey = TokenKey(1588);
+    pub const TREE_ROW_HEIGHT_MD: TokenKey = TokenKey(1589);
+    pub const TREE_ROW_HEIGHT_SM: TokenKey = TokenKey(1590);
+    pub const TREE_ROW_RADIUS: TokenKey = TokenKey(1591);
+    pub const TYPE_BODY: TokenKey = TokenKey(1592);
+    pub const TYPE_BODY_LG: TokenKey = TokenKey(1593);
+    pub const TYPE_CAPTION: TokenKey = TokenKey(1594);
+    pub const TYPE_CODE: TokenKey = TokenKey(1595);
+    pub const TYPE_DISPLAY: TokenKey = TokenKey(1596);
+    pub const TYPE_FIGURE: TokenKey = TokenKey(1597);
+    pub const TYPE_HEADING_1: TokenKey = TokenKey(1598);
+    pub const TYPE_HEADING_2: TokenKey = TokenKey(1599);
+    pub const TYPE_HEADING_3: TokenKey = TokenKey(1600);
+    pub const TYPE_LABEL: TokenKey = TokenKey(1601);
+    pub const TYPE_NUMBER: TokenKey = TokenKey(1602);
+    pub const TYPE_TITLE: TokenKey = TokenKey(1603);
+    pub const WARNING: TokenKey = TokenKey(1604);
+    pub const WARNING_BG: TokenKey = TokenKey(1605);
+    pub const WARNING_BORDER: TokenKey = TokenKey(1606);
+    pub const WARNING_FOREGROUND: TokenKey = TokenKey(1607);
+    pub const WARNING_SOLID: TokenKey = TokenKey(1608);
+    pub const WEIGHT_DISPLAY: TokenKey = TokenKey(1609);
+    pub const WEIGHT_MEDIUM: TokenKey = TokenKey(1610);
+    pub const WEIGHT_REGULAR: TokenKey = TokenKey(1611);
+    pub const WEIGHT_SEMIBOLD: TokenKey = TokenKey(1612);
+    pub const WIDTH_LG: TokenKey = TokenKey(1613);
+    pub const WIDTH_MD: TokenKey = TokenKey(1614);
+    pub const WIDTH_SM: TokenKey = TokenKey(1615);
+    pub const WIDTH_XL: TokenKey = TokenKey(1616);
+    pub const YELLOW_100: TokenKey = TokenKey(1617);
+    pub const YELLOW_200: TokenKey = TokenKey(1618);
+    pub const YELLOW_300: TokenKey = TokenKey(1619);
+    pub const YELLOW_400: TokenKey = TokenKey(1620);
+    pub const YELLOW_50: TokenKey = TokenKey(1621);
+    pub const YELLOW_500: TokenKey = TokenKey(1622);
+    pub const YELLOW_600: TokenKey = TokenKey(1623);
+    pub const YELLOW_700: TokenKey = TokenKey(1624);
+    pub const YELLOW_800: TokenKey = TokenKey(1625);
+    pub const YELLOW_900: TokenKey = TokenKey(1626);
+    pub const YELLOW_950: TokenKey = TokenKey(1627);
 }
 #[rustfmt::skip]
-pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
+pub(super) static VALUES: [[TokenValue; 4]; 1628] = [
     [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0xdfecfeff), TokenValue::Color(0xe6f0ffff), TokenValue::Color(0xdfecfeff)],
     [TokenValue::Color(0xcae0ffff), TokenValue::Color(0xbed9feff), TokenValue::Color(0xcae0ffff), TokenValue::Color(0xbed9feff)],
     [TokenValue::Color(0xa1c9ffff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0xa1c9ffff), TokenValue::Color(0x93c1ffff)],
@@ -1822,6 +1928,40 @@ pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121212ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121212ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x181818ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x181818ff)],
+    [TokenValue::Color(0xfafafaff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xfafafaff), TokenValue::Color(0x1f1f1fff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x333333ff)],
+    [TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x737373ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x737373ff), TokenValue::Color(0x7a7a7aff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(1.0), TokenValue::Pixels(1.0), TokenValue::Pixels(1.0), TokenValue::Pixels(1.0)],
+    [TokenValue::Pixels(120.0), TokenValue::Pixels(120.0), TokenValue::Pixels(120.0), TokenValue::Pixels(120.0)],
+    [TokenValue::Number(0.375), TokenValue::Number(0.375), TokenValue::Number(0.375), TokenValue::Number(0.375)],
+    [TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Contextual("0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)"), TokenValue::Contextual("0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)"), TokenValue::Contextual("0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)"), TokenValue::Contextual("0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)")],
+    [TokenValue::Contextual("0 12px 36px rgb(0 0 0/.16)"), TokenValue::Contextual("0 12px 36px rgb(0 0 0/.38)"), TokenValue::Contextual("0 12px 36px rgb(0 0 0/.16)"), TokenValue::Contextual("0 12px 36px rgb(0 0 0/.38)")],
+    [TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Number(500.0), TokenValue::Number(500.0), TokenValue::Number(500.0), TokenValue::Number(500.0)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x181818ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x181818ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
@@ -1998,6 +2138,36 @@ pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
     [TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0)],
     [TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0)],
     [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Pixels(1.0), TokenValue::Pixels(1.0), TokenValue::Pixels(1.0), TokenValue::Pixels(1.0)],
+    [TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(32.0), TokenValue::Pixels(32.0), TokenValue::Pixels(32.0), TokenValue::Pixels(32.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(220.0), TokenValue::Pixels(220.0), TokenValue::Pixels(220.0), TokenValue::Pixels(220.0)],
+    [TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(112.0), TokenValue::Pixels(112.0), TokenValue::Pixels(112.0), TokenValue::Pixels(112.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0)],
     [TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff)],
     [TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff)],
     [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
@@ -2362,6 +2532,14 @@ pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
     [TokenValue::Color(0x652e00ff), TokenValue::Color(0x5c3010ff), TokenValue::Color(0x652e00ff), TokenValue::Color(0x5c3010ff)],
     [TokenValue::Color(0x431d01ff), TokenValue::Color(0x3c1e09ff), TokenValue::Color(0x431d01ff), TokenValue::Color(0x3c1e09ff)],
     [TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x121212ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x121212ff)],
+    [TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0)],
+    [TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0), TokenValue::Pixels(64.0)],
+    [TokenValue::Pixels(112.0), TokenValue::Pixels(112.0), TokenValue::Pixels(112.0), TokenValue::Pixels(112.0)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xffffffff), TokenValue::Color(0x1f1f1fff)],
     [TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff)],
     [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
@@ -2712,6 +2890,40 @@ pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
     [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
     [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
     [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x2b2b2bff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0xffeceaff), TokenValue::Color(0x391512ff), TokenValue::Color(0xffeceaff), TokenValue::Color(0x391512ff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xeeeeeeff), TokenValue::Color(0x333333ff)],
+    [TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0)],
+    [TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x1f1f1f61), TokenValue::Color(0x707070ff), TokenValue::Color(0x1f1f1f61), TokenValue::Color(0x707070ff)],
+    [TokenValue::Color(0x6d342fff), TokenValue::Color(0xfee8e6ff), TokenValue::Color(0x6d342fff), TokenValue::Color(0xfee8e6ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x525252ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0), TokenValue::Pixels(4.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0), TokenValue::Pixels(14.0)],
+    [TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0), TokenValue::Pixels(12.0)],
+    [TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0), TokenValue::Pixels(8.0)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0), TokenValue::Pixels(16.0)],
+    [TokenValue::Pixels(32.0), TokenValue::Pixels(32.0), TokenValue::Pixels(32.0), TokenValue::Pixels(32.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0), TokenValue::Pixels(20.0)],
+    [TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0), TokenValue::Pixels(24.0)],
+    [TokenValue::Pixels(160.0), TokenValue::Pixels(160.0), TokenValue::Pixels(160.0), TokenValue::Pixels(160.0)],
+    [TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0e0e0ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0xa14138ff), TokenValue::Color(0xf5aaa3ff), TokenValue::Color(0xa14138ff), TokenValue::Color(0xf5aaa3ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0)],
+    [TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0), TokenValue::Pixels(2.0)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x121212ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121212ff)],
+    [TokenValue::Color(0x0b4c97ff), TokenValue::Color(0xbed9feff), TokenValue::Color(0x1f1f1fff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0xffffffff), TokenValue::Color(0xffffffff), TokenValue::Color(0xffffffff)],
     [TokenValue::Color(0xf9f4efff), TokenValue::Color(0xf9f4efff), TokenValue::Color(0xf9f4efff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0x000000ff), TokenValue::Color(0x000000ff), TokenValue::Color(0x000000ff), TokenValue::Color(0x000000ff)],
@@ -3056,9 +3268,9 @@ pub(super) static VALUES: [[TokenValue; 4]; 1522] = [
     [TokenValue::Color(0x2f2800ff), TokenValue::Color(0x2c2605ff), TokenValue::Color(0x2f2800ff), TokenValue::Color(0x2c2605ff)],
 ];
 
-pub(super) const TOKEN_COUNT: usize = 1522;
+pub(super) const TOKEN_COUNT: usize = 1628;
 #[rustfmt::skip]
-pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
+pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1628] = [
     ("--accent-100", "accent", "semantics", ["#e6f0ff", "#dfecfe", "#e6f0ff", "#dfecfe"]),
     ("--accent-200", "accent", "semantics", ["#cae0ff", "#bed9fe", "#cae0ff", "#bed9fe"]),
     ("--accent-300", "accent", "semantics", ["#a1c9ff", "#93c1ff", "#a1c9ff", "#93c1ff"]),
@@ -3349,6 +3561,40 @@ pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
     ("--calendar-selected-background", "calendar", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
     ("--calendar-selected-color", "calendar", "components", ["#fff", "#121212", "#fff", "#121212"]),
     ("--calendar-today-color", "calendar", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
+    ("--card-action-min-width", "card", "components", ["64px", "64px", "64px", "64px"]),
+    ("--card-background", "card", "components", ["#fff", "#181818", "#fff", "#181818"]),
+    ("--card-background-filled", "card", "components", ["#fafafa", "#1f1f1f", "#fafafa", "#1f1f1f"]),
+    ("--card-background-selected", "card", "components", ["#e6f0ff", "#0f2644", "#eee", "#333"]),
+    ("--card-body-color", "card", "components", ["#1f1f1f", "#f5f5f5", "#1f1f1f", "#f5f5f5"]),
+    ("--card-body-font-size-lg", "card", "components", ["16px", "16px", "16px", "16px"]),
+    ("--card-body-font-size-md", "card", "components", ["14px", "14px", "14px", "14px"]),
+    ("--card-body-font-size-sm", "card", "components", ["12px", "12px", "12px", "12px"]),
+    ("--card-border-color", "card", "components", ["#e0e0e0", "#383838", "#e0e0e0", "#383838"]),
+    ("--card-border-color-hover", "card", "components", ["#737373", "#7a7a7a", "#737373", "#7a7a7a"]),
+    ("--card-border-color-selected", "card", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
+    ("--card-border-width", "card", "components", ["1px", "1px", "1px", "1px"]),
+    ("--card-cover-side-min-height", "card", "components", ["calc(24px * 5)", "calc(24px * 5)", "calc(24px * 5)", "calc(24px * 5)"]),
+    ("--card-cover-side-ratio", "card", "components", ["0.375", "0.375", "0.375", "0.375"]),
+    ("--card-description-color", "card", "components", ["#525252", "#b8b8b8", "#525252", "#b8b8b8"]),
+    ("--card-description-font-size-lg", "card", "components", ["14px", "14px", "14px", "14px"]),
+    ("--card-description-font-size-md", "card", "components", ["12px", "12px", "12px", "12px"]),
+    ("--card-description-font-size-sm", "card", "components", ["12px", "12px", "12px", "12px"]),
+    ("--card-divider-color", "card", "components", ["#eee", "#2b2b2b", "#eee", "#2b2b2b"]),
+    ("--card-gap-lg", "card", "components", ["16px", "16px", "16px", "16px"]),
+    ("--card-gap-md", "card", "components", ["12px", "12px", "12px", "12px"]),
+    ("--card-gap-sm", "card", "components", ["8px", "8px", "8px", "8px"]),
+    ("--card-offset-hover", "card", "components", ["2px", "2px", "2px", "2px"]),
+    ("--card-padding-lg", "card", "components", ["24px", "24px", "24px", "24px"]),
+    ("--card-padding-md", "card", "components", ["16px", "16px", "16px", "16px"]),
+    ("--card-padding-sm", "card", "components", ["12px", "12px", "12px", "12px"]),
+    ("--card-radius", "card", "components", ["calc(8px*1.5)", "calc(8px*1.5)", "calc(8px*1.5)", "calc(8px*1.5)"]),
+    ("--card-shadow", "card", "components", ["0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)", "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)", "0 1px 2px rgb(0 0 0/.08), 0 6px 20px rgb(0 0 0/.06)", "0 1px 2px rgb(0 0 0/.28), 0 6px 20px rgb(0 0 0/.16)"]),
+    ("--card-shadow-hover", "card", "components", ["0 12px 36px rgb(0 0 0/.16)", "0 12px 36px rgb(0 0 0/.38)", "0 12px 36px rgb(0 0 0/.16)", "0 12px 36px rgb(0 0 0/.38)"]),
+    ("--card-title-color", "card", "components", ["#1f1f1f", "#f5f5f5", "#1f1f1f", "#f5f5f5"]),
+    ("--card-title-font-size-lg", "card", "components", ["20px", "20px", "20px", "20px"]),
+    ("--card-title-font-size-md", "card", "components", ["16px", "16px", "16px", "16px"]),
+    ("--card-title-font-size-sm", "card", "components", ["14px", "14px", "14px", "14px"]),
+    ("--card-title-weight", "card", "components", ["500", "500", "500", "500"]),
     ("--checkbox-accent-color", "checkbox", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
     ("--checkbox-background", "checkbox", "components", ["#fff", "#181818", "#fff", "#181818"]),
     ("--checkbox-background-checked", "checkbox", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
@@ -3525,6 +3771,36 @@ pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
     ("--date-picker-popup-gap", "date", "components", ["4px", "4px", "4px", "4px"]),
     ("--date-picker-tags-gap", "date", "components", ["4px", "4px", "4px", "4px"]),
     ("--date-picker-window-margin", "date", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-border-color", "descriptions", "components", ["#e0e0e0", "#383838", "#e0e0e0", "#383838"]),
+    ("--descriptions-border-width", "descriptions", "components", ["1px", "1px", "1px", "1px"]),
+    ("--descriptions-color", "descriptions", "components", ["#1f1f1f", "#f5f5f5", "#1f1f1f", "#f5f5f5"]),
+    ("--descriptions-column-gap-lg", "descriptions", "components", ["32px", "32px", "32px", "32px"]),
+    ("--descriptions-column-gap-md", "descriptions", "components", ["24px", "24px", "24px", "24px"]),
+    ("--descriptions-column-gap-sm", "descriptions", "components", ["calc(4px * 5)", "calc(4px * 5)", "calc(4px * 5)", "calc(4px * 5)"]),
+    ("--descriptions-content-gap", "descriptions", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-font-size-lg", "descriptions", "components", ["16px", "16px", "16px", "16px"]),
+    ("--descriptions-font-size-md", "descriptions", "components", ["14px", "14px", "14px", "14px"]),
+    ("--descriptions-font-size-sm", "descriptions", "components", ["12px", "12px", "12px", "12px"]),
+    ("--descriptions-header-gap", "descriptions", "components", ["12px", "12px", "12px", "12px"]),
+    ("--descriptions-header-margin-bottom", "descriptions", "components", ["16px", "16px", "16px", "16px"]),
+    ("--descriptions-item-min-width", "descriptions", "components", ["calc(4px * 55)", "calc(4px * 55)", "calc(4px * 55)", "calc(4px * 55)"]),
+    ("--descriptions-label-color", "descriptions", "components", ["#525252", "#b8b8b8", "#525252", "#b8b8b8"]),
+    ("--descriptions-label-value-gap", "descriptions", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-label-width", "descriptions", "components", ["calc(16px * 7)", "calc(16px * 7)", "calc(16px * 7)", "calc(16px * 7)"]),
+    ("--descriptions-line-height-lg", "descriptions", "components", ["24px", "24px", "24px", "24px"]),
+    ("--descriptions-line-height-md", "descriptions", "components", ["24px", "24px", "24px", "24px"]),
+    ("--descriptions-line-height-sm", "descriptions", "components", ["20px", "20px", "20px", "20px"]),
+    ("--descriptions-padding-x-lg", "descriptions", "components", ["calc(4px * 5)", "calc(4px * 5)", "calc(4px * 5)", "calc(4px * 5)"]),
+    ("--descriptions-padding-x-md", "descriptions", "components", ["16px", "16px", "16px", "16px"]),
+    ("--descriptions-padding-x-sm", "descriptions", "components", ["12px", "12px", "12px", "12px"]),
+    ("--descriptions-padding-y-lg", "descriptions", "components", ["16px", "16px", "16px", "16px"]),
+    ("--descriptions-padding-y-md", "descriptions", "components", ["12px", "12px", "12px", "12px"]),
+    ("--descriptions-padding-y-sm", "descriptions", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-radius", "descriptions", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-row-gap-lg", "descriptions", "components", ["16px", "16px", "16px", "16px"]),
+    ("--descriptions-row-gap-md", "descriptions", "components", ["12px", "12px", "12px", "12px"]),
+    ("--descriptions-row-gap-sm", "descriptions", "components", ["8px", "8px", "8px", "8px"]),
+    ("--descriptions-value-min-width", "descriptions", "components", ["calc(16px * 4)", "calc(16px * 4)", "calc(16px * 4)", "calc(16px * 4)"]),
     ("--dialog-action-background", "dialog", "components", ["#eee", "#2b2b2b", "#eee", "#2b2b2b"]),
     ("--dialog-action-border-color", "dialog", "components", ["#e0e0e0", "#383838", "#e0e0e0", "#383838"]),
     ("--dialog-action-border-radius", "dialog", "components", ["8px", "8px", "8px", "8px"]),
@@ -3889,6 +4165,14 @@ pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
     ("--orange-900", "orange", "primitives", ["#652e00", "#5c3010", "#652e00", "#5c3010"]),
     ("--orange-950", "orange", "primitives", ["#431d01", "#3c1e09", "#431d01", "#3c1e09"]),
     ("--page", "page", "semantics", ["#f5f5f5", "#121212", "#f5f5f5", "#121212"]),
+    ("--pagination-color", "pagination", "components", ["#525252", "#b8b8b8", "#525252", "#b8b8b8"]),
+    ("--pagination-font-size-lg", "pagination", "components", ["16px", "16px", "16px", "16px"]),
+    ("--pagination-font-size-md", "pagination", "components", ["14px", "14px", "14px", "14px"]),
+    ("--pagination-font-size-sm", "pagination", "components", ["12px", "12px", "12px", "12px"]),
+    ("--pagination-group-gap", "pagination", "components", ["12px", "12px", "12px", "12px"]),
+    ("--pagination-item-gap", "pagination", "components", ["4px", "4px", "4px", "4px"]),
+    ("--pagination-jumper-width", "pagination", "components", ["64px", "64px", "64px", "64px"]),
+    ("--pagination-selector-width", "pagination", "components", ["calc(16px * 7)", "calc(16px * 7)", "calc(16px * 7)", "calc(16px * 7)"]),
     ("--popover-background", "popover", "components", ["#fff", "#1f1f1f", "#fff", "#1f1f1f"]),
     ("--popover-border-color", "popover", "components", ["#eee", "#2b2b2b", "#eee", "#2b2b2b"]),
     ("--popover-border-radius", "popover", "components", ["8px", "8px", "8px", "8px"]),
@@ -4239,6 +4523,40 @@ pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
     ("--status-gap", "status", "components", ["8px", "8px", "8px", "8px"]),
     ("--status-padding-block", "status", "components", ["8px", "8px", "8px", "8px"]),
     ("--status-padding-inline", "status", "components", ["12px", "12px", "12px", "12px"]),
+    ("--steps-arrow-width", "steps", "components", ["12px", "12px", "12px", "12px"]),
+    ("--steps-background", "steps", "components", ["#eee", "#2b2b2b", "#eee", "#2b2b2b"]),
+    ("--steps-background-current", "steps", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
+    ("--steps-background-error", "steps", "components", ["#ffecea", "#391512", "#ffecea", "#391512"]),
+    ("--steps-background-finish", "steps", "components", ["#e6f0ff", "#0f2644", "#eee", "#333"]),
+    ("--steps-border-radius", "steps", "components", ["calc(8px/2)", "calc(8px/2)", "calc(8px/2)", "calc(8px/2)"]),
+    ("--steps-color", "steps", "components", ["#525252", "#b8b8b8", "#525252", "#b8b8b8"]),
+    ("--steps-color-current", "steps", "components", ["#1f1f1f", "#f5f5f5", "#1f1f1f", "#f5f5f5"]),
+    ("--steps-color-disabled", "steps", "components", ["color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)", "#707070", "color-mix(in srgb, #1f1f1f calc(.38*100%), transparent)", "#707070"]),
+    ("--steps-color-error", "steps", "components", ["#6d342f", "#fee8e6", "#6d342f", "#fee8e6"]),
+    ("--steps-color-finish", "steps", "components", ["#125fb8", "#93c1ff", "#1f1f1f", "#f5f5f5"]),
+    ("--steps-description-color", "steps", "components", ["#525252", "#b8b8b8", "#525252", "#b8b8b8"]),
+    ("--steps-description-font-size", "steps", "components", ["12px", "12px", "12px", "12px"]),
+    ("--steps-description-gap", "steps", "components", ["4px", "4px", "4px", "4px"]),
+    ("--steps-dot-size", "steps", "components", ["8px", "8px", "8px", "8px"]),
+    ("--steps-font-size-lg", "steps", "components", ["16px", "16px", "16px", "16px"]),
+    ("--steps-font-size-md", "steps", "components", ["14px", "14px", "14px", "14px"]),
+    ("--steps-font-size-sm", "steps", "components", ["12px", "12px", "12px", "12px"]),
+    ("--steps-gap", "steps", "components", ["8px", "8px", "8px", "8px"]),
+    ("--steps-icon-size-lg", "steps", "components", ["20px", "20px", "20px", "20px"]),
+    ("--steps-icon-size-md", "steps", "components", ["16px", "16px", "16px", "16px"]),
+    ("--steps-icon-size-sm", "steps", "components", ["16px", "16px", "16px", "16px"]),
+    ("--steps-indicator-size-lg", "steps", "components", ["32px", "32px", "32px", "32px"]),
+    ("--steps-indicator-size-md", "steps", "components", ["24px", "24px", "24px", "24px"]),
+    ("--steps-indicator-size-sm", "steps", "components", ["20px", "20px", "20px", "20px"]),
+    ("--steps-item-gap", "steps", "components", ["24px", "24px", "24px", "24px"]),
+    ("--steps-item-min-width", "steps", "components", ["calc(16px * 10)", "calc(16px * 10)", "calc(16px * 10)", "calc(16px * 10)"]),
+    ("--steps-line-color", "steps", "components", ["#e0e0e0", "#383838", "#e0e0e0", "#383838"]),
+    ("--steps-line-color-error", "steps", "components", ["#a14138", "#f5aaa3", "#a14138", "#f5aaa3"]),
+    ("--steps-line-color-finish", "steps", "components", ["#125fb8", "#60a0f5", "#1f1f1f", "#f5f5f5"]),
+    ("--steps-line-width", "steps", "components", ["2px", "2px", "2px", "2px"]),
+    ("--steps-navigation-line-width", "steps", "components", ["2px", "2px", "2px", "2px"]),
+    ("--steps-on-current", "steps", "components", ["#fff", "#121212", "#fff", "#121212"]),
+    ("--steps-on-finish", "steps", "components", ["#0b4c97", "#bed9fe", "#1f1f1f", "#f5f5f5"]),
     ("--stone-0", "stone", "primitives", ["#ffffff", "#ffffff", "#ffffff", "#ffffff"]),
     ("--stone-100", "stone", "primitives", ["#f9f4ef", "#f9f4ef", "#f9f4ef", "#f9f4ef"]),
     ("--stone-1000", "stone", "primitives", ["#000000", "#000000", "#000000", "#000000"]),
@@ -4585,7 +4903,7 @@ pub(super) static TOKENS: [(&str, &str, &str, [&str; 4]); 1522] = [
 
 /// Tokens whose value changes under `[data-neutral=slate]`, per profile.
 #[rustfmt::skip]
-pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
+pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 396] = [
     ("--accent-border", ["#1f75db", "#93c1ff", "#192029", "#f0f6fd"]),
     ("--accent-solid", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
     ("--accent-solid-hover", ["color-mix(in srgb, #fff calc(.08*100%), #125fb8)", "color-mix(in srgb, #0d1219 calc(.12*100%), #60a0f5)", "color-mix(in srgb, #fff calc(.08*100%), #192029)", "color-mix(in srgb, #0d1219 calc(.12*100%), #f0f6fd)"]),
@@ -4690,6 +5008,16 @@ pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--calendar-selected-background", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
     ("--calendar-selected-color", ["#fff", "#0d1219", "#fff", "#0d1219"]),
     ("--calendar-today-color", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
+    ("--card-background", ["#fff", "#131920", "#fff", "#131920"]),
+    ("--card-background-filled", ["#f7faff", "#192029", "#f7faff", "#192029"]),
+    ("--card-background-selected", ["#e6f0ff", "#0f2644", "#e7effa", "#2b343f"]),
+    ("--card-body-color", ["#192029", "#f5f5f5", "#192029", "#f5f5f5"]),
+    ("--card-border-color", ["#d7e1ef", "#383838", "#d7e1ef", "#383838"]),
+    ("--card-border-color-hover", ["#6a7481", "#7a7a7a", "#6a7481", "#7a7a7a"]),
+    ("--card-border-color-selected", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
+    ("--card-description-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
+    ("--card-divider-color", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
+    ("--card-title-color", ["#192029", "#f5f5f5", "#192029", "#f5f5f5"]),
     ("--checkbox-accent-color", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
     ("--checkbox-background", ["#fff", "#131920", "#fff", "#131920"]),
     ("--checkbox-background-checked", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
@@ -4725,6 +5053,9 @@ pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--color-picker-recent-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
     ("--control-accent", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
     ("--control-accent-checked", ["#fff", "#0d1219", "#fff", "#0d1219"]),
+    ("--descriptions-border-color", ["#d7e1ef", "#383838", "#d7e1ef", "#383838"]),
+    ("--descriptions-color", ["#192029", "#f5f5f5", "#192029", "#f5f5f5"]),
+    ("--descriptions-label-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
     ("--dialog-action-background", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
     ("--dialog-action-border-color", ["#d7e1ef", "#383838", "#d7e1ef", "#383838"]),
     ("--dialog-action-on-danger", ["#fff", "#0d1219", "#fff", "#0d1219"]),
@@ -4794,6 +5125,7 @@ pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--on-success-solid", ["#fff", "#0d1219", "#fff", "#0d1219"]),
     ("--on-warning-solid", ["#fff", "#0d1219", "#fff", "#0d1219"]),
     ("--page", ["#f0f6fd", "#0d1219", "#f0f6fd", "#0d1219"]),
+    ("--pagination-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
     ("--popover-background", ["#fff", "#192029", "#fff", "#192029"]),
     ("--popover-border-color", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
     ("--popover-color", ["#192029", "#f5f5f5", "#192029", "#f5f5f5"]),
@@ -4874,6 +5206,18 @@ pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--slider-track-background", ["#6a7481", "#7a7a7a", "#6a7481", "#7a7a7a"]),
     ("--spinner-color", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
     ("--spinner-track", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
+    ("--steps-background", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
+    ("--steps-background-current", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
+    ("--steps-background-finish", ["#e6f0ff", "#0f2644", "#e7effa", "#2b343f"]),
+    ("--steps-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
+    ("--steps-color-current", ["#192029", "#f5f5f5", "#192029", "#f5f5f5"]),
+    ("--steps-color-disabled", ["color-mix(in srgb, #192029 calc(.38*100%), transparent)", "#707070", "color-mix(in srgb, #192029 calc(.38*100%), transparent)", "#707070"]),
+    ("--steps-color-finish", ["#125fb8", "#93c1ff", "#192029", "#f0f6fd"]),
+    ("--steps-description-color", ["#49535f", "#b8b8b8", "#49535f", "#b8b8b8"]),
+    ("--steps-line-color", ["#d7e1ef", "#383838", "#d7e1ef", "#383838"]),
+    ("--steps-line-color-finish", ["#125fb8", "#60a0f5", "#192029", "#f0f6fd"]),
+    ("--steps-on-current", ["#fff", "#0d1219", "#fff", "#0d1219"]),
+    ("--steps-on-finish", ["#0b4c97", "#bed9fe", "#192029", "#f0f6fd"]),
     ("--surface", ["#fff", "#131920", "#fff", "#131920"]),
     ("--surface-component", ["#e7effa", "#242c36", "#e7effa", "#242c36"]),
     ("--surface-glass", ["color-mix(in srgb, #0d1219 76%, transparent)", "color-mix(in srgb, #0d1219 76%, transparent)", "color-mix(in srgb, #0d1219 76%, transparent)", "color-mix(in srgb, #0d1219 76%, transparent)"]),
@@ -4959,7 +5303,7 @@ pub(super) static SLATE_TOKENS: [(&str, [&str; 4]); 370] = [
 ];
 
 #[rustfmt::skip]
-pub(super) static SLATE_VALUES: [[TokenValue; 4]; 370] = [
+pub(super) static SLATE_VALUES: [[TokenValue; 4]; 396] = [
     [TokenValue::Color(0x1f75dbff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0x256cbeff), TokenValue::Color(0x568fdbff), TokenValue::Color(0x2b323aff), TokenValue::Color(0xd5dbe2ff)],
@@ -5064,6 +5408,16 @@ pub(super) static SLATE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff)],
+    [TokenValue::Color(0xf7faffff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf7faffff), TokenValue::Color(0x192029ff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x2b343fff)],
+    [TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff), TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x6a7481ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x6a7481ff), TokenValue::Color(0x7a7a7aff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
+    [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
+    [TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
@@ -5099,6 +5453,9 @@ pub(super) static SLATE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
+    [TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff), TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
     [TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff), TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
@@ -5168,6 +5525,7 @@ pub(super) static SLATE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
     [TokenValue::Color(0xf0f6fdff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xf0f6fdff), TokenValue::Color(0x0d1219ff)],
+    [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x192029ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x192029ff)],
     [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
     [TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff)],
@@ -5248,6 +5606,18 @@ pub(super) static SLATE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x6a7481ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x6a7481ff), TokenValue::Color(0x7a7a7aff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
+    [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x2b343fff)],
+    [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x19202961), TokenValue::Color(0x707070ff), TokenValue::Color(0x19202961), TokenValue::Color(0x707070ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
+    [TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x49535fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff), TokenValue::Color(0xd7e1efff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x0d1219ff)],
+    [TokenValue::Color(0x0b4c97ff), TokenValue::Color(0xbed9feff), TokenValue::Color(0x192029ff), TokenValue::Color(0xf0f6fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x131920ff)],
     [TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff), TokenValue::Color(0xe7effaff), TokenValue::Color(0x242c36ff)],
     [TokenValue::Color(0x0d1219c2), TokenValue::Color(0x0d1219c2), TokenValue::Color(0x0d1219c2), TokenValue::Color(0x0d1219c2)],
@@ -5358,7 +5728,7 @@ pub(super) const SLATE_DARK_NEUTRAL: [u32; 21] = [
 
 /// Tokens whose value changes under `[data-neutral=stone]`, per profile.
 #[rustfmt::skip]
-pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
+pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 396] = [
     ("--accent-border", ["#1f75db", "#93c1ff", "#231e18", "#f9f4ef"]),
     ("--accent-solid", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
     ("--accent-solid-hover", ["color-mix(in srgb, #fff calc(.08*100%), #125fb8)", "color-mix(in srgb, #15110d calc(.12*100%), #60a0f5)", "color-mix(in srgb, #fff calc(.08*100%), #231e18)", "color-mix(in srgb, #15110d calc(.12*100%), #f9f4ef)"]),
@@ -5463,6 +5833,16 @@ pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--calendar-selected-background", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
     ("--calendar-selected-color", ["#fff", "#15110d", "#fff", "#15110d"]),
     ("--calendar-today-color", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
+    ("--card-background", ["#fff", "#1c1712", "#fff", "#1c1712"]),
+    ("--card-background-filled", ["#fcfaf7", "#231e18", "#fcfaf7", "#231e18"]),
+    ("--card-background-selected", ["#e6f0ff", "#0f2644", "#f3ede6", "#38322b"]),
+    ("--card-body-color", ["#231e18", "#f5f5f5", "#231e18", "#f5f5f5"]),
+    ("--card-border-color", ["#e6dfd6", "#383838", "#e6dfd6", "#383838"]),
+    ("--card-border-color-hover", ["#797269", "#7a7a7a", "#797269", "#7a7a7a"]),
+    ("--card-border-color-selected", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
+    ("--card-description-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
+    ("--card-divider-color", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
+    ("--card-title-color", ["#231e18", "#f5f5f5", "#231e18", "#f5f5f5"]),
     ("--checkbox-accent-color", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
     ("--checkbox-background", ["#fff", "#1c1712", "#fff", "#1c1712"]),
     ("--checkbox-background-checked", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
@@ -5498,6 +5878,9 @@ pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--color-picker-recent-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
     ("--control-accent", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
     ("--control-accent-checked", ["#fff", "#15110d", "#fff", "#15110d"]),
+    ("--descriptions-border-color", ["#e6dfd6", "#383838", "#e6dfd6", "#383838"]),
+    ("--descriptions-color", ["#231e18", "#f5f5f5", "#231e18", "#f5f5f5"]),
+    ("--descriptions-label-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
     ("--dialog-action-background", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
     ("--dialog-action-border-color", ["#e6dfd6", "#383838", "#e6dfd6", "#383838"]),
     ("--dialog-action-on-danger", ["#fff", "#15110d", "#fff", "#15110d"]),
@@ -5567,6 +5950,7 @@ pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--on-success-solid", ["#fff", "#15110d", "#fff", "#15110d"]),
     ("--on-warning-solid", ["#fff", "#15110d", "#fff", "#15110d"]),
     ("--page", ["#f9f4ef", "#15110d", "#f9f4ef", "#15110d"]),
+    ("--pagination-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
     ("--popover-background", ["#fff", "#231e18", "#fff", "#231e18"]),
     ("--popover-border-color", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
     ("--popover-color", ["#231e18", "#f5f5f5", "#231e18", "#f5f5f5"]),
@@ -5647,6 +6031,18 @@ pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--slider-track-background", ["#797269", "#7a7a7a", "#797269", "#7a7a7a"]),
     ("--spinner-color", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
     ("--spinner-track", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
+    ("--steps-background", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
+    ("--steps-background-current", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
+    ("--steps-background-finish", ["#e6f0ff", "#0f2644", "#f3ede6", "#38322b"]),
+    ("--steps-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
+    ("--steps-color-current", ["#231e18", "#f5f5f5", "#231e18", "#f5f5f5"]),
+    ("--steps-color-disabled", ["color-mix(in srgb, #231e18 calc(.38*100%), transparent)", "#707070", "color-mix(in srgb, #231e18 calc(.38*100%), transparent)", "#707070"]),
+    ("--steps-color-finish", ["#125fb8", "#93c1ff", "#231e18", "#f9f4ef"]),
+    ("--steps-description-color", ["#585149", "#b8b8b8", "#585149", "#b8b8b8"]),
+    ("--steps-line-color", ["#e6dfd6", "#383838", "#e6dfd6", "#383838"]),
+    ("--steps-line-color-finish", ["#125fb8", "#60a0f5", "#231e18", "#f9f4ef"]),
+    ("--steps-on-current", ["#fff", "#15110d", "#fff", "#15110d"]),
+    ("--steps-on-finish", ["#0b4c97", "#bed9fe", "#231e18", "#f9f4ef"]),
     ("--surface", ["#fff", "#1c1712", "#fff", "#1c1712"]),
     ("--surface-component", ["#f3ede6", "#302a23", "#f3ede6", "#302a23"]),
     ("--surface-glass", ["color-mix(in srgb, #15110d 76%, transparent)", "color-mix(in srgb, #15110d 76%, transparent)", "color-mix(in srgb, #15110d 76%, transparent)", "color-mix(in srgb, #15110d 76%, transparent)"]),
@@ -5732,7 +6128,7 @@ pub(super) static STONE_TOKENS: [(&str, [&str; 4]); 370] = [
 ];
 
 #[rustfmt::skip]
-pub(super) static STONE_VALUES: [[TokenValue; 4]; 370] = [
+pub(super) static STONE_VALUES: [[TokenValue; 4]; 396] = [
     [TokenValue::Color(0x1f75dbff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0x256cbeff), TokenValue::Color(0x578fd9ff), TokenValue::Color(0x35302aff), TokenValue::Color(0xded9d4ff)],
@@ -5837,6 +6233,16 @@ pub(super) static STONE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff)],
+    [TokenValue::Color(0xfcfaf7ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xfcfaf7ff), TokenValue::Color(0x231e18ff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x38322bff)],
+    [TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x797269ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x797269ff), TokenValue::Color(0x7a7a7aff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
+    [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
+    [TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
@@ -5872,6 +6278,9 @@ pub(super) static STONE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
+    [TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
     [TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
@@ -5941,6 +6350,7 @@ pub(super) static STONE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
     [TokenValue::Color(0xf9f4efff), TokenValue::Color(0x15110dff), TokenValue::Color(0xf9f4efff), TokenValue::Color(0x15110dff)],
+    [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x231e18ff)],
     [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
     [TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff)],
@@ -6021,6 +6431,18 @@ pub(super) static STONE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x797269ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x797269ff), TokenValue::Color(0x7a7a7aff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
+    [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x38322bff)],
+    [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x231e1861), TokenValue::Color(0x707070ff), TokenValue::Color(0x231e1861), TokenValue::Color(0x707070ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
+    [TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x585149ff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe6dfd6ff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff), TokenValue::Color(0xffffffff), TokenValue::Color(0x15110dff)],
+    [TokenValue::Color(0x0b4c97ff), TokenValue::Color(0xbed9feff), TokenValue::Color(0x231e18ff), TokenValue::Color(0xf9f4efff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x1c1712ff)],
     [TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff), TokenValue::Color(0xf3ede6ff), TokenValue::Color(0x302a23ff)],
     [TokenValue::Color(0x15110dc2), TokenValue::Color(0x15110dc2), TokenValue::Color(0x15110dc2), TokenValue::Color(0x15110dc2)],
@@ -6131,7 +6553,7 @@ pub(super) const STONE_DARK_NEUTRAL: [u32; 21] = [
 
 /// Tokens whose value changes under `[data-neutral=haze]`, per profile.
 #[rustfmt::skip]
-pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
+pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 396] = [
     ("--accent-border", ["#1f75db", "#93c1ff", "#1f1e28", "#f5f4fd"]),
     ("--accent-solid", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
     ("--accent-solid-hover", ["color-mix(in srgb, #fff calc(.08*100%), #125fb8)", "color-mix(in srgb, #121119 calc(.12*100%), #60a0f5)", "color-mix(in srgb, #fff calc(.08*100%), #1f1e28)", "color-mix(in srgb, #121119 calc(.12*100%), #f5f4fd)"]),
@@ -6236,6 +6658,16 @@ pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--calendar-selected-background", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
     ("--calendar-selected-color", ["#fff", "#121119", "#fff", "#121119"]),
     ("--calendar-today-color", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
+    ("--card-background", ["#fff", "#181720", "#fff", "#181720"]),
+    ("--card-background-filled", ["#faf9ff", "#1f1e28", "#faf9ff", "#1f1e28"]),
+    ("--card-background-selected", ["#e6f0ff", "#0f2644", "#eeedf9", "#33323e"]),
+    ("--card-body-color", ["#1f1e28", "#f5f5f5", "#1f1e28", "#f5f5f5"]),
+    ("--card-border-color", ["#e0deee", "#383838", "#e0deee", "#383838"]),
+    ("--card-border-color-hover", ["#737181", "#7a7a7a", "#737181", "#7a7a7a"]),
+    ("--card-border-color-selected", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
+    ("--card-description-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
+    ("--card-divider-color", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
+    ("--card-title-color", ["#1f1e28", "#f5f5f5", "#1f1e28", "#f5f5f5"]),
     ("--checkbox-accent-color", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
     ("--checkbox-background", ["#fff", "#181720", "#fff", "#181720"]),
     ("--checkbox-background-checked", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
@@ -6271,6 +6703,9 @@ pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--color-picker-recent-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
     ("--control-accent", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
     ("--control-accent-checked", ["#fff", "#121119", "#fff", "#121119"]),
+    ("--descriptions-border-color", ["#e0deee", "#383838", "#e0deee", "#383838"]),
+    ("--descriptions-color", ["#1f1e28", "#f5f5f5", "#1f1e28", "#f5f5f5"]),
+    ("--descriptions-label-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
     ("--dialog-action-background", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
     ("--dialog-action-border-color", ["#e0deee", "#383838", "#e0deee", "#383838"]),
     ("--dialog-action-on-danger", ["#fff", "#121119", "#fff", "#121119"]),
@@ -6340,6 +6775,7 @@ pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--on-success-solid", ["#fff", "#121119", "#fff", "#121119"]),
     ("--on-warning-solid", ["#fff", "#121119", "#fff", "#121119"]),
     ("--page", ["#f5f4fd", "#121119", "#f5f4fd", "#121119"]),
+    ("--pagination-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
     ("--popover-background", ["#fff", "#1f1e28", "#fff", "#1f1e28"]),
     ("--popover-border-color", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
     ("--popover-color", ["#1f1e28", "#f5f5f5", "#1f1e28", "#f5f5f5"]),
@@ -6420,6 +6856,18 @@ pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
     ("--slider-track-background", ["#737181", "#7a7a7a", "#737181", "#7a7a7a"]),
     ("--spinner-color", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
     ("--spinner-track", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
+    ("--steps-background", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
+    ("--steps-background-current", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
+    ("--steps-background-finish", ["#e6f0ff", "#0f2644", "#eeedf9", "#33323e"]),
+    ("--steps-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
+    ("--steps-color-current", ["#1f1e28", "#f5f5f5", "#1f1e28", "#f5f5f5"]),
+    ("--steps-color-disabled", ["color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)", "#707070", "color-mix(in srgb, #1f1e28 calc(.38*100%), transparent)", "#707070"]),
+    ("--steps-color-finish", ["#125fb8", "#93c1ff", "#1f1e28", "#f5f4fd"]),
+    ("--steps-description-color", ["#53505f", "#b8b8b8", "#53505f", "#b8b8b8"]),
+    ("--steps-line-color", ["#e0deee", "#383838", "#e0deee", "#383838"]),
+    ("--steps-line-color-finish", ["#125fb8", "#60a0f5", "#1f1e28", "#f5f4fd"]),
+    ("--steps-on-current", ["#fff", "#121119", "#fff", "#121119"]),
+    ("--steps-on-finish", ["#0b4c97", "#bed9fe", "#1f1e28", "#f5f4fd"]),
     ("--surface", ["#fff", "#181720", "#fff", "#181720"]),
     ("--surface-component", ["#eeedf9", "#2b2a35", "#eeedf9", "#2b2a35"]),
     ("--surface-glass", ["color-mix(in srgb, #121119 76%, transparent)", "color-mix(in srgb, #121119 76%, transparent)", "color-mix(in srgb, #121119 76%, transparent)", "color-mix(in srgb, #121119 76%, transparent)"]),
@@ -6505,7 +6953,7 @@ pub(super) static HAZE_TOKENS: [(&str, [&str; 4]); 370] = [
 ];
 
 #[rustfmt::skip]
-pub(super) static HAZE_VALUES: [[TokenValue; 4]; 370] = [
+pub(super) static HAZE_VALUES: [[TokenValue; 4]; 396] = [
     [TokenValue::Color(0x1f75dbff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0x256cbeff), TokenValue::Color(0x578fdbff), TokenValue::Color(0x313039ff), TokenValue::Color(0xdad9e2ff)],
@@ -6610,6 +7058,16 @@ pub(super) static HAZE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff)],
+    [TokenValue::Color(0xfaf9ffff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xfaf9ffff), TokenValue::Color(0x1f1e28ff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x33323eff)],
+    [TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x737181ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x737181ff), TokenValue::Color(0x7a7a7aff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
+    [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
+    [TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
@@ -6645,6 +7103,9 @@ pub(super) static HAZE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
+    [TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
     [TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
@@ -6714,6 +7175,7 @@ pub(super) static HAZE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
     [TokenValue::Color(0xf5f4fdff), TokenValue::Color(0x121119ff), TokenValue::Color(0xf5f4fdff), TokenValue::Color(0x121119ff)],
+    [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x1f1e28ff)],
     [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
     [TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff)],
@@ -6794,6 +7256,18 @@ pub(super) static HAZE_VALUES: [[TokenValue; 4]; 370] = [
     [TokenValue::Color(0x737181ff), TokenValue::Color(0x7a7a7aff), TokenValue::Color(0x737181ff), TokenValue::Color(0x7a7a7aff)],
     [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
+    [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
+    [TokenValue::Color(0xe6f0ffff), TokenValue::Color(0x0f2644ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x33323eff)],
+    [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f5f5ff)],
+    [TokenValue::Color(0x1f1e2861), TokenValue::Color(0x707070ff), TokenValue::Color(0x1f1e2861), TokenValue::Color(0x707070ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x93c1ffff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
+    [TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff), TokenValue::Color(0x53505fff), TokenValue::Color(0xb8b8b8ff)],
+    [TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff), TokenValue::Color(0xe0deeeff), TokenValue::Color(0x383838ff)],
+    [TokenValue::Color(0x125fb8ff), TokenValue::Color(0x60a0f5ff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
+    [TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x121119ff)],
+    [TokenValue::Color(0x0b4c97ff), TokenValue::Color(0xbed9feff), TokenValue::Color(0x1f1e28ff), TokenValue::Color(0xf5f4fdff)],
     [TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff), TokenValue::Color(0xffffffff), TokenValue::Color(0x181720ff)],
     [TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff), TokenValue::Color(0xeeedf9ff), TokenValue::Color(0x2b2a35ff)],
     [TokenValue::Color(0x121119c2), TokenValue::Color(0x121119c2), TokenValue::Color(0x121119c2), TokenValue::Color(0x121119c2)],

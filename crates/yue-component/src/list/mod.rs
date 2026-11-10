@@ -218,6 +218,7 @@ pub struct YueListItem {
     logical_index: usize,
     set_size: Option<usize>,
     semantics: bool,
+    inset: bool,
     leading: Option<AnyElement>,
     content: Option<AnyElement>,
     body: Option<AnyElement>,
@@ -240,6 +241,7 @@ impl YueListItem {
             logical_index: 0,
             set_size: None,
             semantics: true,
+            inset: true,
             leading: None,
             content: None,
             body: None,
@@ -247,6 +249,11 @@ impl YueListItem {
             actions: None,
             layout: Default::default(),
         }
+    }
+    /// Remove shell spacing and stretch content for an independently styled Card.
+    pub fn inset(mut self, inset: bool) -> Self {
+        self.inset = inset;
+        self
     }
     pub fn theme(mut self, theme: YueTheme) -> Self {
         self.theme = Some(theme);

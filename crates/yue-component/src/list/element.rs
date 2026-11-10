@@ -362,6 +362,9 @@ impl RenderOnce for ItemSurface {
         if !item.disabled && !item.selected && item.hoverable.unwrap_or(false) {
             root = root.hover(|style| style.bg(rgba(theme, keys::LIST_ROW_BACKGROUND_HOVER)));
         }
+        if !item.inset {
+            root = root.p_0().gap_0().items_stretch().h_full();
+        }
         let leading = item.leading.map(|el| {
             div()
                 .id("list-leading")
@@ -370,6 +373,7 @@ impl RenderOnce for ItemSurface {
                 .child(el)
         });
         let mut main = div()
+            .when(!item.inset, |el| el.h_full())
             .id("list-main")
             .test_support()
             .min_w_0()
@@ -392,6 +396,7 @@ impl RenderOnce for ItemSurface {
             if let Some(content) = item.content {
                 meta = meta.child(
                     div()
+                        .when(!item.inset, |el| el.h_full().flex_1())
                         .id("list-content")
                         .test_support()
                         .min_w_0()
@@ -407,6 +412,7 @@ impl RenderOnce for ItemSurface {
             if let Some(content) = item.content {
                 main = main.child(
                     div()
+                        .when(!item.inset, |el| el.h_full().flex_1())
                         .id("list-content")
                         .test_support()
                         .min_w_0()

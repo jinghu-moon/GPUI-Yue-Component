@@ -2,6 +2,8 @@ pub(crate) mod avatar;
 pub(crate) mod badge;
 pub(crate) mod breadcrumb;
 pub(crate) mod button;
+pub(crate) mod card;
+pub(crate) mod pagination;
 pub(crate) mod checkbox;
 pub(crate) mod collapse;
 pub(crate) mod color_picker;
@@ -22,6 +24,7 @@ pub(crate) mod segmented;
 pub(crate) mod select;
 pub(crate) mod shortcut;
 pub(crate) mod slider;
+pub(crate) mod steps;
 pub(crate) mod switch;
 pub(crate) mod tabs;
 pub(crate) mod tag;
@@ -37,3 +40,5 @@ pub(crate) mod tree_select;
 
 pub(crate) mod scrollbar;
 pub(crate) mod resizable;
+
+pub(crate) mod descriptions;

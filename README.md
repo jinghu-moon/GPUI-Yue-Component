@@ -112,6 +112,12 @@ Use `.collapse(BreadcrumbCollapse::new(5).before(2).after(2))` to retain both en
 
 Browse **组件 → List** for working configuration, settings lists (preferences, dependent notification controls, read-only values and maintenance actions), states and ten thousand measured virtual items using `YueVirtualList`. Settings examples offer inline and stacked controls using existing Yue components. See [the List guide](docs/29-list.md) for ownership and testing; use `ListGrid::columns` or `ListGrid::min_width` with `YueVirtualListGrid` for responsive and large card collections.
 
+## Cards
+
+`YueCard::new("order").header(YueCardHeader::new("6205-ZZ")).child("Today's work order").footer(YueCardFooter::new(YueButton::new("details", "Details")))` composes an optional Header, Cover, Body and Footer. Four surfaces, three sizes, title overflow help, side/top media and equal footer actions use Yue tokens. Hosts retain selection, loading and data; compose existing Checkbox, RadioGroup, Tabs, Input, Collapse, Avatar and Empty components.
+
+Use `YueListItem::inset(false).content(card)` with ordinary or virtual ListGrid for collections. Optional `.primary_action(button)` shares a visible footer command with static title/body/cover regions; use a regular footer Button for interactive body or media content. Browse **组件 → Card** for working examples, loading/retry and 10,000 virtual work orders. See [the Card guide](docs/41-card.md) for media corner contracts and [implementation evidence](docs/research/2026-11-09-card-implementation.md).
+
 ## Links
 
 `YueLink::new("guide", "使用指南", "https://example.com/guide")` opens a resource through the system's default application. `LinkVariant` provides Default/Primary/Danger/Warning/Success, `LinkSize` provides three sizes, and `LinkHover` selects animated underline, color, or no hover effect. Primary is the default; `.underline(true)` remains visible independently of the hover policy. Optional `.leading_icon(outline::Link)` and `.trailing_icon(outline::ExternalLink)` reuse Tabler SVGs.
@@ -272,6 +278,18 @@ core and Windows patches in `vendor`; consumers must use both patches. Editing,
 animated-image playback, tiled original-detail loading and full ICC/HDR management
 are outside this implementation.
 
+## Pagination
+
+`YuePagination::new("orders", &state).show_total(true).page_size_selector(true).show_jumper(true)` composes existing Yue Button, Select and Input controls with Base's bounded page plan. Retain `YuePaginationState::new(PaginationValue::new(total, page, page_size)?, window, cx)` in the host; subscribe to `PaginationChange` requests and explicitly accept through `set_value`. External updates are silent, and rejected requests retain the committed page and page size.
+
+Pages and Simple modes, three sizes, ghost/outline buttons, optional first/last navigation, ellipsis jumps, exact integer input and Reset/KeepFirstItem policies share one controlled value. `item_range()` supplies a zero-based slice for List or Card collections. Async requests, cancellation and retries remain host-owned. Browse **组件 → 分页 Pagination** for working examples and real collection slices. See [the Pagination guide](docs/42-pagination.md) and [implementation evidence](docs/research/2026-11-09-pagination-implementation.md).
+
+## Steps
+
+`YueSteps::new("import", "configure").items([YueStepItem::new("source", "选择数据"), YueStepItem::new("configure", "配置批次"), YueStepItem::new("result", "导入结果")])` displays a host-owned workflow. `on_change` requests a stable key; the host accepts by supplying the new value. `StepsValue::Pending` and `Complete` explicitly represent the two endpoints. External updates are silent; item status, disabled steps and readonly presentation do not create a second selected value.
+
+Horizontal/vertical layouts, labels below, three sizes, dots, navigation and arrow variants share the existing Base Button, Tabler Icon, motion and YueScrollbar foundations. Navigation/Arrow require horizontal layout with labels on the right. `extra(...)` keeps buttons and retained input entities outside the step activation button. Browse **组件 → 步骤条 Steps** for a validated import workflow with back, failure/retry and completion. See [the Steps guide](docs/43-steps.md) and [implementation evidence](docs/research/2026-11-09-steps-implementation.md).
+
 ## Icons and fonts
 
 ```rust
@@ -312,6 +330,10 @@ pwsh -NoProfile -File tools/test-gpui-hdr.ps1 -Release
 it reports cold and steady stage timings plus a minimally instrumented envelope.
 See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先测量再优化).
 
+## Descriptions
+
+`YueDescriptions::new("record").bordered(true).items([YueDescriptionItem::new("id", "编号").text("WO-42").copyable(true)])` presents one record's attributes. Container-based columns, numeric/Filled spans, horizontal/vertical labels, three densities and independent alignment use native grid stretch. Long values wrap; opt-in one/N-line truncation reuses OverflowTooltip and adds a keyboard stop only while actually truncated. Hosts retain editor entities and validation. Browse **组件 → 描述列表 Descriptions** and see [the guide](docs/44-descriptions.md).
+
 ## Documentation
 
 - [Component architecture and refactoring guide](docs/24-component-architecture.md)
@@ -346,3 +368,8 @@ See [measurement conditions and hotspot findings](docs/26-backdrop-blur.md#5-先
 - [YueTree guide](docs/37-tree.md) — shared tree behavior, keyed selection, cascading checks, filtering, lazy loading and virtualized rows.
 - [YueTreeSelect guide](docs/38-tree-select.md) — tree fields reusing Tree, Select field parts, Input, Tag, Popup and typed form contracts.
 - [YueScrollbar guide](docs/39-scrollbar.md) — floating thumbs, Auto / Hover / Always, single-owner dual-axis geometry and unified Showcase / virtual-list / editor presentation; includes a native Showcase page and an HTML prototype.
+- [YueCard design and implementation](docs/41-card.md) — card regions, surfaces, density, media, actions and composition with existing Yue components; includes references and validation evidence.
+
+- [YuePagination design and implementation](docs/42-pagination.md) — controlled page requests, page-size policies, exact integer jumps and real List/Card examples.
+- [YueSteps design and implementation](docs/43-steps.md) — controlled workflow position, stable-key focus, horizontal/vertical geometry and a validated import example.
+- [YueDescriptions guide](docs/44-descriptions.md) — detail attributes, container-based columns, spans, multiline alignment, copy and overflow help; [implementation evidence](docs/research/2026-11-10-descriptions-implementation.md).

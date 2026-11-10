@@ -24,6 +24,7 @@ pub fn init(cx: &mut App, theme: YueTheme) -> gpui_kit::Result<()> {
         crate::tree::init(cx);
         crate::date_picker::init(cx);
         crate::time_picker::init(cx);
+        crate::pagination::init(cx);
         crate::image_preview::init(cx);
         crate::load_fonts(cx)?;
         crate::scrollbar::install(cx);
