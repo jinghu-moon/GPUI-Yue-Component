@@ -300,6 +300,7 @@ pub struct VirtualGrid {
     frozen_end_rows: usize,
     frozen_end_columns: usize,
     options: Option<Box<GridOptions>>,
+    host_insets: Option<(gpui::Pixels, gpui::Pixels)>,
 }
 impl VirtualGrid {
     /// Atomically update explicit row and column measurements for one Grid.
@@ -423,7 +424,19 @@ impl VirtualGrid {
             frozen_end_rows: 0,
             frozen_end_columns: 0,
             options: None,
+            host_insets: None,
         }
+    }
+    /// Borrow the enclosing ScrollHandle instead of registering a second scroll
+    /// surface. Give the Grid its natural content size. Insets reserve space for
+    /// host chrome; the visible intersection bounds frozen strips to this Grid.
+    /// Call before styling the Grid. RTL is not supported by this adapter.
+    pub fn in_scroll_host(mut self, top: gpui::Pixels, bottom: gpui::Pixels) -> Self {
+        assert!(f32::from(top).is_finite() && top >= px(0.));
+        assert!(f32::from(bottom).is_finite() && bottom >= px(0.));
+        self.base = div().id(self.id.clone()).size_full().overflow_hidden();
+        self.host_insets = Some((top, bottom));
+        self
     }
     /// Prepare one view per live content identity, independently of frame geometry.
     /// External factory inputs require content_revision or axis content invalidation.
@@ -827,6 +840,29 @@ impl Element for VirtualGrid {
         w: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        let natural_bounds = bounds;
+        let bounds = if let Some((top, bottom)) = self.host_insets {
+            assert!(
+                !self.options.as_ref().is_some_and(|o| o.right_to_left),
+                "host Grid does not support RTL"
+            );
+            let mut host = self.scroll.bounds();
+            host.origin.y += top;
+            host.size.height = (host.size.height - top - bottom).max(px(0.));
+            let mut intersection = bounds.intersect(&host);
+            // A key command may reveal an entirely offscreen table. Resolve it
+            // against the host's available extent, then confirm the real owner
+            // clamp; a zero-area observation would otherwise finish NoProgress.
+            if self.rows.read(cx).has_scroll_command() {
+                intersection.size.height = host.size.height.min(natural_bounds.size.height);
+            }
+            if self.columns.read(cx).has_scroll_command() {
+                intersection.size.width = host.size.width.min(natural_bounds.size.width);
+            }
+            intersection
+        } else {
+            bounds
+        };
         let clip = bounds.intersect(&w.content_mask().bounds);
         let visible = clip.size.width > px(0.)
             && clip.size.height > px(0.)
@@ -840,7 +876,15 @@ impl Element for VirtualGrid {
                 }
             });
         }
-        let offset = self.scroll.precise_offset();
+        let host_offset = self.scroll.precise_offset();
+        let offset = if self.host_insets.is_some() {
+            point(
+                -f64::from((bounds.left() - natural_bounds.left()).max(px(0.))),
+                -f64::from((bounds.top() - natural_bounds.top()).max(px(0.))),
+            )
+        } else {
+            host_offset
+        };
         let rtl = self.options.as_ref().is_some_and(|o| o.right_to_left);
         let maximum = (self.columns.read(cx).total_extent() - f64::from(bounds.size.width)).max(0.);
         let physical = (-offset.x).clamp(0., maximum);
@@ -971,14 +1015,14 @@ impl Element for VirtualGrid {
             );
         let (rs, rr) = self.rows.update(cx, |s, _| s.prepare(&rv, now)).unwrap();
         let (cs, cr) = self.columns.update(cx, |s, _| s.prepare(&cv, now)).unwrap();
-        let y = rr
+        let mut y = rr
             .as_ref()
             .map_or(rv.offset(), VirtualizerScrollRequest::offset)
             .clamp(
                 0.0,
                 (rs.total_extent() - f64::from(bounds.size.height)).max(0.0),
             );
-        let x = cr
+        let mut x = cr
             .as_ref()
             .map_or(cv.offset(), VirtualizerScrollRequest::offset)
             .clamp(
@@ -986,7 +1030,44 @@ impl Element for VirtualGrid {
                 (cs.total_extent() - f64::from(bounds.size.width)).max(0.0),
             );
         let physical_x = if rtl { maximum - x } else { x };
-        self.scroll.set_precise_offset(point(-physical_x, -y));
+        if self.host_insets.is_some() {
+            // Observing an offscreen/second Grid must never clamp the page owner.
+            // Only an actual proposal changes it, by the local displacement.
+            if rr.is_some() || cr.is_some() {
+                let max = self.scroll.max_offset();
+                let raw_x = f64::from(self.scroll.bounds().left() - natural_bounds.left());
+                let raw_y = f64::from(
+                    self.scroll.bounds().top() + self.host_insets.unwrap().0 - natural_bounds.top(),
+                );
+                let next = point(
+                    if cr.is_some() {
+                        (host_offset.x - (physical_x - raw_x)).clamp(-f64::from(max.x), 0.)
+                    } else {
+                        host_offset.x
+                    },
+                    if rr.is_some() {
+                        (host_offset.y - (y - raw_y)).clamp(-f64::from(max.y), 0.)
+                    } else {
+                        host_offset.y
+                    },
+                );
+                self.scroll.set_precise_offset(next);
+                if cr.is_some() {
+                    x = (raw_x + host_offset.x - next.x).clamp(
+                        0.,
+                        (cs.total_extent() - f64::from(bounds.size.width)).max(0.),
+                    );
+                }
+                if rr.is_some() {
+                    y = (raw_y + host_offset.y - next.y).clamp(
+                        0.,
+                        (rs.total_extent() - f64::from(bounds.size.height)).max(0.),
+                    );
+                }
+            }
+        } else {
+            self.scroll.set_precise_offset(point(-physical_x, -y));
+        }
         if rtl || frame.mount.read(cx).horizontal.is_some() {
             frame.mount.update(cx, |m, _| {
                 if rtl {
