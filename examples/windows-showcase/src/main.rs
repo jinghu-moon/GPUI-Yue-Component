@@ -46,6 +46,7 @@ fn main() {
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum ShowcasePage {
+    Table,
     Descriptions,
     Steps,
     Pagination,
@@ -98,6 +99,7 @@ enum ShowcasePage {
 }
 
 struct Showcase {
+    table_demo: gpui_kit::Entity<pages::table::TablePage>,
     descriptions_demo: gpui_kit::Entity<pages::descriptions::DescriptionsPage>,
     steps_demo: gpui_kit::Entity<pages::steps::StepsPage>,
     pagination_demo: gpui_kit::Entity<pages::pagination::PaginationPage>,
@@ -319,6 +321,7 @@ impl Showcase {
             date_picker_demo: cx.new(|cx| pages::date_picker::DatePickerPage::new(window, cx)),
             empty_demo: cx.new(pages::empty::EmptyPage::new),
             card_demo: cx.new(|cx| pages::card::CardPage::new(window, cx)),
+            table_demo: cx.new(|cx| pages::table::TablePage::new(window, cx)),
             descriptions_demo: cx.new(|cx| pages::descriptions::DescriptionsPage::new(window, cx)),
             steps_demo: cx.new(|cx| pages::steps::StepsPage::new(window, cx)),
             pagination_demo: cx.new(|cx| pages::pagination::PaginationPage::new(window, cx)),
@@ -554,6 +557,7 @@ impl Render for Showcase {
                         ShowcasePage::DatePicker => self.date_picker_demo.clone().into_any_element(),
                         ShowcasePage::Empty => self.empty_demo.clone().into_any_element(),
                         ShowcasePage::Card => self.card_demo.clone().into_any_element(),
+                        ShowcasePage::Table => self.table_demo.clone().into_any_element(),
                         ShowcasePage::Descriptions => self.descriptions_demo.clone().into_any_element(),
                         ShowcasePage::Steps => self.steps_demo.clone().into_any_element(),
                         ShowcasePage::Pagination => self.pagination_demo.clone().into_any_element(),

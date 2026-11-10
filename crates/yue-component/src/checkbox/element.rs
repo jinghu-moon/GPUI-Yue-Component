@@ -282,6 +282,7 @@ impl RenderOnce for YueCheckbox {
             .disabled(self.disabled)
             .accessibility_label(self.accessible_name())
             .track_focus(&focus_handle)
+            .tab_stop(self.tab_stop)
             .flex()
             .items_center()
             .gap(rems(self.theme, crate::theme::keys::CHECKBOX_LABEL_GAP))

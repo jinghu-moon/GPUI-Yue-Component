@@ -42,3 +42,4 @@ pub(crate) mod scrollbar;
 pub(crate) mod resizable;
 
 pub(crate) mod descriptions;
+pub(crate) mod table;

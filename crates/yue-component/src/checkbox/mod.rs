@@ -101,6 +101,7 @@ pub struct YueCheckbox {
     accessibility_label: Option<SharedString>,
     on_change: Option<ChangeHandler>,
     focus_handle: Option<gpui_kit::FocusHandle>,
+    tab_stop: bool,
     layout: crate::control_layout::ControlLayout,
 }
 
@@ -138,6 +139,7 @@ impl YueCheckbox {
             accessibility_label: None,
             on_change: None,
             focus_handle: None,
+            tab_stop: true,
         }
     }
 
@@ -161,6 +163,13 @@ impl YueCheckbox {
 
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.disabled = disabled;
+        self
+    }
+
+    /// Composite controls may expose selection from their own navigation stop.
+    /// Pointer and accessibility activation remain available.
+    pub fn tab_stop(mut self, tab_stop: bool) -> Self {
+        self.tab_stop = tab_stop;
         self
     }
 

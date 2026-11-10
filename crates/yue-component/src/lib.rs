@@ -42,6 +42,7 @@ mod select;
 mod shortcut_recorder;
 mod slider;
 mod steps;
+mod table;
 mod swatch;
 mod switch;
 mod tabs;
@@ -54,6 +55,10 @@ mod tokens;
 mod tooltip;
 pub mod typography;
 mod virtual_list;
+pub use table::{TableAlign, TableBorders, TableCellContext, TableCellKey, TableColumn, TableColumnKey, TableCommitOutcome,
+    TableDelegate, TableError, TableEvent, TableLoadState, TableRenderMode, TableRequestId, TableRowKey,
+    TableRows, TableSelectionMode, TableSelectionRequest, TableSize, TableSource, TableTextOverflow,
+    TableVerticalAlign, TableView, YueTable, YueTableState};
 pub use virtual_list::{
     VirtualGrid, VirtualGridCell, VirtualGridCellIdentity, VirtualGridCellKey, VirtualGridSnapshot,
     VirtualGridSpan, VirtualGridSpanSet, VirtualGridTrack, VirtualMasonry, VirtualMasonryCache,
