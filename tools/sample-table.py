@@ -42,17 +42,38 @@ def source_digest():
     return value.hexdigest()
 
 
-def busy():
-    output = subprocess.run(["powershell", "-NoProfile", "-Command", QUERY], check=True, capture_output=True, text=True)
+def busy(*, ignore_foreign_app_wrappers=False):
+    query = QUERY
+    if ignore_foreign_app_wrappers:
+        # A cargo run parent waiting on another desktop app is not a compiler.
+        # Ignore only a direct, already-launched top-level target EXE outside
+        # this workspace. Build scripts/deps and unknown paths fail closed.
+        query = r"""$scrollProcesses = @(Get-CimInstance Win32_Process)
+$samplingRoot = '__SAMPLING_ROOT__' + '\'
+@($scrollProcesses | Where-Object {
+    if ($_.Name -in @('rustc.exe','clippy-driver.exe','windows-showcase.exe')) { return $true }
+    if ($_.Name -ne 'cargo.exe' -or $_.CommandLine -match '(?i)\bcargo(?:\.exe)?["\x27]?\s+dev(?:\s|$)') { return $false }
+    $cargoParent = $_
+    if ($cargoParent.CommandLine -match '(?i)\bcargo(?:\.exe)?["\x27]?\s+run(?:\s|$)') {
+        $foreignApps = @($scrollProcesses | Where-Object {
+            $_.ParentProcessId -eq $cargoParent.ProcessId -and $_.ExecutablePath -and
+            $_.ExecutablePath -match '\\target\\(?:debug|release)\\[^\\]+\.exe$' -and
+            -not $_.ExecutablePath.StartsWith($samplingRoot, [System.StringComparison]::OrdinalIgnoreCase)
+        })
+        if ($foreignApps.Count -gt 0) { return $false }
+    }
+    return $true
+}).Count""".replace("__SAMPLING_ROOT__", str(ROOT).replace("'", "''"))
+    output = subprocess.run(["powershell", "-NoProfile", "-Command", query], check=True, capture_output=True, text=True)
     return output.stdout.strip() != "0"
 
 
-def wait_quiet():
+def wait_quiet(*, ignore_foreign_app_wrappers=False):
     deadline = time.monotonic() + 180
     quiet = 0
     announced = False
     while quiet < 2:
-        occupied = busy()
+        occupied = busy(ignore_foreign_app_wrappers=ignore_foreign_app_wrappers)
         quiet = 0 if occupied else quiet + 1
         if occupied and not announced:
             print("Waiting for existing compilation/Showcase; no processes are stopped", flush=True)
