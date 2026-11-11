@@ -47,7 +47,9 @@ impl DialogLayer {
             if !self.is_top(parent) {
                 return Err(DialogOpenError::InvalidParent);
             }
-        } else if self.stack.iter().any(|entry| entry.modal) {
+        } else if !self.stack.is_empty()
+            && (!entry.modal || self.stack.iter().any(|entry| entry.modal))
+        {
             return Err(DialogOpenError::Occupied);
         }
         self.stack.push(entry);

@@ -1,9 +1,13 @@
 //! Edge panels sharing the hardened Dialog session and overlay stack.
 use crate::{YueDialog, YueTheme};
+mod host;
+pub use host::YueDrawerHost;
+pub(crate) mod resize;
 use gpui_kit::{
     AnyElement, App, DefiniteLength, ElementId, Entity, FocusHandle, IntoElement, ParentElement,
     Pixels, Point, RenderOnce, SharedString, Size, Window, point, px,
 };
+use std::{cell::Cell, rc::Rc};
 
 pub use crate::dialog::{
     DialogChange as DrawerChange, DialogCloseReason as DrawerCloseReason,
@@ -67,6 +71,12 @@ impl DrawerSize {
 pub(crate) struct Presentation {
     pub placement: DrawerPlacement,
     pub extent: DefiniteLength,
+    pub resizable: bool,
+    pub min: DefiniteLength,
+    pub max: DefiniteLength,
+    pub on_resize: Option<Rc<resize::ResizeCallback>>,
+    pub host: Option<Rc<Cell<Option<gpui_kit::Bounds<Pixels>>>>>,
+    pub memory: Option<resize::Memory>,
 }
 impl Presentation {
     pub fn extent(&self, available: Size<Pixels>, w: &Window) -> Pixels {
@@ -101,12 +111,21 @@ pub struct YueDrawer {
     presentation: Presentation,
 }
 impl YueDrawer {
+    fn inner_state(&self) -> &Entity<YueDrawerState> {
+        &self.inner.state
+    }
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, state: &Entity<YueDrawerState>) -> Self {
         Self {
             inner: YueDialog::new(id, theme, state).confirm_on_enter(false),
             presentation: Presentation {
                 placement: DrawerPlacement::Right,
                 extent: DrawerSize::Medium.length(),
+                resizable: false,
+                min: gpui_kit::rems(12.).into(),
+                max: DefiniteLength::Fraction(1.),
+                on_resize: None,
+                host: None,
+                memory: None,
             },
         }
     }
@@ -121,6 +140,25 @@ impl YueDrawer {
     /// Width on side placements, height on top/bottom placements.
     pub fn extent(mut self, value: impl Into<DefiniteLength>) -> Self {
         self.presentation.extent = value.into();
+        self
+    }
+    pub fn resizable(mut self, value: bool) -> Self {
+        self.presentation.resizable = value;
+        self
+    }
+    /// Both limits resolve against the available main axis; viewport constraints win.
+    pub fn resize_limits(
+        mut self,
+        min: impl Into<DefiniteLength>,
+        max: impl Into<DefiniteLength>,
+    ) -> Self {
+        self.presentation.min = min.into();
+        self.presentation.max = max.into();
+        self
+    }
+    /// Called on actual user size changes; receives the effective logical pixels.
+    pub fn on_resize(mut self, handler: impl Fn(Pixels, &mut Window, &mut App) + 'static) -> Self {
+        self.presentation.on_resize = Some(Rc::new(handler));
         self
     }
     pub fn modal(mut self, value: bool) -> Self {

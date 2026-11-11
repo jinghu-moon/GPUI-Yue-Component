@@ -121,7 +121,41 @@ impl RenderOnce for YueDialog {
         } else {
             rems(theme, keys::SPACE_16).to_pixels(w.rem_size())
         };
-        let viewport = w.viewport_size();
+        let host_bounds = self
+            .drawer
+            .as_ref()
+            .and_then(|d| d.host.as_ref())
+            .and_then(|b| b.get());
+        let local_host = self.drawer.as_ref().is_some_and(|d| d.host.is_some());
+        let viewport = if local_host {
+            host_bounds.map_or(gpui_kit::size(px(0.), px(0.)), |b| b.size)
+        } else {
+            w.viewport_size()
+        };
+        let resize = self.drawer.as_ref().map(|drawer| {
+            let memory = drawer.memory.clone().unwrap_or_else(|| {
+                w.use_keyed_state((self.id.clone(), "drawer-resize-memory"), cx, |_, _| {
+                    crate::drawer::resize::Memory::default()
+                })
+                .read(cx)
+                .clone()
+            });
+            memory.resolve(drawer, viewport, w)
+        });
+        let resize_controls = self
+            .drawer
+            .as_ref()
+            .zip(resize.as_ref())
+            .map(|(drawer, resize)| {
+                resize.controls(
+                    self.id.clone(),
+                    theme,
+                    &self.state,
+                    drawer.resizable && open && !pending && top,
+                    w,
+                    cx,
+                )
+            });
         let max_width = (viewport.width - margin * 2.).max(px(0.));
         let max_height = (viewport.height - margin * 2.).max(px(0.));
         let minimum_chrome = rems(theme, keys::DIALOG_PADDING).to_pixels(w.rem_size()) * 2.
@@ -328,9 +362,11 @@ impl RenderOnce for YueDialog {
             .child(body)
             .when(has_footer, |d| d.child(footer));
         let geometry = self.drawer.as_ref().map(|drawer| {
-            drawer
-                .placement
-                .geometry(viewport, drawer.extent(viewport, w), presence.progress)
+            drawer.placement.geometry(
+                viewport,
+                resize.as_ref().expect("drawer geometry").extent,
+                presence.progress,
+            )
         });
         let surface = TextRole::Body.apply(
             theme,
@@ -378,6 +414,7 @@ impl RenderOnce for YueDialog {
                 })
                 .occlude()
                 .child(contents)
+                .children(resize_controls)
                 .when(!is_drawer, |d| d.child(capture))
                 .when(is_drawer && !shell_scroll, |d| {
                     d.child(crate::YueScrollbar::vertical("drawer-scrollbar", &scroll).theme(theme))
@@ -398,6 +435,13 @@ impl RenderOnce for YueDialog {
             .interactive(open && top)
             .modal(modal)
             .when(is_drawer, |d| d.overflow_hidden())
+            .when(local_host, |d| {
+                let bounds = host_bounds.unwrap_or_default();
+                d.left(bounds.origin.x)
+                    .top(bounds.origin.y)
+                    .w(bounds.size.width)
+                    .h(bounds.size.height)
+            })
             .when(modal, |d| {
                 d.backdrop(
                     div()
@@ -413,7 +457,9 @@ impl RenderOnce for YueDialog {
                     .busy(pending)
                     .into_any_element()
             } else {
-                surface.into_any_element()
+                ModalBoundary::background(surface)
+                    .busy(pending)
+                    .into_any_element()
             })
             .on_request(move |intent, w, cx| {
                 if intent == DialogIntent::BackdropPress

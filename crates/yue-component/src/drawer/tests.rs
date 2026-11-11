@@ -17,6 +17,7 @@ struct Demo {
     placement: DrawerPlacement,
     size: DrawerSize,
     modal: bool,
+    resizable: bool,
     mask: bool,
     veto: bool,
     pending: bool,
@@ -55,6 +56,8 @@ impl Render for Demo {
                         .placement(self.placement)
                         .size(self.size)
                         .modal(self.modal)
+                        .resizable(self.resizable)
+                        .resize_limits(gpui_kit::rems(10.), px(600.))
                         .overlay(self.mask)
                         .on_close_request(move |_, _, _| !veto)
                         .on_confirm(move |r, _, _| {
@@ -109,6 +112,7 @@ fn setup(cx: &mut TestAppContext) -> (Entity<Demo>, &mut VisualTestContext) {
             placement: DrawerPlacement::Right,
             size: DrawerSize::Small,
             modal: true,
+            resizable: false,
             mask: true,
             veto: false,
             pending: false,
@@ -310,4 +314,229 @@ fn default_enter_does_not_submit_and_unmount_releases_barrier(cx: &mut TestAppCo
     assert!(!state(&v, cx).read_with(cx, |s, _| s.is_open()));
     click(cx, "Background");
     assert_eq!(v.read_with(cx, |s, _| s.background), 1);
+}
+
+fn part(cx: &mut VisualTestContext, id: &'static str) -> gpui_kit::Bounds<Pixels> {
+    cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .find(|n| n.path().last() == Some(&id.into()))
+            .unwrap_or_else(|| panic!("missing {id}"))
+            .bounds()
+    })
+}
+#[gpui_kit::test]
+fn resize_keyboard_limits_and_viewport_preserve_preferred_size(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.resizable = true);
+    click(cx, "Open");
+    draw(cx);
+    click(cx, "Adjust drawer size");
+    press(cx, "home");
+    assert_eq!(node(cx, "Details").bounds().size.width, px(160.));
+    press(cx, "left");
+    assert!(node(cx, "Details").bounds().size.width > px(160.));
+    press(cx, "end");
+    assert_eq!(node(cx, "Details").bounds().size.width, px(600.));
+    cx.simulate_resize(size(px(360.), px(500.)));
+    draw(cx);
+    assert_eq!(node(cx, "Details").bounds().size.width, px(360.));
+    cx.simulate_resize(size(px(800.), px(600.)));
+    draw(cx);
+    assert_eq!(node(cx, "Details").bounds().size.width, px(600.));
+}
+#[gpui_kit::test]
+fn resize_pointer_keeps_tracking_outside_the_surface(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.resizable = true);
+    click(cx, "Open");
+    draw(cx);
+    let start = node(cx, "Adjust drawer size").bounds().center();
+    cx.simulate_event(MouseDownEvent {
+        button: MouseButton::Left,
+        position: start,
+        modifiers: Modifiers::default(),
+        click_count: 1,
+        first_mouse: false,
+    });
+    cx.simulate_mouse_move(
+        start + point(px(-4.), px(0.)),
+        Some(MouseButton::Left),
+        Modifiers::default(),
+    );
+    draw(cx);
+    cx.simulate_mouse_move(
+        start + point(px(-140.), px(0.)),
+        Some(MouseButton::Left),
+        Modifiers::default(),
+    );
+    draw(cx);
+    assert!(
+        node(cx, "Details").bounds().size.width > px(440.),
+        "resize stopped at old panel boundary"
+    );
+    cx.simulate_event(MouseUpEvent {
+        button: MouseButton::Left,
+        position: start + point(px(-140.), px(0.)),
+        modifiers: Modifiers::default(),
+        click_count: 1,
+    });
+    draw(cx);
+    let after = node(cx, "Details").bounds();
+    cx.simulate_mouse_move(start, None, Modifiers::default());
+    draw(cx);
+    assert_eq!(node(cx, "Details").bounds(), after);
+}
+#[gpui_kit::test]
+fn long_body_scroll_does_not_move_chrome(cx: &mut TestAppContext) {
+    let (_, cx) = setup(cx);
+    click(cx, "Open");
+    draw(cx);
+    let header = part(cx, "dialog-header");
+    let footer = part(cx, "dialog-footer");
+    let first = part(cx, "dialog-body");
+    cx.simulate_event(gpui_kit::ScrollWheelEvent {
+        position: first.center(),
+        delta: gpui_kit::ScrollDelta::Pixels(point(px(0.), px(-300.))),
+        touch_phase: gpui_kit::TouchPhase::Moved,
+        ..Default::default()
+    });
+    draw(cx);
+    assert_eq!(header, part(cx, "dialog-header"));
+    assert_eq!(footer, part(cx, "dialog-footer"));
+    let line = cx.update(|w, _| {
+        snapshots(w)
+            .into_iter()
+            .find(|n| n.path().last() == Some(&("line", 0usize).into()))
+            .unwrap()
+            .bounds()
+    });
+    assert!(line.top() < first.top());
+}
+#[gpui_kit::test]
+fn interrupted_slide_reverses_without_jump_and_closes_once(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    click(cx, "Open");
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(100));
+    draw(cx);
+    let middle = node(cx, "Details").bounds().left();
+    let width = cx.update(|w, _| w.viewport_size().width);
+    assert!(
+        middle > width - px(320.) && middle < width,
+        "midpoint {middle:?}, viewport {width:?}"
+    );
+    let state = state(&v, cx);
+    cx.update(|w, cx| state.update(cx, |s, cx| s.close(w, cx)));
+    draw(cx);
+    let reversed = node(cx, "Details").bounds().left();
+    assert!((reversed - middle).abs() < px(2.));
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(400));
+    draw(cx);
+    draw(cx);
+    assert!(!cx.update(|w, _| snapshots(w).iter().any(|n| n.label() == Some("Details"))));
+}
+
+struct LocalDemo {
+    state: Entity<YueDrawerState>,
+    placement: DrawerPlacement,
+    push: bool,
+}
+impl Render for LocalDemo {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let state = self.state.clone();
+        div()
+            .size_full()
+            .p(px(30.))
+            .child(
+                YueButton::text("local-open", theme(), "Open local").on_click(move |_, w, cx| {
+                    state.update(cx, |s, cx| s.open(w, cx)).unwrap();
+                }),
+            )
+            .child(
+                YueDrawerHost::new(
+                    "local-host",
+                    YueDrawer::new("local-drawer", theme(), &self.state)
+                        .title("Local details")
+                        .extent(px(200.))
+                        .placement(self.placement)
+                        .resizable(true)
+                        .resize_limits(px(100.), px(400.)),
+                )
+                .push(self.push)
+                .w(px(600.))
+                .h(px(360.))
+                .child(
+                    div()
+                        .id("document")
+                        .test_support()
+                        .size_full()
+                        .child("Document"),
+                ),
+            )
+    }
+}
+#[gpui_kit::test]
+fn local_host_stays_in_its_bounds_and_pushes_each_edge(cx: &mut TestAppContext) {
+    cx.update(|cx| {
+        gpui_kit::init(cx);
+        crate::popup::init(cx);
+        crate::dialog::init(cx);
+        crate::set_theme(cx, theme());
+        cx.set_reduce_motion(true);
+    });
+    let mut saved = None;
+    let (_, cx) = cx.add_window_view(|w, cx| {
+        let view = cx.new(|cx| LocalDemo {
+            state: cx.new(YueDrawerState::new),
+            placement: DrawerPlacement::Right,
+            push: true,
+        });
+        saved = Some(view.clone());
+        Root::new(view, w, cx)
+    });
+    let v = saved.unwrap();
+    cx.update(|w, _| w.activate_window());
+    draw(cx);
+    draw(cx);
+    for placement in [
+        DrawerPlacement::Right,
+        DrawerPlacement::Left,
+        DrawerPlacement::Top,
+        DrawerPlacement::Bottom,
+    ] {
+        v.update(cx, |s, cx| {
+            s.placement = placement;
+            cx.notify();
+        });
+        draw(cx);
+        click(cx, "Open local");
+        draw(cx);
+        draw(cx);
+        let host = part(cx, "local-host");
+        let panel = node(cx, "Local details").bounds();
+        let (origin, size) = placement.geometry(host.size, px(200.), 1.);
+        assert_eq!(panel.origin, host.origin + origin);
+        assert_eq!(panel.size, size);
+        let document = part(cx, "document");
+        assert_eq!(
+            document.size,
+            if placement.horizontal() {
+                size_2(px(400.), px(360.))
+            } else {
+                size_2(px(600.), px(160.))
+            }
+        );
+        assert!(cx.update(|w, cx| gpui_kit::base::active_modal_scope(w, cx).is_none()));
+        let state = v.read_with(cx, |s, _| s.state.clone());
+        cx.update(|w, cx| state.update(cx, |s, cx| s.close(w, cx)));
+        draw(cx);
+        draw(cx);
+        assert_eq!(part(cx, "document").size, host.size);
+    }
+}
+fn size_2(w: Pixels, h: Pixels) -> Size<Pixels> {
+    gpui_kit::size(w, h)
 }

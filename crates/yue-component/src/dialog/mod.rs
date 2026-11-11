@@ -44,7 +44,7 @@ pub struct YueDialog {
     id: ElementId,
     theme: YueTheme,
     inherited: bool,
-    state: Entity<YueDialogState>,
+    pub(crate) state: Entity<YueDialogState>,
     title: SharedString,
     label: Option<SharedString>,
     description: Option<SharedString>,

@@ -88,7 +88,7 @@ pub use virtual_list::{
 pub use application::{current_theme, init, set_theme};
 pub use drawer::{DrawerPlacement, DrawerSize, DrawerChange, DrawerCloseReason, DrawerDecision,
     DrawerFooter, DrawerOpenError, DrawerOutcome, DrawerSubmitRequest, DrawerTicket,
-    YueDrawer, YueDrawerEvent, YueDrawerState};
+    YueDrawer, YueDrawerHost, YueDrawerEvent, YueDrawerState};
 pub use scrollbar::{ScrollbarVisibility, YueScrollbar};
 pub use tree::{
     TreeApply, TreeChange, TreeChangeSource, TreeCheckMode, TreeCheckProjection, TreeChildren,

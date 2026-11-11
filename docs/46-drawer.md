@@ -77,3 +77,7 @@ open → OpenChanged(true) → Opened；关闭先 guard，接受后 OpenChanged(
 待各阶段完成后填写实际测试命令与结果，不预先声称全部通过。
 
 D0 已完成并提交；D1 已实现四方向/尺寸/插槽/共享会话/模态与非模态/正文滚动。`cargo test -p yue-component --features headless-tests --lib drawer` 7 项通过；`--lib dialog` 25 项通过（含一项 Drawer/Dialog 交叉测试）。头尾固定、窗口钳制、关闭手势、保护、异步、焦点及卸载有实际 headless 覆盖。
+
+D2 已完成：内侧边缘鼠标调整、超出面板继续拖动、方向键/Shift/Home/End、双击复原、限值与缩窗恢复、局部宿主四方向及 push。Drawer 测试增至 12 项全通过，Dialog 相关 25 项回归通过，`cargo clippy -p yue-component --lib -- -D warnings` 通过。动效中途反转、正文滚动固定头尾均有实际覆盖。
+
+同一窗口一次容纳一条显式弹层链。多个声明可同时挂载；已有窗口模态时其他根级打开返回 Occupied，嵌套使用 open_child。非模态面板不会隐式改变窗口其他区域的焦点策略。
