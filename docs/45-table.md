@@ -717,7 +717,7 @@ Skeleton／加载提示有独立展示身份，不制造字段为 null 的伪业
 
 ## 21. 性能合同与验证方案
 
-实现后的同步阶段计时与诊断入口见[全流程统计指南](performance/table-stage-profiling.md)。默认关闭，单独标出测试观测开销；优化结论必须有同工作量的前后对照。
+实现后的同步阶段计时与诊断入口见[全流程统计指南](performance/table-stage-profiling.md)。默认关闭，单独标出测试观测开销；优化结论必须有同工作量的前后对照。当前数据、首次分配异常与确认结果见[全流程热点及排序优化验收](performance/2026-11-11-table-stage-hotspots.md)。
 
 设数据行 N、显示叶列 C、行工作集 Wr、列工作集 Wc、精确保留 cell 数 P。成本分别报告：
 

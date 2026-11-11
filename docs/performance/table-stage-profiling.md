@@ -19,7 +19,7 @@
 
 `TABLE_CAPTURE` 输出 elapsed／unattributed／dropped；`TABLE_STAGE` 输出静态名称、完成调用次数、inclusive／self／max，单位 ns。`Instant` 测量经过的墙钟时间，包含抢占和诊断开销，**不是操作系统线程 CPU 时间**。inclusive 包含子阶段，不能跨层相加；self 扣除直接子 scope，可以相加；max 为单次 inclusive 最大值，不能当作 P95。
 
-`sum(self) + unattributed == elapsed` 必须对账，`dropped == 0` 才接受诊断。unattributed 包含 scope 外的 fixture、oracle、输出和调度时间；不能当作全是业务热点。不同数据量／工作集、不同 feature 或不同诊断粒度的时间不能直接解释为优化收益。
+`sum(self) + unattributed == elapsed` 必须对账，`dropped == 0` 才接受诊断。unattributed 包含 scope 外的 fixture、oracle、输出和调度时间；不能当作全是业务热点。不同数据量／工作集、不同 feature 或不同诊断粒度的时间不能直接解释为优化收益。`gpui.frame.clear.0` 为 ElementIdStack 清理，`.1` 为 Frame 清理。
 
 Recorder 同线程、固定上限 128 个静态阶段和 256 层栈。只聚合，不保留事件／业务 key／用户内容，不逐帧日志、不持有业务对象、不使用全局锁。Scope 必须按栈顺序结束，不跨 await／yield；Capture 可覆盖多个主线程事件循环回合。重叠 Capture 拒绝；未结束 scope 或乱序 drop 的 capture 返回错误；取消后的迟到 scope 不污染下一轮。容量耗尽计 dropped，不静默冒充完整结果。未启用 capture 时不读时钟，但启用 feature 的空闲 scope 仍有 TLS 检查成本。
 
@@ -35,7 +35,7 @@ python tools/profile-table.py --before <EXE> --before-build target/profile-build
 
 默认诊断 cells（TB02）、fixed／measured 完整替换（TB05）、query（TB04）。可通过 `--cases measured-frames tree edit resize range` 单独观察复杂行、树、编辑、真实伸缩输入、range 票据。TB04 每个条件完整顺序 oracle；TB05 每次检查最新值及历史来源释放。功能场景保留原有断言，无额外任意等待。
 
-优化前后各保存同粒度、同 fixture 的 release EXE 与构建记录；加 `--after <EXE> --after-build <JSONL>` 使用三组 ABBA，每场景十二独立进程。runner 核对完整样本序列、工作集／结果计数等价、零 dropped、自耗时对账、原生 test 成功、源码／runner／二进制采样期间不变，保留所有日志和身份。诊断不是性能结论的唯一依据：同时关闭 `TABLE_PROFILE`（保留同一二进制）复测，确认收益不依赖活动插桩；正式默认 feature 再编译／测试。
+优化前后各保存同粒度、同 fixture 的 release EXE 与构建记录；加 `--after <EXE> --after-build <JSONL>` 使用三组 ABBA，每场景十二独立进程。runner 核对完整样本序列、工作集／结果计数等价、零 dropped、自耗时对账、原生 test 成功、源码／runner／二进制采样期间不变，保留所有日志和身份。`--capture off` 时不输出 capture／stage 数据；runner 摘要中的 capture 时长 0 表示未采集，实际时间仍取原始 TABLE_QUERY／TABLE_FRAME。诊断不是性能结论的唯一依据：同时关闭 `TABLE_PROFILE`（保留同一二进制）复测，确认收益不依赖活动插桩；正式默认 feature 再编译／测试。
 
 门禁连续两次观察无 cargo／rustc／clippy／Showcase 后采样；若期间观察到外部进程，整轮弃样重跑，不结束外部进程。这只排除已知污染，不保证机器完全无其他负载。接受时比较每轮分位数及每组前后方向，不把单次最小值当结果。
 
