@@ -719,6 +719,8 @@ Skeleton／加载提示有独立展示身份，不制造字段为 null 的伪业
 
 实现后的同步阶段计时与诊断入口见[全流程统计指南](performance/table-stage-profiling.md)。默认关闭，单独标出测试观测开销；优化结论必须有同工作量的前后对照。当前数据、首次分配异常与确认结果见[全流程热点及排序优化验收](performance/2026-11-11-table-stage-hotspots.md)。
 
+Showcase 多页面滚动另有[开发构建前后对照](performance/2026-11-11-shared-scroll-dev.md)：优化共用框架依赖的 dev profile，保留应用调试设置。该结论只覆盖所测 headless 滚动 CPU 路径，不能替代 release 性能或原生手感验收。
+
 设数据行 N、显示叶列 C、行工作集 Wr、列工作集 Wc、精确保留 cell 数 P。成本分别报告：
 
 - Rows 主要构建 Wr×C；Measured 为保证全行高度也必须计算这些列，不能宣传成 Wr×Wc。

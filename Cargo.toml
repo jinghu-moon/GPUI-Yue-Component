@@ -40,3 +40,18 @@ opt-level = 3
 # too; Showcase/application orchestration retains the normal dev profile.
 [profile.dev.package.yue-component]
 opt-level = 2
+
+# Keep the shared desktop input/render/layout path responsive under `cargo run`.
+# Application code retains its dev settings; assertions and overflow checks stay on.
+# Verified with real Showcase Button/Table/List wheel traces; see performance report.
+[profile.dev.package.gpui-pre]
+opt-level = 2
+
+[profile.dev.package.gpui-base]
+opt-level = 2
+
+[profile.dev.package.gpui-pre-windows]
+opt-level = 2
+
+[profile.dev.package.taffy]
+opt-level = 3

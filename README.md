@@ -53,6 +53,8 @@ gpui_kit::application().run(|cx| {
 
 The complete [minimal consumer](examples/minimal/src/main.rs) uses only `yue-component`, with a controlled switch and a save command. Run `cargo run -p yue-minimal` or browse all components with `cargo run -p windows-showcase`. Both applications use Base only; neither enables Kit's styled `component` or Lucide `assets` layer.
 
+This workspace optimizes the shared GPUI/Base/Windows/layout dependencies in development builds while retaining application dev settings, assertions and overflow checks. See [the Button/Table/List scrolling CPU comparison](docs/performance/2026-11-11-shared-scroll-dev.md) for measurements and native acceptance limits. Downstream workspaces own their Cargo profiles.
+
 Showcase navigation has two independently collapsible groups, 组件 and 设计, with entries alphabetized inside each group. Disclosure supports keyboard activation, animated height and reduced motion.
 
 ## Theme and composition
