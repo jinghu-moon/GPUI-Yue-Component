@@ -24,6 +24,7 @@ const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
     ("descriptions-page", "描述列表 Descriptions", ShowcasePage::Descriptions),
     ("dialog-page", "对话框 Dialog", ShowcasePage::Dialog),
     ("divider-page", "分隔线 Divider", ShowcasePage::Divider),
+    ("drawer-page", "抽屉 Drawer", ShowcasePage::Drawer),
     ("dropdown-page", "下拉菜单 Dropdown", ShowcasePage::Dropdown),
     ("empty-page", "空状态 Empty", ShowcasePage::Empty),
     ("form-page", "表单 Form", ShowcasePage::Form),
@@ -444,6 +445,7 @@ mod tests {
             ("table-page", ShowcasePage::Table, "table-content"),
             ("skeleton-page", ShowcasePage::Skeleton, "skeleton-content"),
             ("collapse-page", ShowcasePage::Collapse, "collapse-content"),
+            ("drawer-page", ShowcasePage::Drawer, "drawer-content"),
             ("divider-page", ShowcasePage::Divider, "divider-content"),
             (
                 "breadcrumb-page",

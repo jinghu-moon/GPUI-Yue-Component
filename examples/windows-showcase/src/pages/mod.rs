@@ -43,3 +43,5 @@ pub(crate) mod resizable;
 
 pub(crate) mod descriptions;
 pub(crate) mod table;
+
+pub(crate) mod drawer;
