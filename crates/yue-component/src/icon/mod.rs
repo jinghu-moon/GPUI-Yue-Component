@@ -192,9 +192,9 @@ mod tests {
     use crate::{Accent, ThemeMode, YueTheme};
     use yue_component_icons::IconDefinition;
 
-    /// Shared web meanings plus GPUI's numeric-step ChevronUp and Empty. Pin each glyph
+    /// Shared web meanings plus GPUI's numeric-step ChevronUp, Empty and DragHandle. Pin each glyph
     /// so an accidental semantic-to-asset substitution fails explicitly.
-    const CONTRACT: [(&str, &str); 16] = [
+    const CONTRACT: [(&str, &str); 17] = [
         ("close", "x"),
         ("chevron-down", "chevron-down"),
         ("chevron-up", "chevron-up"),
@@ -211,6 +211,7 @@ mod tests {
         ("warning", "alert-triangle"),
         ("error", "alert-circle"),
         ("empty", "inbox"),
+            ("drag-handle", "grip-vertical"),
     ];
 
     #[test]
