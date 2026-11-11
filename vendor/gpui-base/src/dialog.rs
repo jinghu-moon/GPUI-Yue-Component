@@ -156,6 +156,7 @@ pub struct Dialog {
     priority: Option<usize>,
     role_on_popup: bool,
     interactive: bool,
+    modal: bool,
 }
 
 /// Unstyled trigger that owns pointer activation for opening a dialog.
@@ -462,6 +463,7 @@ impl Dialog {
             priority: None,
             role_on_popup: false,
             interactive: true,
+            modal: true,
         }
     }
     pub fn open(mut self, open: bool) -> Self {
@@ -492,6 +494,12 @@ impl Dialog {
     /// Retain the barrier during an exit without allowing its descendants to act.
     pub fn interactive(mut self, value: bool) -> Self {
         self.interactive = value;
+        self
+    }
+    /// Whether this host traps focus and absorbs background wheel events.
+    /// Nonmodal consumers must omit the backdrop and provide their own bounds.
+    pub fn modal(mut self, value: bool) -> Self {
+        self.modal = value;
         self
     }
     pub fn handle(mut self, handle: DialogHandle) -> Self {
@@ -627,11 +635,10 @@ impl RenderOnce for Dialog {
                     .justify_center()
                     .when(!self.role_on_popup, |this| this.role(self.role))
                     .track_focus(&self.focus)
-                    .when(!self.interactive && self.topmost, |this| {
+                    .when(self.modal && !self.interactive && self.topmost, |this| {
                         this.capture_any_mouse_down(|_, _, cx| cx.stop_propagation())
                             .capture_key_down(|_, _, cx| cx.stop_propagation())
                     })
-                    .focus_trap(format!("dialog-{}", self.layer), &self.focus)
                     .when(!typed && self.keyboard, |this| this.key_context(CONTEXT))
                     .when(typed, |this| {
                         this.key_context(if self.confirm_on_enter {
@@ -662,7 +669,9 @@ impl RenderOnce for Dialog {
                             }
                         })
                         .capture_any_mouse_down(move |_, _, _| reset_press.set(false))
-                        .on_scroll_wheel(|_, _, cx| cx.stop_propagation())
+                        .when(self.modal, |this| {
+                            this.on_scroll_wheel(|_, _, cx| cx.stop_propagation())
+                        })
                         .on_action(move |_: &DialogEscape, w, cx| {
                             cx.stop_propagation();
                             if topmost && let Some(handler) = &intent_escape {
@@ -781,7 +790,15 @@ impl RenderOnce for Dialog {
                     })
                     .children(self.popup)
                     .children(self.children)
-                    .refine_style(&self.style),
+                    .refine_style(&self.style)
+                    .map(|host| {
+                        if self.modal {
+                            host.focus_trap(format!("dialog-{}", self.layer), &self.focus)
+                                .into_any_element()
+                        } else {
+                            host.into_any_element()
+                        }
+                    }),
             ),
         )
         .with_priority(priority)

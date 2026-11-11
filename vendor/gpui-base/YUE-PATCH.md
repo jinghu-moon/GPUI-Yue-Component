@@ -978,3 +978,12 @@ Neither descriptors nor resolution retain sources, controllers or windows.
 Existing .spans keeps owned storage with no retained configuration cache.
 Opt-in storage is O(S), and cold initialization can cost more; see the nine-point
 readiness report for warm/cold Release ABBA, default guards and rollback.
+
+### Drawer nonmodal host policy
+
+`Dialog::modal(false)` omits the focus-trap registration and background wheel
+barrier. The default remains modal. Consumers must omit the backdrop in this
+mode; YueDrawer also omits the full-window exit input barrier and retains the
+shared typed close-intent path. No styled Sheet dependency is introduced.
+Rebase this addition with Dialog typed intent changes and rerun both Drawer
+and Dialog lifecycle/focus tests.

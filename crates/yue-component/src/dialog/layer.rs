@@ -7,6 +7,7 @@ use gpui_kit::{
 use std::rc::Weak;
 
 pub(super) struct Entry {
+    pub modal: bool,
     pub state: WeakEntity<YueDialogState>,
     pub scope: ModalScope,
     pub lease: Weak<()>,
@@ -46,7 +47,7 @@ impl DialogLayer {
             if !self.is_top(parent) {
                 return Err(DialogOpenError::InvalidParent);
             }
-        } else if !self.stack.is_empty() {
+        } else if self.stack.iter().any(|entry| entry.modal) {
             return Err(DialogOpenError::Occupied);
         }
         self.stack.push(entry);
@@ -76,7 +77,15 @@ impl DialogLayer {
         self.sync(w, cx);
     }
     fn sync(&self, w: &mut Window, cx: &mut App) {
-        set_active_modal_scope(self.stack.last().map(|e| e.scope.clone()), w, cx);
+        set_active_modal_scope(
+            self.stack
+                .iter()
+                .rev()
+                .find(|e| e.modal)
+                .map(|e| e.scope.clone()),
+            w,
+            cx,
+        );
         w.refresh();
     }
 }
@@ -95,7 +104,15 @@ impl RootPlugin for DialogLayer {
             let id = self.stack[ix].scope.owner();
             self.retire(id, w, cx);
         }
-        set_active_modal_scope(self.stack.last().map(|e| e.scope.clone()), w, cx);
+        set_active_modal_scope(
+            self.stack
+                .iter()
+                .rev()
+                .find(|e| e.modal)
+                .map(|e| e.scope.clone()),
+            w,
+            cx,
+        );
     }
     fn decorate(
         &self,

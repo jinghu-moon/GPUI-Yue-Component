@@ -75,3 +75,5 @@ open → OpenChanged(true) → Opened；关闭先 guard，接受后 OpenChanged(
 ## 8. 交付记录
 
 待各阶段完成后填写实际测试命令与结果，不预先声称全部通过。
+
+D0 已完成并提交；D1 已实现四方向/尺寸/插槽/共享会话/模态与非模态/正文滚动。`cargo test -p yue-component --features headless-tests --lib drawer` 7 项通过；`--lib dialog` 25 项通过（含一项 Drawer/Dialog 交叉测试）。头尾固定、窗口钳制、关闭手势、保护、异步、焦点及卸载有实际 headless 覆盖。

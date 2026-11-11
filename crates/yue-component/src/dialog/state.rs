@@ -18,6 +18,7 @@ pub(super) type ConfirmHandler =
 pub(super) type CloseGuard = Rc<dyn Fn(DialogCloseReason, &mut Window, &mut App) -> bool>;
 #[derive(Clone)]
 pub(super) struct Behavior {
+    pub modal: bool,
     pub escape: bool,
     pub overlay: bool,
     pub confirm_disabled: bool,
@@ -28,6 +29,7 @@ pub(super) struct Behavior {
 impl Default for Behavior {
     fn default() -> Self {
         Self {
+            modal: true,
             escape: true,
             overlay: true,
             confirm_disabled: false,
@@ -170,6 +172,7 @@ impl YueDialogState {
         layer.update(cx, |l, cx| {
             l.admit(
                 Entry {
+                    modal: self.behavior.modal,
                     state,
                     scope: scope.clone(),
                     lease: self.mount.clone(),
@@ -355,6 +358,13 @@ impl YueDialogState {
         true
     }
     pub(super) fn is_top(&self, w: &Window, cx: &App) -> bool {
+        if !self.behavior.modal {
+            return self.scope.as_ref().is_some_and(|scope| {
+                active_modal_scope(w, cx).is_none()
+                    && DialogLayer::for_window(w, cx)
+                        .is_some_and(|layer| layer.read(cx).is_top(scope.owner()))
+            });
+        }
         self.scope
             .as_ref()
             .zip(active_modal_scope(w, cx))
@@ -382,13 +392,18 @@ impl YueDialogState {
         self.mount_id = Some(id);
         self.window = Some(w.window_handle().window_id());
         self.owner = Some(owner);
+        assert!(
+            !self.visible || self.behavior.modal == behavior.modal,
+            "close and settle an overlay before changing its modal mode"
+        );
         self.behavior = behavior;
         if !self.open && self.visible && self.focus.contains_focused(w, cx) {
             self.restore_from = w.focused(cx).map(|f| f.downgrade());
         }
         if self._focus_guard.is_none() {
             self._focus_guard = Some(cx.on_focus_out(&self.focus.clone(), w, |s, _, w, cx| {
-                if s.open && s.is_top(w, cx) && !s.focus.contains_focused(w, cx) {
+                if s.behavior.modal && s.open && s.is_top(w, cx) && !s.focus.contains_focused(w, cx)
+                {
                     s.focus.focus(w, cx);
                 }
             }));

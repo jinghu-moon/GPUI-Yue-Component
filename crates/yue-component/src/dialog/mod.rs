@@ -39,6 +39,8 @@ pub(crate) fn init(cx: &mut App) {
 /// ```
 #[derive(IntoElement)]
 pub struct YueDialog {
+    pub(crate) drawer: Option<crate::drawer::Presentation>,
+    extra: Option<AnyElement>,
     id: ElementId,
     theme: YueTheme,
     inherited: bool,
@@ -69,6 +71,8 @@ pub struct YueDialog {
 impl YueDialog {
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, state: &Entity<YueDialogState>) -> Self {
         Self {
+            drawer: None,
+            extra: None,
             id: id.into(),
             theme,
             inherited: false,
@@ -95,6 +99,14 @@ impl YueDialog {
             draggable: false,
             behavior: state::Behavior::default(),
         }
+    }
+    pub(crate) fn modal(mut self, value: bool) -> Self {
+        self.behavior.modal = value;
+        self
+    }
+    pub(crate) fn extra(mut self, content: impl IntoElement) -> Self {
+        self.extra = Some(content.into_any_element());
+        self
     }
     pub fn alert(
         id: impl Into<ElementId>,

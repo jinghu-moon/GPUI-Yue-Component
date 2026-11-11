@@ -51,6 +51,8 @@ impl RenderOnce for YueDialog {
             !self.alert && self.footer_content.is_none() && self.footer != DialogFooter::None,
         );
         let mut behavior = self.behavior;
+        let modal = behavior.modal;
+        let is_drawer = self.drawer.is_some();
         if self.alert
             && behavior.initial_focus.is_none()
             && self.footer_content.is_none()
@@ -74,7 +76,9 @@ impl RenderOnce for YueDialog {
         let settled = if open { state.opened } else { !visible };
         // Sample even when closed: its retained zero seeds the next entrance.
         let presence = Presence::new((self.id.clone(), "dialog-presence"), open)
-            .transition(
+            .transition(if is_drawer {
+                crate::drawer::Presentation::transition()
+            } else {
                 Transition::new(duration(
                     theme,
                     if open {
@@ -83,8 +87,8 @@ impl RenderOnce for YueDialog {
                         keys::DIALOG_DURATION_EXIT
                     },
                 ))
-                .ease(easing(theme, keys::DIALOG_EASE)),
-            )
+                .ease(easing(theme, keys::DIALOG_EASE))
+            })
             .sample(w, cx);
         if !settled
             && matches!(
@@ -105,15 +109,18 @@ impl RenderOnce for YueDialog {
         };
         self.state
             .update(cx, |s, cx| s.schedule_initial_focus(w, cx));
-        let top =
-            gpui_kit::base::active_modal_scope(w, cx).is_some_and(|a| a.owner() == scope.owner());
+        let top = self.state.read(cx).is_top(w, cx);
         let nested = layer::DialogLayer::for_window(w, cx).is_some_and(|l| l.read(cx).has_parent());
         let label = self.label.unwrap_or_else(|| self.title.clone());
         assert!(
             !label.trim().is_empty(),
             "YueDialog requires a nonempty title or semantic label"
         );
-        let margin = rems(theme, keys::SPACE_16).to_pixels(w.rem_size());
+        let margin = if is_drawer {
+            px(0.)
+        } else {
+            rems(theme, keys::SPACE_16).to_pixels(w.rem_size())
+        };
         let viewport = w.viewport_size();
         let max_width = (viewport.width - margin * 2.).max(px(0.));
         let max_height = (viewport.height - margin * 2.).max(px(0.));
@@ -189,6 +196,9 @@ impl RenderOnce for YueDialog {
         } else {
             header = header.child(div().flex_1());
         }
+        if let Some(extra) = self.extra {
+            header = header.child(extra);
+        }
         if self.closable {
             header = header.child(close);
         }
@@ -196,12 +206,21 @@ impl RenderOnce for YueDialog {
         // increasing the header/body/footer gaps.
         let focus_gutter = rems(theme, keys::FOCUS_RING_WIDTH).to_pixels(w.rem_size())
             + rems(theme, keys::FOCUS_RING_OFFSET).to_pixels(w.rem_size());
+        let scroll = w
+            .use_keyed_state((self.id.clone(), "surface-scroll"), cx, |_, _| {
+                gpui_kit::ScrollHandle::new()
+            })
+            .read(cx)
+            .clone();
         let mut body = div()
             .id("dialog-body")
             .test_support()
             .min_h_0()
             .min_w_0()
             .flex_shrink(1.)
+            .when(is_drawer && !shell_scroll, |d| {
+                d.flex_1().track_scroll(&scroll)
+            })
             .when(!shell_scroll, |body| {
                 body.overflow_y_scroll().p(focus_gutter).m(-focus_gutter)
             })
@@ -303,10 +322,16 @@ impl RenderOnce for YueDialog {
             .flex_col()
             .gap(rems(theme, keys::DIALOG_SECTION_PADDING))
             .p(pad)
+            .when(is_drawer, |d| d.size_full())
             .when(shell_scroll, |d| d.overflow_y_scroll())
             .when(show_header, |d| d.child(header))
             .child(body)
             .when(has_footer, |d| d.child(footer));
+        let geometry = self.drawer.as_ref().map(|drawer| {
+            drawer
+                .placement
+                .geometry(viewport, drawer.extent(viewport, w), presence.progress)
+        });
         let surface = TextRole::Body.apply(
             theme,
             div()
@@ -342,16 +367,26 @@ impl RenderOnce for YueDialog {
                 .rounded(rems(theme, keys::DIALOG_BORDER_RADIUS))
                 .shadow(shadow(theme, keys::DIALOG_SHADOW))
                 .opacity(presence.progress)
+                .when_some(geometry, |d, (origin, size)| {
+                    d.absolute()
+                        .left(origin.x)
+                        .top(origin.y)
+                        .w(size.width)
+                        .h(size.height)
+                        .rounded_none()
+                        .opacity(1.)
+                })
                 .occlude()
                 .child(contents)
-                .child(capture)
+                .when(!is_drawer, |d| d.child(capture))
+                .when(is_drawer && !shell_scroll, |d| {
+                    d.child(crate::YueScrollbar::vertical("drawer-scrollbar", &scroll).theme(theme))
+                })
                 .when(
                     self.draggable && self.header_visible && open && !pending && top,
                     |d| d.child(drag.capture()),
                 ),
         );
-        let top =
-            gpui_kit::base::active_modal_scope(w, cx).is_some_and(|a| a.owner() == scope.owner());
         let state = self.state.downgrade();
         Dialog::new(cx)
             .open(true)
@@ -361,15 +396,25 @@ impl RenderOnce for YueDialog {
             .role_on_popup(true)
             .confirm_on_enter(enter)
             .interactive(open && top)
-            .backdrop(
-                div()
-                    .size_full()
-                    .when(self.overlay && top, |d| {
-                        d.bg(rgba(theme, keys::DIALOG_SCRIM_COLOR))
-                    })
-                    .opacity(if nested { 1. } else { presence.progress }),
-            )
-            .popup(ModalBoundary::surface(surface, scope).busy(pending))
+            .modal(modal)
+            .when(is_drawer, |d| d.overflow_hidden())
+            .when(modal, |d| {
+                d.backdrop(
+                    div()
+                        .size_full()
+                        .when(self.overlay && top, |d| {
+                            d.bg(rgba(theme, keys::DIALOG_SCRIM_COLOR))
+                        })
+                        .opacity(if nested { 1. } else { presence.progress }),
+                )
+            })
+            .popup(if modal {
+                ModalBoundary::surface(surface, scope)
+                    .busy(pending)
+                    .into_any_element()
+            } else {
+                surface.into_any_element()
+            })
             .on_request(move |intent, w, cx| {
                 if intent == DialogIntent::BackdropPress
                     && crate::popup::PopupRuntime::for_window(w, cx).owner_press_suppressed()

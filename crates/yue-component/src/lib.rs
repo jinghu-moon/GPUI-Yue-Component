@@ -19,6 +19,7 @@ mod descriptions;
 mod time_picker;
 mod dialog;
 mod divider;
+mod drawer;
 mod dropdown;
 mod empty;
 mod field;
@@ -85,6 +86,9 @@ pub use virtual_list::{
 };
 
 pub use application::{current_theme, init, set_theme};
+pub use drawer::{DrawerPlacement, DrawerSize, DrawerChange, DrawerCloseReason, DrawerDecision,
+    DrawerFooter, DrawerOpenError, DrawerOutcome, DrawerSubmitRequest, DrawerTicket,
+    YueDrawer, YueDrawerEvent, YueDrawerState};
 pub use scrollbar::{ScrollbarVisibility, YueScrollbar};
 pub use tree::{
     TreeApply, TreeChange, TreeChangeSource, TreeCheckMode, TreeCheckProjection, TreeChildren,
@@ -222,6 +226,7 @@ pub use typography::{FontStack, TextRole, TypeStyle, load_fonts, tabular_nums};
 /// Common component types and GPUI composition traits. Import less frequently
 /// used component options explicitly from the crate root.
 pub mod prelude {
+    pub use crate::{YueDrawer, YueDrawerState, DrawerPlacement, DrawerSize};
     pub use crate::{YueDescriptionItem, YueDescriptions};
     pub use crate::{StepsValue, YueStepItem, YueSteps};
     pub use crate::{YueCard, YueCardCover, YueCardFooter, YueCardHeader, YueCardMeta};
