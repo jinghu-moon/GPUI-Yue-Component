@@ -141,4 +141,103 @@ mod tests {
             gpui_kit::ScaledPixels(100. * scale)
         );
     }
+
+    /// Real Showcase pages, real wheel dispatch, full draw and effect draining.
+    /// Opt-in CPU probe; no native GPU/presentation or input latency claim.
+    #[gpui_kit::test]
+    #[ignore = "opt-in shared scroll pipeline; prebuild before sampling"]
+    fn shared_pages_wheel_sample(cx: &mut TestAppContext) {
+        use crate::{Showcase, ShowcasePage};
+        use gpui_kit::{InputEvent as _, ScrollDelta, ScrollWheelEvent, TouchPhase};
+        use std::time::Instant;
+        let case = std::env::var("YUE_SCROLL_CASE").unwrap();
+        let page = match case.as_str() {
+            "button" => ShowcasePage::Button,
+            "table" => ShowcasePage::Table,
+            "list" => ShowcasePage::List,
+            _ => panic!("unknown page"),
+        };
+        cx.update(|cx| {
+            yue_component::init(
+                cx,
+                yue_component::YueTheme::new(
+                    yue_component::ThemeMode::Light,
+                    yue_component::Accent::Azure,
+                ),
+            )
+            .unwrap();
+            cx.set_reduce_motion(true);
+        });
+        let (showcase, cx) = cx.add_window_view(Showcase::new);
+        cx.update(|w, _| {
+            w.activate_window();
+            w.resize(gpui_kit::size(px(1280.), px(800.)));
+            w.set_rem_size(px(16.));
+        });
+        showcase.update(cx, |s, cx| {
+            s.page = page;
+            cx.notify();
+        });
+        cx.update(|w, cx| {
+            w.refresh();
+            w.draw(cx).clear(cx);
+        });
+        cx.run_until_parked();
+        let marker = match case.as_str() {
+            "button" => "button-text",
+            "table" => "table-size",
+            _ => "list-view-lin",
+        };
+        let marker_y = |cx: &mut gpui_kit::VisualTestContext| {
+            cx.update(|w, _| {
+                gpui_kit::base::test_support::snapshots(w)
+                    .into_iter()
+                    .find(|n| n.path().last() == Some(&gpui_kit::ElementId::from(marker)))
+                    .map(|n| f32::from(n.bounds().top()))
+            })
+        };
+        let initial = marker_y(cx).expect("real page control is mounted");
+        let step = |frame: usize, cx: &mut gpui_kit::VisualTestContext| {
+            let ns = cx.update(|w, cx| {
+                let start = Instant::now();
+                w.dispatch_event(
+                    ScrollWheelEvent {
+                        position: point(px(1200.), px(110.)),
+                        delta: ScrollDelta::Pixels(point(
+                            px(0.),
+                            px(if frame % 80 < 40 { -12. } else { 12. }),
+                        )),
+                        modifiers: Default::default(),
+                        touch_phase: TouchPhase::Moved,
+                    }
+                    .to_platform_input(),
+                    cx,
+                );
+                w.draw(cx).clear(cx);
+                start.elapsed().as_nanos()
+            });
+            cx.run_until_parked();
+            ns
+        };
+        step(0, cx);
+        let moved = marker_y(cx).expect("page control still measured after wheel");
+        assert!(
+            moved < initial - 1.,
+            "wheel must move real page content: {initial} -> {moved}"
+        );
+        for frame in 1..80 {
+            step(frame, cx);
+        }
+        for frame in 0..240 {
+            let ns = step(frame, cx);
+            let quads = cx.update(|w, _| w.painted_quads().len());
+            assert!(ns > 0 && quads > 0);
+            println!("SCROLL_FRAME,case={case},frame={frame},ns={ns},quads={quads}");
+        }
+        let final_y = marker_y(cx).expect("reversal restores real page control");
+        assert!(
+            (final_y - initial).abs() <= 1.,
+            "forward/reverse input must restore offset"
+        );
+    }
 }
