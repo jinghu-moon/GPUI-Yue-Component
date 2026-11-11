@@ -46,10 +46,18 @@ impl Memory {
         };
         let min = resolve(p.min);
         let max = resolve(p.max);
-        assert!(
-            max >= min,
-            "drawer resize maximum must not be less than minimum"
-        );
+        // A relative maximum can legitimately fall below an absolute minimum
+        // after a small-container resize or a rem change. Cap the effective
+        // minimum to that maximum; reject contradictory absolute limits only.
+        if matches!(
+            (p.min, p.max),
+            (DefiniteLength::Absolute(_), DefiniteLength::Absolute(_))
+        ) {
+            assert!(
+                max >= min,
+                "drawer resize maximum must not be less than minimum"
+            );
+        }
         let max = max.min(axis).max(px(0.));
         let min = min.min(max);
         let initial = p.extent(available, w);
@@ -132,7 +140,6 @@ impl Resolved {
         let captured = self.clone();
         let pointer_focus = focus.clone();
         let weak = state.downgrade();
-        let owner = state.downgrade();
         let appearance = Rc::new(
             move |context: &gpui_kit::base::ResizeHandleContext, _: &mut Window, _: &mut App| {
                 let active = context.state() != ResizeHandleState::Idle || context.is_focused();
@@ -243,7 +250,6 @@ impl Resolved {
                     }
                 });
                 // A dropped declaration has no live capture; weak ownership avoids retaining its session.
-                let _ = &owner;
             },
         )
         .absolute()

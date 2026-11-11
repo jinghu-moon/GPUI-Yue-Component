@@ -230,6 +230,7 @@ struct Entry {
 }
 #[derive(Default)]
 struct RuntimeState {
+    priority_floor: usize,
     entries: HashMap<PopupId, Entry>,
     serial: u64,
     press_routed: bool,
@@ -279,6 +280,10 @@ pub(super) struct RegistrationSpec {
 }
 
 impl PopupRuntime {
+    /// Nonmodal window surfaces reserve paint priority without claiming modal identity.
+    pub(crate) fn set_priority_floor(&self, priority: usize) {
+        self.0.borrow_mut().priority_floor = priority;
+    }
     pub(crate) fn for_window(window: &Window, cx: &mut App) -> Self {
         if cx.try_global::<WindowRuntimes>().is_none() {
             cx.set_global(WindowRuntimes::default());
@@ -384,17 +389,13 @@ impl PopupRuntime {
     }
     pub(crate) fn highest_priority(&self) -> usize {
         let state = self.0.borrow();
+        let floor = state.priority_floor.max(POPUP_PRIORITY);
         state
             .entries
             .iter()
-            .map(|(id, e)| {
-                e.modal
-                    .as_ref()
-                    .map_or(POPUP_PRIORITY, |s| s.priority() + 1)
-                    + depth(&state, id)
-            })
+            .map(|(id, e)| e.modal.as_ref().map_or(floor, |s| s.priority() + 1) + depth(&state, id))
             .max()
-            .unwrap_or(POPUP_PRIORITY)
+            .unwrap_or(floor)
     }
     /// A modal transition ends the previous transient interaction session.
     /// Release registry borrows before invoking potentially reentrant owners.
@@ -610,11 +611,12 @@ impl Registration {
     pub(super) fn priority(&self) -> usize {
         self.runtime.upgrade().map_or(POPUP_PRIORITY, |state| {
             let state = state.borrow();
+            let floor = state.priority_floor.max(POPUP_PRIORITY);
             state
                 .entries
                 .get(&self.id)
                 .and_then(|e| e.modal.as_ref())
-                .map_or(POPUP_PRIORITY, |s| s.priority() + 1)
+                .map_or(floor, |s| s.priority() + 1)
                 + depth(&state, &self.id)
         })
     }

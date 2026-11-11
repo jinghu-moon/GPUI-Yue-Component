@@ -39,6 +39,7 @@ pub(crate) fn init(cx: &mut App) {
 /// ```
 #[derive(IntoElement)]
 pub struct YueDialog {
+    pub(crate) body_renderer: Option<Box<ContentRenderer>>,
     pub(crate) drawer: Option<crate::drawer::Presentation>,
     extra: Option<AnyElement>,
     id: ElementId,
@@ -71,6 +72,7 @@ pub struct YueDialog {
 impl YueDialog {
     pub fn new(id: impl Into<ElementId>, theme: YueTheme, state: &Entity<YueDialogState>) -> Self {
         Self {
+            body_renderer: None,
             drawer: None,
             extra: None,
             id: id.into(),
@@ -231,6 +233,7 @@ impl YueDialog {
         self
     }
 }
+pub(crate) type ContentRenderer = dyn FnOnce(&mut Window, &mut App) -> AnyElement;
 
 impl ParentElement for YueDialog {
     fn extend(&mut self, children: impl IntoIterator<Item = AnyElement>) {

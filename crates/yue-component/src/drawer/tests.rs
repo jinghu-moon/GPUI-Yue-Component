@@ -1,5 +1,5 @@
 use super::*;
-use crate::{Accent, DialogFooter, ThemeMode, YueButton, YueDialog};
+use crate::{Accent, DialogFooter, ThemeMode, YueButton, YueDialog, YueDropdownMenu, YueMenuItem};
 use gpui_base::test_support::{ElementSnapshot, snapshots};
 use gpui_kit::base::{Root, TestSupportExt as _};
 use gpui_kit::{
@@ -16,13 +16,17 @@ struct Demo {
     child: Entity<YueDrawerState>,
     placement: DrawerPlacement,
     size: DrawerSize,
+    extent: Option<DefiniteLength>,
     modal: bool,
     resizable: bool,
+    relative_limit: bool,
     mask: bool,
     veto: bool,
     pending: bool,
     mounted: bool,
     background: usize,
+    inside_activations: usize,
+    wheels: usize,
     trigger: FocusHandle,
     inner: FocusHandle,
     ticket: Rc<RefCell<Option<DrawerTicket>>>,
@@ -32,6 +36,7 @@ impl Render for Demo {
         let state = self.state.clone();
         let mut root = div()
             .size_full()
+            .on_scroll_wheel(cx.listener(|s, _, _, _| s.wheels += 1))
             .child(
                 YueButton::text("open", theme(), "Open")
                     .track_focus(&self.trigger)
@@ -55,9 +60,17 @@ impl Render for Demo {
                         .title("Details")
                         .placement(self.placement)
                         .size(self.size)
+                        .extent(self.extent.unwrap_or_else(|| self.size.length()))
                         .modal(self.modal)
                         .resizable(self.resizable)
-                        .resize_limits(gpui_kit::rems(10.), px(600.))
+                        .resize_limits(
+                            gpui_kit::rems(10.),
+                            if self.relative_limit {
+                                DefiniteLength::Fraction(0.85)
+                            } else {
+                                px(600.).into()
+                            },
+                        )
                         .overlay(self.mask)
                         .on_close_request(move |_, _, _| !veto)
                         .on_confirm(move |r, _, _| {
@@ -69,7 +82,9 @@ impl Render for Demo {
                             }
                         })
                         .child(
-                            YueButton::text("inside", theme(), "Inside").track_focus(&self.inner),
+                            YueButton::text("inside", theme(), "Inside")
+                                .track_focus(&self.inner)
+                                .on_click(cx.listener(|s, _, _, _| s.inside_activations += 1)),
                         )
                         .child(YueButton::text("nested", theme(), "Nested").on_click(
                             move |_, w, cx| {
@@ -78,6 +93,15 @@ impl Render for Demo {
                                     .unwrap();
                             },
                         ))
+                        .child(
+                            YueDropdownMenu::new(
+                                "drawer-menu",
+                                theme(),
+                                YueButton::text("drawer-menu-trigger", theme(), "Options"),
+                            )
+                            .label("Drawer choices")
+                            .items([YueMenuItem::new("First choice")]),
+                        )
                         .children((0usize..60).map(|ix| {
                             div()
                                 .id(("line", ix))
@@ -111,13 +135,17 @@ fn setup(cx: &mut TestAppContext) -> (Entity<Demo>, &mut VisualTestContext) {
             child: cx.new(YueDrawerState::new),
             placement: DrawerPlacement::Right,
             size: DrawerSize::Small,
+            extent: None,
             modal: true,
             resizable: false,
+            relative_limit: false,
             mask: true,
             veto: false,
             pending: false,
             mounted: true,
             background: 0,
+            inside_activations: 0,
+            wheels: 0,
             trigger: cx.focus_handle(),
             inner: cx.focus_handle(),
             ticket: Rc::default(),
@@ -539,4 +567,236 @@ fn local_host_stays_in_its_bounds_and_pushes_each_edge(cx: &mut TestAppContext) 
 }
 fn size_2(w: Pixels, h: Pixels) -> Size<Pixels> {
     gpui_kit::size(w, h)
+}
+
+struct LazyDemo {
+    state: Entity<YueDrawerState>,
+    calls: Rc<std::cell::Cell<usize>>,
+}
+impl Render for LazyDemo {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        let calls = self.calls.clone();
+        YueDrawer::new("lazy", theme(), &self.state)
+            .title("Lazy body")
+            .content(move |_, _| {
+                calls.set(calls.get() + 1);
+                div().child("Expensive body").into_any_element()
+            })
+    }
+}
+#[gpui_kit::test]
+fn lazy_body_has_no_closed_render_work(cx: &mut TestAppContext) {
+    cx.update(|cx| {
+        gpui_kit::init(cx);
+        crate::popup::init(cx);
+        crate::dialog::init(cx);
+        crate::set_theme(cx, theme());
+        cx.set_reduce_motion(true);
+    });
+    let calls = Rc::new(std::cell::Cell::new(0));
+    let mut saved = None;
+    let (_, cx) = cx.add_window_view(|w, cx| {
+        let view = cx.new(|cx| LazyDemo {
+            state: cx.new(YueDrawerState::new),
+            calls: calls.clone(),
+        });
+        saved = Some(view.clone());
+        Root::new(view, w, cx)
+    });
+    draw(cx);
+    draw(cx);
+    assert_eq!(calls.get(), 0);
+    let state = saved.unwrap().read_with(cx, |s, _| s.state.clone());
+    cx.update(|w, cx| state.update(cx, |s, cx| s.open(w, cx)).unwrap());
+    draw(cx);
+    draw(cx);
+    assert!(calls.get() > 0);
+    cx.update(|w, cx| state.update(cx, |s, cx| s.close(w, cx)));
+    draw(cx);
+    draw(cx);
+    let closed = calls.get();
+    for _ in 0..10 {
+        cx.update(|w, _| w.refresh());
+        draw(cx);
+    }
+    assert_eq!(
+        calls.get(),
+        closed,
+        "closed declarations must not run expensive content builders"
+    );
+}
+
+#[gpui_kit::test]
+fn nonmodal_wheel_only_blocks_events_inside_the_panel(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.modal = false);
+    click(cx, "Open");
+    draw(cx);
+    let wheel = |cx: &mut VisualTestContext, position| {
+        cx.simulate_event(gpui_kit::ScrollWheelEvent {
+            position,
+            delta: gpui_kit::ScrollDelta::Pixels(point(px(0.), px(-300.))),
+            touch_phase: gpui_kit::TouchPhase::Moved,
+            ..Default::default()
+        });
+        draw(cx);
+    };
+    wheel(cx, point(px(10.), px(500.)));
+    assert_eq!(v.read_with(cx, |s, _| s.wheels), 1);
+    let inside = part(cx, "dialog-body").center();
+    wheel(cx, inside);
+    assert_eq!(v.read_with(cx, |s, _| s.wheels), 1);
+}
+#[gpui_kit::test]
+fn resize_keys_follow_main_axis_and_placement_on_all_edges(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    for (placement, key) in [
+        (DrawerPlacement::Left, "right"),
+        (DrawerPlacement::Right, "left"),
+        (DrawerPlacement::Top, "down"),
+        (DrawerPlacement::Bottom, "up"),
+    ] {
+        edit(&v, cx, |s| {
+            s.placement = placement;
+            s.resizable = true;
+        });
+        click(cx, "Open");
+        draw(cx);
+        click(cx, "Adjust drawer size");
+        press(cx, "home");
+        let measure = |cx: &mut VisualTestContext| {
+            let b = node(cx, "Details").bounds();
+            if placement.horizontal() {
+                b.size.width
+            } else {
+                b.size.height
+            }
+        };
+        assert_eq!(measure(cx), px(160.));
+        press(cx, key);
+        assert!(measure(cx) > px(160.));
+        press(cx, "end");
+        assert!(measure(cx) <= px(600.));
+        press(cx, "escape");
+        draw(cx);
+    }
+}
+
+#[gpui_kit::test]
+fn short_top_drawer_scrolls_the_shell_using_its_actual_height(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| {
+        s.placement = DrawerPlacement::Top;
+        s.extent = Some(px(100.).into());
+    });
+    click(cx, "Open");
+    draw(cx);
+    let height = node(cx, "Details").bounds().size.height;
+    assert_eq!(height, px(100.));
+    let center = part(cx, "dialog-shell").center();
+    cx.simulate_event(gpui_kit::ScrollWheelEvent {
+        position: center,
+        delta: gpui_kit::ScrollDelta::Pixels(point(px(0.), px(-10000.))),
+        touch_phase: gpui_kit::TouchPhase::Moved,
+        ..Default::default()
+    });
+    draw(cx);
+    let footer = part(cx, "dialog-footer");
+    assert!(
+        footer.bottom() <= height && footer.top() >= px(0.),
+        "unreachable footer {footer:?}"
+    );
+}
+
+#[gpui_kit::test]
+fn popup_above_nonmodal_drawer_activates_and_escapes_before_its_owner(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.modal = false);
+    click(cx, "Open");
+    draw(cx);
+    click(cx, "Options");
+    draw(cx);
+    assert!(node(cx, "First choice").visible());
+    press(cx, "escape");
+    draw(cx);
+    assert!(state(&v, cx).read_with(cx, |s, _| s.is_open()));
+    assert!(!cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("First choice"))
+    }));
+    click(cx, "Options");
+    draw(cx);
+    click(cx, "First choice");
+    draw(cx);
+    assert!(!cx.update(|w, _| {
+        snapshots(w)
+            .iter()
+            .any(|n| n.label() == Some("First choice"))
+    }));
+    assert!(state(&v, cx).read_with(cx, |s, _| s.is_open()));
+}
+
+#[gpui_kit::test]
+fn nonmodal_exit_keeps_chain_ownership_until_settled(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.modal = false);
+    click(cx, "Open");
+    draw(cx);
+    let child = v.read_with(cx, |s, _| s.child.clone());
+    assert_eq!(
+        cx.update(|w, cx| child.update(cx, |s, cx| s.open(w, cx))),
+        Err(DrawerOpenError::Occupied)
+    );
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    let parent = state(&v, cx);
+    cx.update(|w, cx| parent.update(cx, |s, cx| s.close(w, cx)));
+    draw(cx);
+    assert_eq!(
+        cx.update(|w, cx| child.update(cx, |s, cx| s.open(w, cx))),
+        Err(DrawerOpenError::Occupied)
+    );
+    cx.executor()
+        .advance_clock(std::time::Duration::from_millis(400));
+    draw(cx);
+    draw(cx);
+    assert!(
+        cx.update(|w, cx| child.update(cx, |s, cx| s.open(w, cx)))
+            .is_ok()
+    );
+}
+
+#[gpui_kit::test]
+fn relative_resize_maximum_caps_minimum_in_small_containers_and_large_rem(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| {
+        s.resizable = true;
+        s.relative_limit = true;
+    });
+    cx.simulate_resize(size(px(180.), px(600.)));
+    cx.update(|w, _| w.set_rem_size(px(24.)));
+    draw(cx);
+    click(cx, "Open");
+    draw(cx);
+    let width = node(cx, "Details").bounds().size.width;
+    assert!((width - px(153.)).abs() < px(0.1), "{width:?}");
+    cx.simulate_resize(size(px(1000.), px(600.)));
+    draw(cx);
+    assert_eq!(node(cx, "Details").bounds().size.width, px(480.));
+}
+
+#[gpui_kit::test]
+fn nonmodal_exit_blocks_its_own_commands_without_blocking_background(cx: &mut TestAppContext) {
+    let (v, cx) = setup(cx);
+    edit(&v, cx, |s| s.modal = false);
+    click(cx, "Open");
+    draw(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(false));
+    let parent = state(&v, cx);
+    cx.update(|w, cx| parent.update(cx, |s, cx| s.close(w, cx)));
+    draw(cx);
+    click(cx, "Inside");
+    assert_eq!(v.read_with(cx, |s, _| s.inside_activations), 0);
+    click(cx, "Background");
+    assert_eq!(v.read_with(cx, |s, _| s.background), 1);
 }

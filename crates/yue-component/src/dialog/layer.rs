@@ -47,9 +47,7 @@ impl DialogLayer {
             if !self.is_top(parent) {
                 return Err(DialogOpenError::InvalidParent);
             }
-        } else if !self.stack.is_empty()
-            && (!entry.modal || self.stack.iter().any(|entry| entry.modal))
-        {
+        } else if !self.stack.is_empty() {
             return Err(DialogOpenError::Occupied);
         }
         self.stack.push(entry);
@@ -79,6 +77,10 @@ impl DialogLayer {
         self.sync(w, cx);
     }
     fn sync(&self, w: &mut Window, cx: &mut App) {
+        self.sync_scope(w, cx);
+        w.refresh();
+    }
+    fn sync_scope(&self, w: &Window, cx: &mut App) {
         set_active_modal_scope(
             self.stack
                 .iter()
@@ -88,7 +90,14 @@ impl DialogLayer {
             w,
             cx,
         );
-        w.refresh();
+        crate::popup::PopupRuntime::for_window(w, cx).set_priority_floor(
+            self.stack
+                .iter()
+                .filter(|entry| !entry.modal)
+                .map(|entry| entry.scope.priority() + 1)
+                .max()
+                .unwrap_or(0),
+        );
     }
 }
 impl Render for DialogLayer {
@@ -106,15 +115,7 @@ impl RootPlugin for DialogLayer {
             let id = self.stack[ix].scope.owner();
             self.retire(id, w, cx);
         }
-        set_active_modal_scope(
-            self.stack
-                .iter()
-                .rev()
-                .find(|e| e.modal)
-                .map(|e| e.scope.clone()),
-            w,
-            cx,
-        );
+        self.sync_scope(w, cx);
     }
     fn decorate(
         &self,

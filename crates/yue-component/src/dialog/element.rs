@@ -157,7 +157,17 @@ impl RenderOnce for YueDialog {
                 )
             });
         let max_width = (viewport.width - margin * 2.).max(px(0.));
-        let max_height = (viewport.height - margin * 2.).max(px(0.));
+        let surface_height = self.drawer.as_ref().zip(resize.as_ref()).map_or(
+            viewport.height,
+            |(drawer, resize)| {
+                if drawer.placement.horizontal() {
+                    viewport.height
+                } else {
+                    resize.extent
+                }
+            },
+        );
+        let max_height = (surface_height - margin * 2.).max(px(0.));
         let minimum_chrome = rems(theme, keys::DIALOG_PADDING).to_pixels(w.rem_size()) * 2.
             + rems(theme, keys::DIALOG_HEADER_HEIGHT).to_pixels(w.rem_size())
             + rems(theme, keys::BUTTON_HEIGHT_MD).to_pixels(w.rem_size())
@@ -269,6 +279,9 @@ impl RenderOnce for YueDialog {
             );
         }
         body = body.children(self.children);
+        if let Some(render) = self.body_renderer {
+            body = body.child(render(w, cx));
+        }
         if shell_scroll {
             body = body.flex_shrink_0();
         }
@@ -349,6 +362,7 @@ impl RenderOnce for YueDialog {
         // content, so scrolling cannot feed back into drag constraints.
         let contents = div()
             .id("dialog-shell")
+            .test_support()
             .min_w_0()
             .min_h_0()
             .flex_shrink(1.)
@@ -357,7 +371,10 @@ impl RenderOnce for YueDialog {
             .gap(rems(theme, keys::DIALOG_SECTION_PADDING))
             .p(pad)
             .when(is_drawer, |d| d.size_full())
-            .when(shell_scroll, |d| d.overflow_y_scroll())
+            .when(shell_scroll, |d| {
+                d.overflow_y_scroll()
+                    .when(is_drawer, |d| d.track_scroll(&scroll))
+            })
             .when(show_header, |d| d.child(header))
             .child(body)
             .when(has_footer, |d| d.child(footer));
@@ -413,10 +430,17 @@ impl RenderOnce for YueDialog {
                         .opacity(1.)
                 })
                 .occlude()
+                .when(!modal && (!open || !top), |d| {
+                    d.capture_any_mouse_down(|_, _, cx| cx.stop_propagation())
+                        .capture_key_down(|_, _, cx| cx.stop_propagation())
+                })
+                .when(is_drawer, |d| {
+                    d.on_scroll_wheel(|_, _, cx| cx.stop_propagation())
+                })
                 .child(contents)
                 .children(resize_controls)
                 .when(!is_drawer, |d| d.child(capture))
-                .when(is_drawer && !shell_scroll, |d| {
+                .when(is_drawer, |d| {
                     d.child(crate::YueScrollbar::vertical("drawer-scrollbar", &scroll).theme(theme))
                 })
                 .when(

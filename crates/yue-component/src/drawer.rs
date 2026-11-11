@@ -129,6 +129,15 @@ impl YueDrawer {
             },
         }
     }
+    /// Build expensive body content only while present, including its exit.
+    /// This appends to children; it does not create or retain business entities.
+    pub fn content(
+        mut self,
+        render: impl FnOnce(&mut Window, &mut App) -> AnyElement + 'static,
+    ) -> Self {
+        self.inner.body_renderer = Some(Box::new(render));
+        self
+    }
     pub fn placement(mut self, value: DrawerPlacement) -> Self {
         self.presentation.placement = value;
         self
