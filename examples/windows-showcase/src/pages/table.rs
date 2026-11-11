@@ -1,7 +1,11 @@
+#[path = "table/basic.rs"]
+mod basic;
 #[path = "table/configuration.rs"]
 mod configuration;
 #[path = "table/customization.rs"]
 mod customization;
+#[path = "table/playground.rs"]
+mod playground;
 #[path = "table/temporal.rs"]
 mod temporal;
 use crate::scroll::ScrollableElement as _;
@@ -21,8 +25,8 @@ use std::rc::Rc;
 use yue_component::{
     AvatarSize, TableAlign, TableBorders, TableColumn, TableDelegate, TableEvent, TableLoadState,
     TableRenderMode, TableRowKey, TableRows, TableSelectionMode, TableSize, TableSource,
-    TableTextOverflow, TableView, TagTone, YueAvatar, YueButton, YueCard, YueCardHeader, YueTable,
-    YueTableState, YueTag,
+    TableTextOverflow, TableView, TabsChangeRequest, TagTone, YueAvatar, YueButton, YueCard,
+    YueCardHeader, YueTabItem, YueTable, YueTableState, YueTabs, YueTag,
 };
 
 struct Order {
@@ -37,30 +41,6 @@ impl TableDelegate for Orders {
     type Source = TableRows<Order>;
 }
 
-pub(crate) struct TablePage {
-    delegate: Entity<Orders>,
-    table: Entity<YueTableState<Orders>>,
-    layout: Entity<YueTableState<Orders>>,
-    large: Option<Entity<YueTableState<Orders>>>,
-    queries: Option<(Entity<query::QueryExample>, Entity<query::QueryExample>)>,
-    structure: Option<Entity<structure::StructureExample>>,
-    editing: Option<Entity<editing::EditingExample>>,
-    temporal: Option<Entity<temporal::TemporalExample>>,
-    advanced: Option<Entity<advanced::AdvancedExample>>,
-    customization: Option<Entity<customization::CustomizationExample>>,
-    size: TableSize,
-    borders: TableBorders,
-    striped: bool,
-    advanced_layout: bool,
-    grouped: bool,
-    show_done: bool,
-    static_mode: bool,
-    narrow: bool,
-    reversed: bool,
-    revision: u64,
-    subscriptions: Vec<Subscription>,
-    message: SharedString,
-}
 fn records(count: usize, revision: u64, reverse: bool) -> Rc<TableRows<Order>> {
     let mut records: Vec<_> = (0..count)
         .map(|i| Order {
@@ -150,632 +130,151 @@ fn columns(wrap: bool) -> Rc<[TableColumn<Order>]> {
     ]
     .into()
 }
+/// Retains ordinary example state; Tabs mounts only the selected panel.
+pub(crate) struct TablePage {
+    selected: SharedString,
+    basic: Entity<basic::BasicExamples>,
+    playground: Option<Entity<playground::Playground>>,
+    local: Option<Entity<query::QueryExample>>,
+    remote: Option<Entity<query::QueryExample>>,
+    structure: Option<Entity<structure::StructureExample>>,
+    editing: Option<Entity<editing::EditingExample>>,
+    temporal: Option<Entity<temporal::TemporalExample>>,
+    advanced: Option<Entity<advanced::AdvancedExample>>,
+    customization: Option<Entity<customization::CustomizationExample>>,
+}
+
 impl TablePage {
     pub(crate) fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
-        let delegate = cx.new(|_| Orders);
-        let table = cx.new(|cx| YueTableState::new(&delegate, cx));
-        let layout = cx.new(|cx| YueTableState::new(&delegate, cx));
-        table.update(cx, |s, cx| {
-            s.commit_view(
-                TableView::new(records(40, 1, false), columns(false))
-                    .selection_mode(TableSelectionMode::Multiple)
-                    .disabled_rows([TableRowKey::try_new("order-1").unwrap()]),
-                None,
-                cx,
-            )
-            .unwrap()
-        });
-        layout.update(cx, |s, cx| {
-            s.commit_view(
-                TableView::new(records(4, 1, false), columns(true)),
-                None,
-                cx,
-            )
-            .unwrap()
-        });
-        let subscription = cx.subscribe(&table, |page, table, event: &TableEvent, cx| {
-            if let TableEvent::ColumnResizeRequested(request) = event {
-                let view = table.read(cx).view().unwrap().clone();
-                table.update(cx, |s, cx| {
-                    if let Err(error) = request
-                        .apply_to(&view)
-                        .and_then(|v| s.commit_view(v, Some(request.id()), cx))
-                    {
-                        let _ = s.reject_request(request.id(), cx);
-                        page.message = format!("列宽未修改：{error}").into();
-                    }
-                });
-                cx.notify();
-            }
-            if let TableEvent::SelectionRequested(request) = event {
-                let accepted = table.read(cx).view().unwrap().clone();
-                let next = request.apply_to(&accepted);
-                table.update(cx, |s, cx| {
-                    match next.and_then(|next| s.commit_view(next, Some(request.id()), cx)) {
-                        Ok(_) => {
-                            page.message =
-                                format!("已选择 {} 条工单", s.view().unwrap().selected_keys().len())
-                                    .into()
-                        }
-                        Err(error) => {
-                            let _ = s.reject_request(request.id(), cx);
-                            page.message = error.to_string().into();
-                        }
-                    }
-                });
-                cx.notify();
-            }
-        });
         Self {
-            delegate,
-            table,
-            layout,
-            large: None,
-            queries: None,
+            selected: "basic".into(),
+            basic: cx.new(basic::BasicExamples::new),
+            playground: None,
+            local: None,
+            remote: None,
             structure: None,
             editing: None,
             temporal: None,
             advanced: None,
             customization: None,
-            size: TableSize::Medium,
-            borders: TableBorders::Rows,
-            striped: false,
-            advanced_layout: false,
-            grouped: false,
-            show_done: true,
-            static_mode: false,
-            narrow: false,
-            reversed: false,
-            revision: 1,
-            subscriptions: vec![subscription],
-            message:
-                "方向键导航；空格选择，Shift 扩选，Ctrl+A 全选。Enter／F2 进入操作，Escape 返回。"
-                    .into(),
         }
     }
-    fn large(&mut self, cx: &mut Context<Self>) {
-        if self.large.is_some() {
-            self.large = None;
-            cx.notify();
-            return;
+
+    fn select(&mut self, key: &SharedString, w: &mut Window, cx: &mut Context<Self>) {
+        if key != &self.selected {
+            // Stress fixtures have no unsaved edits. Release them when leaving;
+            // ordinary queries and editor drafts retain their entity identity.
+            self.advanced = None;
+            if let Some(playground) = &self.playground {
+                playground.update(cx, |s, cx| s.release_large(cx));
+            }
         }
-        // TB01 shape: 100,000 rows x 12 ordinary text columns. Prepared only on request.
-        let columns: Vec<_> = (0..12)
-            .map(|i| {
-                TableColumn::text(
-                    format!("field-{i}"),
-                    format!("字段 {}", i + 1),
-                    move |r: &Order| {
-                        if i == 0 {
-                            r.key.clone()
-                        } else {
-                            format!("{} / {}", r.amount, i).into()
-                        }
-                    },
-                )
-                .width(rems(8.))
-            })
-            .collect();
-        let state = cx.new(|cx| YueTableState::new(&self.delegate, cx));
-        state.update(cx, |s, cx| {
-            s.commit_view(
-                TableView::new(records(100_000, 1, false), columns),
-                None,
-                cx,
-            )
-            .unwrap()
-        });
-        self.large = Some(state);
+        match key.as_str() {
+            "basic" => {}
+            "playground" => {
+                self.playground
+                    .get_or_insert_with(|| cx.new(|cx| playground::Playground::new(w, cx)));
+            }
+            "local" => {
+                self.local
+                    .get_or_insert_with(|| cx.new(|cx| query::QueryExample::new(false, w, cx)));
+            }
+            "remote" => {
+                self.remote
+                    .get_or_insert_with(|| cx.new(|cx| query::QueryExample::new(true, w, cx)));
+            }
+            "structure" => {
+                self.structure
+                    .get_or_insert_with(|| cx.new(|cx| structure::StructureExample::new(w, cx)));
+            }
+            "editing" => {
+                self.editing
+                    .get_or_insert_with(|| cx.new(|cx| editing::EditingExample::new(w, cx)));
+            }
+            "temporal" => {
+                self.temporal
+                    .get_or_insert_with(|| cx.new(|cx| temporal::TemporalExample::new(w, cx)));
+            }
+            "advanced" => {
+                self.advanced
+                    .get_or_insert_with(|| cx.new(advanced::AdvancedExample::new));
+            }
+            "customization" => {
+                self.customization
+                    .get_or_insert_with(|| cx.new(customization::CustomizationExample::new));
+            }
+            _ => return,
+        }
+        self.selected = key.clone();
         cx.notify();
     }
 }
-impl TablePage {
-    fn sync_layout_columns(&mut self, reset: bool, cx: &mut Context<Self>) {
-        let current = self.table.read(cx).view().unwrap().clone();
-        let mut next = if reset {
-            columns(false).to_vec()
-        } else {
-            current.columns().to_vec()
-        };
-        for c in &mut next {
-            let key = c.key().as_str().to_owned();
-            let pin = if self.advanced_layout {
-                match key.as_str() {
-                    "number" => yue_component::TablePin::Start,
-                    "action" => yue_component::TablePin::End,
-                    _ => yue_component::TablePin::None,
-                }
-            } else {
-                yue_component::TablePin::None
-            };
-            *c = c
-                .clone()
-                .pin(pin)
-                .resizable(self.advanced_layout)
-                .min_width(rems(5.))
-                .max_width(rems(30.));
-            if reset && self.advanced_layout && key == "note" {
-                *c = c.clone().min_width(rems(12.)).flex(1.);
+
+fn example_tab<V: Render>(
+    key: &'static str,
+    label: &'static str,
+    description: &'static str,
+    view: Option<Entity<V>>,
+) -> YueTabItem {
+    YueTabItem::new(key, label)
+        .panel_tab_stop(false)
+        .content(move |_, _| {
+            let mut body = div()
+                .p_6()
+                .w_full()
+                .min_w_0()
+                .flex()
+                .flex_col()
+                .gap_5()
+                .child(div().text_xl().child(label))
+                .child(description);
+            if let Some(view) = &view {
+                body = body.child(view.clone());
             }
-            if key == "done" {
-                *c = c.clone().visible(self.show_done).responsive_priority(10);
-            }
-            let path = if self.grouped {
-                match key.as_str() {
-                    "owner" | "note" => {
-                        vec![yue_component::TableHeaderGroup::new("details", "工单信息")]
-                    }
-                    "amount" | "status" | "done" => vec![yue_component::TableHeaderGroup::new(
-                        "progress",
-                        "金额与进度",
-                    )],
-                    _ => vec![],
-                }
-            } else {
-                vec![]
-            };
-            *c = c.clone().header_path(path);
-        }
-        self.table.update(cx, |s, cx| {
-            s.commit_view(current.as_ref().clone().with_columns(next), None, cx)
-                .unwrap()
-        });
-        cx.notify();
-    }
+            div()
+                .id((gpui_kit::ElementId::from("table-section"), key))
+                .size_full()
+                .min_w_0()
+                .min_h_0()
+                .child(body)
+                .overflow_y_scrollbar()
+                .into_any_element()
+        })
 }
+
 impl Render for TablePage {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let _ = &self.subscriptions;
-        let controls = div()
-            .flex()
-            .flex_wrap()
-            .gap_2()
-            .child(
-                YueButton::new("table-size", format!("密度：{:?}", self.size)).on_click(
-                    cx.listener(|s, _, _, cx| {
-                        s.size = match s.size {
-                            TableSize::Small => TableSize::Medium,
-                            TableSize::Medium => TableSize::Large,
-                            TableSize::Large => TableSize::Small,
-                        };
-                        cx.notify();
-                    }),
-                ),
-            )
-            .child(
-                YueButton::new("table-borders", format!("边框：{:?}", self.borders)).on_click(
-                    cx.listener(|s, _, _, cx| {
-                        s.borders = match s.borders {
-                            TableBorders::None => TableBorders::Rows,
-                            TableBorders::Rows => TableBorders::Grid,
-                            TableBorders::Grid => TableBorders::None,
-                        };
-                        cx.notify();
-                    }),
-                ),
-            )
-            .child(
-                YueButton::new("table-stripes", "切换斑马纹").on_click(cx.listener(
-                    |s, _, _, cx| {
-                        s.striped = !s.striped;
-                        cx.notify();
-                    },
-                )),
-            )
-            .child(
-                YueButton::new("table-narrow", "切换窄容器").on_click(cx.listener(
-                    |s, _, _, cx| {
-                        s.narrow = !s.narrow;
-                        cx.notify();
-                    },
-                )),
-            )
-            .child(
-                YueButton::new(
-                    "table-mode",
-                    if self.static_mode {
-                        "切换虚拟视口"
-                    } else {
-                        "切换自然高度"
-                    },
-                )
-                .on_click(cx.listener(|s, _, _, cx| {
-                    s.static_mode = !s.static_mode;
-                    cx.notify();
-                })),
-            )
-            .child(
-                YueButton::new("table-single", "切换单选／多选").on_click(cx.listener(
-                    |s, _, _, cx| {
-                        s.table.update(cx, |state, cx| {
-                            let view = state.view().unwrap().as_ref().clone();
-                            let next = if view.selection_kind() == TableSelectionMode::Single {
-                                TableSelectionMode::Multiple
-                            } else {
-                                TableSelectionMode::Single
-                            };
-                            state
-                                .commit_view(view.selection([]).selection_mode(next), None, cx)
-                                .unwrap();
-                            s.message = if next == TableSelectionMode::Single {
-                                "单选"
-                            } else {
-                                "多选"
-                            }
-                            .into();
-                        });
-                        cx.notify();
-                    },
-                )),
-            )
-            .child(
-                YueButton::new("table-reverse", "反转数据顺序").on_click(cx.listener(
-                    |s, _, _, cx| {
-                        s.reversed = !s.reversed;
-                        s.revision += 1;
-                        s.table.update(cx, |state, cx| {
-                            let old = state.view().unwrap();
-                            let candidate = TableView::new(
-                                records(40, s.revision, s.reversed),
-                                old.shared_columns().clone(),
-                            )
-                            .selection_mode(TableSelectionMode::Multiple)
-                            .selection(old.selected_keys().iter().cloned());
-                            state.commit_view(candidate, None, cx).unwrap();
-                        });
-                        cx.notify();
-                    },
-                )),
-            );
-        let states = div()
-            .flex()
-            .flex_wrap()
-            .gap_2()
-            .children(
-                [
-                    ("table-ready", "显示数据", TableLoadState::Ready),
-                    ("table-refresh", "保留结果刷新", TableLoadState::Refreshing),
-                    (
-                        "table-fail",
-                        "模拟失败",
-                        TableLoadState::Failed("刷新失败；当前工单仍可查看，请重试。".into()),
-                    ),
-                ]
-                .into_iter()
-                .map(|(id, label, load)| {
-                    YueButton::new(id, label).on_click(cx.listener(move |s, _, _, cx| {
-                        s.table.update(cx, |state, cx| {
-                            let view = state
-                                .view()
-                                .unwrap()
-                                .as_ref()
-                                .clone()
-                                .load_state(load.clone());
-                            state.commit_view(view, None, cx).unwrap();
-                        });
-                        cx.notify();
-                    }))
-                }),
-            )
-            .child(
-                YueButton::new("table-initial", "初次加载").on_click(cx.listener(|s, _, _, cx| {
-                    s.revision += 1;
-                    s.table.update(cx, |state, cx| {
-                        let cols = state.view().unwrap().shared_columns().clone();
-                        state
-                            .commit_view(
-                                TableView::new(records(0, s.revision, false), cols)
-                                    .load_state(TableLoadState::Loading),
-                                None,
-                                cx,
-                            )
-                            .unwrap();
-                    });
-                    cx.notify();
-                })),
-            )
-            .child(
-                YueButton::new("table-empty", "清空／恢复").on_click(cx.listener(|s, _, _, cx| {
-                    s.revision += 1;
-                    s.table.update(cx, |state, cx| {
-                        let old = state.view().unwrap();
-                        let count = if old.source().is_empty() { 40 } else { 0 };
-                        let view = TableView::new(
-                            records(count, s.revision, false),
-                            old.shared_columns().clone(),
-                        )
-                        .selection_mode(TableSelectionMode::Multiple);
-                        state.commit_view(view, None, cx).unwrap();
-                    });
-                    cx.notify();
-                })),
-            )
-            .child(
-                YueButton::new(
-                    "table-large",
-                    if self.large.is_some() {
-                        "卸载大数据示例"
-                    } else {
-                        "加载 10 万行 × 12 列"
-                    },
-                )
-                .on_click(cx.listener(|s, _, _, cx| s.large(cx))),
-            );
-        let mut content = div()
-            .p_6()
-            .w_full()
-            .min_w_0()
-            .flex()
-            .flex_col()
-            .gap_5()
-            .child(div().text_2xl().child("Table 表格"))
-            .child("同类记录的字段比较；滚动、选择与数据更新保留稳定身份。")
-            .child(controls)
-            .child(states)
-            .child(
-                div()
-                    .flex()
-                    .flex_wrap()
-                    .gap_2()
-                    .child(
-                        YueButton::new(
-                            "table-advanced-layout",
-                            if self.advanced_layout {
-                                "还原默认布局"
-                            } else {
-                                "演示固定与伸缩布局"
-                            },
-                        )
-                        .on_click(cx.listener(|s, _, _, cx| {
-                            s.advanced_layout = !s.advanced_layout;
-                            s.static_mode = false;
-                            s.sync_layout_columns(true, cx);
-                        })),
-                    )
-                    .child(
-                        YueButton::new(
-                            "table-grouped",
-                            if self.grouped {
-                                "取消分组表头"
-                            } else {
-                                "分组表头"
-                            },
-                        )
-                        .on_click(cx.listener(|s, _, _, cx| {
-                            s.grouped = !s.grouped;
-                            s.sync_layout_columns(false, cx);
-                        })),
-                    )
-                    .child(
-                        YueButton::new(
-                            "table-column-visibility",
-                            if self.show_done {
-                                "隐藏核验列"
-                            } else {
-                                "显示核验列"
-                            },
-                        )
-                        .on_click(cx.listener(|s, _, _, cx| {
-                            s.show_done = !s.show_done;
-                            s.sync_layout_columns(false, cx);
-                        })),
-                    ),
-            )
-            .child(div().id("table-message").child(self.message.clone()))
-            .child(
-                div()
-                    .w(if self.narrow { rems(28.) } else { rems(76.) })
-                    .max_w_full()
-                    .child(
-                        YueCard::new("table-orders-card")
-                            .header(YueCardHeader::new("工单"))
-                            .body_inset(false)
-                            .child(
-                                YueTable::new("orders-table", &self.table)
-                                    .accessibility_label("工单列表")
-                                    .size(self.size)
-                                    .borders(self.borders)
-                                    .striped(self.striped)
-                                    .height(rems(22.))
-                                    .frozen_rows(
-                                        usize::from(self.advanced_layout),
-                                        usize::from(self.advanced_layout),
-                                    )
-                                    .footer_fixed(self.advanced_layout)
-                                    .render_mode(if self.static_mode && !self.advanced_layout {
-                                        TableRenderMode::Static
-                                    } else {
-                                        TableRenderMode::Rows
-                                    }),
-                            ),
-                    ),
-            )
-            .child(
-                YueCard::new("table-layout-card")
-                    .header(YueCardHeader::new("自然高度与多行对齐"))
-                    .body_inset(false)
-                    .child(
-                        YueTable::new("layout-table", &self.layout)
-                            .accessibility_label("工单内容与状态")
-                            .borders(TableBorders::Grid)
-                            .render_mode(TableRenderMode::Static),
-                    ),
-            );
-        if let Some(large) = &self.large {
-            content = content.child(
-                YueCard::new("table-large-card")
-                    .header(YueCardHeader::new("100,000 行 × 12 列"))
-                    .body_inset(false)
-                    .child(
-                        YueTable::new("large-table", large)
-                            .accessibility_label("大数据工单")
-                            .height(rems(28.)),
-                    ),
-            );
-        }
-        content = content.child(
-            YueButton::new(
-                "table-query-examples",
-                if self.queries.is_some() {
-                    "收起查询示例"
-                } else {
-                    "本地与远程查询示例"
-                },
-            )
-            .on_click(cx.listener(|s, _, w, cx| {
-                s.queries = if s.queries.is_some() {
-                    None
-                } else {
-                    Some((
-                        cx.new(|cx| query::QueryExample::new(false, w, cx)),
-                        cx.new(|cx| query::QueryExample::new(true, w, cx)),
-                    ))
-                };
-                cx.notify();
-            })),
-        );
-        content = content.child(
-            YueButton::new(
-                "table-structure-examples",
-                if self.structure.is_some() {
-                    "收起结构示例"
-                } else {
-                    "树、详情与嵌套子表…"
-                },
-            )
-            .on_click(cx.listener(|s, _, w, cx| {
-                s.structure = if s.structure.is_some() {
-                    None
-                } else {
-                    Some(cx.new(|cx| structure::StructureExample::new(w, cx)))
-                };
-                cx.notify();
-            })),
-        );
-        if let Some(structure) = &self.structure {
-            content = content.child(
-                YueCard::new("table-structure-card")
-                    .header(YueCardHeader::new("树与展开详情"))
-                    .child(structure.clone()),
-            );
-        }
-        content = content.child(
-            YueButton::new(
-                "table-editing-examples",
-                if self.editing.is_some() {
-                    "收起编辑示例"
-                } else {
-                    "单元格与整行编辑…"
-                },
-            )
-            .on_click(cx.listener(|s, _, w, cx| {
-                s.editing = if s.editing.is_some() {
-                    None
-                } else {
-                    Some(cx.new(|cx| editing::EditingExample::new(w, cx)))
-                };
-                s.temporal = if s.editing.is_some() {
-                    Some(cx.new(|cx| temporal::TemporalExample::new(w, cx)))
-                } else {
-                    None
-                };
-                cx.notify();
-            })),
-        );
-        if let Some(editing) = &self.editing {
-            content = content.child(
-                YueCard::new("table-editing-card")
-                    .header(YueCardHeader::new("真实控件编辑与保存"))
-                    .child(editing.clone()),
-            );
-        }
-        if let Some(temporal) = &self.temporal {
-            content = content.child(
-                YueCard::new("table-temporal-card")
-                    .header(YueCardHeader::new("日期与时间编辑"))
-                    .child(temporal.clone()),
-            );
-        }
-        content = content.child(
-            YueButton::new(
-                "advanced-table-toggle",
-                if self.advanced.is_some() {
-                    "收起双轴、合并与范围加载示例"
-                } else {
-                    "双轴、合并、宿主吸顶与范围加载…"
-                },
-            )
-            .on_click(cx.listener(|s, _, _, cx| {
-                s.advanced = if s.advanced.is_some() {
-                    None
-                } else {
-                    Some(cx.new(advanced::AdvancedExample::new))
-                };
-                cx.notify();
-            })),
-        );
-        if let Some(advanced) = &self.advanced {
-            content = content.child(
-                YueCard::new("table-advanced-card")
-                    .header(YueCardHeader::new("高级布局与范围加载"))
-                    .child(advanced.clone()),
-            );
-        }
-        content = content.child(
-            YueButton::new(
-                "table-customization-toggle",
-                if self.customization.is_some() {
-                    "收起重排和列配置"
-                } else {
-                    "重排、列配置与尾游标加载…"
-                },
-            )
-            .on_click(cx.listener(|s, _, _, cx| {
-                s.customization = if s.customization.is_some() {
-                    None
-                } else {
-                    Some(cx.new(customization::CustomizationExample::new))
-                };
-                cx.notify();
-            })),
-        );
-        if let Some(example) = &self.customization {
-            content = content.child(
-                YueCard::new("table-customization-card")
-                    .header(YueCardHeader::new("重排、列设置与尾部追加"))
-                    .child(example.clone()),
-            );
-        }
-        if let Some((local, remote)) = &self.queries {
-            content = content
-                .child(
-                    YueCard::new("table-local-query-card")
-                        .header(YueCardHeader::new("本地查询与跨页选择"))
-                        .child(local.clone()),
-                )
-                .child(
-                    YueCard::new("table-remote-query-card")
-                        .header(YueCardHeader::new("远程查询与过期恢复"))
-                        .child(remote.clone()),
-                );
-        }
-        div()
-            .id("table-content")
-            .debug_selector(|| "table-content".into())
-            .size_full()
-            .min_w_0()
-            .min_h_0()
-            .child(content)
-            .overflow_y_scrollbar()
+        div().id("table-content").debug_selector(|| "table-content".into())
+            .size_full().min_w_0().min_h_0().flex().flex_col()
+            .child(div().p_6().pb_3().flex().flex_col().gap_2()
+                .child(div().text_2xl().child("Table 表格"))
+                .child("按类别浏览独立示例，比较展示、布局与数据交互。"))
+            .child(div().flex_1().min_h_0().min_w_0().child(
+                YueTabs::new("table-examples", Some(self.selected.clone()))
+                    .accessibility_label("表格示例分类")
+                    .height(gpui_kit::relative(1.))
+                    .width(gpui_kit::relative(1.))
+                    .items([
+                        example_tab("basic", "基础样式", "10 个独立示例：边框、斑马纹、密度、自定义内容、换行、空表格与加载状态。", Some(self.basic.clone())),
+                        example_tab("playground", "布局与交互", "固定表头与列、伸缩列、分组表头、响应式、选择、键盘导航，以及 10 万行虚拟列表。", self.playground.clone()),
+                        example_tab("local", "本地查询", "排序、筛选、分页、跨页选择与批量操作；负责人编辑后重新执行当前查询。", self.local.clone()),
+                        example_tab("remote", "远程查询", "模拟异步请求、过期响应、失败重试与未知结果；保留已接受的数据。", self.remote.clone()),
+                        example_tab("structure", "树与详情", "树形工单、父子级联、根分页、节点懒加载、展开详情与嵌套子表。", self.structure.clone()),
+                        example_tab("editing", "编辑与校验", "使用 Input、Select、Form 和 Field 编辑单元格与整行，演示保存、校验与取消。", self.editing.clone()),
+                        example_tab("temporal", "日期与时间", "复用 DatePicker 和 TimePicker 编辑预约，保存前校验实际输入。", self.temporal.clone()),
+                        example_tab("advanced", "合并与加载", "双轴虚拟化、自然高度合并、表头吸顶与范围加载，分别展示不同布局场景。", self.advanced.clone()),
+                        example_tab("customization", "重排与列设置", "行列拖动、列显示与宽度设置，以及尾游标追加、失败与重试。", self.customization.clone()),
+                    ])
+                    .on_change(cx.listener(|s, request: &TabsChangeRequest, w, cx| s.select(request.key(), w, cx))),
+            ))
     }
 }
 
 #[cfg(all(test, feature = "headless-tests"))]
 mod tests {
     use super::*;
-    use gpui_kit::base::{Root, test_support::snapshots};
-    use gpui_kit::{ElementId, TestAppContext, VisualTestContext, px, size};
-    use yue_component::{Accent, ThemeMode, YueTheme};
+    use gpui_kit::base::test_support::snapshots;
+    use gpui_kit::{ElementId, Role, TestAppContext, VisualTestContext, px, size};
     pub(super) fn draw(cx: &mut VisualTestContext) {
         cx.run_until_parked();
         cx.update(|w, cx| {
@@ -796,74 +295,138 @@ mod tests {
         cx.simulate_click(point, Default::default());
         draw(cx);
     }
-    #[gpui_kit::test]
-    fn table_page_controls_update_real_tables(cx: &mut TestAppContext) {
+
+    fn open(cx: &mut TestAppContext) -> (Entity<TablePage>, &mut VisualTestContext) {
         cx.update(|cx| {
-            yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure)).unwrap()
+            yue_component::init(
+                cx,
+                yue_component::YueTheme::new(
+                    yue_component::ThemeMode::Light,
+                    yue_component::Accent::Azure,
+                ),
+            )
+            .unwrap();
+            cx.set_reduce_motion(true);
         });
         let mut page = None;
         let (_, cx) = cx.add_window_view(|w, cx| {
             let view = cx.new(|cx| TablePage::new(w, cx));
             page = Some(view.clone());
-            Root::new(view, w, cx)
+            gpui_kit::base::Root::new(view, w, cx)
         });
-        let page = page.unwrap();
-        cx.update(|w, _| w.resize(size(px(1800.), px(1600.))));
+        cx.update(|w, _| {
+            w.activate_window();
+            w.resize(size(px(1800.), px(1200.)));
+        });
         draw(cx);
-        for id in [
-            "table-size",
-            "table-borders",
-            "table-stripes",
-            "table-narrow",
-            "table-mode",
-            "table-single",
-            "table-reverse",
+        (page.unwrap(), cx)
+    }
+
+    fn tab(cx: &mut VisualTestContext, label: &str) {
+        let center = cx.update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .find(|n| n.role() == Some(Role::Tab) && n.label() == Some(label))
+                .unwrap()
+                .bounds()
+                .center()
+        });
+        cx.simulate_click(center, Default::default());
+        draw(cx);
+    }
+
+    #[gpui_kit::test]
+    fn gallery_exposes_ten_examples_and_only_mounts_the_selected_category(cx: &mut TestAppContext) {
+        let (page, cx) = open(cx);
+        let tables = |cx: &mut VisualTestContext| {
+            cx.update(|w, _| {
+                snapshots(w)
+                    .into_iter()
+                    .filter(|n| n.role() == Some(Role::Table))
+                    .count()
+            })
+        };
+        assert_eq!(tables(cx), 10);
+        assert!(page.read_with(cx, |p, _| p.playground.is_none()
+            && p.local.is_none()
+            && p.remote.is_none()
+            && p.advanced.is_none()));
+        for (label, key) in [
+            ("布局与交互", "playground"),
+            ("本地查询", "local"),
+            ("远程查询", "remote"),
+            ("树与详情", "structure"),
+            ("编辑与校验", "editing"),
+            ("日期与时间", "temporal"),
+            ("合并与加载", "advanced"),
+            ("重排与列设置", "customization"),
+            ("基础样式", "basic"),
         ] {
-            click(cx, id);
+            tab(cx, label);
+            assert_eq!(page.read_with(cx, |p, _| p.selected.to_string()), key);
+            let panels = cx.update(|w, _| {
+                snapshots(w)
+                    .into_iter()
+                    .filter(|n| n.role() == Some(Role::TabPanel))
+                    .map(|n| n.label().unwrap().to_owned())
+                    .collect::<Vec<_>>()
+            });
+            assert_eq!(panels, vec![label.to_owned()]);
         }
-        assert_eq!(page.read_with(cx, |p, _| p.size), TableSize::Large);
-        assert!(page.read_with(cx, |p, _| p.static_mode && p.striped && p.narrow));
-        assert!(page.read_with(cx, |p, cx| {
-            p.table
-                .read(cx)
-                .view()
-                .unwrap()
-                .source()
-                .row_key(0)
-                .unwrap()
-                .as_str()
-                == "order-39"
-        }));
-        click(cx, "table-refresh");
         assert_eq!(
-            page.read_with(cx, |p, cx| p.table.read(cx).view().unwrap().load().clone()),
-            TableLoadState::Refreshing
+            tables(cx),
+            10,
+            "inactive advanced tables must leave the render tree"
         );
-        click(cx, "table-fail");
-        click(cx, "table-ready");
-        click(cx, "table-empty");
-        assert!(page.read_with(cx, |p, cx| {
-            p.table.read(cx).view().unwrap().source().is_empty()
-        }));
-        click(cx, "table-empty");
+        assert!(page.read_with(cx, |p, _| p.advanced.is_none()));
+        let local = page.read_with(cx, |p, _| p.local.as_ref().unwrap().entity_id());
+        tab(cx, "本地查询");
         assert_eq!(
-            page.read_with(cx, |p, cx| p.table.read(cx).view().unwrap().source().len()),
-            40
+            page.read_with(cx, |p, _| p.local.as_ref().unwrap().entity_id()),
+            local
         );
-        click(cx, "table-large");
+    }
+
+    #[gpui_kit::test]
+    fn gallery_density_is_independent_and_narrow_tabs_support_keyboard_navigation(
+        cx: &mut TestAppContext,
+    ) {
+        let (page, cx) = open(cx);
+        let height = |cx: &mut VisualTestContext, label: &str| {
+            cx.update(|w, _| {
+                snapshots(w)
+                    .into_iter()
+                    .find(|n| n.role() == Some(Role::Table) && n.label() == Some(label))
+                    .unwrap()
+                    .bounds()
+                    .size
+                    .height
+            })
+        };
+        let plain = height(cx, "基础表格");
+        let dense = height(cx, "表格密度");
+        click(cx, "table-size");
+        assert_eq!(height(cx, "基础表格"), plain);
+        assert!(height(cx, "表格密度") > dense);
+        cx.update(|w, _| w.resize(size(px(760.), px(800.))));
+        draw(cx);
+        tab(cx, "基础样式");
+        cx.simulate_keystrokes("end");
+        draw(cx);
         assert_eq!(
-            page.read_with(cx, |p, cx| p
-                .large
-                .as_ref()
-                .unwrap()
-                .read(cx)
-                .view()
-                .unwrap()
-                .source()
-                .len()),
-            100_000
+            page.read_with(cx, |p, _| p.selected.to_string()),
+            "customization"
         );
-        click(cx, "table-large");
-        assert!(page.read_with(cx, |p, _| p.large.is_none()));
+        let last = cx.update(|w, _| {
+            snapshots(w)
+                .into_iter()
+                .find(|n| n.role() == Some(Role::Tab) && n.label() == Some("重排与列设置"))
+                .unwrap()
+        });
+        assert_eq!(last.focused(), Some(true));
+        assert!(last.bounds().right() <= px(760.) && last.bounds().left() >= px(0.));
+        cx.simulate_keystrokes("home");
+        draw(cx);
+        assert_eq!(page.read_with(cx, |p, _| p.selected.to_string()), "basic");
     }
 }

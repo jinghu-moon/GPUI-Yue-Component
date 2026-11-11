@@ -202,7 +202,8 @@ mod tests {
                 let start = Instant::now();
                 w.dispatch_event(
                     ScrollWheelEvent {
-                        position: point(px(1200.), px(110.)),
+                        // Table keeps its category tabs above the scrolling panel.
+                        position: point(px(1200.), px(if case == "table" { 220. } else { 110. })),
                         delta: ScrollDelta::Pixels(point(
                             px(0.),
                             px(if frame % 80 < 40 { -12. } else { 12. }),
