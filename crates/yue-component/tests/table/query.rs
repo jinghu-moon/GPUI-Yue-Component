@@ -1,7 +1,7 @@
 use super::*;
 use yue_component::{
-    TableDataMode, TableFilterValue, TableLocalQuery, TableProjection, TableQuery, TableSort,
-    TableSortDirection, TableTotal,
+    TableColumnKey, TableDataMode, TableFilterValue, TableLocalQuery, TableProjection, TableQuery,
+    TableSort, TableSortDirection, TableTotal,
 };
 
 struct QueryRecord {
@@ -716,4 +716,88 @@ fn tb04_query_pipeline_sample(cx: &mut TestAppContext) {
     }
     #[cfg(feature = "table-profile")]
     super::profile::finish(capture);
+}
+
+// A source may use a tree or a remote-page index for row lookup. Sorting must
+// not amplify those accesses to two lookups per comparator invocation.
+struct CountedQuerySource {
+    rows: Rc<TableRows<QueryRecord>>,
+    reads: Rc<Cell<usize>>,
+}
+impl TableSource for CountedQuerySource {
+    type Row = QueryRecord;
+    fn scope(&self) -> &SharedString {
+        self.rows.scope()
+    }
+    fn revision(&self) -> u64 {
+        self.rows.revision()
+    }
+    fn len(&self) -> usize {
+        self.rows.len()
+    }
+    fn row_key(&self, index: usize) -> Option<&TableRowKey> {
+        self.rows.row_key(index)
+    }
+    fn position_of(&self, key: &TableRowKey) -> Option<usize> {
+        self.rows.position_of(key)
+    }
+    fn row(&self, key: &TableRowKey) -> Option<&QueryRecord> {
+        self.reads.set(self.reads.get() + 1);
+        self.rows.row(key)
+    }
+}
+#[test]
+fn sorted_query_bounds_source_reads_and_preserves_stable_non_clone_order() {
+    let count = 4096;
+    let reads = Rc::new(Cell::new(0));
+    let source = Rc::new(CountedQuerySource {
+        rows: query_source(count),
+        reads: reads.clone(),
+    });
+    let columns: Rc<[_]> = vec![
+        TableColumn::value("amount", "Amount", |r: &QueryRecord| r.amount)
+            .display_with(|v| v.to_string().into())
+            .sortable(true)
+            .build()
+            .unwrap(),
+        TableColumn::value("done", "Done", |r: &QueryRecord| r.done)
+            .display_with(|v| v.to_string().into())
+            .sortable(true)
+            .build()
+            .unwrap(),
+    ]
+    .into();
+    let query = TableQuery::default().with_sorts(vec![
+        TableSort::new(
+            TableColumnKey::try_new("amount").unwrap(),
+            TableSortDirection::Descending,
+        ),
+        TableSort::new(
+            TableColumnKey::try_new("done").unwrap(),
+            TableSortDirection::Ascending,
+        ),
+    ]);
+    let view = TableLocalQuery::execute(source.clone(), columns.clone(), query, 2).unwrap();
+    assert!(
+        reads.get() <= count * 4,
+        "sorting repeatedly looked up records: {}",
+        reads.get()
+    );
+    let mut expected = (0..count).collect::<Vec<_>>();
+    expected.sort_by_key(|i| (std::cmp::Reverse(i % 19), i % 3 == 0));
+    assert_eq!(
+        (0..count)
+            .map(|i| view.source().row_key(i).unwrap().as_str().to_owned())
+            .collect::<Vec<_>>(),
+        expected
+            .iter()
+            .map(|i| format!("order-{i}"))
+            .collect::<Vec<_>>()
+    );
+    // Unsorted queries retain source order and do not build the borrowed sort buffer.
+    let plain =
+        TableLocalQuery::execute(source.clone(), columns, TableQuery::default(), 3).unwrap();
+    for i in 0..count {
+        assert_eq!(plain.source().row_key(i), source.row_key(i));
+    }
 }

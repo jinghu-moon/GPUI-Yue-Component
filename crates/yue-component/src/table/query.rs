@@ -599,7 +599,11 @@ impl TableLocalQuery {
                 )
             })
             .collect();
-        let mut keys = Vec::with_capacity(source.len());
+        let sorting = !query.sorts.is_empty();
+        let mut keys = Vec::with_capacity(if sorting { 0 } else { source.len() });
+        // Keep borrowed rows only for this query. Comparisons must not repeat
+        // source lookups; no record Clone/Send bound or persistent cache.
+        let mut candidates = Vec::with_capacity(if sorting { source.len() } else { 0 });
         for ix in 0..source.len() {
             let key = source.row_key(ix).ok_or(TableError::InvalidSource)?;
             let row = source.row(key).ok_or(TableError::InvalidSource)?;
@@ -607,7 +611,11 @@ impl TableLocalQuery {
                 .iter()
                 .all(|(r, f)| (r.predicate)(row, f.value.as_ref()))
             {
-                keys.push(key.clone());
+                if sorting {
+                    candidates.push((key, row));
+                } else {
+                    keys.push(key.clone());
+                }
             }
         }
         observe(1, start.elapsed());
@@ -636,9 +644,7 @@ impl TableLocalQuery {
             })
             .collect();
         if !sorts.is_empty() {
-            keys.sort_by(|a, b| {
-                let a = source.row(a).unwrap();
-                let b = source.row(b).unwrap();
+            candidates.sort_by(|(_, a), (_, b)| {
                 sorts
                     .iter()
                     .map(|(compare, direction)| {
@@ -652,6 +658,7 @@ impl TableLocalQuery {
                     .find(|o| *o != Ordering::Equal)
                     .unwrap_or(Ordering::Equal)
             });
+            keys = candidates.into_iter().map(|(key, _)| key.clone()).collect();
         }
         observe(2, start.elapsed());
         #[cfg(feature = "table-profile")]
