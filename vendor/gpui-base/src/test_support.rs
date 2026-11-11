@@ -371,6 +371,8 @@ impl<E: Element<PrepaintState = Option<Hitbox>> + InteractiveElement> Element fo
         window: &mut Window,
         cx: &mut App,
     ) -> Self::PrepaintState {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.test_support.prepaint");
         let global_id = id.expect("observed elements have an ID");
         let role = self.inner.a11y_role();
         let mut node = gpui::accesskit::Node::new(role.unwrap_or(gpui::Role::Unknown));
@@ -451,6 +453,8 @@ impl<E: Element<PrepaintState = Option<Hitbox>> + InteractiveElement> Element fo
         window: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.test_support.paint");
         let style = self
             .inner
             .interactivity()

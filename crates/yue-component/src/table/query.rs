@@ -571,9 +571,17 @@ impl TableLocalQuery {
         mut observe: impl FnMut(u8, std::time::Duration),
         mut aggregate: impl FnMut(&S, &[TableRowKey]),
     ) -> Result<TableView<TableProjection<S>>, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.query.execute_inner");
         let start = std::time::Instant::now();
+        #[cfg(feature = "table-profile")]
+        let validation_scope = gpui_kit::perf_stats::scope("table.query.validate");
         query.validate(&columns)?;
         observe(0, start.elapsed());
+        #[cfg(feature = "table-profile")]
+        drop(validation_scope);
+        #[cfg(feature = "table-profile")]
+        let filter_scope = gpui_kit::perf_stats::scope("table.query.filter");
         let start = std::time::Instant::now();
         let filters: Vec<_> = query
             .filters
@@ -603,6 +611,10 @@ impl TableLocalQuery {
             }
         }
         observe(1, start.elapsed());
+        #[cfg(feature = "table-profile")]
+        drop(filter_scope);
+        #[cfg(feature = "table-profile")]
+        let sort_scope = gpui_kit::perf_stats::scope("table.query.sort");
         let start = std::time::Instant::now();
         let sorts: Vec<_> = query
             .sorts
@@ -642,9 +654,17 @@ impl TableLocalQuery {
             });
         }
         observe(2, start.elapsed());
+        #[cfg(feature = "table-profile")]
+        drop(sort_scope);
+        #[cfg(feature = "table-profile")]
+        let projection_scope = gpui_kit::perf_stats::scope("table.query.projection");
         let start = std::time::Instant::now();
         let total = keys.len();
-        aggregate(&source, &keys);
+        {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("table.query.aggregate");
+            aggregate(&source, &keys);
+        }
         if let Some(page) = &mut query.page {
             page.number = page.number.min(total.div_ceil(page.size).max(1));
             let start = (page.number - 1) * page.size;
@@ -657,6 +677,8 @@ impl TableLocalQuery {
         .with_query(query)
         .with_result(TableDataMode::Local, TableTotal::Known(total));
         observe(3, start.elapsed());
+        #[cfg(feature = "table-profile")]
+        drop(projection_scope);
         Ok(result)
     }
 }
@@ -714,6 +736,8 @@ impl<D: TableDelegate> YueTableState<D> {
         source: TableQuerySource,
         cx: &mut gpui_kit::Context<Self>,
     ) -> Result<TableRequestId, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.query.request_query");
         if self.edit.is_some() {
             return Err(TableError::UnsupportedOperation(
                 "finish editing before changing the query",

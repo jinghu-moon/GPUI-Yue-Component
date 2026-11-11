@@ -356,6 +356,8 @@ impl Render for Probe {
     }
 }
 fn draw(cx: &mut VisualTestContext) {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("fixture.draw_effects");
     cx.run_until_parked();
     cx.update(|w, cx| {
         w.refresh();
@@ -1086,3 +1088,7 @@ mod customization;
 
 #[path = "table/churn.rs"]
 mod churn;
+
+#[cfg(feature = "table-profile")]
+#[path = "table/profile.rs"]
+mod profile;

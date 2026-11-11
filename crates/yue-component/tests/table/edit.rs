@@ -14,6 +14,8 @@ fn editable(source: Rc<TableRows<Record>>) -> TableView<TableRows<Record>> {
 }
 #[gpui_kit::test]
 fn edit_versions_conflicts_cancel_restart_and_atomic_save(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     let (probe, cx) = open(cx, 10, false);
     let _ = probe;
     let delegate = cx.new(|_| Delegate);
@@ -76,4 +78,6 @@ fn edit_versions_conflicts_cancel_restart_and_atomic_save(cx: &mut TestAppContex
             );
         })
     });
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }

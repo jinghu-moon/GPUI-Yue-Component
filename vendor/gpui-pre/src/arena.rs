@@ -137,6 +137,8 @@ impl Arena {
     /// draw's clear must not free memory the outer draw still references, so it is
     /// deferred: the outer draw's own clear will drop both draws' allocations.
     pub fn clear(&mut self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.arena.clear");
         if self.scope_depth == 0 {
             self.force_clear();
         } else {

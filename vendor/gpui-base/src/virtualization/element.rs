@@ -137,6 +137,8 @@ impl Element for VirtualList {
         window: &mut Window,
         cx: &mut App,
     ) -> (LayoutId, VirtualListFrame) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.list.request_layout");
         let state = self.state.clone();
         self.state
             .update(cx, |state, _| {
@@ -256,6 +258,8 @@ impl Element for VirtualList {
         window: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.list.prepaint");
         self.state
             .update(cx, |state, cx| state.observe_scrollbar_activity(cx));
         self.state
@@ -491,6 +495,8 @@ impl Element for VirtualList {
         window: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.list.paint");
         if let (Some(batch), Some(native), Some(hitbox)) = (&frame.measured, &frame.native, &hitbox)
         {
             batch.paint_scroll_listener(native, bounds, hitbox, window);

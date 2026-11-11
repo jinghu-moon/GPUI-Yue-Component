@@ -272,6 +272,8 @@ impl<D: TableDelegate> YueTableState<D> {
         response_to: Option<TableRequestId>,
         cx: &mut Context<Self>,
     ) -> Result<TableCommitOutcome, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.commit_view");
         if response_to
             .is_some_and(|ticket| !self.requests.contains(&ticket) || ticket.owner != self.owner)
         {
@@ -511,6 +513,8 @@ impl<D: TableDelegate> YueTableState<D> {
         range: bool,
         cx: &mut Context<Self>,
     ) -> Result<TableRequestId, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.state.request_toggle");
         let view = self.accepted.as_ref().ok_or(TableError::Unbound)?;
         if view.source.position_of(key).is_none() || view.disabled_rows.contains(key) {
             return Err(TableError::InvalidSelection);
@@ -534,6 +538,8 @@ impl<D: TableDelegate> YueTableState<D> {
         selected: bool,
         cx: &mut Context<Self>,
     ) -> Result<TableRequestId, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.state.request_select_all");
         self.request_selection(SelectionIntent::All(selected), cx)
     }
     pub fn request_clear_selection(
@@ -613,6 +619,8 @@ impl<D: TableDelegate> YueTableState<D> {
         options: VirtualizerScrollOptions,
         cx: &mut Context<Self>,
     ) -> Result<(), TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.scroll_to_cell");
         let view = self.accepted.as_ref().ok_or(TableError::Unbound)?;
         let key = view.spans.origin_for(view, key);
         if !view
@@ -633,6 +641,8 @@ impl<D: TableDelegate> YueTableState<D> {
         Ok(())
     }
     pub(super) fn sync_layout(&mut self, p: &Presentation, w: &Window, cx: &mut Context<Self>) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.sync_layout");
         self.layout_rem = w.rem_size();
         let Some(view) = self.accepted.as_ref() else {
             return;
@@ -729,6 +739,8 @@ impl<D: TableDelegate> YueTableState<D> {
             measurement_epoch: self.measurements.epoch,
         };
         if self.geometry.as_ref() != Some(&signature) {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("table.geometry.rebuild");
             self.measurements.sizes.retain(|key, (revision, _, _)| {
                 view.source.contains_key(key) && view.source.row_revision(key) == *revision
             });
@@ -747,6 +759,8 @@ impl<D: TableDelegate> YueTableState<D> {
                 footer: view.columns.iter().any(|c| c.footer.is_some()),
             });
             self.rows.update(cx, |s, cx| {
+                #[cfg(feature = "table-profile")]
+                let _perf = gpui_kit::perf_stats::scope("table.geometry.rows");
                 let len = source.len();
                 let sizing = if !matches!(view.sizing.kind, sizing::RowSizingKind::Fixed)
                     || p.header_visible && self.resolved.depth > 0
@@ -795,6 +809,8 @@ impl<D: TableDelegate> YueTableState<D> {
                 cx.notify();
             });
             self.columns.update(cx, |s, cx| {
+                #[cfg(feature = "table-profile")]
+                let _perf = gpui_kit::perf_stats::scope("table.geometry.columns");
                 let (source, sizing): (Rc<dyn VirtualizerSource>, VirtualizerSizing) =
                     if p.mode == TableRenderMode::Cells {
                         let source = cells::ColumnSource::new(view, &self.resolved);

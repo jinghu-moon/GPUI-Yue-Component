@@ -140,6 +140,8 @@ pub(super) fn span_set<S: TableSource>(
     view: &TableView<S>,
     p: &Presentation,
 ) -> crate::VirtualGridSpanSet {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.cells.span_set");
     let rows = header_count(p);
     let selection = usize::from(view.selection_mode != TableSelectionMode::None);
     let mut spans = Vec::new();
@@ -209,6 +211,8 @@ pub(super) fn render<D: TableDelegate>(
     w: &mut Window,
     cx: &mut Context<YueTableState<D>>,
 ) -> AnyElement {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.cells.render");
     let rows = header_count(p);
     let selection = usize::from(view.selection_mode != TableSelectionMode::None);
     let signature = (

@@ -22,7 +22,7 @@ half = { version = "2.7.1", default-features = false, features = ["std"] }
 # Headless tests use Base observations directly. This now composes with every
 # workspace member (all consumers are Base-only). Keep instrumentation opt-in.
 # Kit's test-support also enables the optional Fast backend with conflicting pins.
-gpui-base = { version = "0.8.0", optional = true, features = ["test-support"] }
+gpui-base = { version = "0.8.0", optional = true }
 
 [target.'cfg(windows)'.dev-dependencies]
 windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Devices_Display", "Win32_Graphics_Dxgi_Common", "Win32_Graphics_Gdi"] }
@@ -30,7 +30,9 @@ windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_Devices_D
 [features]
 default = ["bundled-fonts"]
 bundled-fonts = []
-headless-tests = ["dep:gpui-base"]
+headless-tests = ["dep:gpui-base", "gpui-base/test-support"]
+# Bounded CPU-stage statistics; excluded from normal builds.
+table-profile = ["dep:gpui-base", "gpui-base/perf-stats"]
 
 [[test]]
 name = "controls"

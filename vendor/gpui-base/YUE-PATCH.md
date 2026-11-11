@@ -1,5 +1,9 @@
 # Yue Base patches
 
+## Opt-in virtualization stage statistics (2026-11-11)
+
+`perf-stats` forwards GPUI statistics and marks List/Grid layout, prepaint/paint, source replacement/snapshot and Grid cell build/layout/prepaint. Test observation costs have separate labels. No state, viewport, renderer, clipping or theme behavior changes. Feature-off builds exclude all scopes. Keep the Table diagnostic coverage and VirtualList regression suite when rebasing. See `docs/performance/table-stage-profiling.md`.
+
 ## Keyed tree sibling sorting and load preparation (2026-11-11)
 
 `KeyedTreeModel::sort_siblings` stably sorts each siblings index and rebuilds

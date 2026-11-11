@@ -17,6 +17,8 @@ fn m2_headless_layout_frame_sample(cx: &mut TestAppContext) {
 }
 
 fn frame_sample(cx: &mut TestAppContext, layout: bool) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     let count: usize = std::env::var("YUE_TABLE_BENCH_ROWS")
         .expect("runner supplies rows")
         .parse()
@@ -81,7 +83,11 @@ fn frame_sample(cx: &mut TestAppContext, layout: bool) {
         });
         // Match the application loop: drain effects/tasks between frames, outside
         // the draw timing. A tight draw-only loop is not a sustained UI workload.
-        cx.run_until_parked();
+        {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("fixture.effects");
+            cx.run_until_parked();
+        }
         sample
     };
     for frame in 0..120 {
@@ -114,4 +120,6 @@ fn frame_sample(cx: &mut TestAppContext, layout: bool) {
             assert!(last.bounds().left() > first.bounds().right());
         }
     }
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }

@@ -32,6 +32,9 @@ mod interactive;
 mod key_dispatch;
 mod keymap;
 mod path_builder;
+/// Bounded, opt-in synchronous CPU stage accounting.
+#[cfg(feature = "perf-stats")]
+pub mod perf_stats;
 mod platform;
 pub mod prelude;
 /// Profiling utilities for task, frame, and thread performance tracking.

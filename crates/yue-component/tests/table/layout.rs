@@ -185,6 +185,8 @@ fn grouped_headers_share_widths_and_shallow_leaves_span_bands(cx: &mut TestAppCo
 
 #[gpui_kit::test]
 fn resize_pointer_final_coordinate_keyboard_release_and_rejection(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     let (p, cx) = open(cx, 20, false);
     configure(&p, cx, |mut cols| {
         cols[0] = cols[0]
@@ -267,6 +269,8 @@ fn resize_pointer_final_coordinate_keyboard_release_and_rejection(cx: &mut TestA
         "Escape and late keyup cannot commit"
     );
     assert_eq!(cell(cx, "row-0", "name").bounds().size.width, accepted);
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }
 
 #[gpui_kit::test]

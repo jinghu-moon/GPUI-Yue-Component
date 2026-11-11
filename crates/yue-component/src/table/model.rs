@@ -143,6 +143,8 @@ impl<R: 'static> TableRows<R> {
         rows: Rc<[R]>,
         key_of: impl Fn(&R) -> SharedString,
     ) -> Result<Self, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.source.index");
         let scope = scope.into();
         if scope.trim().is_empty() {
             return Err(TableError::EmptyKey);
@@ -565,6 +567,8 @@ impl<R: 'static> TableColumn<R> {
         window: &mut Window,
         cx: &mut App,
     ) -> AnyElement {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.column.render");
         if let Some(render) = &self.renderer {
             return render(row, cell, window, cx);
         }
@@ -781,6 +785,8 @@ impl<S: TableSource> TableView<S> {
             && self.spans.same(&other.spans)
     }
     pub(super) fn validate(&self, validate_source: bool) -> Result<(), TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.view.validate");
         if self.data_mode == super::TableDataMode::Local && self.source.has_placeholders() {
             return Err(TableError::UnsupportedCombination(
                 "local query requires fully loaded records",
@@ -816,6 +822,8 @@ impl<S: TableSource> TableView<S> {
             }
         }
         if validate_source {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("table.source.validate");
             if self.source.scope().trim().is_empty() {
                 return Err(TableError::EmptyKey);
             }

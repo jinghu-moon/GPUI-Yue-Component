@@ -436,6 +436,8 @@ impl TableDelegate for RangeDelegate {
 }
 #[gpui_kit::test]
 fn range_tickets_isolate_queries_owners_retries_and_placeholders(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     cx.update(|cx| {
         let d = cx.new(|_| RangeDelegate);
         let a = cx.new(|cx| YueTableState::new(&d, cx));
@@ -507,10 +509,14 @@ fn range_tickets_isolate_queries_owners_retries_and_placeholders(cx: &mut TestAp
             Err(TableError::StaleRequest)
         );
     });
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }
 #[gpui_kit::test]
 #[ignore = "opt-in TB02 release size baseline; tools/sample-table.py --workload tb02"]
 fn tb02_cells_frame_sample(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     use std::time::Instant;
     let count: usize = std::env::var("YUE_TABLE_BENCH_ROWS")
         .unwrap()
@@ -588,7 +594,11 @@ fn tb02_cells_frame_sample(cx: &mut TestAppContext) {
             w.draw(cx).clear(cx);
             (start.elapsed().as_nanos(), calls.get())
         });
-        cx.run_until_parked();
+        {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("fixture.effects");
+            cx.run_until_parked();
+        }
         sample
     };
     for frame in 0..120 {
@@ -609,4 +619,6 @@ fn tb02_cells_frame_sample(cx: &mut TestAppContext) {
     println!(
         "TABLE_MATRIX,rows={count},columns=256,sizing=Known,pins=2+2,frozen_rows=1+1,spans=16"
     );
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }

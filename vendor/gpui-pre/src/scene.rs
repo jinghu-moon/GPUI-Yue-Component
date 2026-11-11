@@ -171,6 +171,8 @@ impl Scene {
     }
 
     pub fn finish(&mut self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.scene.finish");
         self.shadows.sort_by_key(|shadow| shadow.order);
         self.quads.sort_by_key(|quad| quad.order);
         // Already ordered on insertion; retained for explicit Scene contract.

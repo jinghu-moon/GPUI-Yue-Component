@@ -6,6 +6,8 @@ use std::time::Instant;
 #[gpui_kit::test]
 #[ignore = "opt-in TB05 snapshot churn; TABLE_CHURN_MEASURED selects the independent variant"]
 fn tb05_snapshot_churn(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     let measured = std::env::var("TABLE_CHURN_MEASURED").is_ok_and(|v| v == "1");
     let (p, cx) = open(cx, 10_000, true);
     let observed = Rc::new(Cell::new(-1));
@@ -120,4 +122,6 @@ fn tb05_snapshot_churn(cx: &mut TestAppContext) {
         calls,
         "idle must not rebuild cells"
     );
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }

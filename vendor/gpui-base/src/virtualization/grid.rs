@@ -643,6 +643,8 @@ impl Element for VirtualGrid {
         w: &mut Window,
         cx: &mut App,
     ) -> (LayoutId, VirtualGridFrame) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.grid.request_layout");
         let rows = self.rows.read(cx);
         let columns = self.columns.read(cx);
         Self::validate_axes(rows, columns).expect("invalid virtual grid configuration");
@@ -840,6 +842,8 @@ impl Element for VirtualGrid {
         w: &mut Window,
         cx: &mut App,
     ) -> Option<Hitbox> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.grid.prepaint");
         let natural_bounds = bounds;
         let bounds = if let Some((top, bottom)) = self.host_insets {
             assert!(
@@ -1013,8 +1017,12 @@ impl Element for VirtualGrid {
                 self.columns.read(cx).source_for_render().len() - column_end_start,
                 trailing_width,
             );
+        #[cfg(feature = "perf-stats")]
+        let prepare_scope = gpui::perf_stats::scope("base.grid.axes.prepare");
         let (rs, rr) = self.rows.update(cx, |s, _| s.prepare(&rv, now)).unwrap();
         let (cs, cr) = self.columns.update(cx, |s, _| s.prepare(&cv, now)).unwrap();
+        #[cfg(feature = "perf-stats")]
+        drop(prepare_scope);
         let mut y = rr
             .as_ref()
             .map_or(rv.offset(), VirtualizerScrollRequest::offset)
@@ -1084,6 +1092,8 @@ impl Element for VirtualGrid {
                 }
             });
         }
+        #[cfg(feature = "perf-stats")]
+        let commit_scope = gpui::perf_stats::scope("base.grid.axes.commit");
         for (state, viewport, request, applied) in [
             (&self.rows, &rv, rr.as_ref(), y),
             (&self.columns, &cv, cr.as_ref(), x),
@@ -1102,6 +1112,8 @@ impl Element for VirtualGrid {
         }
         let rows = self.rows.read(cx).snapshot(&rv.with_offset(y)).unwrap();
         let columns = self.columns.read(cx).snapshot(&cv.with_offset(x)).unwrap();
+        #[cfg(feature = "perf-stats")]
+        drop(commit_scope);
         let content_size = size(
             Pixels::from(columns.total_extent()),
             Pixels::from(rows.total_extent()),
@@ -1285,6 +1297,8 @@ impl Element for VirtualGrid {
                         )
                         .intersect(&clip);
                         let build = |w: &mut Window, cx: &mut App| {
+                            #[cfg(feature = "perf-stats")]
+                            let render_scope = gpui::perf_stats::scope("base.grid.cell.build");
                             let mut element = div()
                                 .id(column_key)
                                 .w(extent.width)
@@ -1292,9 +1306,23 @@ impl Element for VirtualGrid {
                                 .child((self.render)(cell, w, cx))
                                 .test_support()
                                 .into_any_element();
+                            #[cfg(feature = "perf-stats")]
+                            drop(render_scope);
                             w.with_id(row_key.clone(), |w| {
-                                element.layout_as_root(extent.map(AvailableSpace::Definite), w, cx);
-                                element.prepaint_at(origin, w, cx);
+                                {
+                                    #[cfg(feature = "perf-stats")]
+                                    let _perf = gpui::perf_stats::scope("base.grid.cell.layout");
+                                    element.layout_as_root(
+                                        extent.map(AvailableSpace::Definite),
+                                        w,
+                                        cx,
+                                    );
+                                }
+                                {
+                                    #[cfg(feature = "perf-stats")]
+                                    let _perf = gpui::perf_stats::scope("base.grid.cell.prepaint");
+                                    element.prepaint_at(origin, w, cx);
+                                }
                             });
                             frame.cells.push((row_key, element));
                             if let Some(masks) = &mut frame.masks {
@@ -1336,6 +1364,8 @@ impl Element for VirtualGrid {
         w: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.grid.paint");
         self.base.interactivity().paint(
             id,
             inspector,

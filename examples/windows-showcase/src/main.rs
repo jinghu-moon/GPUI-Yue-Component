@@ -1,4 +1,6 @@
 mod pages;
+#[cfg(feature = "table-profile")]
+mod table_profile;
 use pages::button::*;
 use pages::checkbox::*;
 use pages::dropdown::*;
@@ -34,6 +36,8 @@ use yue_component::{
 };
 
 fn main() {
+    #[cfg(feature = "table-profile")]
+    let capture = table_profile::start();
     gpui_kit::application().run(|cx| {
         yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Azure))
             .expect("initialize Yue");
@@ -42,6 +46,8 @@ fn main() {
         })
         .expect("failed to open Yue component showcase window");
     });
+    #[cfg(feature = "table-profile")]
+    table_profile::finish(capture);
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -552,13 +558,21 @@ impl Render for Showcase {
                     .min_h_0()
                     .child(match self.page {
                         ShowcasePage::Tree => self.tree_demo.clone().into_any_element(),
-                        ShowcasePage::TreeSelect => self.tree_select_demo.clone().into_any_element(),
-                        ShowcasePage::TimePicker => self.time_picker_demo.clone().into_any_element(),
-                        ShowcasePage::DatePicker => self.date_picker_demo.clone().into_any_element(),
+                        ShowcasePage::TreeSelect => {
+                            self.tree_select_demo.clone().into_any_element()
+                        }
+                        ShowcasePage::TimePicker => {
+                            self.time_picker_demo.clone().into_any_element()
+                        }
+                        ShowcasePage::DatePicker => {
+                            self.date_picker_demo.clone().into_any_element()
+                        }
                         ShowcasePage::Empty => self.empty_demo.clone().into_any_element(),
                         ShowcasePage::Card => self.card_demo.clone().into_any_element(),
                         ShowcasePage::Table => self.table_demo.clone().into_any_element(),
-                        ShowcasePage::Descriptions => self.descriptions_demo.clone().into_any_element(),
+                        ShowcasePage::Descriptions => {
+                            self.descriptions_demo.clone().into_any_element()
+                        }
                         ShowcasePage::Steps => self.steps_demo.clone().into_any_element(),
                         ShowcasePage::Pagination => self.pagination_demo.clone().into_any_element(),
                         ShowcasePage::Scrollbar => self.scrollbar_demo.clone().into_any_element(),

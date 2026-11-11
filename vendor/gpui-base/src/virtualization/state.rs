@@ -827,6 +827,8 @@ impl VirtualizerState {
         sizing: VirtualizerSizing,
         change: VirtualizerChange,
     ) -> Result<(), VirtualizerError> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.axis.replace_source");
         // Attached explicit geometry has no native measured-list state to
         // reconstruct. Fixed/Known transactions retain the same owner and keys.
         if sizing.kind() != self.sizing.kind()
@@ -1322,6 +1324,8 @@ impl VirtualizerState {
         &self,
         viewport: &VirtualizerViewport,
     ) -> Result<VirtualizerSnapshot, VirtualizerError> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = gpui::perf_stats::scope("base.axis.snapshot");
         self.validate_viewport(viewport)?;
         let padding = viewport.origin + f64::from(self.layout.padding_start);
         let offset = viewport.offset - padding + f64::from(viewport.leading_occlusion);

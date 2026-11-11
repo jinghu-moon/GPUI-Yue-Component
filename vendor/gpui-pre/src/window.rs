@@ -995,6 +995,8 @@ impl ElementIdStack {
     }
 
     pub(crate) fn clear(&mut self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.frame.clear.0");
         self.ids.clear();
         self.hashes.clear();
     }
@@ -1122,6 +1124,8 @@ impl Frame {
     }
 
     pub(crate) fn clear(&mut self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.frame.clear.1");
         self.element_states.clear();
         self.accessed_element_states.clear();
         self.mouse_listeners.clear();
@@ -1196,6 +1200,8 @@ impl Frame {
     }
 
     pub(crate) fn finish(&mut self, prev_frame: &mut Self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.frame.finish");
         for element_state_key in &self.accessed_element_states {
             if let Some((element_state_key, element_state)) =
                 prev_frame.element_states.remove_entry(element_state_key)
@@ -3488,6 +3494,8 @@ impl Window {
     /// the contents of the new [`Scene`], use [`Self::present`].
     #[profiling::function]
     pub fn draw(&mut self, cx: &mut App) -> ArenaClearNeeded {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.draw");
         // Drain every draw in profiler builds so a previous frame's
         // first-invalidation timestamp can't be attributed to this one.
         #[cfg(feature = "profiler")]
@@ -3583,7 +3591,11 @@ impl Window {
         // capture to their new hitbox during prepaint; cached hitboxes keep IDs.
         if self.frame_bound_pointer_capture
             && self.captured_hitbox.is_some_and(|id| {
-                !self.rendered_frame.hitboxes.iter().any(|hitbox| hitbox.id == id)
+                !self
+                    .rendered_frame
+                    .hitboxes
+                    .iter()
+                    .any(|hitbox| hitbox.id == id)
             })
         {
             self.release_pointer();
@@ -3664,6 +3676,8 @@ impl Window {
     }
 
     fn record_entities_accessed(&mut self, cx: &mut App) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.dependencies");
         let mut entities_ref = cx.entities.accessed_entities.get_mut();
         let mut entities = mem::take(entities_ref.deref_mut());
         let handle = self.handle;
@@ -3687,6 +3701,8 @@ impl Window {
 
     #[profiling::function]
     fn present(&mut self) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.present");
         #[cfg(feature = "profiler")]
         let _foreground_turn = profiler::journal::foreground_turn();
         #[cfg(feature = "profiler")]
@@ -3752,6 +3768,8 @@ impl Window {
     }
 
     fn draw_roots(&mut self, cx: &mut App) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.roots");
         self.invalidator.set_phase(DrawPhase::Prepaint);
         self.tooltip_bounds.take();
 
@@ -3784,10 +3802,16 @@ impl Window {
         let scale_factor = self.scale_factor();
         #[cfg(feature = "profiler")]
         let request_layout_start = Instant::now();
+        #[cfg(feature = "perf-stats")]
+        let request_scope = crate::perf_stats::scope("gpui.request_layout");
         let mut root_element = self.root.as_ref().unwrap().clone().into_any_element();
         let root_layout_id = root_element.request_layout(self, cx);
         #[cfg(feature = "profiler")]
         let prepaint_start = Instant::now();
+        #[cfg(feature = "perf-stats")]
+        drop(request_scope);
+        #[cfg(feature = "perf-stats")]
+        let prepaint_scope = crate::perf_stats::scope("gpui.prepaint");
         self.layout_engine
             .as_mut()
             .unwrap()
@@ -3827,6 +3851,10 @@ impl Window {
         // Now actually paint the elements.
         #[cfg(feature = "profiler")]
         let paint_start = Instant::now();
+        #[cfg(feature = "perf-stats")]
+        drop(prepaint_scope);
+        #[cfg(feature = "perf-stats")]
+        let paint_scope = crate::perf_stats::scope("gpui.paint");
         self.invalidator.set_phase(DrawPhase::Paint);
         root_element.paint(self, cx);
 
@@ -3854,6 +3882,10 @@ impl Window {
                 paint: Instant::now().duration_since(paint_start),
             });
 
+        #[cfg(feature = "perf-stats")]
+        drop(paint_scope);
+        #[cfg(feature = "perf-stats")]
+        let _a11y_scope = crate::perf_stats::scope("gpui.a11y.finalize");
         // a11y may have been activated/deactivated halfway through the frame
         let a11y_active_start_of_frame = self.a11y.is_active();
         self.a11y.sync_active_flag();
@@ -5547,6 +5579,8 @@ impl Window {
         available_space: Size<AvailableSpace>,
         cx: &mut App,
     ) {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.layout.compute");
         self.invalidator.debug_assert_prepaint();
 
         let mut layout_engine = self.layout_engine.take().unwrap();
@@ -5877,6 +5911,8 @@ impl Window {
     /// Dispatch a mouse, keyboard, or touch event on the window.
     #[profiling::function]
     pub fn dispatch_event(&mut self, event: PlatformInput, cx: &mut App) -> DispatchEventResult {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.input.dispatch");
         #[cfg(feature = "profiler")]
         self.window_profiler.begin_input(event.kind_name());
         let update_count_before = self.invalidator.update_count();

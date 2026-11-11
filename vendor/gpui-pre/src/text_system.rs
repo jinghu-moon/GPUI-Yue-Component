@@ -642,6 +642,8 @@ impl WindowTextSystem {
         runs: &[TextRun],
         force_width: Option<Pixels>,
     ) -> ShapedLine {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.text.shape_line");
         debug_assert!(
             text.find('\n').is_none(),
             "text argument should not contain newlines"
@@ -695,6 +697,8 @@ impl WindowTextSystem {
         force_width: Option<Pixels>,
         materialize_text: impl FnOnce() -> SharedString,
     ) -> ShapedLine {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.text.shape_line_by_hash");
         let mut decoration_runs = SmallVec::<[DecorationRun; 32]>::new();
         for run in runs {
             if let Some(last_run) = decoration_runs.last_mut()
@@ -755,6 +759,8 @@ impl WindowTextSystem {
         wrap_width: Option<Pixels>,
         line_clamp: Option<usize>,
     ) -> Result<SmallVec<[WrappedLine; 1]>> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.text.shape_text");
         let mut runs = runs.iter().filter(|run| run.len > 0).cloned().peekable();
         let mut font_runs = self.font_runs_pool.lock().pop().unwrap_or_default();
 
@@ -890,6 +896,8 @@ impl WindowTextSystem {
         runs: &[TextRun],
         force_width: Option<Pixels>,
     ) -> Arc<LineLayout> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.text.layout_line");
         let mut last_run = None::<&TextRun>;
         let mut font_runs = self.font_runs_pool.lock().pop().unwrap_or_default();
         font_runs.clear();
@@ -1034,6 +1042,8 @@ impl WindowTextSystem {
         force_width: Option<Pixels>,
         materialize_text: impl FnOnce() -> SharedString,
     ) -> Arc<LineLayout> {
+        #[cfg(feature = "perf-stats")]
+        let _perf = crate::perf_stats::scope("gpui.text.layout_line_by_hash");
         let mut last_run = None::<&TextRun>;
         let mut font_runs = self.font_runs_pool.lock().pop().unwrap_or_default();
         font_runs.clear();

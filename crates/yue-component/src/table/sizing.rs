@@ -120,6 +120,8 @@ impl<D: TableDelegate> YueTableState<D> {
         height: Pixels,
         cx: &mut Context<Self>,
     ) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.sizing.measure_cell");
         if epoch != self.measurements.epoch || !f32::from(height).is_finite() || height <= px(0.) {
             return;
         }
@@ -153,6 +155,8 @@ impl<D: TableDelegate> YueTableState<D> {
         }
     }
     fn flush_measurements(&mut self, cx: &mut Context<Self>) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.sizing.flush_measurements");
         self.measurements.scheduled = false;
         let Some(view) = self.accepted.clone() else {
             self.measurements.pending.clear();

@@ -63,6 +63,7 @@ default = [
 font-kit = []
 inspector = ["gpui_macros/inspector"]
 leak-detection = []
+perf-stats = []
 profiler = ["dep:hdrhistogram"]
 screen-capture = ["scap"]
 stacker = ["dep:stacksafe"]

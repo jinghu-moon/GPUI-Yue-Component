@@ -14,6 +14,8 @@ pub(super) fn render<D: TableDelegate>(
     w: &mut Window,
     cx: &mut Context<YueTableState<D>>,
 ) -> AnyElement {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.element.render");
     let Some(mut p) = state.presentation.clone() else {
         return div().into_any_element();
     };
@@ -525,6 +527,8 @@ pub(super) fn row<D: TableDelegate>(
     w: &mut Window,
     cx: &mut App,
 ) -> AnyElement {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.element.row");
     let theme = crate::current_theme(cx);
     let is_header = p.header_visible && index == 0;
     let position = index.saturating_sub(usize::from(p.header_visible));
@@ -1005,6 +1009,8 @@ pub(super) fn row<D: TableDelegate>(
                     })
                 .max(px(0.)),
             };
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("table.delegate.render_cell");
             delegate
                 .update(cx, |d, cx| d.render_cell(row, column, &cell_context, w, cx))
                 .unwrap_or_else(|_| div().into_any_element())
@@ -1406,6 +1412,8 @@ fn navigate<D: TableDelegate>(
     w: &mut Window,
     cx: &mut Context<YueTableState<D>>,
 ) {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.element.navigate");
     let Some(mut p) = state.presentation.clone() else {
         return;
     };

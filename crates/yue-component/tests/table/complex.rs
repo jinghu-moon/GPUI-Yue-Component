@@ -76,6 +76,8 @@ fn run<D: TableDelegate>(
     calls: Rc<Cell<usize>>,
     started: Instant,
 ) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     cx.update(|cx| {
         yue_component::init(cx, YueTheme::new(ThemeMode::Light, Accent::Neutral)).unwrap();
         cx.set_reduce_motion(true);
@@ -113,7 +115,11 @@ fn run<D: TableDelegate>(
             w.draw(cx).clear(cx);
             (begin.elapsed().as_nanos(), calls.get())
         });
-        cx.run_until_parked();
+        {
+            #[cfg(feature = "table-profile")]
+            let _perf = gpui_kit::perf_stats::scope("fixture.effects");
+            cx.run_until_parked();
+        }
         sample
     };
     for frame in 0..120 {
@@ -154,6 +160,8 @@ fn run<D: TableDelegate>(
         owner,
         state.read_with(cx, |s, _| s.scroll_handle().precise_offset())
     );
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }
 #[gpui_kit::test]
 #[ignore = "opt-in TB03 release baseline, tools/sample-table.py --workload tb03"]

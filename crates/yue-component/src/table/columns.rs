@@ -78,6 +78,8 @@ impl TableColumnPreferences {
     /// Migrate saved settings by stable key and semantic version. Removed,
     /// unauthorized and changed-meaning columns lose their old settings.
     pub fn reconcile<S: TableSource>(&self, view: &TableView<S>) -> Self {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.columns.reconcile");
         let valid = |k: &TableColumnKey| {
             view.declarations.iter().find(|c| {
                 c.key() == k
@@ -143,6 +145,8 @@ impl TableColumnPreferences {
         }
     }
     pub(super) fn resolve<S: TableSource>(&self, view: &TableView<S>) -> Rc<[TableColumn<S::Row>]> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.columns.resolve");
         let mut cols = Vec::with_capacity(view.declarations.len());
         let mut seen = HashSet::new();
         for key in self

@@ -1,5 +1,9 @@
 # Yue GPUI paint snapshot extension
 
+## Opt-in bounded synchronous stage statistics (2026-11-11)
+
+`perf-stats` exposes same-thread Capture / RAII Scope with inclusive, self and maximum elapsed times; instruments input, frame, layout, text, scene, cleanup and present. Normal builds exclude all added code. Bounded stages/depth, generation isolation, stack-order validation and no per-event retention. Yue Table profiling tests cover reconciliation, cancellation, unwinding and capacity. Remove/adapt when upstream provides equivalent bounded aggregation; retain these contracts. This is wall time including diagnostic overhead, not OS thread CPU or GPU completion.
+
 ## One Tab stop per focus identity (2026-11-09)
 
 `src/tab_stop.rs` retains the first registration of a FocusId in the current

@@ -362,6 +362,8 @@ impl<S: TableSource> TableOutline<S> {
         revision: u64,
         page: Option<TablePage>,
     ) -> Result<TableOutlineSource<S>, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.outline.snapshot");
         let mut rows = HashMap::new();
         let mut visible = Vec::new();
         let mut roots = 0;

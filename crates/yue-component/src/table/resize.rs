@@ -70,6 +70,8 @@ impl<D: TableDelegate> YueTableState<D> {
         w: &Window,
         cx: &mut Context<Self>,
     ) -> Result<(), TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.resize.begin_resize");
         if self.edit.is_some() {
             return Err(TableError::UnsupportedOperation(
                 "finish editing before resizing",
@@ -120,6 +122,8 @@ impl<D: TableDelegate> YueTableState<D> {
         Ok(())
     }
     pub(super) fn pointer_resize(&mut self, x: Pixels, cx: &mut Context<Self>) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.resize.pointer_resize");
         let Some(s) = &mut self.resize else {
             return;
         };
@@ -192,6 +196,8 @@ impl<D: TableDelegate> YueTableState<D> {
         self.resize.as_ref().is_some_and(|s| s.pointer.is_some())
     }
     pub(super) fn finish_resize(&mut self, cx: &mut Context<Self>) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.resize.finish_resize");
         let Some(s) = self.resize.take() else {
             return;
         };

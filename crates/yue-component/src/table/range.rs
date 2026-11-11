@@ -153,6 +153,8 @@ impl<D: TableDelegate> YueTableState<D> {
         range: Range<usize>,
         cx: &mut Context<Self>,
     ) -> Result<Option<TableRangeRequest>, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.range.request_range");
         let view = self.view().ok_or(TableError::Unbound)?;
         if range.start > range.end || range.end > view.source.len() {
             return Err(TableError::InvalidSource);
@@ -210,6 +212,8 @@ impl<D: TableDelegate> YueTableState<D> {
         candidate: TableView<D::Source>,
         cx: &mut Context<Self>,
     ) -> Result<TableCommitOutcome, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.range.commit_range");
         let old = self.view().ok_or(TableError::Unbound)?;
         if !self
             .range_pending
@@ -323,6 +327,8 @@ impl<D: TableDelegate> YueTableState<D> {
         cursor: impl Into<SharedString>,
         cx: &mut Context<Self>,
     ) -> Result<Option<TableRangeRequest>, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.range.request_tail");
         let cursor = cursor.into();
         if cursor.trim().is_empty() {
             return Err(TableError::EmptyKey);

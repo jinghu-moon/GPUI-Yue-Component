@@ -86,6 +86,8 @@ impl<D: TableDelegate> YueTableState<D> {
         mode: TableEditMode,
         cx: &mut Context<Self>,
     ) -> Result<(), TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.edit.request_edit");
         self.validate_edit(&key)?;
         if self.edit.is_some() {
             return Err(TableError::UnsupportedOperation("finish the current edit"));
@@ -127,6 +129,8 @@ impl<D: TableDelegate> YueTableState<D> {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Result<TableEditToken, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.edit.start_edit");
         self.validate_edit(&key)?;
         if self.edit.is_some() {
             return Err(TableError::UnsupportedOperation("finish the current edit"));
@@ -188,6 +192,8 @@ impl<D: TableDelegate> YueTableState<D> {
         &mut self,
         cx: &mut Context<Self>,
     ) -> Result<TableEditToken, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.edit.request_edit_save");
         self.request_edit_save_with_move(TableEditMove::Stay, cx)
     }
     pub fn request_edit_save_with_move(
@@ -262,6 +268,8 @@ impl<D: TableDelegate> YueTableState<D> {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) -> Result<TableCommitOutcome, TableError> {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.edit.commit_edit");
         if !self.is_current_edit(token)
             || self.edit.as_ref().unwrap().stage != TableEditStage::Saving
         {
@@ -297,6 +305,8 @@ impl<D: TableDelegate> YueTableState<D> {
         candidate: &TableView<D::Source>,
         cx: &mut Context<Self>,
     ) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.edit.reconcile_edit");
         let Some(session) = &mut self.edit else {
             return;
         };

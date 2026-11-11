@@ -342,6 +342,8 @@ impl<D: TableDelegate> YueTableState<D> {
         }
     }
     pub(super) fn finish_drag(&mut self, cx: &mut Context<Self>) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.reorder.finish_drag");
         let Some(drag) = self.drag.take() else { return };
         if drag.moved
             && let Some(target) = drag.target
@@ -359,6 +361,8 @@ impl<D: TableDelegate> YueTableState<D> {
         cx.notify();
     }
     pub(super) fn keyboard_drag(&mut self, key: &str, cx: &mut Context<Self>) -> bool {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.reorder.keyboard_drag");
         let Some(drag) = &self.drag else { return false };
         if drag.pointer.is_some() {
             return false;
@@ -462,6 +466,8 @@ impl<D: TableDelegate> YueTableState<D> {
         w: &mut Window,
         cx: &mut Context<Self>,
     ) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.reorder.pointer_drag");
         let Some(d) = self.drag.as_mut() else { return };
         if d.pointer.is_none() {
             return;

@@ -45,6 +45,8 @@ impl Element for StaticGrid {
         w: &mut Window,
         cx: &mut App,
     ) -> (LayoutId, Geometry) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.static_grid.request_layout");
         let mut heights = vec![self.minimum; self.count];
         let measured: Vec<_> = self
             .cells
@@ -114,6 +116,8 @@ impl Element for StaticGrid {
         w: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.static_grid.prepaint");
         for c in &mut self.cells {
             let height = g.heights[c.row..c.row + c.rows]
                 .iter()
@@ -154,6 +158,8 @@ impl Element for StaticGrid {
         w: &mut Window,
         cx: &mut App,
     ) {
+        #[cfg(feature = "table-profile")]
+        let _perf = gpui_kit::perf_stats::scope("table.static_grid.paint");
         for c in &mut self.cells {
             c.element.paint(w, cx);
         }
@@ -167,6 +173,8 @@ pub(super) fn render<D: super::TableDelegate>(
     w: &mut Window,
     cx: &mut gpui_kit::Context<super::YueTableState<D>>,
 ) -> StaticGrid {
+    #[cfg(feature = "table-profile")]
+    let _perf = gpui_kit::perf_stats::scope("table.static_grid.render");
     use super::{TableSelectionMode, TableSource};
     use gpui_kit::{InteractiveElement as _, ParentElement as _, Styled as _};
     let minimum = p

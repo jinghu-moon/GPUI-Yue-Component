@@ -563,6 +563,8 @@ fn query_tickets_reject_old_success_failure_and_keep_unrelated_selection(cx: &mu
 #[gpui_kit::test]
 #[ignore = "opt-in TB04 query pipeline; run prebuilt release executable with tools/sample-table-query.py"]
 fn tb04_query_pipeline_sample(cx: &mut TestAppContext) {
+    #[cfg(feature = "table-profile")]
+    let capture = super::profile::start();
     use std::time::Instant;
     let source = query_source(250_000);
     let amount = TableColumn::value("amount", "Amount", |r: &QueryRecord| r.amount)
@@ -712,4 +714,6 @@ fn tb04_query_pipeline_sample(cx: &mut TestAppContext) {
             );
         }
     }
+    #[cfg(feature = "table-profile")]
+    super::profile::finish(capture);
 }
