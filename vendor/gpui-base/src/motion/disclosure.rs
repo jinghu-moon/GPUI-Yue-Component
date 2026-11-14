@@ -16,6 +16,7 @@ use std::time::Duration;
 /// `None` for a closed child; no live descendants remain for input or a11y.
 /// The Fast backend currently retains geometry only, without a paint snapshot.
 pub struct MotionDisclosure {
+    on_settled: Option<std::rc::Rc<SettledHandler>>,
     id: ElementId,
     open: bool,
     child: Option<AnyElement>,
@@ -23,9 +24,11 @@ pub struct MotionDisclosure {
     exit: Transition,
     geometry: gpui::SharedString,
 }
+type SettledHandler = dyn Fn(bool, &mut Window, &mut App);
 
 #[derive(Clone)]
 struct DisclosureState {
+    delivered: Option<bool>,
     open: bool,
     natural: Pixels,
     current: Pixels,
@@ -91,6 +94,7 @@ impl MotionDisclosure {
             "Closed disclosure must detach its descendants"
         );
         Self {
+            on_settled: None,
             id: id.into(),
             open,
             child: child.map(|child| {
@@ -114,6 +118,12 @@ impl MotionDisclosure {
     /// natural measurement. Ordinary content-height changes need no revision.
     pub fn geometry_key(mut self, key: impl Into<gpui::SharedString>) -> Self {
         self.geometry = key.into();
+        self
+    }
+    /// Runs after measured geometry has settled, once per open/closed edge.
+    /// Deferred callbacks should validate their consumer's current generation.
+    pub fn on_settled(mut self, handler: impl Fn(bool, &mut Window, &mut App) + 'static) -> Self {
+        self.on_settled = Some(std::rc::Rc::new(handler));
         self
     }
 }
@@ -150,6 +160,7 @@ impl Element for MotionDisclosure {
             global_id.expect("Disclosure requires an id"),
             |state: Option<DisclosureState>, _| {
                 let mut state = state.unwrap_or_else(|| DisclosureState {
+                    delivered: None,
                     open: self.open,
                     natural: px(0.),
                     current: px(0.),
@@ -177,6 +188,7 @@ impl Element for MotionDisclosure {
                     }
                 }
                 if state.open != self.open {
+                    state.delivered = None;
                     state.open = self.open;
                     state.opening = self.open && !state.settle;
                     if !state.settle {
@@ -230,7 +242,7 @@ impl Element for MotionDisclosure {
             gpui::size(bounds.size.width, bounds.size.height.max(px(1.))),
         ));
         let enabled = window.is_visible() && window.is_window_active() && !cx.reduce_motion();
-        let (active, relayout) = window.with_element_state(
+        let (active, relayout, settled) = window.with_element_state(
             global_id.expect("Disclosure requires an id"),
             |state: Option<DisclosureState>, _| {
                 let mut state = state.expect("Disclosure layout must precede prepaint");
@@ -268,9 +280,22 @@ impl Element for MotionDisclosure {
                 if !state.open && !state.active {
                     state.snapshot = None;
                 }
-                ((state.active && enabled && visible, relayout), state)
+                let settled = (!state.active && !relayout && state.delivered != Some(state.open))
+                    .then_some(state.open);
+                if let Some(open) = settled {
+                    state.delivered = Some(open);
+                }
+                (
+                    (state.active && enabled && visible, relayout, settled),
+                    state,
+                )
             },
         );
+        if let Some(open) = settled
+            && let Some(handler) = self.on_settled.clone()
+        {
+            window.defer(cx, move |w, cx| handler(open, w, cx));
+        }
         if active || relayout {
             window.request_animation_frame();
         }

@@ -40,6 +40,8 @@ mod index_path;
 pub mod input;
 mod link;
 mod loading;
+mod notice;
+pub use notice::{NoticeCloseReason, NoticeController};
 mod list_settings;
 #[cfg(all(target_os = "macos", not(test)))]
 mod macos_accessibility;

@@ -3,6 +3,8 @@
 //! Applications own their window and lifecycle. This crate provides presentation
 //! data and components while reusing the GPUI types pinned by `gpui-kit`.
 
+mod alert;
+pub use alert::{YueAlert, AlertKind, AlertVariant, AlertSize, AlertAnnouncement, AlertCloseReason};
 mod application;
 mod avatar;
 mod badge;
@@ -226,6 +228,7 @@ pub use typography::{FontStack, TextRole, TypeStyle, load_fonts, tabular_nums};
 /// Common component types and GPUI composition traits. Import less frequently
 /// used component options explicitly from the crate root.
 pub mod prelude {
+    pub use crate::{YueAlert, AlertKind, AlertVariant, AlertSize, AlertAnnouncement, AlertCloseReason};
     pub use crate::{YueDrawer, YueDrawerState, DrawerPlacement, DrawerSize};
     pub use crate::{YueDescriptionItem, YueDescriptions};
     pub use crate::{StepsValue, YueStepItem, YueSteps};

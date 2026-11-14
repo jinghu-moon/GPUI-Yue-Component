@@ -1,5 +1,18 @@
 # Yue Base patches
 
+## Inline notice lifecycle and measured settlement (2026-11-14)
+
+`NoticeController` owns only controlled visibility generations, one-shot close requests,
+read-time accounting and descendant focus departure. Hover, focus, viewport exposure
+and window availability are independent pause reasons. The consumer supplies owner,
+callbacks, visibility, duration and presentation; no queue, colors or task is added.
+`MotionDisclosure::on_settled` defers a once-per-edge notification after measured
+height has reached its final layout; consumers validate their generation before
+acting. Existing disclosure geometry and paint snapshots retain their defaults.
+Keep the YueAlert headless lifecycle, reversal, timer and geometry regressions,
+and the existing Collapse/Tree suites when rebasing this patch.
+
+
 ## Opt-in virtualization stage statistics (2026-11-11)
 
 `perf-stats` forwards GPUI statistics and marks List/Grid layout, prepaint/paint, source replacement/snapshot and Grid cell build/layout/prepaint. Test observation costs have separate labels. No state, viewport, renderer, clipping or theme behavior changes. Feature-off builds exclude all scopes. Keep the Table diagnostic coverage and VirtualList regression suite when rebasing. See `docs/performance/table-stage-profiling.md`.

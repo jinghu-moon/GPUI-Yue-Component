@@ -93,6 +93,12 @@ pub struct YueButton {
 crate::control_layout::control_layout!(YueButton);
 
 impl YueButton {
+    pub(crate) fn replace_icon(mut self, icon: Icon) -> Self {
+        if let ButtonContent::Icon { icon: current, .. } = &mut self.content {
+            *current = icon;
+        }
+        self
+    }
     // Card extends pointer activation without duplicating the command or key engine.
     pub(crate) fn card_command(&self) -> Option<ClickHandler> {
         if self.disabled || self.loading {
