@@ -605,3 +605,28 @@ fn reduced_motion_closes_at_final_geometry_without_an_animation_loop(cx: &mut Te
     cx.update(|w, _| assert!(find(w, "alert".into()).is_none()));
     assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
 }
+
+#[gpui_kit::test]
+fn restarting_duration_keeps_an_existing_hover_pause(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.duration = Some(Duration::from_secs(2));
+        cx.notify();
+    });
+    draw(cx);
+    let close = cx.update(|w, _| part(w, "close").bounds().center());
+    cx.simulate_mouse_move(close, None, Modifiers::default());
+    tick(cx, 500);
+    v.update(cx, |p, cx| {
+        p.duration = Some(Duration::from_secs(1));
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 5000);
+    v.read_with(cx, |p, _| assert!(p.requests.is_empty()));
+    cx.simulate_mouse_move(gpui_kit::point(px(1.), px(1.)), None, Modifiers::default());
+    tick(cx, 1100);
+    v.read_with(cx, |p, _| {
+        assert_eq!(p.requests, vec![AlertCloseReason::Timeout])
+    });
+}

@@ -92,6 +92,7 @@ impl NoticeController {
             "notice duration must be nonzero"
         );
         if self.visible != visible || (visible && self.duration != duration) || !self.initialized {
+            let visibility_changed = self.visible != visible;
             let hiding = self.initialized && self.visible && !visible;
             self.generation += 1;
             self.awaiting_close = hiding;
@@ -102,7 +103,11 @@ impl NoticeController {
             self.timeout_requested = false;
             self.stamp = cx.background_executor().now();
             self.exposed = false;
-            self.hovered = false;
+            // Changing duration does not create a new pointer-enter edge.
+            // Preserve an ongoing reading pause while the host restarts time.
+            if visibility_changed {
+                self.hovered = false;
+            }
             if hiding && self.focus.contains_focused(w, cx) {
                 // Delay until the live descendants have been detached. Do not
                 // redirect focus that a host callback has already moved.
