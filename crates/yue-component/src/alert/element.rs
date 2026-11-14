@@ -119,6 +119,7 @@ impl RenderOnce for YueAlert {
             .read(cx)
             .clone();
         let narrow = measurement.borrow().narrow;
+        let align_to_title = has_description || (narrow && self.action.is_some());
         let expand_focus = w
             .use_keyed_state((id.clone(), "expand-focus"), cx, |_, cx| cx.focus_handle())
             .read(cx)
@@ -147,6 +148,8 @@ impl RenderOnce for YueAlert {
             } else {
                 TextRole::Body
             };
+            let text_style = text_role.style(theme);
+            let first_line_height = px(text_style.line_height);
             let mut text = div()
                 .id((id.clone(), "text"))
                 .test_support()
@@ -268,6 +271,13 @@ impl RenderOnce for YueAlert {
                 .min_w_0()
                 .flex_1()
                 .gap(rems(theme, k::SPACE_8))
+                .when(!narrow, |d| {
+                    if has_description {
+                        d.items_start()
+                    } else {
+                        d.items_center()
+                    }
+                })
                 .when(narrow, |d| d.flex_col());
             content = content.child(text);
             if let Some(action) = self.action {
@@ -278,6 +288,8 @@ impl RenderOnce for YueAlert {
                         .min_w_0()
                         .max_w_full()
                         .flex_shrink_0()
+                        .flex()
+                        .items_center()
                         .child(action),
                 );
             }
@@ -307,7 +319,7 @@ impl RenderOnce for YueAlert {
                 },
                 move |bounds, (progress, timed), w, _| {
                     if timed {
-                        let height = rems(theme, k::BOX_BORDER_WIDTH).to_pixels(w.rem_size());
+                        let height = rems(theme, k::STATUS_BORDER_WIDTH).to_pixels(w.rem_size());
                         w.paint_quad(gpui_kit::fill(
                             gpui_kit::Bounds::new(
                                 gpui_kit::point(bounds.left(), bounds.bottom() - height),
@@ -320,15 +332,16 @@ impl RenderOnce for YueAlert {
             )
             .absolute()
             .inset_0();
-            let mut surface = text_role
-                .apply(theme, div())
+            let mut surface = text_style
+                .apply(div())
                 .id(id.clone())
                 .test_support()
                 .relative()
                 .w_full()
                 .min_w_0()
                 .flex()
-                .items_start()
+                .when(align_to_title, |d| d.items_start())
+                .when(!align_to_title, |d| d.items_center())
                 .gap(rems(theme, k::SPACE_8))
                 .px(rems(theme, if small { k::SPACE_8 } else { k::SPACE_12 }))
                 .py(rems(theme, if small { k::SPACE_4 } else { k::SPACE_8 }))
@@ -341,29 +354,41 @@ impl RenderOnce for YueAlert {
                 .when(
                     self.variant == AlertVariant::Outlined && !self.banner,
                     |d| {
-                        d.border(rems(theme, k::BOX_BORDER_WIDTH))
+                        d.border(rems(theme, k::STATUS_BORDER_WIDTH))
                             .border_color(border)
                     },
                 )
                 .when(self.banner, |d| {
-                    d.border_b(rems(theme, k::BOX_BORDER_WIDTH))
+                    d.border_b(rems(theme, k::STATUS_BORDER_WIDTH))
                         .border_color(border)
                 })
                 .on_hover(move |value, w, cx| {
                     hover.update(cx, |s, cx| s.set_hovered(*value, w, cx))
                 });
             if self.show_icon {
-                surface =
-                    surface.child(div().flex_shrink_0().child(icon.color_value(fg).size(rems(
-                        theme,
-                        if small {
-                            k::ICON_SIZE_SM
-                        } else if has_description {
-                            k::ICON_SIZE_MD
-                        } else {
-                            k::ICON_SIZE_SM
-                        },
-                    ))));
+                let icon_size = rems(
+                    theme,
+                    if !small && has_description {
+                        k::ICON_SIZE_MD
+                    } else {
+                        k::ICON_SIZE_SM
+                    },
+                );
+                // A flex slot has no anonymous text baseline. Match the title's
+                // line box; single-line surfaces additionally center the lane
+                // against the command buttons' retained hit-target height.
+                surface = surface.child(
+                    div()
+                        .id((id.clone(), "icon"))
+                        .test_support()
+                        .flex_shrink_0()
+                        .flex()
+                        .items_center()
+                        .justify_center()
+                        .w(icon_size)
+                        .h(first_line_height)
+                        .child(icon.color_value(fg).size(icon_size)),
+                );
             }
             surface = surface.child(content);
             if self.closable {
@@ -385,7 +410,7 @@ impl RenderOnce for YueAlert {
                     }
                 };
                 surface = surface.child(
-                    div().flex_shrink_0().child(
+                    div().flex_shrink_0().flex().items_center().child(
                         button
                             .size(ButtonSize::Small)
                             .variant(if self.variant == AlertVariant::Solid {

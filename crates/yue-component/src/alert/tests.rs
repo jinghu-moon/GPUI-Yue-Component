@@ -18,6 +18,7 @@ struct Probe {
     width: f32,
     description: bool,
     action: bool,
+    closable: bool,
     expanded: bool,
     lines: Option<usize>,
     duration: Option<Duration>,
@@ -33,7 +34,7 @@ impl Render for Probe {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let mut alert = YueAlert::new("alert", "保存状态")
             .visible(self.visible)
-            .closable(true)
+            .closable(self.closable)
             .kind(self.kind)
             .variant(self.variant)
             .size(self.size)
@@ -111,6 +112,7 @@ fn open(cx: &mut TestAppContext) -> (Entity<Probe>, &mut VisualTestContext) {
             width: 600.,
             description: false,
             action: false,
+            closable: true,
             expanded: false,
             lines: None,
             duration: None,
@@ -221,6 +223,188 @@ fn narrow_actions_move_below_body_without_losing_close_lane(cx: &mut TestAppCont
         assert!(part(w, "close").bounds().right() <= a.right());
         assert!(part(w, "description").bounds().right() <= a.right());
     });
+}
+
+#[gpui_kit::test]
+fn single_line_icon_text_and_commands_share_center_and_even_padding(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    for size in [AlertSize::Small, AlertSize::Medium] {
+        for action in [false, true] {
+            for closable in [false, true] {
+                v.update(cx, |p, cx| {
+                    p.size = size;
+                    p.action = action;
+                    p.closable = closable;
+                    cx.notify();
+                });
+                draw(cx);
+                draw(cx);
+                tick(cx, 500);
+                cx.update(|w, _| {
+                    let alert = find(w, "alert".into()).unwrap().bounds();
+                    let message = part(w, "message").bounds();
+                    let icon = part(w, "icon").bounds();
+                    let text_offset = message.center().y - alert.center().y;
+                    assert!(text_offset.abs() <= px(0.1),
+                        "{size:?}, action={action}, closable={closable}: message {message:?}, alert {alert:?}");
+                    assert!((icon.center().y - message.center().y).abs() <= px(0.1),
+                        "icon {icon:?}, message {message:?}");
+                    if action {
+                        let button = find(w, "retry".into()).unwrap().bounds();
+                        let slot = part(w, "action").bounds();
+                        assert!((slot.size.height - button.size.height).abs() <= px(0.1),
+                            "anonymous line box must not enlarge action slot: {slot:?} vs {button:?}");
+                        let top = button.top() - alert.top();
+                        let bottom = alert.bottom() - button.bottom();
+                        assert!((top - bottom).abs() <= px(0.1), "action padding {top:?}/{bottom:?}");
+                    }
+                    if closable {
+                        let close = part(w, "close").bounds();
+                        assert!((close.center().y - alert.center().y).abs() <= px(0.1));
+                    }
+                });
+            }
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn multiline_icon_aligns_with_first_line_not_the_whole_description(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    for rem in [16., 20., 24.] {
+        cx.update(|w, _| w.set_rem_size(px(rem)));
+        for size in [AlertSize::Small, AlertSize::Medium] {
+            v.update(cx, |p, cx| {
+                p.description = true;
+                p.action = true;
+                p.width = 1000.;
+                p.size = size;
+                cx.notify();
+            });
+            draw(cx);
+            draw(cx);
+            tick(cx, 500);
+            cx.update(|w, _| {
+                let message = part(w, "message").bounds();
+                let icon = part(w, "icon").bounds();
+                assert!(
+                    (message.center().y - icon.center().y).abs() <= px(0.1),
+                    "{size:?}: {message:?} vs {icon:?}"
+                );
+                let action = part(w, "action").bounds();
+                let button = find(w, "retry".into()).unwrap().bounds();
+                assert!((action.size.height - button.size.height).abs() <= px(0.1));
+            });
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn narrow_action_does_not_pull_icon_down_from_the_title(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.action = true;
+        p.width = 240.;
+        p.description = false;
+        cx.notify();
+    });
+    draw(cx);
+    draw(cx);
+    tick(cx, 500);
+    cx.update(|w, _| {
+        let message = part(w, "message").bounds();
+        let icon = part(w, "icon").bounds();
+        assert!((message.center().y - icon.center().y).abs() <= px(0.1));
+        assert!(part(w, "action").bounds().top() >= message.bottom());
+    });
+}
+
+#[gpui_kit::test]
+fn outlined_paints_a_real_semantic_border_while_tonal_does_not(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    for kind in [
+        AlertKind::Info,
+        AlertKind::Success,
+        AlertKind::Warning,
+        AlertKind::Error,
+    ] {
+        for variant in [AlertVariant::Tonal, AlertVariant::Outlined] {
+            v.update(cx, |p, cx| {
+                p.kind = kind;
+                p.variant = variant;
+                p.closable = false;
+                cx.notify();
+            });
+            draw(cx);
+            tick(cx, 500);
+            cx.update(|w, cx| {
+                let bounds = find(w, "alert".into())
+                    .unwrap()
+                    .bounds()
+                    .scale(w.scale_factor());
+                let theme = crate::current_theme(cx);
+                let (_, _, border) = super::element::colors(theme, kind, variant);
+                // GPUI submits the background and border as separate quads.
+                let quads = w.painted_quads();
+                if variant == AlertVariant::Outlined {
+                    let q = quads
+                        .iter()
+                        .find(|q| q.bounds == bounds && q.border_widths.top.0 > 0.)
+                        .expect("painted alert outline");
+                    let width = crate::tokens::rems(theme, crate::theme::keys::STATUS_BORDER_WIDTH)
+                        .to_pixels(w.rem_size())
+                        .scale(w.scale_factor());
+                    assert_eq!(q.border_widths.top, width, "{kind:?} outline width");
+                    assert_eq!(q.border_widths.bottom, width);
+                    assert_eq!(q.border_widths.left, width);
+                    assert_eq!(q.border_widths.right, width);
+                    assert_eq!(q.border_color, gpui_kit::Hsla::from(border));
+                } else {
+                    assert!(
+                        !quads
+                            .iter()
+                            .any(|q| q.bounds == bounds && q.border_widths.top.0 > 0.)
+                    );
+                }
+            });
+        }
+    }
+}
+
+#[gpui_kit::test]
+fn countdown_paints_a_nonzero_progress_line_that_shrinks(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.duration = Some(Duration::from_secs(2));
+        cx.notify();
+    });
+    draw(cx);
+    let progress = |cx: &mut VisualTestContext| {
+        cx.update(|w, cx| {
+            let bounds = find(w, "alert".into())
+                .unwrap()
+                .bounds()
+                .scale(w.scale_factor());
+            let theme = crate::current_theme(cx);
+            let (_, fg, _) = super::element::colors(theme, AlertKind::Info, AlertVariant::Tonal);
+            let q = w
+                .painted_quads()
+                .into_iter()
+                .find(|q| {
+                    q.bounds.bottom() == bounds.bottom()
+                        && q.bounds.left() == bounds.left()
+                        && q.bounds.size.height.0 > 0.
+                        && q.bounds.size.height < bounds.size.height
+                        && q.background.as_solid() == Some(gpui_kit::Hsla::from(fg))
+                })
+                .expect("visible countdown line");
+            q.bounds.size.width
+        })
+    };
+    let full = progress(cx);
+    tick(cx, 500);
+    let left = progress(cx);
+    assert!(left.0 > 0. && left < full);
 }
 #[gpui_kit::test]
 fn controlled_keyboard_close_detaches_then_completes_once_and_restores_focus(

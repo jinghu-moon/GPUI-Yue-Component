@@ -65,9 +65,9 @@ YueAlert::new("save-error", "项目未保存")
 
 ## 4. 布局、样式和语义
 
-外层 w_full/min_w_0，文本完整换行，允许长单词断行；图标和关闭位不缩小。单行图标在首行行高中对齐，带描述时图标对准标题首行。操作与关闭分列，窄容器操作下移；多行短内容不能把关闭控件挤出边框。父容器负责提示间距，关闭后不额外残留内边距。
+外层 w_full/min_w_0，文本完整换行，允许长单词断行；图标和关闭位不缩小。单行提示的图标、正文和尾侧按钮共享垂直中心线；带描述或窄容器操作下移时，图标对准标题首行中心。图标槽使用首行行高和 flex 居中，操作与关闭槽也使用 flex，不引入匿名文本行盒的基线留白。操作与关闭分列，窄容器操作下移；多行短内容不能把关闭控件挤出边框。父容器负责提示间距，关闭后不额外残留内边距。
 
-Medium 复用 Body（约14/20）、Space8/12/16，基础高度随关闭按钮约40px；Small 复用 Caption（约12/16）、Space4/8，保留现有小号按钮命中区，约32px。带描述按内容自然增高。图标基础16、带描述20、小号16，均通过现有 token 的 rem 投影。边框和圆角复用现有细线与 Radius token。
+Medium 复用 Body（约14/20）、Space8/12/16，基础高度随关闭按钮约40px；Small 复用 Caption（约12/16）、Space4/8，保留现有小号按钮命中区，约32px。带描述按内容自然增高。图标基础16、带描述20、小号16，均通过现有 token 的 rem 投影。边框和倒计时细线使用 `STATUS_BORDER_WIDTH`（基准 1px，按 rem 投影），圆角使用 Radius token。`BOX_BORDER_WIDTH` 是默认无边框容器策略，值为 0px，不用于 Alert 描边。
 
 Tonal/Outlined 使用 info/success/warning/error 的 bg/foreground/border；Solid 使用配对 solid/on_solid；Info 使用 accent_solid/on_accent。不将黑白当通用默认色，逐主题检查对比度。内部操作按钮保留自身 Button 状态；实心变体使用可读按钮表面，不能把默认深色 ghost 文案直接放在深底上。
 
@@ -126,3 +126,11 @@ Showcase 必须有：四状态、三变体、标题描述、图标开关与自�
 本地日志位于 `target/alert-component-tests.log`、`target/alert-showcase-tests.log`、`target/alert-clippy.log` 和 `target/alert-native-build.log`，不纳入 Git。验证中额外修复“重设 duration 时丢失既有悬停暂停”，并保留专项回归。新增导航项使旧 Segmented 导航测试的目标落到视口外，测试改为先滚动到目标，再执行原有真实点击断言。
 
 A0、A1、A2 和计时边界修复的回退节点分别为 `29aee7d`、`4e646af`、`ab516a2`、`6d3d6fb`。最终示例与文档作为 A3 单独提交。所有计划阶段已完成；真机观感、Narrator 实际播报及真实跨 DPI 行为仍由原生环境验收，不把 headless 几何/语义断言当作这些验收的替代。
+
+### 截图反馈修正 — 对齐、描边与按钮留白（2026-11-14）
+
+- 单行提示的图标、正文和按钮使用共同中心线；带描述或窄容器下移操作时，图标槽与标题首行等高，图标在槽内居中。操作和关闭槽改为 flex，消除普通文本行盒带来的额外底部基线留白，保留按钮自身命中尺寸。
+- Outlined 与公告边线原先错误使用值为 0px 的 `BOX_BORDER_WIDTH`，现改用 `STATUS_BORDER_WIDTH` 的基准 1px；Tonal 保持无外框。倒计时细线同步修正零宽 token。
+- 新增 5 项 headless 回归，覆盖大小密度、操作/关闭的有无、16/20/24 rem、多行与窄布局、实际提交到场景的描边四边和颜色，以及倒计时线正高度与随时间缩短。修正前，前三项布局/描边回归均失败；修正后 20 项 Alert 专项通过。
+
+最终验证：组件全量 1216 通过、20 个原有忽略；Showcase 85 通过、10 个原有忽略；严格 Clippy 和 Windows Showcase 构建通过。日志使用 `target/alert-layout-*.log`，包含修正前后的对照输出。新版 `target/debug/windows-showcase.exe` 已生成，供用户进行原生观感验收。
