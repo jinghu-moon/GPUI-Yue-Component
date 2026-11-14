@@ -26,15 +26,16 @@ YueAlert 是受控 RenderOnce：业务宿主持有 visible、expanded 及业务�
 ## 3. API 和所有权
 
 ```rust,ignore
+let close = cx.listener(|s, _: &AlertCloseReason, _, cx| {
+    s.show_error = false;
+    cx.notify();
+});
 YueAlert::new("save-error", "项目未保存")
     .kind(AlertKind::Error)
     .description("连接已断开。输入已保留，恢复连接后可重试。")
     .visible(self.show_error)
     .closable(true)
-    .on_close(cx.listener(|s, _: &AlertCloseReason, _, cx| {
-        s.show_error = false;
-        cx.notify();
-    }))
+    .on_close(move |reason, window, cx| close(&reason, window, cx))
     .action(YueButton::new("retry", "重试").on_click(...));
 ```
 
@@ -66,7 +67,7 @@ YueAlert::new("save-error", "项目未保存")
 
 外层 w_full/min_w_0，文本完整换行，允许长单词断行；图标和关闭位不缩小。单行图标在首行行高中对齐，带描述时图标对准标题首行。操作与关闭分列，窄容器操作下移；多行短内容不能把关闭控件挤出边框。父容器负责提示间距，关闭后不额外残留内边距。
 
-Medium 复用 Body（约14/20）、Space8/12/16，基础高度随关闭按钮约40px；Small 复用 Caption（约12/16）、Space4/8，保留现有小号按钮命中区，约32px。带描述按内容自然增高。图标基础16、带描述20、小号14，均通过现有 token 的 rem 投影。边框和圆角复用现有细线与 Radius token。
+Medium 复用 Body（约14/20）、Space8/12/16，基础高度随关闭按钮约40px；Small 复用 Caption（约12/16）、Space4/8，保留现有小号按钮命中区，约32px。带描述按内容自然增高。图标基础16、带描述20、小号16，均通过现有 token 的 rem 投影。边框和圆角复用现有细线与 Radius token。
 
 Tonal/Outlined 使用 info/success/warning/error 的 bg/foreground/border；Solid 使用配对 solid/on_solid；Info 使用 accent_solid/on_accent。不将黑白当通用默认色，逐主题检查对比度。内部操作按钮保留自身 Button 状态；实心变体使用可读按钮表面，不能把默认深色 ghost 文案直接放在深底上。
 
@@ -104,3 +105,24 @@ Showcase 必须有：四状态、三变体、标题描述、图标开关与自�
 折叠测量按文字、实际宽度、字号、字体和行数缓存；宽度变化后自动撤销不需要的展开按钮，并将已聚焦的消失按钮交还 Root 焦点导航。计时每显示代次只请求一次；重开/更改时长重置；hover、focus、离屏、窗口失活/隐藏各自暂停，不互相覆盖。无后台定时任务，进度由可见活动帧驱动。
 
 验证：14 项 Alert 专项 headless 测试通过（另有 1 项现有 Dialog 测试），新增真实 KeyDown+KeyUp 关闭、宽度重测与焦点转移、离屏/失活暂停、初始隐藏/卸载、reduce_motion、静态及悬停后零额外动画帧断言。此前严格 Clippy 的库与 Showcase 全目标检查通过；A3 将对最终改动再跑完整门禁。
+
+### A3 — 示例、实际消费与最终验证
+
+完成 11 个独立 Showcase 场景：四状态、三外观、图标/富内容/更新操作、两密度、三种关闭与恢复、受控拒绝、描述折叠、公告、窄容器、可暂停倒计时、保存失败/重试。更新操作和窄面板重试均有实际页面状态反馈；表单复用 YueField + YueInput + InputState，失败后保留输入，重试保存后转为成功提示。页面复用 YueCard，沿用 Showcase 的单一滚动宿主。导航入口为 **组件 → 警告提示 Alert**。
+
+提供 `examples/minimal/src/bin/alert.rs`，可运行 `cargo run -p yue-minimal --bin alert`；完整页面运行 `cargo run -p windows-showcase`。公开符号已导出至根模块和 prelude，README 已收录。
+
+最终门禁（2026-11-14）：
+
+|命令/证据|结果|
+|---|---|
+|`cargo test -p yue-component --features headless-tests --quiet`|1211 通过、20 个原有忽略；含 15 项 Alert 专项、Collapse/Tree 共用动效回归及 doctest|
+|`cargo test -p windows-showcase --features headless-tests --quiet`|85 通过、10 个原有忽略；含 2 项 Alert 实际页面流程及导航测试|
+|`cargo clippy -p yue-component -p windows-showcase --all-targets --features headless-tests -- -D warnings`|通过|
+|`cargo check -p yue-minimal --bin alert`|通过|
+|`cargo build -p windows-showcase`|通过；生成 `target/debug/windows-showcase.exe`|
+|`git diff --check`|通过|
+
+本地日志位于 `target/alert-component-tests.log`、`target/alert-showcase-tests.log`、`target/alert-clippy.log` 和 `target/alert-native-build.log`，不纳入 Git。验证中额外修复“重设 duration 时丢失既有悬停暂停”，并保留专项回归。新增导航项使旧 Segmented 导航测试的目标落到视口外，测试改为先滚动到目标，再执行原有真实点击断言。
+
+A0、A1、A2 和计时边界修复的回退节点分别为 `29aee7d`、`4e646af`、`ab516a2`、`6d3d6fb`。最终示例与文档作为 A3 单独提交。所有计划阶段已完成；真机观感、Narrator 实际播报及真实跨 DPI 行为仍由原生环境验收，不把 headless 几何/语义断言当作这些验收的替代。

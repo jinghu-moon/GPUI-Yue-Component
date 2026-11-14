@@ -1,3 +1,4 @@
+pub(crate) mod alert;
 pub(crate) mod avatar;
 pub(crate) mod badge;
 pub(crate) mod breadcrumb;

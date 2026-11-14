@@ -52,6 +52,7 @@ fn main() {
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 enum ShowcasePage {
+    Alert,
     Table,
     Descriptions,
     Steps,
@@ -106,6 +107,7 @@ enum ShowcasePage {
 }
 
 struct Showcase {
+    alert_demo: gpui_kit::Entity<pages::alert::AlertPage>,
     table_demo: gpui_kit::Entity<pages::table::TablePage>,
     descriptions_demo: gpui_kit::Entity<pages::descriptions::DescriptionsPage>,
     steps_demo: gpui_kit::Entity<pages::steps::StepsPage>,
@@ -302,6 +304,7 @@ impl Showcase {
             link_demo: cx.new(pages::link::LinkPage::new),
             divider_demo: cx.new(pages::divider::DividerPage::new),
             dialog_demo: cx.new(|cx| pages::dialog::DialogPage::new(window, cx)),
+            alert_demo: cx.new(|cx| pages::alert::AlertPage::new(window, cx)),
             drawer_demo: cx.new(|cx| pages::drawer::DrawerPage::new(window, cx)),
             toast_demo: cx.new(|cx| pages::toast::ToastPage::new(window, cx)),
             tag_demo: cx.new(|cx| pages::tag::TagPage::new(window, cx)),
@@ -644,6 +647,7 @@ impl Render for Showcase {
                         ShowcasePage::Skeleton => self.skeleton_demo.clone().into_any_element(),
                         ShowcasePage::Select => self.select_demo.clone().into_any_element(),
                         ShowcasePage::Dialog => self.dialog_demo.clone().into_any_element(),
+                        ShowcasePage::Alert => self.alert_demo.clone().into_any_element(),
                         ShowcasePage::Drawer => self.drawer_demo.clone().into_any_element(),
                         ShowcasePage::Divider => self.divider_demo.clone().into_any_element(),
                         ShowcasePage::Breadcrumb => self.breadcrumb_demo.clone().into_any_element(),

@@ -4,6 +4,7 @@ use gpui_kit::base::{Button, Collapsible};
 use yue_component::{Icon, IconSize, MotionDuration, MotionEase};
 
 const COMPONENTS: &[(&str, &str, ShowcasePage)] = &[
+    ("alert-page", "警告提示 Alert", ShowcasePage::Alert),
     ("avatar-page", "头像 Avatar", ShowcasePage::Avatar),
     ("badge-page", "徽标 Badge", ShowcasePage::Badge),
     (
@@ -445,6 +446,7 @@ mod tests {
             ("table-page", ShowcasePage::Table, "table-content"),
             ("skeleton-page", ShowcasePage::Skeleton, "skeleton-content"),
             ("collapse-page", ShowcasePage::Collapse, "collapse-content"),
+            ("alert-page", ShowcasePage::Alert, "alert-content"),
             ("drawer-page", ShowcasePage::Drawer, "drawer-content"),
             ("divider-page", ShowcasePage::Divider, "divider-content"),
             (
@@ -485,6 +487,19 @@ mod tests {
     #[gpui_kit::test]
     fn segmented_page_selection_writes_back_to_the_showcase(cx: &mut TestAppContext) {
         let (view, cx) = open(cx);
+        let target = node(cx, "segmented-page").bounds().center();
+        let height = cx.update(|w, _| w.viewport_size().height);
+        if target.y < gpui_kit::px(0.) || target.y > height {
+            cx.simulate_event(gpui_kit::ScrollWheelEvent {
+                position: gpui_kit::point(target.x, height / 2.),
+                delta: gpui_kit::ScrollDelta::Pixels(gpui_kit::point(
+                    gpui_kit::px(0.), height / 2. - target.y,
+                )),
+                touch_phase: gpui_kit::TouchPhase::Moved,
+                ..Default::default()
+            });
+            draw(cx);
+        }
         let position = node(cx, "segmented-page").bounds().center();
         cx.simulate_click(position, Modifiers::default());
         draw(cx);
