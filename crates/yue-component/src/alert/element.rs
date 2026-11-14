@@ -88,6 +88,7 @@ impl RenderOnce for YueAlert {
         let (bg, fg, border) = colors(theme, self.kind, self.variant);
         let small = self.size == AlertSize::Small;
         let has_description = self.description.is_some() || !self.children.is_empty();
+        let foldable = self.description.is_some() && self.max_lines.is_some();
         let role = match self.announcement.unwrap_or(match self.kind {
             AlertKind::Info | AlertKind::Success => AlertAnnouncement::Polite,
             AlertKind::Warning | AlertKind::Error => AlertAnnouncement::Assertive,
@@ -118,6 +119,20 @@ impl RenderOnce for YueAlert {
             .read(cx)
             .clone();
         let narrow = measurement.borrow().narrow;
+        let expand_focus = w
+            .use_keyed_state((id.clone(), "expand-focus"), cx, |_, cx| cx.focus_handle())
+            .read(cx)
+            .clone();
+        let show_expand = foldable && measurement.borrow().overflow;
+        if !show_expand && expand_focus.is_focused(w) {
+            let focus = expand_focus.clone();
+            w.on_next_frame(move |w, cx| {
+                if focus.is_focused(w) {
+                    w.blur(cx);
+                    gpui_kit::base::Root::focus_next(w, cx);
+                }
+            });
+        }
         let body = if self.visible {
             let icon = self.icon.unwrap_or_else(|| {
                 Icon::new(match self.kind {
@@ -216,7 +231,7 @@ impl RenderOnce for YueAlert {
                 );
             }
             text = text.children(self.children);
-            if self.max_lines.is_some() && measurement.borrow().overflow {
+            if show_expand {
                 let handler = self.on_expanded;
                 let next = !self.expanded;
                 text = text.child(
@@ -236,6 +251,7 @@ impl RenderOnce for YueAlert {
                             ButtonVariant::Ghost
                         })
                         .size(ButtonSize::Small)
+                        .track_focus(&expand_focus)
                         .expanded(self.expanded)
                         .on_click(move |_, w, cx| {
                             if let Some(h) = &handler {

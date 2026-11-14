@@ -23,6 +23,8 @@ struct Probe {
     duration: Option<Duration>,
     focus: FocusHandle,
     mounted: bool,
+    offscreen: bool,
+    brief: bool,
     kind: AlertKind,
     variant: AlertVariant,
     size: AlertSize,
@@ -63,7 +65,7 @@ impl Render for Probe {
                 move |w, cx| h(&(), w, cx)
             });
         if self.description {
-            alert=alert.description("这是一段足够长的中文提示说明，用于确认窄容器、长段落、连续标识符和多行说明都能完整显示。LongIdentifierWithoutSpacesABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ。".repeat(3));
+            alert=alert.description(if self.brief {"提示内容在窄面板中需要多行显示，调整宽度后应自动隐藏不再需要的展开按钮。".into()} else {"这是一段足够长的中文提示说明，用于确认窄容器、长段落、连续标识符和多行说明都能完整显示。LongIdentifierWithoutSpacesABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ。".repeat(3)});
         }
         if let Some(n) = self.lines {
             alert = alert.max_lines(n);
@@ -77,7 +79,13 @@ impl Render for Probe {
             .flex()
             .flex_col()
             .child(YueButton::new("outside", "外部操作").track_focus(&self.focus))
-            .when(self.mounted, |d| d.child(alert))
+            .when(self.mounted, |d| {
+                d.child(
+                    div()
+                        .mt(if self.offscreen { px(2000.) } else { px(0.) })
+                        .child(alert),
+                )
+            })
             .child(div().id("after").test_support().h(px(20.)))
     }
 }
@@ -108,6 +116,8 @@ fn open(cx: &mut TestAppContext) -> (Entity<Probe>, &mut VisualTestContext) {
             duration: None,
             focus: cx.focus_handle(),
             mounted: true,
+            offscreen: false,
+            brief: false,
             kind: AlertKind::Info,
             variant: AlertVariant::Tonal,
             size: AlertSize::Medium,
@@ -217,8 +227,18 @@ fn controlled_keyboard_close_detaches_then_completes_once_and_restores_focus(
     cx: &mut TestAppContext,
 ) {
     let (v, cx) = open(cx);
-    let close = cx.update(|w, _| part(w, "close").bounds().center());
-    cx.simulate_click(close, Modifiers::default());
+    let focus = v.read_with(cx, |p, _| p.focus.clone());
+    cx.update(|w, cx| focus.focus(w, cx));
+    cx.simulate_keystrokes("tab");
+    draw(cx);
+    cx.update(|w, _| assert_eq!(part(w, "close").focused(), Some(true)));
+    let keystroke = gpui_kit::Keystroke::parse("enter").unwrap();
+    cx.simulate_event(gpui_kit::KeyDownEvent {
+        keystroke: keystroke.clone(),
+        is_held: false,
+        prefer_character_input: false,
+    });
+    cx.simulate_event(gpui_kit::KeyUpEvent { keystroke });
     draw(cx);
     v.read_with(cx, |p, _| {
         assert_eq!(p.requests, vec![AlertCloseReason::CloseButton])
@@ -453,4 +473,135 @@ fn hidden_window_pauses_time_and_unmount_leaves_no_timeout(cx: &mut TestAppConte
         assert!(p.requests.is_empty());
         assert_eq!(p.closed, 0);
     });
+}
+
+#[gpui_kit::test]
+fn offscreen_and_inactive_window_preserve_remaining_read_time(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.duration = Some(Duration::from_secs(2));
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 500);
+    v.update(cx, |p, cx| {
+        p.offscreen = true;
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 5000);
+    v.read_with(cx, |p, _| assert!(p.requests.is_empty()));
+    v.update(cx, |p, cx| {
+        p.offscreen = false;
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 500);
+    cx.deactivate_window();
+    draw(cx);
+    tick(cx, 5000);
+    v.read_with(cx, |p, _| assert!(p.requests.is_empty()));
+    cx.update(|w, _| w.activate_window());
+    draw(cx);
+    tick(cx, 1100);
+    v.read_with(cx, |p, _| {
+        assert_eq!(p.requests, vec![AlertCloseReason::Timeout])
+    });
+}
+#[gpui_kit::test]
+fn static_and_paused_notices_stop_requesting_frames(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    for _ in 0..4 {
+        draw(cx);
+    }
+    assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
+    v.update(cx, |p, cx| {
+        p.description = true;
+        p.lines = Some(2);
+        cx.notify();
+    });
+    draw(cx);
+    draw(cx);
+    tick(cx, 500);
+    draw(cx);
+    assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
+    v.update(cx, |p, cx| {
+        p.duration = Some(Duration::from_secs(5));
+        cx.notify();
+    });
+    draw(cx);
+    assert!(cx.update(|w, cx| w.simulate_next_frame(cx)) > 0);
+    let close = cx.update(|w, _| part(w, "close").bounds().center());
+    cx.simulate_mouse_move(close, None, Modifiers::default());
+    draw(cx);
+    tick(cx, 500);
+    draw(cx);
+    assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
+}
+#[gpui_kit::test]
+fn width_remeasurement_removes_unnecessary_fold_control(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.description = true;
+        p.brief = true;
+        p.width = 200.;
+        p.lines = Some(2);
+        cx.notify();
+    });
+    draw(cx);
+    draw(cx);
+    tick(cx, 500);
+    cx.update(|w, _| {
+        part(w, "expand");
+    });
+    let focus = v.read_with(cx, |p, _| p.focus.clone());
+    cx.update(|w, cx| focus.focus(w, cx));
+    cx.simulate_keystrokes("tab");
+    draw(cx);
+    cx.update(|w, _| assert_eq!(part(w, "expand").focused(), Some(true)));
+    v.update(cx, |p, cx| {
+        p.width = 1000.;
+        cx.notify();
+    });
+    draw(cx);
+    draw(cx);
+    tick(cx, 500);
+    cx.update(|w, _| {
+        assert!(find(w, ElementId::from((ElementId::from("alert"), "expand"))).is_none());
+        assert!(snapshots(w).iter().any(|n| n.focused() == Some(true)));
+    });
+}
+#[gpui_kit::test]
+fn initial_hidden_and_direct_unmount_do_not_report_closed(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    v.update(cx, |p, cx| {
+        p.mounted = false;
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 500);
+    v.update(cx, |p, cx| {
+        p.visible = false;
+        p.mounted = true;
+        cx.notify();
+    });
+    draw(cx);
+    tick(cx, 500);
+    v.read_with(cx, |p, _| assert_eq!(p.closed, 0));
+}
+
+#[gpui_kit::test]
+fn reduced_motion_closes_at_final_geometry_without_an_animation_loop(cx: &mut TestAppContext) {
+    let (v, cx) = open(cx);
+    cx.update(|_, cx| cx.set_reduce_motion(true));
+    v.update(cx, |p, cx| {
+        p.visible = false;
+        cx.notify();
+    });
+    draw(cx);
+    draw(cx);
+    draw(cx);
+    v.read_with(cx, |p, _| assert_eq!(p.closed, 1));
+    cx.update(|w, _| assert!(find(w, "alert".into()).is_none()));
+    assert_eq!(cx.update(|w, cx| w.simulate_next_frame(cx)), 0);
 }
